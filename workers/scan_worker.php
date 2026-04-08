@@ -8,9 +8,12 @@ use App\Database;
 use App\Services\AiService;
 use App\Services\FileService;
 use App\Services\ParseService;
+use App\Services\PackagingService;
+use App\Parsers\DatabaseParser;
 
 $pdo = Database::getConnection();
 $parseService = new ParseService();
+$packagingService = new PackagingService();
 $fileService = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
 
 // Get AI credentials from environment
@@ -52,13 +55,32 @@ while (true) {
         foreach ($job['debug_file_ids'] as $fileId) {
              $destPath = $fileService->getExtractedPath($fileId);
              if (!is_dir($destPath)) {
-                 // Try extraction if not already extracted
-                 // (In production, the file upload process would have handle this, 
-                 // but for robustness we'll check)
                  echo "Warning: Data not extracted for $fileId. Skipping...\n";
                  continue;
              }
-             $allDiagnosticData[] = $parseService->parseAll($destPath);
+
+             // Base diagnostic data (Hardware, Disk, Raid, etc)
+             $data = $parseService->parseAll($destPath);
+
+             // Level 1: Extended Database Parsing (SQLite Logs)
+             if ($job['scan_level'] === 'level1') {
+                 $dbParser = new DatabaseParser($destPath);
+                 $dbResults = $dbParser->parseAll();
+
+                 // Persist extended data for future reference (Level 2 drills)
+                 $stmt = $pdo->prepare("UPDATE debug_files SET extended_data = :data WHERE id = :id");
+                 $stmt->execute(['id' => $fileId, 'data' => json_encode($dbResults)]);
+
+                 // Package data for AI prompt
+                 $data['packaged_logs'] = [
+                     'system' => $packagingService->formatSystemEvents($dbResults['system_events'] ?? []),
+                     'disk_health' => $packagingService->formatDiskHealth($dbResults['disk_health'] ?? []),
+                     'connections' => $packagingService->formatConnections($dbResults['connection_logs'] ?? []),
+                     'disk_ops' => $packagingService->formatDiskEvents($dbResults['disk_events'] ?? [])
+                 ];
+             }
+
+             $allDiagnosticData[] = $data;
         }
 
         // 4. Perform AI Analysis

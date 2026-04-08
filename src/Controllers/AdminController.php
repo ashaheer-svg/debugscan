@@ -58,8 +58,31 @@ class AdminController
 
     public function tenants(Request $request, Response $response): Response
     {
-        $stmt = $this->pdo->query("SELECT * FROM users WHERE role = 'tenant' ORDER BY created_at DESC");
-        $tenants = $stmt->fetchAll();
+        $stmt = $this->pdo->query("
+            SELECT 
+                u.*, 
+                COALESCE(SUM(df.file_size_bytes), 0) as total_storage_bytes,
+                COUNT(df.id) as total_entries
+            FROM users u
+            LEFT JOIN debug_files df ON u.id = df.tenant_id
+            WHERE u.role = 'tenant'
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+        ");
+        $tenantsData = $stmt->fetchAll();
+
+        // Format storage strings
+        $tenants = array_map(function($t) {
+            $bytes = (int)$t['total_storage_bytes'];
+            if ($bytes >= 1073741824) {
+                $t['storage_formatted'] = number_format($bytes / 1073741824, 2) . ' GB';
+            } elseif ($bytes >= 1048576) {
+                $t['storage_formatted'] = number_format($bytes / 1048576, 2) . ' MB';
+            } else {
+                $t['storage_formatted'] = number_format($bytes / 1024, 2) . ' KB';
+            }
+            return $t;
+        }, $tenantsData);
 
         $body = $this->view->render('admin/tenants.twig', [
             'tenants' => $tenants,

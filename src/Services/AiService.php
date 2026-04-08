@@ -57,7 +57,40 @@ class AiService
     public function analyze(array $diagnosticData, string $model, int $maxTokens): array
     {
         $systemPrompt = $this->getSystemPrompt();
-        $userPrompt = "Analyze the following Synology diagnostic data and provide a forensic report in strict JSON format:\n\n" . json_encode($diagnosticData, JSON_PRETTY_PRINT);
+        
+        // Assemble User Prompt
+        $userPrompt = "SYNOLOGY FORENSIC DIAGNOSTIC REQUEST\n";
+        $userPrompt .= "====================================\n\n";
+        
+        foreach ($diagnosticData as $index => $fileData) {
+            $userPrompt .= "### DATA SET " . ($index + 1) . "\n";
+            
+            // 1. Hardware Identity
+            $hw = $fileData['hardware'] ?? [];
+            $userPrompt .= "#### DEVICE IDENTITY\n";
+            $userPrompt .= sprintf("- Model: %s | Serial: %s | DSM: %s\n", 
+                $fileData['version']['model'] ?? 'Unknown',
+                $fileData['version']['serial'] ?? 'Unknown',
+                $fileData['version']['version'] ?? 'Unknown'
+            );
+            
+            // 2. Physical Layout & RAID
+            $userPrompt .= "#### STORAGE ARCHITECTURE\n";
+            $userPrompt .= "Pools/Volumes: " . json_encode($fileData['volumes'] ?? []) . "\n";
+            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? []) . "\n\n";
+
+            // 3. Level 1 Packaged Logs (Forensic signal)
+            if (isset($fileData['packaged_logs'])) {
+                $userPrompt .= "#### FORENSIC EVIDENCE BLOCKS (SQLite Extractions)\n";
+                $userPrompt .= $fileData['packaged_logs']['system'] . "\n\n";
+                $userPrompt .= $fileData['packaged_logs']['disk_health'] . "\n\n";
+                $userPrompt .= $fileData['packaged_logs']['connections'] . "\n\n";
+                $userPrompt .= $fileData['packaged_logs']['disk_ops'] . "\n\n";
+            } else {
+                // Fallback to basic JSON if no packaged logs
+                $userPrompt .= "#### BASIC TELEMETRY\n" . json_encode($fileData, JSON_PRETTY_PRINT) . "\n\n";
+            }
+        }
 
         try {
             $response = $this->client->post('chat/completions', [
@@ -84,21 +117,31 @@ class AiService
 
     private function getSystemPrompt(): string
     {
-        // This is a condensed version of the prompt in Spec.md
-        return "You are an expert Synology Forensic Support Engineer. 
-        Analyze the provided diagnostic JSON to identify hardware failures, RAID issues, storage bottlenecks, and system errors.
-        Output MUST be a JSON object with the following structure:
+        return "You are the Lead Forensic Support Engineer for Synology.
+        Your task is to analyze diagnostic 'File Sets' and provide a definitive health audit.
+
+        STRICT RULES:
+        1. EVIDENCE REQUIREMENT: Every finding MUST cite identifying logs (Database tags like [SYNOSYSDB] or [SYNOCONNDB]) or specific hardware telemetry.
+        2. FORENSIC CORRELATION: Correlate error codes across different blocks (e.g., match a 'Disk I/O' block error with a 'Volume Degraded' system event).
+        3. REDUNDANCY CHECK: Distinguish between intermittent cable issues (indicated by PHYRdyChg/BadCRC) and physical media failure (Bad Sectors/UNC).
+        4. ACCURACY: If the data shows no critical issues, provide an 'A' grade and explain the healthy indicators.
+
+        OUTPUT FORMAT (Strict JSON):
         {
-            \"health_score\": \"A-F\",
-            \"summary\": \"Brief overview of the system status\",
+            \"health_score\": \"A|B|C|D|F\",
+            \"summary\": \"Executive overview of system health and critical risks.\",
             \"findings\": [
                 {
-                    \"category\": \"Hardware|Storage|System|Network\",
+                    \"category\": \"Hardware|Storage|Security|System\",
                     \"severity\": \"critical|warning|info|ok\",
-                    \"title\": \"Finding title\",
-                    \"description\": \"Detailed explanation\",
-                    \"recommendation\": \"Actionable steps to resolve\",
-                    \"evidence\": {}
+                    \"title\": \"Finding headline\",
+                    \"description\": \"In-depth technical analysis of the issue.\",
+                    \"recommendation\": \"Specific, actionable remediation steps.\",
+                    \"evidence\": {
+                        \"source\": \"Diagnostic Block Name\",
+                        \"timestamp\": \"Relevant event time\",
+                        \"raw_fragment\": \"Extracted log text or telemetry value\"
+                    }
                 }
             ]
         }";
