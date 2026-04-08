@@ -57,7 +57,7 @@ class ScanService
      */
     public function getJobStatus(string $jobId): array
     {
-        $stmt = $this->pdo->prepare("SELECT id, status, health_score, findings_count, error_message FROM scan_jobs WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT id, status, health_score, findings_count, error_message, progress_percent, progress_stage FROM scan_jobs WHERE id = :id");
         $stmt->execute(['id' => $jobId]);
         $job = $stmt->fetch();
         

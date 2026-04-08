@@ -43,16 +43,25 @@ while (true) {
     }
 
     // 2. Mark as running
-    $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'running', started_at = NOW() WHERE id = :id");
+    $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'running', progress_stage = 'Initializing', progress_percent = 5, started_at = NOW() WHERE id = :id");
     $stmt->execute(['id' => $job['id']]);
     $pdo->commit();
 
     echo "Processing Job: {$job['id']} (Project: {$job['project_id']})\n";
 
     try {
+        // Update function for progress
+        $updateProgress = function($stage, $percent) use ($pdo, $job) {
+            $stmt = $pdo->prepare("UPDATE scan_jobs SET progress_stage = :stage, progress_percent = :percent WHERE id = :id");
+            $stmt->execute(['stage' => $stage, 'percent' => $percent, 'id' => $job['id']]);
+        };
+
         // 3. Collect diagnostic data for all files in the scan
         $allDiagnosticData = [];
-        foreach ($job['debug_file_ids'] as $fileId) {
+        $fileCount = count($job['debug_file_ids']);
+        foreach ($job['debug_file_ids'] as $index => $fileId) {
+             $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 40));
+
              $destPath = $fileService->getExtractedPath($fileId);
              if (!is_dir($destPath)) {
                  echo "Warning: Data not extracted for $fileId. Skipping...\n";
@@ -64,6 +73,7 @@ while (true) {
 
              // Level 1: Extended Database Parsing (SQLite Logs)
              if ($job['scan_level'] === 'level1') {
+                 $updateProgress("Forensic Database Extraction (" . ($index + 1) . "/$fileCount)", 20 + (int)(($index / $fileCount) * 40));
                  $dbParser = new DatabaseParser($destPath);
                  $dbResults = $dbParser->parseAll();
 
@@ -84,16 +94,21 @@ while (true) {
         }
 
         // 4. Perform AI Analysis
+        $updateProgress("AI Forensic Analysis (" . ucfirst($job['scan_level']) . ")", 70);
         $analysis = $aiService->analyze(
             $allDiagnosticData, 
             $job['ai_model'], 
             (int)$job['max_output_tokens']
         );
 
+        $updateProgress("Finalizing Report", 95);
+
         // 5. Save results and mark as completed
         $stmt = $pdo->prepare("
             UPDATE scan_jobs 
             SET status = 'completed', 
+                progress_stage = 'Completed',
+                progress_percent = 100,
                 completed_at = NOW(), 
                 health_score = :health, 
                 result_summary = :summary,

@@ -51,13 +51,14 @@
                             </th>
                             <th style="padding: 12px 0;">Filename</th>
                             <th style="padding: 12px 0;">Size</th>
-                            <th style="padding: 12px 0;">Uploaded</th>
-                            <th style="padding: 12px 24px; text-align: right;">Status</th>
+                            <th style="padding: 12px 0;">Base Extraction</th>
+                            <th style="padding: 12px 0;">Forensic Audit</th>
+                            <th style="padding: 12px 24px; text-align: right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for file in files %}
-                        <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
+                        <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;" id="file-row-{{ file.id }}">
                             <td style="padding: 16px 24px;">
                                 <input type="checkbox" name="file_ids[]" value="{{ file.id }}" class="file-check">
                             </td>
@@ -67,16 +68,32 @@
                             </td>
                             <td style="padding: 16px 0; color: var(--text-secondary);">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
                             <td style="padding: 16px 0;">
-                                <span style="font-size: 10px; font-weight: 700; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase;">
+                                <span id="extraction-status-{{ file.id }}" style="font-size: 10px; font-weight: 700; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase;">
                                     {{ file.extraction_status }}
                                 </span>
                             </td>
+                            <td style="padding: 16px 0;">
+                                <div class="forensic-status-{{ file.id }}" style="display: flex; flex-direction: column; gap: 4px;">
+                                    <div style="display: flex; gap: 4px;">
+                                        <span id="l1-badge-{{ file.id }}" class="badge" title="Level 1" style="background: var(--bg-light); color: var(--text-muted); font-size: 10px; padding: 2px 6px;">L1</span>
+                                        <span id="l2-badge-{{ file.id }}" class="badge" title="Level 2" style="background: var(--bg-light); color: var(--text-muted); font-size: 10px; padding: 2px 6px;">L2</span>
+                                    </div>
+                                    <div id="progress-container-{{ file.id }}" style="display: none;">
+                                        <div style="height: 4px; background: var(--bg-light); border-radius: 2px; overflow: hidden; width: 80px;">
+                                            <div id="progress-bar-{{ file.id }}" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+                                        </div>
+                                        <div id="progress-stage-{{ file.id }}" style="font-size: 9px; color: var(--primary); font-weight: 600;">Queued...</div>
+                                    </div>
+                                </div>
+                            </td>
                             <td style="padding: 16px 24px; text-align: right;">
                                 <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                    {% if file.extraction_status == 'completed' %}
-                                        <a href="/files/raw/{{ file.id }}" target="_blank" class="btn btn-sm" style="background: var(--bg-light); color: var(--text-secondary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--border); text-decoration: none;">JSON</a>
-                                        <a href="/files/report/{{ file.id }}" class="btn btn-sm" style="background: var(--primary-light); color: var(--primary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--primary-light); text-decoration: none;">REPORT</a>
-                                    {% endif %}
+                                    <a href="/files/raw/{{ file.id }}" target="_blank" class="btn btn-sm" title="Raw JSON" style="background: var(--bg-light); color: var(--text-secondary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--border); text-decoration: none;">JSON</a>
+                                    <a href="/files/report/{{ file.id }}" class="btn btn-sm" title="Hardware Report" style="background: var(--primary-light); color: var(--primary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--primary-light); text-decoration: none;">HW</a>
+                                    
+                                    <a href="#" id="l1-btn-{{ file.id }}" class="btn btn-sm" title="Level 1 Report" style="display: none; background: var(--success-light); color: var(--success); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--success-light); text-decoration: none;">L1</a>
+                                    <a href="#" id="l2-btn-{{ file.id }}" class="btn btn-sm" title="Level 2 Report" style="display: none; background: var(--warning-light); color: var(--warning); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--warning-light); text-decoration: none;">L2</a>
+
                                     <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn btn-sm" style="background: var(--white); color: var(--error); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--error-light);">DELETE</button>
                                 </div>
                             </td>
@@ -335,6 +352,118 @@
             fileInput.value = '';
         }, 5000);
     }
+
+    const activeScans = new Map();
+
+    // Initialize state from server-side data
+    {% for scan in scans %}
+        {% if scan.status in ['queued', 'running'] %}
+            activeScans.set('{{ scan.id }}', {
+                level: '{{ scan.scan_level }}',
+                files: {{ scan.debug_file_ids|json_encode|raw }}
+            });
+        {% elseif scan.status == 'completed' %}
+            {# Immediately show buttons for completed historic scans #}
+            {% for fid in scan.debug_file_ids %}
+                (function() {
+                    const fid = '{{ fid }}';
+                    const level = '{{ scan.scan_level }}';
+                    const btn = document.getElementById(level + '-btn-' + fid);
+                    const badge = document.getElementById(level + '-badge-' + fid);
+                    if (btn) {
+                        btn.style.display = 'inline-block';
+                        btn.href = '/scans/report/{{ scan.id }}';
+                    }
+                    if (badge) {
+                        badge.style.background = level === 'level1' ? 'var(--success-light)' : 'var(--warning-light)';
+                        badge.style.color = level === 'level1' ? 'var(--success)' : 'var(--warning)';
+                    }
+                })();
+            {% endfor %}
+        {% endif %}
+    {% endfor %}
+
+    function pollScans() {
+        if (activeScans.size === 0) return;
+
+        activeScans.forEach((data, scanId) => {
+            fetch(`/scans/status/${scanId}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(job => {
+                const isFinished = job.status === 'completed' || job.status === 'failed';
+                
+                job.debug_file_ids.forEach(fid => {
+                    const container = document.getElementById('progress-container-' + fid);
+                    const bar = document.getElementById('progress-bar-' + fid);
+                    const stage = document.getElementById('progress-stage-' + fid);
+                    const l1Btn = document.getElementById('l1-btn-' + fid);
+                    const l2Btn = document.getElementById('l2-btn-' + fid);
+                    const badge = document.getElementById(job.scan_level + '-badge-' + fid);
+
+                    if (job.status === 'running' || job.status === 'queued') {
+                        container.style.display = 'block';
+                        bar.style.width = (job.progress_percent || 0) + '%';
+                        stage.innerText = job.progress_stage || 'Queued...';
+                    } else if (isFinished) {
+                        container.style.display = 'none';
+                        if (job.status === 'completed') {
+                            const btn = job.scan_level === 'level1' ? l1Btn : l2Btn;
+                            if (btn) {
+                                btn.style.display = 'inline-block';
+                                btn.href = '/scans/report/' + job.id;
+                            }
+                            if (badge) {
+                                badge.style.background = job.scan_level === 'level1' ? 'var(--success-light)' : 'var(--warning-light)';
+                                badge.style.color = job.scan_level === 'level1' ? 'var(--success)' : 'var(--warning)';
+                            }
+                        }
+                    }
+                });
+
+                if (isFinished) {
+                    activeScans.delete(scanId);
+                    if (job.status === 'completed') {
+                        // Optionally reload if we want the history table updated too
+                        // location.reload(); 
+                    }
+                }
+            })
+            .catch(e => console.error("Poll error:", e));
+        });
+    }
+
+    // Start polling if needed
+    if (activeScans.size > 0) {
+        setInterval(pollScans, 3000);
+    }
+
+    // Update startScan to handle AJAX and start polling
+    document.getElementById('analysisForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                activeScans.set(data.job_id, {
+                    level: formData.get('level'),
+                    files: data.debug_file_ids
+                });
+                pollScans(); // Start immediately
+                setInterval(pollScans, 3000);
+            } else {
+                alert(data.message || 'Failed to start scan');
+            }
+        })
+        .catch(err => alert('Error starting scan: ' + err));
+    });
 
     function deleteFile(id) {
         if (!confirm('Are you sure you want to delete this log file? This will also remove all extracted temporary data.')) {

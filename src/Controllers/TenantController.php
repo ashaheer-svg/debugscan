@@ -278,10 +278,27 @@ class TenantController
             $settings = $stmt->fetch();
             $model = ($level === 'level1') ? $settings['level1_model'] : $settings['level2_model'];
 
-            $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
+            $jobId = $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
             
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'job_id' => $jobId,
+                    'debug_file_ids' => $fileIds,
+                    'message' => 'Scan job queued successfully.'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
             $_SESSION['success'] = 'Scan job queued successfully. Analysis is running in background.';
         } catch (\Exception $e) {
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Failed to queue scan: ' . $e->getMessage()
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            }
             $_SESSION['error'] = 'Failed to queue scan: ' . $e->getMessage();
         }
 
@@ -395,6 +412,27 @@ class TenantController
         $stmt->execute(['id' => $id]);
 
         $response->getBody()->write(json_encode(['success' => true, 'message' => 'Diagnostic log deleted successfully.']));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function getScanStatus(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        $stmt = $this->pdo->prepare("
+            SELECT id, status, progress_percent, progress_stage, debug_file_ids, result_summary
+            FROM scan_jobs 
+            WHERE id = :id AND tenant_id = :tid
+        ");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+        $job = $stmt->fetch();
+
+        if (!$job) {
+            return $response->withStatus(404);
+        }
+
+        $response->getBody()->write(json_encode($job));
         return $response->withHeader('Content-Type', 'application/json');
     }
 }
