@@ -28,9 +28,20 @@ $aiService = new AiService($aiApiKey);
 
 echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
+echo "DEBUG: DB_NAME: " . getenv('DB_NAME') . "\n";
+echo "DEBUG: GROQ_KEY: " . substr($aiApiKey, 0, 8) . "...\n";
 
 while (true) {
-    // 1. Pick up a queued job using SKIP LOCKED to avoid multiple workers picking the same job
+    // 1. Pick up a queued job
+    $stmt = $pdo->prepare("
+        SELECT id, status
+        FROM scan_jobs
+        LIMIT 1
+    ");
+    $stmt->execute();
+    $test = $stmt->fetch();
+    echo "DEBUG: Simple scan_jobs count test: " . ($test ? 'found one' : 'zero rows found') . "\n";
+
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
         SELECT id, tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
@@ -45,7 +56,9 @@ while (true) {
 
     if (!$job) {
         $pdo->rollBack();
-        sleep(2); // Wait before checking again
+        echo "DEBUG: No queued jobs found.\n";
+        if (isset($argv[1]) && $argv[1] === 'once') break;
+        sleep(2);
         continue;
     }
 
