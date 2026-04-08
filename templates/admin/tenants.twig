@@ -51,9 +51,26 @@
                 </td>
                 <td style="padding: 16px 0; font-weight: 600;">{{ tenant.tokens_available|number_format }}</td>
                 <td style="padding: 16px 0; color: var(--text-secondary);">{{ tenant.scans_level1_count }} / {{ tenant.scans_level2_count }}</td>
-                <td style="padding: 16px 0; text-align: right;">
-                    <button class="btn btn-sm" style="background: var(--bg-light); color: var(--primary); font-weight: 600; padding: 4px 12px; font-size: 11px;">Allocate Tokens</button>
-                    <button class="btn btn-sm" style="background: var(--bg-light); color: var(--text-primary); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 8px;">Edit</button>
+                <td style="padding: 16px 0; text-align: right; white-space: nowrap;">
+                    <button class="btn btn-sm btn-allocate" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" style="background: var(--bg-light); color: var(--primary); font-weight: 600; padding: 4px 12px; font-size: 11px;">Allocate</button>
+                    
+                    {% if tenant.status == 'active' %}
+                    <form action="/admin/tenants/toggle-status" method="POST" style="display: inline;">
+                        <input type="hidden" name="id" value="{{ tenant.id }}">
+                        <input type="hidden" name="status" value="inactive">
+                        <button type="submit" class="btn btn-sm" style="background: var(--bg-light); color: var(--warning); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 4px;">Deactivate</button>
+                    </form>
+                    {% else %}
+                    <form action="/admin/tenants/toggle-status" method="POST" style="display: inline;">
+                        <input type="hidden" name="id" value="{{ tenant.id }}">
+                        <input type="hidden" name="status" value="active">
+                        <button type="submit" class="btn btn-sm" style="background: var(--bg-light); color: var(--success); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 4px;">Activate</button>
+                    </form>
+                    {% endif %}
+
+                    <button class="btn btn-sm btn-edit" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" data-email="{{ tenant.email }}" style="background: var(--bg-light); color: var(--text-primary); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 4px;">Edit</button>
+                    
+                    <button class="btn btn-sm btn-delete" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" style="background: var(--bg-light); color: var(--error); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 4px;">Delete</button>
                 </td>
             </tr>
             {% endfor %}
@@ -67,16 +84,75 @@
     {% endif %}
 </div>
 
+<!-- Edit Tenant Modal -->
+<dialog id="editModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 530px; background: var(--white); margin: auto;">
+    <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Edit Tenant: <span id="editTenantTitle"></span></h2>
+        <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+    <form action="/admin/tenants/update" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" id="edit_id" name="id">
+        <div class="form-group">
+            <label for="edit_org_name" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Organization Name</label>
+            <input type="text" id="edit_org_name" name="org_name" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+        </div>
+        <div style="display: flex; gap: 16px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="edit_email" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Admin Email</label>
+                <input type="email" id="edit_email" name="email" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="edit_password" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">New Password (Optional)</label>
+                <input type="password" id="edit_password" name="password" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+            </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+            <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Save Changes</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Allocate Tokens Modal -->
+<dialog id="allocateModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 400px; background: var(--white); margin: auto;">
+    <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Allocate Tokens</h2>
+        <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+    <form action="/admin/tenants/allocate" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <input type="hidden" id="allocate_id" name="id">
+        <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Allocating tokens to <strong id="allocateTenantName"></strong></p>
+        <div class="form-group">
+            <label for="allocate_amount" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Amount to Add</label>
+            <input type="number" id="allocate_amount" name="amount" required value="100000" min="1" step="1" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+            <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Add Tokens</button>
+        </div>
+    </form>
+</dialog>
+
+<!-- Delete Confirmation Modal -->
+<dialog id="deleteModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 400px; background: var(--white); margin: auto;">
+    <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px; text-align: center;">
+        <h3 style="font-size: 20px; margin: 0; color: var(--text-primary);">Delete Tenant?</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.5;">
+            This will permanently delete <strong id="deleteTenantName"></strong> and all associated forensic data. This action cannot be undone.
+        </p>
+        <form action="/admin/tenants/delete" method="POST" style="display: flex; justify-content: center; gap: 12px; margin-top: 12px;">
+            <input type="hidden" id="delete_id" name="id">
+            <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--row-border); padding: 10px 20px; border-radius: 4px; font-weight: 500;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="background: var(--error); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 500;">Delete Permanently</button>
+        </form>
+    </div>
+</dialog>
+
 <!-- Provision Tenant Modal -->
-<style>
-    #provisionModal::backdrop {
-        background: rgba(0, 0, 0, 0.5);
-    }
-</style>
 <dialog id="provisionModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 530px; background: var(--white); margin: auto;">
     <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Provision New Tenant</h2>
-        <button type="button" id="btnCloseModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+        <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
     <form action="/admin/tenants/create" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
         <div class="form-group">
@@ -98,39 +174,69 @@
             <input type="number" id="tokens" name="tokens" required value="500000" min="0" step="1" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
-            <button type="button" id="btnCancelModal" class="btn" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
+            <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
             <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Provision Tenant</button>
         </div>
     </form>
 </dialog>
 
 <script>
-    const modal = document.getElementById('provisionModal');
-    const btnOpen = document.getElementById('btnProvision');
-    const btnClose = document.getElementById('btnCloseModal');
-    const btnCancel = document.getElementById('btnCancelModal');
+    const provisionModal = document.getElementById('provisionModal');
+    const editModal = document.getElementById('editModal');
+    const allocateModal = document.getElementById('allocateModal');
+    const deleteModal = document.getElementById('deleteModal');
 
-    btnOpen.addEventListener('click', () => modal.showModal());
-    btnClose.addEventListener('click', () => modal.close());
-    btnCancel.addEventListener('click', () => modal.close());
-    
-    // Close when clicking outside
-    modal.addEventListener('click', (e) => {
-        const dialogDimensions = modal.getBoundingClientRect()
-        if (
-            e.clientX < dialogDimensions.left ||
-            e.clientX > dialogDimensions.right ||
-            e.clientY < dialogDimensions.top ||
-            e.clientY > dialogDimensions.bottom
-        ) {
-            modal.close()
-        }
+    // Button Triggers
+    document.getElementById('btnProvision').addEventListener('click', () => provisionModal.showModal());
+
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('edit_id').value = btn.dataset.id;
+            document.getElementById('edit_org_name').value = btn.dataset.name;
+            document.getElementById('edit_email').value = btn.dataset.email;
+            document.getElementById('editTenantTitle').textContent = btn.dataset.name;
+            editModal.showModal();
+        });
     });
 
-    // Auto-hide alerts after 4 seconds
+    document.querySelectorAll('.btn-allocate').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('allocate_id').value = btn.dataset.id;
+            document.getElementById('allocateTenantName').textContent = btn.dataset.name;
+            allocateModal.showModal();
+        });
+    });
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.getElementById('delete_id').value = btn.dataset.id;
+            document.getElementById('deleteTenantName').textContent = btn.dataset.name;
+            deleteModal.showModal();
+        });
+    });
+
+    // Modal Close Logic
+    document.querySelectorAll('.btn-close-modal, .btn-cancel-modal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.target.closest('dialog').close();
+        });
+    });
+
+    // Close on backdrop click for all dialogs
+    document.querySelectorAll('dialog').forEach(d => {
+        d.addEventListener('click', (e) => {
+            const rect = d.getBoundingClientRect();
+            if (e.clientX < rect.left || e.clientX > rect.right || e.clientY < rect.top || e.clientY > rect.bottom) {
+                d.close();
+            }
+        });
+    });
+
+    // Auto-hide alerts
     setTimeout(() => {
         document.querySelectorAll('div[style*="var(--success-light)"], div[style*="var(--error-light)"]').forEach(el => {
-            el.style.display = 'none';
+            el.style.opacity = '0';
+            setTimeout(() => el.style.display = 'none', 500);
         });
     }, 4000);
 </script>

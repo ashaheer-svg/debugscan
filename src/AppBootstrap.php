@@ -112,6 +112,10 @@ class AppBootstrap
             $group->get('/admin', [AdminController::class, 'dashboard']);
             $group->get('/admin/tenants', [AdminController::class, 'tenants']);
             $group->post('/admin/tenants/create', [AdminController::class, 'createTenant']);
+            $group->post('/admin/tenants/update', [AdminController::class, 'updateTenant']);
+            $group->post('/admin/tenants/toggle-status', [AdminController::class, 'toggleTenantStatus']);
+            $group->post('/admin/tenants/delete', [AdminController::class, 'deleteTenant']);
+            $group->post('/admin/tenants/allocate', [AdminController::class, 'allocateTokens']);
             $group->get('/admin/logs', [AdminController::class, 'logs']);
             $group->get('/admin/settings', [AdminController::class, 'settings']);
             $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);

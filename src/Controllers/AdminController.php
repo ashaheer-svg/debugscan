@@ -93,6 +93,7 @@ class AdminController
             $stmt = $this->pdo->prepare("
                 INSERT INTO users (email, password_hash, display_name, role, status, tokens_available)
                 VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
+                RETURNING id
             ");
             $stmt->execute([
                 'email' => $email,
@@ -100,7 +101,14 @@ class AdminController
                 'name' => $orgName,
                 'tokens' => $tokens
             ]);
+            $tenantId = $stmt->fetchColumn();
             
+            $this->logAction($request, 'user_created', 'users', $tenantId, [
+                'email' => $email,
+                'display_name' => $orgName,
+                'tokens' => $tokens
+            ]);
+
             $_SESSION['success'] = "Tenant '{$orgName}' has been provisioned successfully.";
         } catch (\PDOException $e) {
             if ($e->getCode() === '23505') { // Unique violation
@@ -111,6 +119,131 @@ class AdminController
         }
 
         return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+    }
+
+    public function updateTenant(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $id = $data['id'] ?? null;
+        $orgName = trim($data['org_name'] ?? '');
+        $email = trim($data['email'] ?? '');
+        $password = $data['password'] ?? '';
+
+        if (!$id || empty($orgName) || empty($email)) {
+            $_SESSION['error'] = 'ID, Organization Name, and Email are required.';
+            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        }
+
+        try {
+            $sql = "UPDATE users SET display_name = :name, email = :email, updated_at = NOW()";
+            $params = ['name' => $orgName, 'email' => $email, 'id' => $id];
+
+            if (!empty($password)) {
+                $sql .= ", password_hash = :pass";
+                $params['pass'] = password_hash($password, PASSWORD_BCRYPT);
+            }
+
+            $sql .= " WHERE id = :id AND role = 'tenant'";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute($params);
+
+            $this->logAction($request, 'user_updated', 'users', $id, [
+                'email' => $email,
+                'display_name' => $orgName,
+                'password_changed' => !empty($password)
+            ]);
+
+            $_SESSION['success'] = "Tenant '{$orgName}' updated successfully.";
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '23505') {
+                $_SESSION['error'] = 'A user with that email already exists.';
+            } else {
+                $_SESSION['error'] = 'Failed to update tenant: ' . $e->getMessage();
+            }
+        }
+
+        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+    }
+
+    public function toggleTenantStatus(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $id = $data['id'] ?? null;
+        $status = $data['status'] ?? null;
+
+        if (!$id || !in_array($status, ['active', 'inactive'])) {
+            $_SESSION['error'] = 'Invalid status toggle request.';
+            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        }
+
+        $stmt = $this->pdo->prepare("UPDATE users SET status = :status, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['status' => $status, 'id' => $id]);
+
+        $this->logAction($request, $status === 'active' ? 'user_updated' : 'user_deactivated', 'users', $id, ['new_status' => $status]);
+
+        $_SESSION['success'] = "Tenant status changed to " . ucfirst($status) . ".";
+        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+    }
+
+    public function deleteTenant(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $id = $data['id'] ?? null;
+
+        if (!$id) {
+            $_SESSION['error'] = 'Tenant ID required for deletion.';
+            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        }
+
+        $stmt = $this->pdo->prepare("DELETE FROM users WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['id' => $id]);
+
+        $this->logAction($request, 'user_deleted', 'users', $id);
+
+        $_SESSION['success'] = "Tenant permanently deleted.";
+        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+    }
+
+    public function allocateTokens(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $id = $data['id'] ?? null;
+        $amount = (int)($data['amount'] ?? 0);
+
+        if (!$id || $amount <= 0) {
+            $_SESSION['error'] = 'Valid amount and Tenant ID required.';
+            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        }
+
+        $stmt = $this->pdo->prepare("UPDATE users SET tokens_available = tokens_available + :amount, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['amount' => $amount, 'id' => $id]);
+
+        $this->logAction($request, 'tokens_allocated', 'users', $id, ['amount' => $amount]);
+
+        $_SESSION['success'] = "Allocated {$amount} tokens successfully.";
+        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+    }
+
+    private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = []): void
+    {
+        $userId = $_SESSION['user_id'] ?? null;
+        $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        $ua = $request->getServerParams()['HTTP_USER_AGENT'] ?? null;
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO audit_log (user_id, action, resource_type, resource_id, details, ip_address, user_agent)
+            VALUES (:uid, :act, :rt, :rid, :details, :ip, :ua)
+        ");
+        
+        $stmt->execute([
+            'uid' => $userId,
+            'act' => $action,
+            'rt' => $resourceType,
+            'rid' => $resourceId,
+            'details' => json_encode($details),
+            'ip' => $ip,
+            'ua' => $ua
+        ]);
     }
 
     public function logs(Request $request, Response $response): Response
