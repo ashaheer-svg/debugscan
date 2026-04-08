@@ -73,7 +73,7 @@
         background: rgba(0, 0, 0, 0.5);
     }
 </style>
-<dialog id="provisionModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 480px; background: var(--white); margin: auto;">
+<dialog id="provisionModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 530px; background: var(--white); margin: auto;">
     <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Provision New Tenant</h2>
         <button type="button" id="btnCloseModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
@@ -83,13 +83,15 @@
             <label for="org_name" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Organization Name</label>
             <input type="text" id="org_name" name="org_name" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="e.g. Acme Corp Forensic Team">
         </div>
-        <div class="form-group">
-            <label for="email" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Admin Email</label>
-            <input type="email" id="email" name="email" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="admin@acme.com">
-        </div>
-        <div class="form-group">
-            <label for="password" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Password</label>
-            <input type="password" id="password" name="password" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+        <div style="display: flex; gap: 16px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="email" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Admin Email</label>
+                <input type="email" id="email" name="email" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="admin@acme.com">
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label for="password" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Password</label>
+                <input type="password" id="password" name="password" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+            </div>
         </div>
         <div class="form-group">
             <label for="tokens" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Tokens</label>
