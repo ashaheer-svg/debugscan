@@ -90,10 +90,14 @@ class AdminController
 
         try {
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+            // We use a CTE to insert and set tenant_id to the new id in one go
             $stmt = $this->pdo->prepare("
-                INSERT INTO users (email, password_hash, display_name, role, status, tokens_available)
-                VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
-                RETURNING id
+                WITH new_user AS (
+                    INSERT INTO users (email, password_hash, display_name, role, status, tokens_available)
+                    VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
+                    RETURNING id
+                )
+                UPDATE users SET tenant_id = id FROM new_user WHERE users.id = new_user.id RETURNING users.id
             ");
             $stmt->execute([
                 'email' => $email,
