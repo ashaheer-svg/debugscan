@@ -1,0 +1,136 @@
+# Fresh VPS Provisioning Guide: AI DebugScan v3
+
+This guide provides step-by-step instructions to set up a clean Ubuntu 22.04/24.04 server for the AI DebugScan platform.
+
+> [!IMPORTANT]
+> This assumes you have just reinstalled Ubuntu and have a fresh terminal as `root`.
+
+## 1. System Preparation
+Update the system and install essential tools.
+```bash
+apt update && apt upgrade -y
+apt install -y curl git unzip build-essential software-properties-common
+```
+
+## 2. Install PHP 8.2 & Extensions
+The application requires PHP 8.2 and specific libraries for PostgreSQL, XML, and Zip support.
+```bash
+add-apt-repository ppa:ondrej/php -y
+apt update
+apt install -y php8.2-fpm php8.2-cli php8.2-pgsql php8.2-xml php8.2-mbstring php8.2-zip php8.2-curl php8.2-intl
+```
+
+## 3. Install Web & Database Servers
+```bash
+apt install -y nginx postgresql postgresql-contrib
+```
+
+### Configure PostgreSQL
+Create the database and a dedicated user.
+```bash
+sudo -u postgres psql -c "CREATE DATABASE aidebugscan;"
+sudo -u postgres psql -c "CREATE USER scanuser WITH PASSWORD 'SET_YOUR_PASSWORD_HERE';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE aidebugscan TO scanuser;"
+```
+
+## 4. Install Composer
+```bash
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/composer
+```
+
+## 5. Set Up Git-Based Deployment
+This allows you to deploy by simply running `git push production main`.
+
+### Create the Repositories
+```bash
+mkdir -p /var/repo/ai-debugscan3.git
+cd /var/repo/ai-debugscan3.git
+git init --bare
+```
+
+### Create the Post-Receive Hook
+Create a file at `/var/repo/ai-debugscan3.git/hooks/post-receive`:
+```bash
+nano /var/repo/ai-debugscan3.git/hooks/post-receive
+```
+
+**Paste the following content**:
+```bash
+#!/bin/bash
+TARGET="/var/www/ai-debugscan3"
+GIT_DIR="/var/repo/ai-debugscan3.git"
+
+mkdir -p $TARGET
+git --work-tree=$TARGET --git-dir=$GIT_DIR checkout -f main
+
+# Set permissions
+chown -R www-data:www-data $TARGET
+
+# Run Composer automatically
+cd $TARGET
+sudo -u www-data composer install --no-dev --optimize-autoloader
+```
+**Make it executable**:
+```bash
+chmod +x /var/repo/ai-repo/ai-debugscan3.git/hooks/post-receive
+```
+
+## 6. Nginx Configuration
+Create a site file at `/etc/nginx/sites-available/aidebugscan`:
+```nginx
+server {
+    listen 80;
+    server_name YOUR_IP_OR_DOMAIN;
+    root /var/www/ai-debugscan3/public;
+
+    index index.php;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+    }
+}
+```
+**Enable and restart**:
+```bash
+ln -s /etc/nginx/sites-available/aidebugscan /etc/nginx/sites-enabled/
+rm /etc/nginx/sites-enabled/default
+systemctl restart nginx
+```
+
+## 7. Background Worker (Systemd)
+Create `/etc/systemd/system/scan-worker.service`:
+```ini
+[Unit]
+Description=AI DebugScan Background Worker
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/ai-debugscan3
+ExecStart=/usr/bin/php /var/www/ai-debugscan3/workers/scan_worker.php
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+**Start the worker**:
+```bash
+systemctl daemon-reload
+systemctl enable --now scan-worker
+```
+
+## 8. Final Local Steps (on your computer)
+Update your local Git remote to point to the new server:
+```powershell
+git remote remove production
+git remote add production root@YOUR_IP_ADDRESS:/var/repo/ai-debugscan3.git
+git push production main --force
+```
