@@ -378,7 +378,7 @@ class TenantController
         $tenantId = $request->getAttribute('tenant_id');
 
         // 1. Verify ownership and get file info
-        $stmt = $this->pdo->prepare("SELECT id, stored_path FROM debug_files WHERE id = :id AND tenant_id = :tid");
+        $stmt = $this->pdo->prepare("SELECT id, storage_path FROM debug_files WHERE id = :id AND tenant_id = :tid");
         $stmt->execute(['id' => $id, 'tid' => $tenantId]);
         $file = $stmt->fetch();
 
@@ -388,7 +388,7 @@ class TenantController
         }
 
         // 2. Physical Cleanup
-        $this->fileService->deleteProjectFile($id, $file['stored_path']);
+        $this->fileService->deleteProjectFile($id, $file['storage_path']);
 
         // 3. Database Cleanup
         $stmt = $this->pdo->prepare("DELETE FROM debug_files WHERE id = :id");
