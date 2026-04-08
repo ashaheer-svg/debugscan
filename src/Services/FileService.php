@@ -112,11 +112,31 @@ class FileService
         return $this->extractedDir . DIRECTORY_SEPARATOR . $fileId;
     }
 
-    public function cleanupExtracted(string $fileId): void
+    /**
+     * Delete both the raw upload and the extracted folder.
+     */
+    public function deleteProjectFile(string $fileId, ?string $storedPath): void
     {
+        // 1. Delete raw archive
+        if ($storedPath && file_exists($storedPath)) {
+            unlink($storedPath);
+        }
+
+        // 2. Delete extracted directory
         $path = $this->getExtractedPath($fileId);
         if (is_dir($path)) {
-            // Recursive directory removal would go here
+            $this->recursiveRmdir($path);
         }
+    }
+
+    private function recursiveRmdir(string $dir): void
+    {
+        if (!is_dir($dir)) return;
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            (is_dir($path)) ? $this->recursiveRmdir($path) : unlink($path);
+        }
+        rmdir($dir);
     }
 }

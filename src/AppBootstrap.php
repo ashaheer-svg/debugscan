@@ -116,6 +116,7 @@ class AppBootstrap
             // Log File Analysis Routes
             $group->get('/files/raw/{id}', [TenantController::class, 'viewRawData']);
             $group->get('/files/report/{id}', [TenantController::class, 'viewHardwareReport']);
+            $group->post('/files/delete/{id}', [TenantController::class, 'deleteLogFile']);
             
             // Admin Routes
             $group->get('/admin', [AdminController::class, 'dashboard']);
