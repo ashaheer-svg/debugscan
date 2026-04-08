@@ -30,6 +30,7 @@ echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
 echo "DEBUG: DB_NAME ENV: " . getenv('DB_NAME') . "\n";
 echo "DEBUG: DB CONNECTED: " . $pdo->query("SELECT current_database()")->fetchColumn() . "\n";
+echo "DEBUG: DB VERSION: " . $pdo->query("SELECT version()")->fetchColumn() . "\n";
 echo "DEBUG: DB USER: " . $pdo->query("SELECT current_user")->fetchColumn() . "\n";
 echo "DEBUG: GROQ_KEY: " . substr($aiApiKey, 0, 8) . "...\n";
 
