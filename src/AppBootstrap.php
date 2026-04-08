@@ -113,6 +113,10 @@ class AppBootstrap
             $group->post('/projects/scan/{id}', [TenantController::class, 'startScan']);
             $group->get('/scans/report/{id}', [TenantController::class, 'viewReport']);
             
+            // Log File Analysis Routes
+            $group->get('/files/raw/{id}', [TenantController::class, 'viewRawData']);
+            $group->get('/files/report/{id}', [TenantController::class, 'viewHardwareReport']);
+            
             // Admin Routes
             $group->get('/admin', [AdminController::class, 'dashboard']);
             $group->get('/admin/tenants', [AdminController::class, 'tenants']);

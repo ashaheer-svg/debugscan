@@ -1,0 +1,141 @@
+{% extends "layout/dashboard.twig" %}
+
+{% set active_page = 'projects' %}
+
+{% block title %}Hardware Audit - {{ file.nas_model|default('Unknown') }}{% endblock %}
+
+{% block dashboard_content %}
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+            <a href="/projects/view/{{ project.id }}" style="text-decoration: none; color: var(--text-muted); font-size: 13px;">{{ project.name }}</a>
+            <span style="color: var(--text-muted); font-size: 13px;">/</span>
+            <span style="color: var(--text-primary); font-size: 13px; font-weight: 600;">Hardware Audit</span>
+        </div>
+        <h1 class="page-title">Hardware Discovery Report</h1>
+        <p class="page-subtitle">Platform audit generated from <code>{{ file.original_filename }}</code></p>
+    </div>
+    <div style="display: flex; gap: 12px;">
+        <a href="/files/raw/{{ file.id }}" target="_blank" class="btn" style="background: var(--white); border: 1px solid var(--border); color: var(--text-primary); width: auto; text-decoration: none;">View Raw JSON</a>
+    </div>
+</header>
+
+<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px;">
+    <!-- System Identity -->
+    <section style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px;">System Identity</h3>
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px;">
+            <span style="font-size: 13px; color: var(--text-secondary);">Model</span>
+            <span style="font-size: 13px; font-weight: 700;">{{ data.hardware.model|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">Serial Number</span>
+            <span style="font-size: 13px; font-weight: 700; font-family: monospace;">{{ data.hardware.serial|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">CPU Architecture</span>
+            <span style="font-size: 13px; font-weight: 600;">{{ data.hardware.cpu_model|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">Physical RAM</span>
+            <span style="font-size: 13px; font-weight: 600;">{{ data.hardware.ram_gb ? data.hardware.ram_gb ~ ' GB' : '--' }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">System Uptime</span>
+            <span style="font-size: 13px; font-weight: 600;">{{ data.hardware.uptime_days|default('0') }} days</span>
+        </div>
+    </section>
+
+    <!-- OS / Software -->
+    <section style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 20px; letter-spacing: 0.5px;">Software Environment</h3>
+        <div style="display: grid; grid-template-columns: 140px 1fr; gap: 12px;">
+            <span style="font-size: 13px; color: var(--text-secondary);">DSM Version</span>
+            <span style="font-size: 13px; font-weight: 700;">{{ data.version.product|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">Build Number</span>
+            <span style="font-size: 13px; font-weight: 600;">{{ data.version.build|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">Build Date</span>
+            <span style="font-size: 13px; font-weight: 600;">{{ data.version.build_date|default('--') }}</span>
+            
+            <span style="font-size: 13px; color: var(--text-secondary);">Major Release</span>
+            <span style="font-size: 13px; font-weight: 600;">DSM {{ data.version.major|default('--') }}</span>
+        </div>
+    </section>
+</div>
+
+<!-- Storage Inventory -->
+<section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden; margin-bottom: 32px;">
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border);">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">Discovery: Disk Inventory</h3>
+    </div>
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                <th style="padding: 12px 24px;">Device</th>
+                <th style="padding: 12px 0;">Bay/Unit</th>
+                <th style="padding: 12px 0;">Model / Serial</th>
+                <th style="padding: 12px 0;">Capacity</th>
+                <th style="padding: 12px 0;">Temp</th>
+                <th style="padding: 12px 24px; text-align: right;">Health Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for id, disk in data.disks %}
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
+                <td style="padding: 16px 24px; font-family: monospace; font-weight: 700;">{{ id }}</td>
+                <td style="padding: 16px 0;">
+                    {% if disk.container %}
+                        <span style="font-size: 11px; background: #f0f2f5; padding: 2px 6px; border-radius: 3px; font-weight: 600;">{{ disk.container }} [Slot {{ disk.slot }}]</span>
+                    {% else %}
+                        <span style="color: var(--text-muted);">Internal</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 0;">
+                    <div style="font-weight: 600;">{{ disk.model|default('--') }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;">{{ disk.serial|default('--') }}</div>
+                </td>
+                <td style="padding: 16px 0;">{{ disk.size_gb|default('0') }} GB</td>
+                <td style="padding: 16px 0;">
+                    {% if disk.temp %}
+                        <span style="color: {% if disk.temp > 45 %}var(--warning){% else %}var(--success){% endif %};">{{ disk.temp }}°C</span>
+                    {% else %}--{% endif %}
+                </td>
+                <td style="padding: 16px 24px; text-align: right;">
+                    <span style="font-size: 11px; font-weight: 700; color: {% if disk.status == 'normal' or disk.status == 'detected' %}var(--success){% else %}var(--error){% endif %}; text-transform: uppercase;">
+                        {{ disk.status|default('Unknown') }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+<!-- Logic / RAID Summary -->
+<section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden;">
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border);">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">Storage Hierarchy (RAID/LVM)</h3>
+    </div>
+    <div style="padding: 24px;">
+        {% if data.raid %}
+            <div style="display: flex; flex-direction: column; gap: 24px;">
+                {% for array, info in data.raid %}
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                            <span style="font-weight: 700; font-size: 16px;">{{ array }}</span>
+                            <span style="background: var(--primary-light); color: var(--primary); padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700;">{{ info.level|upper }}</span>
+                            <span style="color: {% if info.status == 'clean' or info.status == 'active' %}var(--success){% else %}var(--warning){% endif %}; font-weight: 600; font-size: 13px;">{{ info.status|upper }}</span>
+                        </div>
+                        <div style="font-family: monospace; font-size: 12px; background: #1e293b; color: #cbd5e1; padding: 12px; border-radius: 6px; overflow-x: auto;">
+                            {{ info.raw|default('No raw data captured.')|nl2br }}
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div style="text-align: center; padding: 24px; color: var(--text-muted);">
+                No active RAID arrays detected in this log.
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

@@ -321,4 +321,54 @@ class TenantController
         $response->getBody()->write($body);
         return $response;
     }
+
+    public function viewRawData(Request $request, Response $response, array $args): Response
+    {
+        $fileId = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        $stmt = $this->pdo->prepare("SELECT extraction_data FROM debug_files WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $fileId, 'tid' => $tenantId]);
+        $data = $stmt->fetchColumn();
+
+        if (!$data) {
+            $response->getBody()->write(json_encode(['error' => 'No extraction data available or file not found.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $response->getBody()->write($data);
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function viewHardwareReport(Request $request, Response $response, array $args): Response
+    {
+        $fileId = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        // Fetch File Info
+        $stmt = $this->pdo->prepare("SELECT * FROM debug_files WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $fileId, 'tid' => $tenantId]);
+        $file = $stmt->fetch();
+
+        if (!$file) {
+            return $response->withHeader('Location', '/projects')->withStatus(302);
+        }
+
+        // Fetch Project Info
+        $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = :pid");
+        $stmt->execute(['pid' => $file['project_id']]);
+        $project = $stmt->fetch();
+
+        // Decode Data
+        $data = json_decode($file['extraction_data'] ?: '{}', true);
+
+        $body = $this->view->render('tenant/hardware_report.twig', [
+            'file' => $file,
+            'project' => $project,
+            'data' => $data,
+            'active_page' => 'projects'
+        ]);
+        $response->getBody()->write($body);
+        return $response;
+    }
 }
