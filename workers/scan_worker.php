@@ -36,8 +36,13 @@ echo "DEBUG: GROQ_KEY: " . substr($aiApiKey, 0, 8) . "...\n";
 
 while (true) {
     // 1. Pick up a queued job
-    $tables = $pdo->query("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname = 'public'")->fetchAll(PDO::FETCH_COLUMN);
-    echo "DEBUG: Tables in public: " . implode(', ', $tables) . "\n";
+    $allTables = $pdo->query("SELECT schemaname, tablename FROM pg_catalog.pg_tables ORDER BY schemaname, tablename")->fetchAll(PDO::FETCH_ASSOC);
+    echo "DEBUG: Available Tables:\n";
+    foreach ($allTables as $t) {
+        if ($t['schemaname'] !== 'pg_catalog' && $t['schemaname'] !== 'information_schema') {
+            echo "  - {$t['schemaname']}.{$t['tablename']}\n";
+        }
+    }
 
     $stmt = $pdo->prepare("
         SELECT id, status
