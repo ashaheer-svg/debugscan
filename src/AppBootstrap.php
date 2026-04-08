@@ -111,6 +111,7 @@ class AppBootstrap
             // Admin Routes
             $group->get('/admin', [AdminController::class, 'dashboard']);
             $group->get('/admin/tenants', [AdminController::class, 'tenants']);
+            $group->post('/admin/tenants/create', [AdminController::class, 'createTenant']);
             $group->get('/admin/logs', [AdminController::class, 'logs']);
             $group->get('/admin/settings', [AdminController::class, 'settings']);
             $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);

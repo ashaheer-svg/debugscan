@@ -8,10 +8,21 @@
         <h1 class="admin-title" style="margin-bottom: 8px;">Tenant Management</h1>
         <p class="page-subtitle">Manage forensic licenses, token allocations, and account status.</p>
     </div>
-    <button type="button" class="btn btn-primary" style="width: auto;">
+    <button type="button" class="btn btn-primary" id="btnProvision" style="width: auto;">
         + Provision New Tenant
     </button>
 </header>
+
+{% if error %}
+<div style="background: var(--error-light, #ffebee); color: var(--error, #d32f2f); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 24px; font-weight: 500; border: 1px solid #ffcdd2;">
+    {{ error }}
+</div>
+{% endif %}
+{% if success %}
+<div style="background: var(--success-light, #e8f5e9); color: var(--success, #2e7d32); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 24px; font-weight: 500; border: 1px solid #c8e6c9;">
+    {{ success }}
+</div>
+{% endif %}
 
 <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
     <table style="width: 100%; border-collapse: collapse; text-align: left;">
@@ -55,4 +66,65 @@
     </div>
     {% endif %}
 </div>
+
+<!-- Provision Tenant Modal -->
+<dialog id="provisionModal" style="border: none; border-radius: var(--radius); padding: 0; box-shadow: var(--shadow-2); width: 100%; max-width: 480px; background: var(--white);">
+    <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+        <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Provision New Tenant</h2>
+        <button type="button" id="btnCloseModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+    <form action="/admin/tenants/create" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        <div class="form-group">
+            <label for="org_name" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Organization Name</label>
+            <input type="text" id="org_name" name="org_name" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="e.g. Acme Corp Forensic Team">
+        </div>
+        <div class="form-group">
+            <label for="email" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Admin Email</label>
+            <input type="email" id="email" name="email" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="admin@acme.com">
+        </div>
+        <div class="form-group">
+            <label for="password" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Password</label>
+            <input type="password" id="password" name="password" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+        </div>
+        <div class="form-group">
+            <label for="tokens" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Tokens</label>
+            <input type="number" id="tokens" name="tokens" required value="500000" min="0" step="1000" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
+            <button type="button" id="btnCancelModal" class="btn" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
+            <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Provision Tenant</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    const modal = document.getElementById('provisionModal');
+    const btnOpen = document.getElementById('btnProvision');
+    const btnClose = document.getElementById('btnCloseModal');
+    const btnCancel = document.getElementById('btnCancelModal');
+
+    btnOpen.addEventListener('click', () => modal.showModal());
+    btnClose.addEventListener('click', () => modal.close());
+    btnCancel.addEventListener('click', () => modal.close());
+    
+    // Close when clicking outside
+    modal.addEventListener('click', (e) => {
+        const dialogDimensions = modal.getBoundingClientRect()
+        if (
+            e.clientX < dialogDimensions.left ||
+            e.clientX > dialogDimensions.right ||
+            e.clientY < dialogDimensions.top ||
+            e.clientY > dialogDimensions.bottom
+        ) {
+            modal.close()
+        }
+    });
+
+    // Auto-hide alerts after 4 seconds
+    setTimeout(() => {
+        document.querySelectorAll('div[style*="var(--success-light)"], div[style*="var(--error-light)"]').forEach(el => {
+            el.style.display = 'none';
+        });
+    }, 4000);
+</script>
 {% endblock %}

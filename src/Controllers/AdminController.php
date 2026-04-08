@@ -63,10 +63,54 @@ class AdminController
 
         $body = $this->view->render('admin/tenants.twig', [
             'tenants' => $tenants,
-            'active_page' => 'admin_tenants'
+            'active_page' => 'admin_tenants',
+            'error' => $_SESSION['error'] ?? null,
+            'success' => $_SESSION['success'] ?? null
         ]);
+        
+        unset($_SESSION['error']);
+        unset($_SESSION['success']);
+        
         $response->getBody()->write($body);
         return $response;
+    }
+
+    public function createTenant(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $orgName = trim($data['org_name'] ?? '');
+        $email = trim($data['email'] ?? '');
+        $password = $data['password'] ?? '';
+        $tokens = (int)($data['tokens'] ?? 500000);
+
+        if (empty($orgName) || empty($email) || empty($password)) {
+            $_SESSION['error'] = 'All fields are required to provision a tenant.';
+            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        }
+
+        try {
+            $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+            $stmt = $this->pdo->prepare("
+                INSERT INTO users (email, password_hash, display_name, role, status, tokens_available)
+                VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
+            ");
+            $stmt->execute([
+                'email' => $email,
+                'pass' => $hashedPassword,
+                'name' => $orgName,
+                'tokens' => $tokens
+            ]);
+            
+            $_SESSION['success'] = "Tenant '{$orgName}' has been provisioned successfully.";
+        } catch (\PDOException $e) {
+            if ($e->getCode() === '23505') { // Unique violation
+                $_SESSION['error'] = 'A user with that email already exists.';
+            } else {
+                $_SESSION['error'] = 'Failed to create tenant: ' . $e->getMessage();
+            }
+        }
+
+        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
     }
 
     public function logs(Request $request, Response $response): Response
