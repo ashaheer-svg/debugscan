@@ -1,0 +1,58 @@
+{% extends "layout/admin.twig" %}
+
+{% block title %}Tenant Management - AI DebugScan v3{% endblock %}
+
+{% block admin_content %}
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+    <div>
+        <h1 class="admin-title" style="margin-bottom: 8px;">Tenant Management</h1>
+        <p class="page-subtitle">Manage forensic licenses, token allocations, and account status.</p>
+    </div>
+    <button type="button" class="btn btn-primary" style="width: auto;">
+        + Provision New Tenant
+    </button>
+</header>
+
+<div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                <th style="padding: 12px 0;">Organization / Display Name</th>
+                <th style="padding: 12px 0;">Email</th>
+                <th style="padding: 12px 0;">Status</th>
+                <th style="padding: 12px 0;">Tokens</th>
+                <th style="padding: 12px 0;">Scans (L1/L2)</th>
+                <th style="padding: 12px 0; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tenant in tenants %}
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
+                <td style="padding: 16px 0; font-weight: 600; color: var(--text-primary);">{{ tenant.display_name }}</td>
+                <td style="padding: 16px 0; color: var(--text-secondary);">{{ tenant.email }}</td>
+                <td style="padding: 16px 0;">
+                    <span class="badge" style="
+                        background: {% if tenant.status == 'active' %}var(--success-light){% else %}var(--bg-light){% endif %};
+                        color: {% if tenant.status == 'active' %}var(--success){% else %}var(--text-muted){% endif %};
+                        padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                        {{ tenant.status|upper }}
+                    </span>
+                </td>
+                <td style="padding: 16px 0; font-weight: 600;">{{ tenant.tokens_available|number_format }}</td>
+                <td style="padding: 16px 0; color: var(--text-secondary);">{{ tenant.scans_level1_count }} / {{ tenant.scans_level2_count }}</td>
+                <td style="padding: 16px 0; text-align: right;">
+                    <button class="btn btn-sm" style="background: var(--bg-light); color: var(--primary); font-weight: 600; padding: 4px 12px; font-size: 11px;">Allocate Tokens</button>
+                    <button class="btn btn-sm" style="background: var(--bg-light); color: var(--text-primary); font-weight: 600; padding: 4px 12px; font-size: 11px; margin-left: 8px;">Edit</button>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if not tenants %}
+    <div style="padding: 48px; text-align: center; color: var(--text-muted);">
+        No tenants found in the system.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

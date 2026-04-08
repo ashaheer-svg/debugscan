@@ -1,0 +1,53 @@
+{% extends "layout/admin.twig" %}
+
+{% block title %}System Audit Logs - AI DebugScan v3{% endblock %}
+
+{% block admin_content %}
+<header class="page-header">
+    <h1 class="admin-title">System Audit & Error Logs</h1>
+    <p class="page-subtitle">Historical record of all system events, authentication attempts, and scan failures.</p>
+</header>
+
+<div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                <th style="padding: 12px 0;">Timestamp</th>
+                <th style="padding: 12px 0;">User context</th>
+                <th style="padding: 12px 0;">Action</th>
+                <th style="padding: 12px 0;">IP Address</th>
+                <th style="padding: 12px 0;">Details / Payload</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 12px;">
+                <td style="padding: 12px 0; color: var(--text-secondary); white-space: nowrap;">{{ log.created_at|date('Y-m-d H:i:s') }}</td>
+                <td style="padding: 12px 0;">
+                    <div style="font-weight: 600; color: var(--text-primary);">{{ log.user_name|default('System') }}</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">ID: {{ log.user_id|slice(0,8) }}</div>
+                </td>
+                <td style="padding: 12px 0;">
+                    <span class="badge" style="
+                        background: {% if 'FAILED' in log.action|upper %}var(--danger-light){% elseif 'CREATE' in log.action|upper %}var(--success-light){% else %}var(--bg-light){% endif %};
+                        color: {% if 'FAILED' in log.action|upper %}var(--danger){% elseif 'CREATE' in log.action|upper %}var(--success){% else %}var(--text-primary){% endif %};
+                        padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                        {{ log.action }}
+                    </span>
+                </td>
+                <td style="padding: 12px 0; font-family: monospace; color: var(--text-muted);">{{ log.ip_address|default('::1') }}</td>
+                <td style="padding: 12px 0; color: var(--text-secondary); max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ log.details }}">
+                    {{ log.details }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if not logs %}
+    <div style="padding: 48px; text-align: center; color: var(--text-muted);">
+        No audit logs recorded yet.
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

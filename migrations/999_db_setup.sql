@@ -1,0 +1,10 @@
+CREATE USER scanuser WITH PASSWORD 'scanuser123';
+GRANT ALL PRIVILEGES ON DATABASE aidebugscan TO scanuser;
+ALTER TABLE users OWNER TO scanuser;
+ALTER TABLE projects OWNER TO scanuser;
+ALTER TABLE debug_files OWNER TO scanuser;
+ALTER TABLE scan_jobs OWNER TO scanuser;
+ALTER TABLE scan_findings OWNER TO scanuser;
+ALTER TABLE audit_log OWNER TO scanuser;
+ALTER TABLE system_settings OWNER TO scanuser;
+ALTER TABLE sessions OWNER TO scanuser;

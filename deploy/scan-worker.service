@@ -1,0 +1,14 @@
+[Unit]
+Description=AI DebugScan Background Worker
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/ai-debugscan3
+ExecStart=/usr/bin/php /var/www/ai-debugscan3/workers/scan_worker.php
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

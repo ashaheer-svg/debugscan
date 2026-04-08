@@ -1,0 +1,15 @@
+cd /var/www/ai-debugscan3
+mput -r public
+mput -r src
+mput -r templates
+mput -r config
+mput -r migrations
+mput -r workers
+mput -r guide
+mput .env.example
+mput composer.json
+mput setup_system.php
+mput INSTALL.md
+lpwd
+ls -l
+quit

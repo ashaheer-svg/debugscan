@@ -1,0 +1,84 @@
+{% extends "layout/base.twig" %}
+
+{% block head %}
+<style>
+    .admin-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+    .admin-sidebar {
+        width: 240px;
+        background: #2D3E50; /* Darker sidebar for Admin */
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+    }
+    .admin-header {
+        padding: 24px;
+        background: rgba(0,0,0,0.2);
+        font-weight: 700;
+        font-size: 16px;
+        text-align: center;
+        color: #E0E0E0;
+    }
+    .admin-nav { list-style: none; padding: 24px 0; flex: 1; }
+    .admin-nav-link {
+        display: block;
+        padding: 12px 24px;
+        color: #B0BEC5;
+        text-decoration: none;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+    .admin-nav-link:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
+    .admin-nav-link.active { background: var(--primary); color: #FFFFFF; font-weight: 600; }
+
+    .admin-main { flex: 1; background: var(--bg-light); display: flex; flex-direction: column; }
+    .admin-top-nav {
+        height: 64px;
+        background: var(--white);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 24px;
+    }
+    .page-container { padding: 32px; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+    /* Admin Specific Styling */
+    .admin-title { font-size: 24px; font-weight: 700; color: #2D3436; margin-bottom: 32px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
+    .stat-card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1); border-top: 4px solid var(--primary); }
+    .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; margin-top: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-layout">
+    <aside class="admin-sidebar">
+        <div class="admin-header">
+            SYSTEM ADMIN
+        </div>
+        <nav class="admin-nav">
+            <a href="/admin" class="admin-nav-link {% if active_page == 'admin_dash' %}active{% endif %}">System Dashboard</a>
+            <a href="/admin/tenants" class="admin-nav-link {% if active_page == 'admin_tenants' %}active{% endif %}">Tenant Management</a>
+            <a href="/admin/settings" class="admin-nav-link {% if active_page == 'admin_settings' %}active{% endif %}">AI & System Settings</a>
+            <a href="/admin/logs" class="admin-nav-link {% if active_page == 'admin_logs' %}active{% endif %}">Audit & Error Logs</a>
+        </nav>
+        <div style="padding: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <a href="/auth/logout" class="admin-nav-link" style="color: var(--danger);">Exit Admin</a>
+        </div>
+    </aside>
+
+    <main class="admin-main">
+        <header class="admin-top-nav">
+            <span style="font-weight: 600; color: var(--text-secondary);">Administrator</span>
+        </header>
+
+        <section class="page-container">
+            {% block admin_content %}{% endblock %}
+        </section>
+    </main>
+</div>
+{% endblock %}

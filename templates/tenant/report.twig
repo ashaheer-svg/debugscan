@@ -1,0 +1,67 @@
+{% extends "layout/dashboard.twig" %}
+
+{% set active_page = 'scans' %}
+
+{% block title %}Forensic Report - {{ project.name }}{% endblock %}
+
+{% block dashboard_content %}
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <a href="/projects" style="font-size: 13px; color: var(--primary); text-decoration: none; font-weight: 600;">&larr; Back to Projects</a>
+        <h1 class="page-title" style="margin-top: 8px;">Forensic Analysis Report</h1>
+        <p class="page-subtitle">Project: {{ project.name }} | Serial: {{ project.serial_number|default('N/A') }}</p>
+    </div>
+    <div style="text-align: right;">
+        <span style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 4px;">Health Score</span>
+        <div style="font-size: 48px; font-weight: 900; color: {% if job.health_score == 'A' %}var(--success){% elseif job.health_score == 'F' %}var(--danger){% else %}var(--warning){% endif %}; line-height: 1;">
+            {{ job.health_score }}
+        </div>
+    </div>
+</header>
+
+<!-- Summary Section -->
+<section style="background: var(--white); padding: 32px; border-radius: var(--radius); box-shadow: var(--shadow-1); margin-bottom: 32px; border-left: 4px solid var(--primary);">
+    <h3 style="margin-bottom: 16px; font-weight: 700;">Executive Summary</h3>
+    <p style="font-size: 15px; color: var(--text-primary); line-height: 1.7;">
+        {{ job.result_summary|json_decode }}
+    </p>
+</section>
+
+<!-- Findings Section -->
+<h3 style="margin-bottom: 24px; font-weight: 700;">Detailed Findings ({{ findings|length }})</h3>
+
+<div style="display: flex; flex-direction: column; gap: 24px;">
+    {% for finding in findings %}
+    <article style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden; border: 1px solid var(--border);">
+        <header style="padding: 16px 24px; background: var(--bg-off-white); border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span class="badge" style="
+                    background: {% if finding.severity == 'critical' %}var(--danger-light){% elseif finding.severity == 'warning' %}var(--warning-light){% else %}var(--info-light){% endif %};
+                    color: {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};
+                    padding: 4px 12px; border-radius: 4px; font-size: 11px; font-weight: 700; text-transform: uppercase;">
+                    {{ finding.severity }}
+                </span>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 600;">{{ finding.category }}</span>
+            </div>
+            <span style="font-size: 12px; color: var(--text-muted);">Finding ID: {{ finding.id|slice(0,8) }}</span>
+        </header>
+        
+        <div style="padding: 24px;">
+            <h4 style="font-size: 18px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary);">{{ finding.title }}</h4>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px; line-height: 1.6;">{{ finding.description }}</p>
+            
+            <div style="background: var(--bg-light); border-radius: var(--radius); padding: 20px;">
+                <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Recommendation</h5>
+                <p style="font-size: 14px; color: var(--text-primary); font-weight: 500;">{{ finding.recommendation }}</p>
+            </div>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+{% if not findings %}
+<div style="background: var(--white); padding: 48px; border-radius: var(--radius); box-shadow: var(--shadow-1); text-align: center; color: var(--text-muted);">
+    No specific findings were documented for this scan.
+</div>
+{% endif %}
+{% endblock %}

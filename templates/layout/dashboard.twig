@@ -1,0 +1,110 @@
+{% extends "layout/base.twig" %}
+
+{% block head %}
+<style>
+    .dashboard-layout {
+        display: flex;
+        min-height: 100vh;
+    }
+    .sidebar {
+        width: 240px;
+        background: var(--white);
+        border-right: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s;
+    }
+    .sidebar-header {
+        padding: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-bottom: 1px solid var(--row-border);
+    }
+    .sidebar-logo { width: 32px; height: 32px; }
+    .sidebar-name { font-weight: 700; font-size: 16px; color: var(--primary); }
+
+    .nav-list { list-style: none; padding: 24px 0; flex: 1; }
+    .nav-item { padding: 4px 16px; }
+    .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: var(--radius-sm);
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .nav-link:hover { background: var(--bg-light); color: var(--primary); }
+    .nav-link.active { background: var(--bg-light); color: var(--primary); font-weight: 600; }
+
+    .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-light); }
+    .top-nav {
+        height: 64px;
+        background: var(--white);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding: 0 24px;
+        gap: 16px;
+    }
+    .content-area { padding: 32px; flex: 1; overflow-y: auto; max-width: 1200px; margin: 0 auto; width: 100%; }
+
+    /* Page Titles */
+    .page-header { margin-bottom: 32px; }
+    .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); }
+    .page-subtitle { font-size: 14px; color: var(--text-secondary); }
+
+    /* KPI Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .kpi-card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1); text-align: center; }
+    .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <img src="/assets/img/logo.svg" alt="DS" class="sidebar-logo">
+            <span class="sidebar-name">DebugScan v3</span>
+        </div>
+        <nav class="nav-list">
+            <div class="nav-item">
+                <a href="/dashboard" class="nav-link {% if active_page == 'dashboard' %}active{% endif %}">
+                    <span>Dash</span> Dashboard
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/projects" class="nav-link {% if active_page == 'projects' %}active{% endif %}">
+                    <span>Proj</span> Projects
+                </a>
+            </div>
+            <div class="nav-item">
+                <a href="/scans" class="nav-link {% if active_page == 'scans' %}active{% endif %}">
+                    <span>Scan</span> Scans
+                </a>
+            </div>
+        </nav>
+        <div style="padding: 24px; border-top: 1px solid var(--row-border);">
+            <a href="/auth/logout" class="nav-link" style="color: var(--danger);">Logout</a>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="top-nav">
+            <span class="tokens-badge" style="background: var(--warning-light); color: var(--warning); padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;">
+                Tokens: {{ tokens_available|default(0) }}
+            </span>
+            <span class="user-name" style="font-weight: 600;">{{ user_name }}</span>
+        </header>
+
+        <section class="content-area">
+            {% block dashboard_content %}{% endblock %}
+        </section>
+    </main>
+</div>
+{% endblock %}

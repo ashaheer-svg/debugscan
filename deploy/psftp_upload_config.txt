@@ -1,0 +1,3 @@
+put deploy/nginx_site.conf /tmp/nginx_site.conf
+put deploy/scan-worker.service /tmp/scan-worker.service
+quit

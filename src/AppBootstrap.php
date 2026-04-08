@@ -1,0 +1,121 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App;
+
+use DI\ContainerBuilder;
+use Dotenv\Dotenv;
+use Slim\App;
+use Slim\Factory\AppFactory;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
+use PDO;
+use App\Database;
+use App\Services\AuthService;
+use App\Services\FileService;
+use App\Services\ScanService;
+use App\Services\AiService;
+use App\Controllers\AuthController;
+use App\Controllers\TenantController;
+use App\Controllers\AdminController;
+use App\Helpers\DatabaseSessionHandler;
+use App\Middleware\AuthMiddleware;
+
+require __DIR__ . '/../vendor/autoload.php';
+
+class AppBootstrap
+{
+    public static function create(): App
+    {
+        // Load environment variables
+        if (file_exists(__DIR__ . '/../.env')) {
+            $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+            $dotenv->load();
+        }
+
+        // Initialize Container
+        $containerBuilder = new ContainerBuilder();
+
+        // Add application dependencies to container
+        $containerBuilder->addDefinitions([
+            PDO::class => function () {
+                return Database::getConnection();
+            },
+            Environment::class => function () {
+                $loader = new FilesystemLoader(__DIR__ . '/../templates');
+                return new Environment($loader, [
+                    'cache' => false, // Set to a path in production
+                    'debug' => ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
+                ]);
+            },
+            AuthService::class => function ($container) {
+                return new AuthService($container->get(PDO::class));
+            },
+            AuthController::class => function ($container) {
+                return new AuthController(
+                    $container->get(Environment::class),
+                    $container->get(AuthService::class)
+                );
+            },
+            TenantController::class => function ($container) {
+                return new TenantController(
+                    $container->get(Environment::class),
+                    $container->get(PDO::class),
+                    new FileService($container->get(PDO::class), __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted'),
+                    new ScanService($container->get(PDO::class))
+                );
+            },
+            AdminController::class => function ($container) {
+                return new AdminController(
+                    $container->get(Environment::class),
+                    $container->get(PDO::class),
+                    new AiService($_ENV['GROQ_API_KEY'])
+                );
+            },
+        ]);
+
+        $container = $containerBuilder->build();
+
+        // Setup Database Session Handler
+        $sessionHandler = new DatabaseSessionHandler($container->get(PDO::class));
+        session_set_save_handler($sessionHandler, true);
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Initialize Slim App
+        AppFactory::setContainer($container);
+        $app = AppFactory::create();
+
+        // Add Middleware
+        $app->addRoutingMiddleware();
+        $app->addErrorMiddleware(
+            ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
+            true,
+            true
+        );
+
+        // Routes
+        $app->get('/login', [AuthController::class, 'showLogin']);
+        $app->post('/auth/login', [AuthController::class, 'login']);
+        $app->get('/auth/logout', [AuthController::class, 'logout']);
+
+        // Authenticated Routes
+        $app->group('', function ($group) {
+            $group->get('/dashboard', [TenantController::class, 'dashboard']);
+            $group->get('/projects', [TenantController::class, 'projects']);
+            $group->post('/projects/create', [TenantController::class, 'createProject']);
+            $group->get('/scans/report/{id}', [TenantController::class, 'viewReport']);
+            
+            // Admin Routes
+            $group->get('/admin', [AdminController::class, 'dashboard']);
+            $group->get('/admin/tenants', [AdminController::class, 'tenants']);
+            $group->get('/admin/logs', [AdminController::class, 'logs']);
+            $group->get('/admin/settings', [AdminController::class, 'settings']);
+            $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);
+        })->add(new AuthMiddleware($container->get(PDO::class)));
+
+        return $app;
+    }
+}

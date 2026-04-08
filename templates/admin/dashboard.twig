@@ -1,0 +1,57 @@
+{% extends "layout/admin.twig" %}
+
+{% block title %}Admin Dashboard - AI DebugScan v3{% endblock %}
+
+{% block admin_content %}
+<h1 class="admin-title">System Health & Metrics</h1>
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <h2 class="stat-value">{{ tenant_count }}</h2>
+        <p class="stat-label">Active Tenants</p>
+    </div>
+    <div class="stat-card">
+        <h2 class="stat-value">{{ total_scans|number_format }}</h2>
+        <p class="stat-label">Total Scans Executed</p>
+    </div>
+    <div class="stat-card">
+        <h2 class="stat-value">{{ (tokens_used / 1000)|round(1) }}k</h2>
+        <p class="stat-label">Groq Tokens Consumed</p>
+    </div>
+    <div class="stat-card">
+        <h2 class="stat-value">99.8%</h2>
+        <p class="stat-label">Parser Success Rate</p>
+    </div>
+</div>
+
+<div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+    <h3 style="margin-bottom: 24px; font-weight: 700; color: #2D3436;">Global Audit Log</h3>
+    
+    {% if recent_activity %}
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                <th style="padding: 12px 0;">Timestamp</th>
+                <th style="padding: 12px 0;">User</th>
+                <th style="padding: 12px 0;">Action</th>
+                <th style="padding: 12px 0;">Details</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in recent_activity %}
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
+                <td style="padding: 16px 0; color: var(--text-secondary);">{{ log.created_at|date('M d, H:i:s') }}</td>
+                <td style="padding: 16px 0; font-weight: 600;">{{ log.user_name|default('System') }}</td>
+                <td style="padding: 16px 0;">
+                    <span class="badge" style="background: var(--bg-light); color: var(--text-primary); padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border); font-size: 11px; font-weight: 600;">{{ log.action }}</span>
+                </td>
+                <td style="padding: 16px 0; color: var(--text-secondary);">{{ log.details|default('N/A') }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 40px; text-align: center; color: var(--text-muted);">No recent logs.</div>
+    {% endif %}
+</div>
+{% endblock %}
