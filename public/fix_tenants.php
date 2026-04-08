@@ -2,6 +2,12 @@
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\Database;
+use Dotenv\Dotenv;
+
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
+    $dotenv->load();
+}
 
 try {
     $pdo = Database::getConnection();
