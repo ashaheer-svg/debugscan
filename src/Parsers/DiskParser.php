@@ -32,23 +32,39 @@ class DiskParser implements ParserInterface
             }
         }
 
-        // 2. Supplement/Fallback with per-disk runtime files (Hardwarev2.md Section 3.2.3)
+        // 2. Supplement/Fallback with per-disk runtime files (Hardwarev2.md Section 3.2.3 & 9)
         $diskDirs = glob($extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
         foreach ($diskDirs as $dir) {
             $diskName = basename($dir);
             if (!isset($disks[$diskName])) {
-                $disks[$diskName] = [];
+                $disks[$diskName] = [
+                    'status' => 'detected'
+                ];
             }
             
             if (file_exists($dir . '/model')) $disks[$diskName]['model'] = trim(file_get_contents($dir . '/model'));
             if (file_exists($dir . '/serial')) $disks[$diskName]['serial'] = trim(file_get_contents($dir . '/serial'));
             if (file_exists($dir . '/temperature')) $disks[$diskName]['temp'] = (int)trim(file_get_contents($dir . '/temperature'));
-            if (file_exists($dir . '/id')) $disks[$diskName]['slot'] = (int)trim(file_get_contents($dir . '/id'));
+            
+            // Physical Bay Mapping
+            if (file_exists($dir . '/id')) $disks[$diskName]['bay'] = (int)trim(file_get_contents($dir . '/id'));
+            if (file_exists($dir . '/container')) {
+                $container = trim(file_get_contents($dir . '/container'));
+                $disks[$diskName]['container'] = empty($container) ? 'Main' : $container;
+            } else {
+                $disks[$diskName]['container'] = $disks[$diskName]['container'] ?? 'Main';
+            }
         }
 
-        // 3. Fallback to /proc/partitions for raw discovery (Hardwarev2.md Section 1.3.1)
-        if (empty($disks)) {
-            $disks = $this->parsePartitions($extractedPath);
+        // 3. Precise capacity and discovery from /proc/partitions (Hardwarev2.md Section 1.3.1 & 5.1)
+        $partitions = $this->parsePartitions($extractedPath);
+        foreach ($partitions as $id => $pInfo) {
+            if (!isset($disks[$id])) {
+                $disks[$id] = $pInfo;
+            } else {
+                $disks[$id]['size_gb'] = $pInfo['size_gb'];
+                $disks[$id]['is_expansion'] = $pInfo['is_expansion'] ?? false;
+            }
         }
 
         return $disks;

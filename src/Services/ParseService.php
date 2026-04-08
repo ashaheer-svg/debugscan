@@ -44,10 +44,24 @@ class ParseService
         foreach ($this->parsers as $key => $parser) {
             try {
                 $results[$key] = $parser->parse($extractedPath, $context);
+                // Update context for subsequent parsers
+                if ($key === 'version') $context = array_merge($context, $results[$key]);
             } catch (\Exception $e) {
                 $results[$key] = ['error' => $e->getMessage()];
             }
         }
+
+        // Post-processing: Extract Expansion Units from Disks
+        $expansionUnits = [];
+        if (isset($results['disks']) && is_array($results['disks'])) {
+            foreach ($results['disks'] as $disk) {
+                $container = $disk['container'] ?? 'Main';
+                if ($container !== 'Main' && !in_array($container, $expansionUnits)) {
+                    $expansionUnits[] = $container;
+                }
+            }
+        }
+        $results['expansion_units'] = $expansionUnits;
 
         return $results;
     }

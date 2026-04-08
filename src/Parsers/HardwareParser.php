@@ -11,14 +11,15 @@ class HardwareParser implements ParserInterface
         $major = $context['majorversion'] ?? 7;
         $hardware = [];
 
-        // 1. Model Name (Hardwarev2.md Section 3.1.1 & 2.1.1)
+        // 1. Model & Serial from synoinfo.conf (Hardwarev2.md Section 2.1.1 & 4.2)
+        $synoInfo = $this->parseSynoInfo($extractedPath);
+        $hardware['serial'] = $synoInfo['serialno'] ?? null;
+
         if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
             $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));
         } else {
             // For DSM 6.x or older, fallback to synoinfo.conf "unique" field
-            $synoInfo = $this->parseSynoInfo($extractedPath);
             $unique = $synoInfo['unique'] ?? '';
-            // e.g. "synology_avoton_rs818+" -> "RS818+"
             if (!empty($unique)) {
                 $parts = explode('_', $unique);
                 $hardware['model'] = strtoupper(end($parts));
@@ -27,10 +28,12 @@ class HardwareParser implements ParserInterface
             }
         }
 
-        // 2. Serial Number - Usually from load_info.result if available
-        $loadInfo = $this->getLoadInfo($extractedPath);
-        if ($loadInfo && isset($loadInfo['serial'])) {
-            $hardware['serial'] = $loadInfo['serial'];
+        // 2. Supplement Serial from load_info.result if missing
+        if (empty($hardware['serial'])) {
+            $loadInfo = $this->getLoadInfo($extractedPath);
+            if ($loadInfo && isset($loadInfo['serial'])) {
+                $hardware['serial'] = $loadInfo['serial'];
+            }
         }
 
         // 3. CPU Info
