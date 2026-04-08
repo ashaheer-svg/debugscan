@@ -46,7 +46,7 @@ class AppBootstrap
                 $loader = new FilesystemLoader(__DIR__ . '/../templates');
                 return new Environment($loader, [
                     'cache' => false, // Set to a path in production
-                    'debug' => ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
+                    'debug' => (getenv('APP_DEBUG') ?: 'false') === 'true',
                 ]);
             },
             AuthService::class => function ($container) {
@@ -70,7 +70,7 @@ class AppBootstrap
                 return new AdminController(
                     $container->get(Environment::class),
                     $container->get(PDO::class),
-                    new AiService($_ENV['GROQ_API_KEY'])
+                    new AiService(getenv('GROQ_API_KEY'))
                 );
             },
         ]);
@@ -91,7 +91,7 @@ class AppBootstrap
         // Add Middleware
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(
-            ($_ENV['APP_DEBUG'] ?? 'false') === 'true',
+            (getenv('APP_DEBUG') ?: 'false') === 'true',
             true,
             true
         );
