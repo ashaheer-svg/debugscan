@@ -18,6 +18,8 @@ use App\Services\PackagingService;
 use App\Parsers\DatabaseParser;
 
 $pdo = Database::getConnection();
+Database::setTenantContext($pdo, null, 'admin'); // Bypass RLS for worker
+
 $parseService = new ParseService();
 $packagingService = new PackagingService();
 $fileService = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
