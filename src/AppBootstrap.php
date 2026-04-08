@@ -30,7 +30,7 @@ class AppBootstrap
     {
         // Load environment variables
         if (file_exists(__DIR__ . '/../.env')) {
-            $dotenv = Dotenv::createImmutable(__DIR__ . '/../');
+            $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
             $dotenv->load();
         }
 
