@@ -122,9 +122,30 @@
                     {% else %}--{% endif %}
                 </td>
                 <td style="padding: 16px 24px; text-align: right;">
-                    <span style="font-size: 11px; font-weight: 700; color: {% if disk.status == 'normal' or disk.status == 'detected' %}var(--success){% else %}var(--error){% endif %}; text-transform: uppercase;">
-                        {{ disk.status|default('Unknown') }}
-                    </span>
+                    <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 4px;">
+                        <span style="font-size: 11px; font-weight: 700; color: {% if disk.status == 'normal' or disk.status == 'detected' %}var(--success){% else %}var(--error){% endif %}; text-transform: uppercase;">
+                            {{ disk.status|default('Unknown') }}
+                        </span>
+                        
+                        {# Detailed Health Indicators #}
+                        <div style="display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end;">
+                            {% if disk.smart_status and disk.smart_status != 'normal' %}
+                                <span style="font-size: 9px; padding: 1px 4px; border-radius: 2px; background: #fee2e2; color: #991b1b; font-weight: 700; border: 1px solid #fecaca;">SMART: {{ disk.smart_status|upper }}</span>
+                            {% endif %}
+                            
+                            {% if disk.bad_sectors and disk.bad_sectors > 0 %}
+                                <span style="font-size: 9px; padding: 1px 4px; border-radius: 2px; background: #fff7ed; color: #9a3412; font-weight: 700; border: 1px solid #ffedd5;">BAD SECTORS: {{ disk.bad_sectors }}</span>
+                            {% endif %}
+
+                            {% if disk.timeout_status and disk.timeout_status != 'normal' %}
+                                <span style="font-size: 9px; padding: 1px 4px; border-radius: 2px; background: #fff1f2; color: #be123c; font-weight: 700; border: 1px solid #ffe4e6;">TIMEOUTS</span>
+                            {% endif %}
+
+                            {% if disk.reset_fail_status and disk.reset_fail_status != 'normal' %}
+                                <span style="font-size: 9px; padding: 1px 4px; border-radius: 2px; background: #7f1d1d; color: #fff; font-weight: 700; border: 1px solid #991b1b;">RESET FAIL</span>
+                            {% endif %}
+                        </div>
+                    </div>
                 </td>
             </tr>
             {% endfor %}

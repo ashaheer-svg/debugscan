@@ -54,6 +54,21 @@ class DiskParser implements ParserInterface
             } else {
                 $disks[$diskName]['container'] = $disks[$diskName]['container'] ?? 'Main';
             }
+
+            // Advanced Health Indicators (Hardwarev2.md Section 3.2.3 & 4.3)
+            $healthFiles = [
+                'bad_sec_ct' => 'bad_sectors',
+                'unc_status' => 'unc_status',
+                'timeout_status' => 'timeout_status',
+                'reset_fail_status' => 'reset_fail_status',
+                'predict_status' => 'predict_status',
+                'adv_status' => 'adv_status'
+            ];
+            foreach ($healthFiles as $file => $key) {
+                if (file_exists($dir . '/' . $file)) {
+                    $disks[$diskName][$key] = trim(file_get_contents($dir . '/' . $file));
+                }
+            }
         }
 
         // 3. Precise capacity and discovery from /proc/partitions (Hardwarev2.md Section 1.3.1 & 5.1)
