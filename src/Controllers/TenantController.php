@@ -8,6 +8,7 @@ use App\Services\FileService;
 use App\Services\ParseService;
 use App\Services\ScanService;
 use PDO;
+use Ramsey\Uuid\Uuid;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -95,6 +96,132 @@ class TenantController
         ]);
 
         return $response->withHeader('Location', '/projects')->withStatus(302);
+    }
+
+    public function viewProject(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        // Fetch Project
+        $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+        $project = $stmt->fetch();
+
+        if (!$project) {
+            return $response->withHeader('Location', '/projects')->withStatus(302);
+        }
+
+        // Fetch Files
+        $stmt = $this->pdo->prepare("SELECT * FROM debug_files WHERE project_id = :pid ORDER BY created_at DESC");
+        $stmt->execute(['pid' => $id]);
+        $files = $stmt->fetchAll();
+
+        // Fetch Scans
+        $stmt = $this->pdo->prepare("SELECT * FROM scan_jobs WHERE project_id = :pid ORDER BY created_at DESC");
+        $stmt->execute(['pid' => $id]);
+        $scans = $stmt->fetchAll();
+
+        $body = $this->view->render('tenant/project_view.twig', [
+            'project' => $project,
+            'files' => $files,
+            'scans' => $scans,
+            'active_page' => 'projects',
+            'success' => $_SESSION['success'] ?? null,
+            'error' => $_SESSION['error'] ?? null,
+        ]);
+
+        unset($_SESSION['success'], $_SESSION['error']);
+
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function uploadLog(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+        $uploadedFiles = $request->getUploadedFiles();
+        $file = $uploadedFiles['debug_log'] ?? null;
+
+        if (!$file || $file->getError() !== UPLOAD_ERR_OK) {
+            $_SESSION['error'] = 'Please select a valid Synology debug log file (.dat).';
+            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+        }
+
+        // Validate extension
+        $filename = $file->getClientFilename();
+        if (!str_ends_with(strtolower($filename), '.dat') && !str_ends_with(strtolower($filename), '.zip')) {
+            $_SESSION['error'] = 'Invalid file format. Please upload a .dat or .zip file.';
+            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+        }
+
+        try {
+            // 1. Save File
+            $fileId = Uuid::uuid4()->toString(); // We'll use this for storage
+            $storedName = $fileId . '.dat';
+            $uploadPath = __DIR__ . '/../../storage/uploads/' . $storedName;
+            
+            if (!is_dir(dirname($uploadPath))) {
+                mkdir(dirname($uploadPath), 0755, true);
+            }
+            
+            $file->moveTo($uploadPath);
+
+            // 2. Database Record
+            $stmt = $this->pdo->prepare("
+                INSERT INTO debug_files (id, project_id, tenant_id, original_filename, stored_filename, file_size_bytes, file_hash_sha256, storage_path, extraction_status)
+                VALUES (:id, :pid, :tid, :orig, :stored, :size, :hash, :path, 'pending')
+            ");
+            $stmt->execute([
+                'id' => $fileId,
+                'pid' => $id,
+                'tid' => $tenantId,
+                'orig' => $filename,
+                'stored' => $storedName,
+                'size' => $file->getSize(),
+                'hash' => hash_file('sha256', $uploadPath),
+                'path' => $uploadPath
+            ]);
+
+            // 3. Process/Extract
+            $this->fileService->processFile($fileId, $uploadPath);
+
+            $_SESSION['success'] = 'Log file uploaded and processed successfully.';
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Failed to process file: ' . $e->getMessage();
+        }
+
+        return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+    }
+
+    public function startScan(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+        $data = $request->getParsedBody();
+        $level = $data['level'] ?? 'level1';
+        $fileIds = $data['file_ids'] ?? [];
+
+        if (empty($fileIds)) {
+            $_SESSION['error'] = 'Please select at least one log file to scan.';
+            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+        }
+
+        try {
+            // Get system model setting
+            $stmt = $this->pdo->query("SELECT level1_model, level2_model FROM system_settings LIMIT 1");
+            $settings = $stmt->fetch();
+            $model = ($level === 'level1') ? $settings['level1_model'] : $settings['level2_model'];
+
+            $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
+            
+            $_SESSION['success'] = 'Scan job queued successfully. Analysis is running in background.';
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Failed to queue scan: ' . $e->getMessage();
+        }
+
+        return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
     }
 
     public function viewReport(Request $request, Response $response, array $args): Response
