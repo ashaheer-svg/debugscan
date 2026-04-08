@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 require __DIR__ . '/../vendor/autoload.php';
 
+// Load Environment Variables
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = Dotenv\Dotenv::createUnsafeImmutable(__DIR__ . '/../');
+    $dotenv->load();
+}
+
 use App\Database;
 use App\Services\AiService;
 use App\Services\FileService;
@@ -17,7 +23,8 @@ $packagingService = new PackagingService();
 $fileService = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
 
 // Get AI credentials from environment
-$aiService = new AiService($_ENV['GROQ_API_KEY']);
+$aiApiKey = getenv('GROQ_API_KEY') ?: ($_ENV['GROQ_API_KEY'] ?? '');
+$aiService = new AiService($aiApiKey);
 
 echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
