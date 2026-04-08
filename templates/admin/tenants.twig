@@ -68,7 +68,12 @@
 </div>
 
 <!-- Provision Tenant Modal -->
-<dialog id="provisionModal" style="border: none; border-radius: var(--radius); padding: 0; box-shadow: var(--shadow-2); width: 100%; max-width: 480px; background: var(--white);">
+<style>
+    #provisionModal::backdrop {
+        background: rgba(0, 0, 0, 0.5);
+    }
+</style>
+<dialog id="provisionModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 4px 12px rgba(0,0,0,0.12); width: 100%; max-width: 480px; background: var(--white); margin: auto;">
     <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
         <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Provision New Tenant</h2>
         <button type="button" id="btnCloseModal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
