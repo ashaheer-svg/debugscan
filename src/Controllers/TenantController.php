@@ -421,7 +421,7 @@ class TenantController
         $tenantId = $request->getAttribute('tenant_id');
 
         $stmt = $this->pdo->prepare("
-            SELECT id, status, progress_percent, progress_stage, debug_file_ids, result_summary
+            SELECT id, status, progress_percent, progress_stage, debug_file_ids, result_summary, checkpoints
             FROM scan_jobs 
             WHERE id = :id AND tenant_id = :tid
         ");

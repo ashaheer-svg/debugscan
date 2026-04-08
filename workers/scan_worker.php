@@ -50,44 +50,74 @@ while (true) {
     echo "Processing Job: {$job['id']} (Project: {$job['project_id']})\n";
 
     try {
-        // Update function for progress
+        $checkpoints = [];
+        $addCheckpoint = function($level, $stage, $status, $meta = []) use (&$checkpoints, $pdo, $job) {
+            $checkpoints[] = [
+                'level' => $level,
+                'stage' => $stage,
+                'status' => $status,
+                'meta' => $meta,
+                'ts' => date('Y-m-d H:i:s')
+            ];
+            $stmt = $pdo->prepare("UPDATE scan_jobs SET checkpoints = :cp, progress_stage = :stage WHERE id = :id");
+            $stmt->execute(['cp' => json_encode($checkpoints), 'stage' => $stage, 'id' => $job['id']]);
+        };
+
+        // Update function for progress percent
         $updateProgress = function($stage, $percent) use ($pdo, $job) {
             $stmt = $pdo->prepare("UPDATE scan_jobs SET progress_stage = :stage, progress_percent = :percent WHERE id = :id");
             $stmt->execute(['stage' => $stage, 'percent' => $percent, 'id' => $job['id']]);
         };
 
+        $addCheckpoint('system', 'Initializing', 'success', ['files' => count($job['debug_file_ids'])]);
+
         // 3. Collect diagnostic data for all files in the scan
         $allDiagnosticData = [];
         $fileCount = count($job['debug_file_ids']);
         foreach ($job['debug_file_ids'] as $index => $fileId) {
-             $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 40));
+             $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 20));
 
              $destPath = $fileService->getExtractedPath($fileId);
              if (!is_dir($destPath)) {
-                 echo "Warning: Data not extracted for $fileId. Skipping...\n";
+                 $addCheckpoint('file', 'File Extraction', 'failed', ['file_id' => $fileId, 'error' => 'Extraction directory missing']);
                  continue;
              }
+             $addCheckpoint('file', 'File Extraction', 'success', ['file_id' => $fileId, 'path' => $destPath]);
 
-             // Base diagnostic data (Hardware, Disk, Raid, etc)
+             // Base diagnostic data
              $data = $parseService->parseAll($destPath);
+             $addCheckpoint('file', 'Base Parsing', 'success', ['file_id' => $fileId, 'dsm' => $data['version']['product'] ?? 'unknown']);
 
              // Level 1: Extended Database Parsing (SQLite Logs)
              if ($job['scan_level'] === 'level1') {
-                 $updateProgress("Forensic Database Extraction (" . ($index + 1) . "/$fileCount)", 20 + (int)(($index / $fileCount) * 40));
+                 $updateProgress("Forensic Database Extraction (" . ($index + 1) . "/$fileCount)", 30 + (int)(($index / $fileCount) * 30));
                  $dbParser = new DatabaseParser($destPath);
                  $dbResults = $dbParser->parseAll();
+
+                 $rowCount = array_sum(array_map('count', $dbResults));
+                 $addCheckpoint('forensic', 'SQLite Extraction', 'success', [
+                     'file_id' => $fileId, 
+                     'rows_total' => $rowCount,
+                     'tables' => array_keys($dbResults)
+                 ]);
 
                  // Persist extended data for future reference (Level 2 drills)
                  $stmt = $pdo->prepare("UPDATE debug_files SET extended_data = :data WHERE id = :id");
                  $stmt->execute(['id' => $fileId, 'data' => json_encode($dbResults)]);
 
                  // Package data for AI prompt
-                 $data['packaged_logs'] = [
+                 $package = [
                      'system' => $packagingService->formatSystemEvents($dbResults['system_events'] ?? []),
                      'disk_health' => $packagingService->formatDiskHealth($dbResults['disk_health'] ?? []),
                      'connections' => $packagingService->formatConnections($dbResults['connection_logs'] ?? []),
                      'disk_ops' => $packagingService->formatDiskEvents($dbResults['disk_events'] ?? [])
                  ];
+                 $data['packaged_logs'] = $package;
+
+                 $addCheckpoint('forensic', 'Data Packaged', 'success', [
+                     'file_id' => $fileId,
+                     'package_size_bytes' => strlen(json_encode($package))
+                 ]);
              }
 
              $allDiagnosticData[] = $data;
@@ -95,11 +125,18 @@ while (true) {
 
         // 4. Perform AI Analysis
         $updateProgress("AI Forensic Analysis (" . ucfirst($job['scan_level']) . ")", 70);
+        
         $analysis = $aiService->analyze(
             $allDiagnosticData, 
             $job['ai_model'], 
             (int)$job['max_output_tokens']
         );
+
+        $addCheckpoint('ai', 'AI Report Generated', 'success', [
+            'model' => $job['ai_model'],
+            'findings_count' => count($analysis['findings'] ?? []),
+            'health_score' => $analysis['health_score'] ?? 'N/A'
+        ]);
 
         $updateProgress("Finalizing Report", 95);
 
@@ -113,6 +150,7 @@ while (true) {
                 health_score = :health, 
                 result_summary = :summary,
                 findings_count = :count,
+                checkpoints = :cp,
                 total_duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000
             WHERE id = :id
         ");
@@ -122,7 +160,10 @@ while (true) {
             'health' => $analysis['health_score'] ?? 'N/A',
             'summary' => json_encode($analysis['summary'] ?? ''),
             'count' => count($analysis['findings'] ?? []),
+            'cp' => json_encode($checkpoints)
         ]);
+        
+        $addCheckpoint('system', 'Workflow Finished', 'success');
 
         // 6. Save individual findings
         if (isset($analysis['findings'])) {
