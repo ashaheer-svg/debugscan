@@ -9,34 +9,58 @@ class DiskParser implements ParserInterface
     public function parse(string $extractedPath, array &$context): array
     {
         $disks = [];
-        $smartFiles = glob($extractedPath . '/dsm/run/synostorage/disks/*');
-
-        foreach ($smartFiles as $file) {
-            if (is_file($file)) {
-                $diskName = basename($file);
-                $content = json_decode(file_get_contents($file), true);
-                if ($content) {
-                    $disks[$diskName] = [
-                        'model' => $content['model'] ?? '',
-                        'serial' => $content['serial'] ?? '',
-                        'size_gb' => round(($content['size'] ?? 0) / 1024 / 1024 / 1024, 2),
-                        'temp' => $content['temp'] ?? 0,
-                        'status' => $content['status'] ?? '',
-                        'smart_status' => $content['smart_status'] ?? '',
-                        'bad_sectors' => $content['bad_sector'] ?? 0,
-                        'reallocated_sectors' => $content['reallocated_sector'] ?? 0,
-                        'power_on_hours' => $content['power_on_hour'] ?? 0,
-                    ];
-                }
+        
+        // 1. Load authoritative metadata from load_info.result if exists (Hardwarev2.md Section 2.2.3)
+        $loadInfo = $this->getLoadInfo($extractedPath);
+        if ($loadInfo && isset($loadInfo['disks'])) {
+            foreach ($loadInfo['disks'] as $disk) {
+                $id = $disk['id'] ?? null;
+                if (!$id) continue;
+                
+                $disks[$id] = [
+                    'model' => $disk['model'] ?? '',
+                    'serial' => $disk['serial'] ?? '',
+                    'size_gb' => round(($disk['size_total'] ?? 0) / 1024 / 1024 / 1024, 2),
+                    'temp' => $disk['temp'] ?? 0,
+                    'status' => $disk['status'] ?? '',
+                    'smart_status' => $disk['smart_status'] ?? '',
+                    'unc' => $disk['unc'] ?? 0,
+                    'is_ssd' => $disk['isSsd'] ?? false,
+                    'slot' => $disk['slot_id'] ?? null,
+                    'container' => $disk['container']['str'] ?? null
+                ];
             }
         }
 
-        // If SMART files are missing, fallback to /proc/partitions or disk_log
+        // 2. Supplement/Fallback with per-disk runtime files (Hardwarev2.md Section 3.2.3)
+        $diskDirs = glob($extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
+        foreach ($diskDirs as $dir) {
+            $diskName = basename($dir);
+            if (!isset($disks[$diskName])) {
+                $disks[$diskName] = [];
+            }
+            
+            if (file_exists($dir . '/model')) $disks[$diskName]['model'] = trim(file_get_contents($dir . '/model'));
+            if (file_exists($dir . '/serial')) $disks[$diskName]['serial'] = trim(file_get_contents($dir . '/serial'));
+            if (file_exists($dir . '/temperature')) $disks[$diskName]['temp'] = (int)trim(file_get_contents($dir . '/temperature'));
+            if (file_exists($dir . '/id')) $disks[$diskName]['slot'] = (int)trim(file_get_contents($dir . '/id'));
+        }
+
+        // 3. Fallback to /proc/partitions for raw discovery (Hardwarev2.md Section 1.3.1)
         if (empty($disks)) {
             $disks = $this->parsePartitions($extractedPath);
         }
 
         return $disks;
+    }
+
+    private function getLoadInfo(string $path): ?array
+    {
+        $file = $path . '/dsm/result/load_info.result';
+        if (file_exists($file)) {
+            return json_decode(file_get_contents($file), true);
+        }
+        return null;
     }
 
     private function parsePartitions(string $path): array
@@ -49,10 +73,13 @@ class DiskParser implements ParserInterface
         $disks = [];
         
         foreach ($lines as $line) {
-            if (preg_match('/^\s+\d+\s+\d+\s+(\d+)\s+(sd[a-z]|sata[0-9]|nvme[0-9]n[0-9])$/', $line, $matches)) {
-                $disks[$matches[2]] = [
-                    'size_gb' => round((int)$matches[1] / 1024 / 1024, 2),
+            // Match whole disks (internal major 8, expansion major 128)
+            // Hardwarev2.md Section 1.3.1 & 2.2.1
+            if (preg_match('/^\s+(8|128)\s+\d+\s+(\d+)\s+(sd[a-z]+|sata\d+|nvme\d+n\d+)$/', $line, $matches)) {
+                $disks[$matches[3]] = [
+                    'size_gb' => round((int)$matches[2] / 1024 / 1024, 2),
                     'status' => 'detected',
+                    'is_expansion' => ($matches[1] == '128')
                 ];
             }
         }

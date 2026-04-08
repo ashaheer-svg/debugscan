@@ -11,15 +11,20 @@ class HardwareParser implements ParserInterface
         $major = $context['majorversion'] ?? 7;
         $hardware = [];
 
-        // 1. Model Name
-        if ($major >= 7 && file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
+        // 1. Model Name (Hardwarev2.md Section 3.1.1 & 2.1.1)
+        if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
             $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));
         } else {
-            // For DSM 6.x, get from synoinfo.conf
+            // For DSM 6.x or older, fallback to synoinfo.conf "unique" field
             $synoInfo = $this->parseSynoInfo($extractedPath);
             $unique = $synoInfo['unique'] ?? '';
-            $parts = explode('_', $unique);
-            $hardware['model'] = strtoupper(end($parts));
+            // e.g. "synology_avoton_rs818+" -> "RS818+"
+            if (!empty($unique)) {
+                $parts = explode('_', $unique);
+                $hardware['model'] = strtoupper(end($parts));
+            } else {
+                $hardware['model'] = 'Unknown Synology';
+            }
         }
 
         // 2. Serial Number - Usually from load_info.result if available
@@ -37,11 +42,14 @@ class HardwareParser implements ParserInterface
             $hardware['cpu_cores'] = substr_count($cpuContent, 'processor');
         }
 
-        // 4. RAM
+        // 4. RAM (Hardwarev2.md Section 3.1.3)
         if (file_exists($extractedPath . '/dsm/proc/meminfo')) {
             $memContent = file_get_contents($extractedPath . '/dsm/proc/meminfo');
             if (preg_match('/MemTotal:\s+(\d+)/', $memContent, $matches)) {
-                $hardware['ram_gb'] = round((int)$matches[1] / 1024 / 1024, 2);
+                $hardware['ram_gb'] = round((int)$matches[1] / 1024 / 1024, 1);
+            }
+            if (preg_match('/MemAvailable:\s+(\d+)/', $memContent, $matches)) {
+                $hardware['ram_available_gb'] = round((int)$matches[1] / 1024 / 1024, 1);
             }
         }
 

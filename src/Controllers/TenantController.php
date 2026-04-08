@@ -19,13 +19,15 @@ class TenantController
     private PDO $pdo;
     private FileService $fileService;
     private ScanService $scanService;
+    private ParseService $parseService;
 
-    public function __construct(Environment $view, PDO $pdo, FileService $fileService, ScanService $scanService)
+    public function __construct(Environment $view, PDO $pdo, FileService $fileService, ScanService $scanService, ParseService $parseService)
     {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->fileService = $fileService;
         $this->scanService = $scanService;
+        $this->parseService = $parseService;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -187,8 +189,70 @@ class TenantController
             // 3. Process/Extract
             $this->fileService->processFile($fileId, $uploadPath);
 
+            // 4. Advanced Hardware Extraction (Hardwarev2.md)
+            $extractedPath = $this->fileService->getExtractedPath($fileId);
+            $parsedData = $this->parseService->parseAll($extractedPath);
+
+            $hw = $parsedData['hardware'] ?? [];
+            $ver = $parsedData['version'] ?? [];
+            
+            // Update Debug File record
+            $stmt = $this->pdo->prepare("
+                UPDATE debug_files SET 
+                    extraction_status = 'completed',
+                    dsm_version = :dsm,
+                    nas_model = :model,
+                    nas_serial = :serial,
+                    extraction_data = :data
+                WHERE id = :id
+            ");
+            $stmt->execute([
+                'dsm' => $ver['product'] ?? null,
+                'model' => $hw['model'] ?? null,
+                'serial' => $hw['serial'] ?? null,
+                'data' => json_encode($parsedData),
+                'id' => $fileId
+            ]);
+
+            // Update Project record with authoritative hardware info
+            $stmt = $this->pdo->prepare("
+                UPDATE projects SET
+                    model = COALESCE(model, :model),
+                    serial_number = COALESCE(serial_number, :serial),
+                    dsm_version = COALESCE(dsm_version, :dsm),
+                    ram_gb = COALESCE(ram_gb, :ram),
+                    cpu_model = COALESCE(cpu_model, :cpu),
+                    updated_at = NOW()
+                WHERE id = :pid
+            ");
+            $stmt->execute([
+                'model' => $hw['model'] ?? null,
+                'serial' => $hw['serial'] ?? null,
+                'dsm' => $ver['product'] ?? null,
+                'ram' => $hw['ram_gb'] ?? null,
+                'cpu' => $hw['cpu_model'] ?? null,
+                'pid' => $id
+            ]);
+
+            // If AJAX, return JSON
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Log file uploaded and processed successfully.',
+                    'file_id' => $fileId
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
             $_SESSION['success'] = 'Log file uploaded and processed successfully.';
         } catch (\Exception $e) {
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => 'Failed to process file: ' . $e->getMessage()
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+            }
             $_SESSION['error'] = 'Failed to process file: ' . $e->getMessage();
         }
 

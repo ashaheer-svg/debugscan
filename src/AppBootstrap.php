@@ -16,6 +16,7 @@ use App\Services\AuthService;
 use App\Services\FileService;
 use App\Services\ScanService;
 use App\Services\AiService;
+use App\Services\ParseService;
 use App\Controllers\AuthController;
 use App\Controllers\TenantController;
 use App\Controllers\AdminController;
@@ -63,7 +64,8 @@ class AppBootstrap
                     $container->get(Environment::class),
                     $container->get(PDO::class),
                     new FileService($container->get(PDO::class), __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted'),
-                    new ScanService($container->get(PDO::class))
+                    new ScanService($container->get(PDO::class)),
+                    new ParseService()
                 );
             },
             AdminController::class => function ($container) {

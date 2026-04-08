@@ -153,33 +153,37 @@
         
         <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
             <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Upload Debug Log</h3>
-            <form action="/projects/upload/{{ project.id }}" method="POST" enctype="multipart/form-data">
-                <div style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; background: var(--bg-light); cursor: pointer;" onclick="document.getElementById('debug_log').click()">
+            <div id="uploadContainer">
+                <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; background: var(--bg-light); cursor: pointer;" onclick="document.getElementById('debug_log').click()">
                     <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
                     <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Click to select file</p>
                     <p style="font-size: 11px; color: var(--text-muted);">Synology debug.dat or .zip</p>
-                    <input type="file" id="debug_log" name="debug_log" style="display: none;" onchange="this.form.submit()">
+                    <input type="file" id="debug_log" name="debug_log" style="display: none;">
                 </div>
                 <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
                     Logs stay within your tenant partition and are encrypted at rest.
                 </p>
-            </form>
+            </div>
         </div>
 
         <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
             <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Project Summary</h3>
             <div style="display: flex; flex-direction: column; gap: 12px;">
                 <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">Case ID</span>
-                    <span style="font-size: 13px; font-weight: 600; font-family: monospace;">{{ project.id|slice(0, 8) }}</span>
+                    <span style="font-size: 13px; color: var(--text-muted);">Model</span>
+                    <span style="font-size: 13px; font-weight: 600;">{{ project.model|default('--') }}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">Created</span>
-                    <span style="font-size: 13px; font-weight: 600;">{{ project.created_at|date('M d, Y') }}</span>
+                    <span style="font-size: 13px; color: var(--text-muted);">DSM Version</span>
+                    <span style="font-size: 13px; font-weight: 600;">{{ project.dsm_version|default('--') }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="font-size: 13px; color: var(--text-muted);">RAM</span>
+                    <span style="font-size: 13px; font-weight: 600;">{{ project.ram_gb ? project.ram_gb ~ ' GB' : '--' }}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                     <span style="font-size: 13px; color: var(--text-muted);">Serial</span>
-                    <span style="font-size: 13px; font-weight: 600;">{{ project.serial_number|default('--') }}</span>
+                    <span style="font-size: 13px; font-weight: 600; font-family: monospace;">{{ project.serial_number|default('--') }}</span>
                 </div>
             </div>
         </div>
@@ -187,14 +191,138 @@
     </aside>
 </div>
 
+<!-- Upload Progress Modal -->
+<div id="uploadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: var(--white); width: 100%; max-width: 440px; padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-3); text-align: center;">
+        <div id="modalIcon" style="font-size: 40px; margin-bottom: 16px;">🚀</div>
+        <h3 id="modalTitle" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Uploading Debug Log</h3>
+        <p id="modalStatus" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">Preparing transmission...</p>
+        
+        <div style="background: var(--bg-light); height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 12px; position: relative;">
+            <div id="progressBar" style="position: absolute; left: 0; top: 0; height: 100%; width: 0%; background: var(--primary); transition: width 0.3s ease;"></div>
+        </div>
+        <div id="progressText" style="font-size: 12px; font-weight: 600; color: var(--text-muted);">0%</div>
+
+        <div id="processingSteps" style="margin-top: 32px; text-align: left; display: none;">
+            <div class="step-item" id="step-extract" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; opacity: 0.5;">
+                <div class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--border);"></div>
+                <span style="font-size: 13px;">Uncompressing Archive</span>
+            </div>
+            <div class="step-item" id="step-parse" style="display: flex; align-items: center; gap: 12px; opacity: 0.5;">
+                <div class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--border);"></div>
+                <span style="font-size: 13px;">Extracting Hardware Identity</span>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     const selectAll = document.getElementById('selectAll');
     const fileChecks = document.querySelectorAll('.file-check');
+    const fileInput = document.getElementById('debug_log');
+    const uploadModal = document.getElementById('uploadModal');
+    const progressBar = document.getElementById('progressBar');
+    const progressText = document.getElementById('progressText');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalStatus = document.getElementById('modalStatus');
+    const modalIcon = document.getElementById('modalIcon');
+    const processingSteps = document.getElementById('processingSteps');
     
     if (selectAll) {
         selectAll.addEventListener('change', () => {
             fileChecks.forEach(cb => cb.checked = selectAll.checked);
         });
+    }
+
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            if (!this.files.length) return;
+            uploadFile(this.files[0]);
+        });
+    }
+
+    function uploadFile(file) {
+        const formData = new FormData();
+        formData.append('debug_log', file);
+
+        const xhr = new XMLHttpRequest();
+        uploadModal.style.display = 'flex';
+        
+        // Stage 1: Uploading
+        xhr.upload.addEventListener('progress', e => {
+            if (e.lengthComputable) {
+                const percent = Math.round((e.loaded / e.total) * 100);
+                progressBar.style.width = percent + '%';
+                progressText.innerText = percent + '%';
+                modalStatus.innerText = `Transmitting ${file.name} (${(e.loaded/1024/1024).toFixed(1)}MB / ${(e.total/1024/1024).toFixed(1)}MB)`;
+            }
+        });
+
+        xhr.addEventListener('load', () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+                // Stage 2: Processing
+                transitionToProcessing();
+                setTimeout(() => {
+                    location.reload();
+                }, 2000); // Give user time to see completion
+            } else {
+                let errorMsg = "Upload failed";
+                try {
+                    const resp = JSON.parse(xhr.responseText);
+                    errorMsg = resp.message || errorMsg;
+                } catch(e) {}
+                handleUploadError(errorMsg);
+            }
+        });
+
+        xhr.addEventListener('error', () => handleUploadError("Network connection lost"));
+        
+        xhr.open('POST', '/projects/upload/{{ project.id }}');
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.send(formData);
+    }
+
+    function transitionToProcessing() {
+        modalIcon.innerText = '⚙️';
+        modalTitle.innerText = 'Analyzing Debug Log';
+        modalStatus.innerText = 'Finalizing extraction and mapping metadata...';
+        progressBar.style.width = '100%';
+        progressBar.style.background = 'var(--success)';
+        progressText.innerText = 'UPLOAD COMPLETE';
+        processingSteps.style.display = 'block';
+        
+        // Simulated sub-steps for UX since backend is one-shot
+        const stepExtract = document.getElementById('step-extract');
+        const stepParse = document.getElementById('step-parse');
+        
+        setTimeout(() => {
+            stepExtract.style.opacity = '1';
+            stepExtract.querySelector('.step-dot').style.background = 'var(--success)';
+        }, 500);
+        
+        setTimeout(() => {
+            stepParse.style.opacity = '1';
+            stepParse.querySelector('.step-dot').style.background = 'var(--success)';
+            modalIcon.innerText = '✅';
+            modalTitle.innerText = 'Extraction Successful';
+            modalStatus.innerText = 'Hardware identity and storage topology mapped.';
+        }, 1200);
+    }
+
+    function handleUploadError(msg) {
+        modalIcon.innerText = '❌';
+        modalTitle.innerText = 'Upload Failed';
+        modalStatus.innerText = msg || 'An unknown error occurred during processing.';
+        modalStatus.style.color = 'var(--error)';
+        progressBar.style.background = 'var(--error)';
+        
+        setTimeout(() => {
+            uploadModal.style.display = 'none';
+            // Reset for next attempt
+            modalStatus.style.color = '';
+            progressBar.style.background = '';
+            fileInput.value = '';
+        }, 5000);
     }
 </script>
 {% endblock %}
