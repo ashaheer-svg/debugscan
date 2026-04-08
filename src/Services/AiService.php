@@ -11,7 +11,7 @@ class AiService
 {
     private Client $client;
     private string $apiKey;
-    private string $baseUrl = 'https://api.groq.com/openai/v1';
+    private string $baseUrl = 'https://api.groq.com/openai/v1/';
 
     public function __construct(string $apiKey)
     {
