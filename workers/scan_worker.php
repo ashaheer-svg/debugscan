@@ -30,31 +30,8 @@ $aiService = new AiService($aiApiKey);
 
 echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
-echo "DEBUG: DB_NAME ENV: " . getenv('DB_NAME') . "\n";
-echo "DEBUG: DB CONNECTED: " . $pdo->query("SELECT current_database()")->fetchColumn() . "\n";
-echo "DEBUG: DB SEARCH PATH: " . $pdo->query("SELECT current_setting('search_path')")->fetchColumn() . "\n";
-echo "DEBUG: DB USER: " . $pdo->query("SELECT current_user")->fetchColumn() . "\n";
-echo "DEBUG: GROQ_KEY: " . substr($aiApiKey, 0, 8) . "...\n";
 
 while (true) {
-    // 1. Pick up a queued job
-    $allTables = $pdo->query("SELECT schemaname, tablename FROM pg_catalog.pg_tables ORDER BY schemaname, tablename")->fetchAll(PDO::FETCH_ASSOC);
-    echo "DEBUG: Available Tables:\n";
-    foreach ($allTables as $t) {
-        if ($t['schemaname'] !== 'pg_catalog' && $t['schemaname'] !== 'information_schema') {
-            echo "  - {$t['schemaname']}.{$t['tablename']}\n";
-        }
-    }
-
-    $stmt = $pdo->prepare("
-        SELECT id, status
-        FROM scan_jobs
-        LIMIT 1
-    ");
-    $stmt->execute();
-    $test = $stmt->fetch();
-    echo "DEBUG: Simple scan_jobs count test: " . ($test ? 'found one' : 'zero rows found') . "\n";
-
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
         SELECT id, tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
@@ -69,7 +46,6 @@ while (true) {
 
     if (!$job) {
         $pdo->rollBack();
-        echo "DEBUG: No queued jobs found.\n";
         if (isset($argv[1]) && $argv[1] === 'once') break;
         sleep(2);
         continue;
