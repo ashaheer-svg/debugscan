@@ -45,10 +45,19 @@ class AppBootstrap
             },
             Environment::class => function () {
                 $loader = new FilesystemLoader(__DIR__ . '/../templates');
-                return new Environment($loader, [
+                $twig = new Environment($loader, [
                     'cache' => false, // Set to a path in production
                     'debug' => (getenv('APP_DEBUG') ?: 'false') === 'true',
                 ]);
+
+                // Register custom filters
+                $twig->addFilter(new \Twig\TwigFilter('json_decode', function ($string) {
+                    if (!$string) return '';
+                    $decoded = json_decode((string)$string, true);
+                    return $decoded === null ? $string : $decoded;
+                }));
+
+                return $twig;
             },
             AuthService::class => function ($container) {
                 return new AuthService($container->get(PDO::class));
