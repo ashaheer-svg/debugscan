@@ -76,8 +76,9 @@ class AiService
             
             // 2. Physical Layout & RAID
             $userPrompt .= "#### STORAGE ARCHITECTURE\n";
-            $userPrompt .= "Pools/Volumes: " . json_encode($fileData['volumes'] ?? []) . "\n";
-            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? []) . "\n\n";
+            $userPrompt .= "Pools/Volumes: " . json_encode($fileData['volumes'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
+            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
+
 
             // 3. Level 1 Packaged Logs (Forensic signal)
             if (isset($fileData['packaged_logs'])) {
@@ -88,7 +89,8 @@ class AiService
                 $userPrompt .= $fileData['packaged_logs']['disk_ops'] . "\n\n";
             } else {
                 // Fallback to basic JSON if no packaged logs
-                $userPrompt .= "#### BASIC TELEMETRY\n" . json_encode($fileData, JSON_PRETTY_PRINT) . "\n\n";
+                $userPrompt .= "#### BASIC TELEMETRY\n" . json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
+
             }
         }
 

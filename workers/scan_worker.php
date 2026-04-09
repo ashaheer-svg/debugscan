@@ -28,6 +28,15 @@ $fileService = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . 
 $aiApiKey = getenv('GROQ_API_KEY') ?: ($_ENV['GROQ_API_KEY'] ?? '');
 $aiService = new AiService($aiApiKey);
 
+/**
+ * Parses a PostgreSQL array string (e.g., "{uuid1,uuid2}") into a PHP array.
+ */
+function parsePgArray(?string $pgArray): array {
+    if (!$pgArray || $pgArray === '{}') return [];
+    return explode(',', trim($pgArray, '{}'));
+}
+
+
 echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
 
@@ -69,7 +78,8 @@ while (true) {
                 'ts' => date('Y-m-d H:i:s')
             ];
             $stmt = $pdo->prepare("UPDATE scan_jobs SET checkpoints = :cp, progress_stage = :stage WHERE id = :id");
-            $stmt->execute(['cp' => json_encode($checkpoints), 'stage' => $stage, 'id' => $job['id']]);
+            $stmt->execute(['cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE), 'stage' => $stage, 'id' => $job['id']]);
+
         };
 
         // Update function for progress percent
@@ -78,12 +88,14 @@ while (true) {
             $stmt->execute(['stage' => $stage, 'percent' => $percent, 'id' => $job['id']]);
         };
 
-        $addCheckpoint('system', 'Initializing', 'success', ['files' => count($job['debug_file_ids'])]);
+        $addCheckpoint('system', 'Initializing', 'success', ['files' => count(parsePgArray($job['debug_file_ids'] ?? ''))]);
 
         // 3. Collect diagnostic data for all files in the scan
         $allDiagnosticData = [];
-        $fileCount = count($job['debug_file_ids']);
-        foreach ($job['debug_file_ids'] as $index => $fileId) {
+        $debugFileIds = parsePgArray($job['debug_file_ids'] ?? '');
+        $fileCount = count($debugFileIds);
+        foreach ($debugFileIds as $index => $fileId) {
+
              $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 20));
 
              $destPath = $fileService->getExtractedPath($fileId);
@@ -169,11 +181,12 @@ while (true) {
         $stmt->execute([
             'id' => $job['id'],
             'health' => $analysis['health_score'] ?? 'N/A',
-            'summary' => json_encode($analysis['summary'] ?? ''),
-            'payload' => json_encode($allDiagnosticData),
+            'summary' => json_encode($analysis['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
+            'payload' => json_encode($allDiagnosticData, JSON_INVALID_UTF8_SUBSTITUTE),
             'count' => count($analysis['findings'] ?? []),
-            'cp' => json_encode($checkpoints)
+            'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)
         ]);
+
 
         
         $addCheckpoint('system', 'Workflow Finished', 'success');
