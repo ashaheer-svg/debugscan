@@ -30,11 +30,17 @@ class DatabaseParser
         'power supply', 'Bad Sector', 'UNC', 'ioerr', 'Disk', 'removed', 'inserted'
     ];
 
+    private ?string $relevanceRegex = null;
+
     public function __construct(string $extractPath)
     {
         $this->extractPath = rtrim($extractPath, DIRECTORY_SEPARATOR);
         $this->locateDatabases();
         $this->detectRelativeCutoffs();
+        
+        // Build optimized regex for pattern matching
+        $patterns = array_map('preg_quote', self::RELEVANCE_PATTERNS);
+        $this->relevanceRegex = '/' . implode('|', $patterns) . '/i';
     }
 
     private function locateDatabases(): void
@@ -126,7 +132,7 @@ class DatabaseParser
         $this->cutoffDate = date('Y-m-d', $this->cutoffUnix);
     }
 
-    public function parseAll(): array
+    public function parseAll(?callable $onProgress = null): array
     {
         $results = [];
         $stats = ['root_path' => $this->forensicRoot ?? 'not found'];
@@ -139,7 +145,7 @@ class DatabaseParser
             try {
                 switch ($name) {
                     case '.SYNOSYSDB':
-                        $res = $this->parseSystemEvents($path);
+                        $res = $this->parseSystemEvents($path, $onProgress);
                         $results['system_events'] = $res['data'];
                         $stats['system_events'] = $res['stats'];
                         break;
@@ -149,12 +155,12 @@ class DatabaseParser
                         $stats['disk_health'] = $res['stats'];
                         break;
                     case '.SYNOCONNDB':
-                        $res = $this->parseConnections($path);
+                        $res = $this->parseConnections($path, $onProgress);
                         $results['connection_logs'] = $res['data'];
                         $stats['connection_logs'] = $res['stats'];
                         break;
                     case '.SYNODISKDB':
-                        $res = $this->parseDiskEvents($path);
+                        $res = $this->parseDiskEvents($path, $onProgress);
                         $results['disk_events'] = $res['data'];
                         $stats['disk_events'] = $res['stats'];
                         break;
@@ -171,10 +177,7 @@ class DatabaseParser
     private function isRelevant(string $msg, string $level): bool
     {
         if ($level !== 'info') return true; // Keep all warning/err
-        foreach (self::RELEVANCE_PATTERNS as $pattern) {
-            if (stripos($msg, $pattern) !== false) return true;
-        }
-        return false;
+        return preg_match($this->relevanceRegex, $msg) === 1;
     }
 
     private function getPdo(string $path): PDO
@@ -185,20 +188,25 @@ class DatabaseParser
         return $pdo;
     }
 
-    private function parseSystemEvents(string $path): array
+    private function parseSystemEvents(string $path, ?callable $onProgress = null): array
     {
         $pdo = $this->getPdo($path);
         
         $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
         
-        // Get Rows in window
+        // Memory-safe stream processing
         $stmt = $pdo->prepare("SELECT time, level, username, msg FROM logs WHERE time >= :cutoff ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
-        $allInWindow = $stmt->fetchAll();
-
-        // 2. Filter by relevance
+        
         $selected = [];
-        foreach ($allInWindow as $row) {
+        $scanned = 0;
+        
+        while ($row = $stmt->fetch()) {
+            $scanned++;
+            if ($onProgress && $scanned % 5000 === 0) {
+                $onProgress("Scanning System Events: " . number_format($scanned) . " / " . number_format($total));
+            }
+
             if ($this->isRelevant($row['msg'], $row['level'])) {
                 $selected[] = $row;
             }
@@ -228,16 +236,25 @@ class DatabaseParser
         ];
     }
 
-    private function parseConnections(string $path): array
+    private function parseConnections(string $path, ?callable $onProgress = null): array
     {
         $pdo = $this->getPdo($path);
         
         $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
         
         // Tiered filter: Warnings/Errors + aggregations
-        $stmt = $pdo->prepare("SELECT time, level, username, ip, protocol, msg FROM logs WHERE time >= :cutoff AND level IN ('warning', 'err') ORDER BY time ASC");
+        $stmt = $pdo->prepare("SELECT time, level, username, ip, protocol, msg FROM logs WHERE time >= :cutoff AND (level IN ('warning', 'err') OR msg LIKE '%failed%') ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
-        $critical = $stmt->fetchAll();
+
+        $critical = [];
+        $scanned = 0;
+        while ($row = $stmt->fetch()) {
+            $scanned++;
+            if ($onProgress && $scanned % 5000 === 0) {
+                $onProgress("Scanning Connection Logs: " . number_format($scanned));
+            }
+            $critical[] = $row;
+        }
 
         $stmt = $pdo->prepare("SELECT ip, username, COUNT(*) as attempts, MIN(time) as first_seen, MAX(time) as last_seen FROM logs WHERE time >= :cutoff AND level = 'warning' AND msg LIKE '%failed%' GROUP BY ip, username HAVING attempts >= 3 ORDER BY attempts DESC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
@@ -245,7 +262,7 @@ class DatabaseParser
         
         return [
             'data' => [
-                'summary_groups' => [], // Add if needed, simplifying for now
+                'summary_groups' => [],
                 'brute_force' => $bruteForce,
                 'critical_events' => $critical
             ],
@@ -253,7 +270,7 @@ class DatabaseParser
         ];
     }
 
-    private function parseDiskEvents(string $path): array
+    private function parseDiskEvents(string $path, ?callable $onProgress = null): array
     {
         $pdo = $this->getPdo($path);
         $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
@@ -262,13 +279,19 @@ class DatabaseParser
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
         $summary = $stmt->fetchAll();
 
-        $stmt = $pdo->prepare("SELECT time, level, model, serial, slot, container, msg, errtype, info FROM logs WHERE time >= :cutoff AND level IN ('info', 'warning', 'err') ORDER BY time ASC");
+        // Memory-safe stream for detailed events
+        $stmt = $pdo->prepare("SELECT time, level, model, serial, slot, container, msg, errtype, info FROM logs WHERE time >= :cutoff ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
-        $allEvents = $stmt->fetchAll();
 
         $selected = [];
-        foreach ($allEvents as $row) {
-            if ($this->isRelevant($row['msg'], $row['level'])) {
+        $scanned = 0;
+        while ($row = $stmt->fetch()) {
+            $scanned++;
+            if ($onProgress && $scanned % 5000 === 0) {
+                $onProgress("Scanning Drive Events: " . number_format($scanned) . " / " . number_format($total));
+            }
+
+            if ($this->isRelevant($row['msg'] ?? '', $row['level'] ?? '')) {
                 $selected[] = $row;
             }
         }

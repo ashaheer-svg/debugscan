@@ -122,7 +122,7 @@ while (true) {
 
                  if (is_dir($destPath)) {
                     $dbParser = new DatabaseParser($destPath);
-                    $dbResults = $dbParser->parseAll();
+                    $dbResults = $dbParser->parseAll($updateProgress);
                     
                     $addCheckpoint('forensic', 'Cache Population', 'success', [
                         'file_id' => $fileId, 
