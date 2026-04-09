@@ -39,8 +39,27 @@ class DatabaseParser
 
     private function locateDatabases(): void
     {
-        // 1. Find the forensic root by looking for ANY target database recursively
-        $this->forensicRoot = $this->findForensicRoot($this->extractPath);
+        // 1. Try "Fast Path" first (Standard Synology locations)
+        $fastPaths = [
+            $this->extractPath . DIRECTORY_SEPARATOR . 'dsm' . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'synolog',
+            $this->extractPath . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'synolog'
+        ];
+
+        foreach ($fastPaths as $path) {
+            if (is_dir($path)) {
+                foreach (self::TARGET_DBS as $db) {
+                    if (file_exists($path . DIRECTORY_SEPARATOR . $db)) {
+                        $this->forensicRoot = $path;
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        // 2. If fast-path failed, perform a depth-limited recursive search
+        if (!$this->forensicRoot) {
+            $this->forensicRoot = $this->findForensicRoot($this->extractPath);
+        }
         
         if (!$this->forensicRoot) {
             return; // No databases found
@@ -54,9 +73,15 @@ class DatabaseParser
         }
     }
 
-    private function findForensicRoot(string $dir): ?string
+    private function findForensicRoot(string $dir, int $depth = 0): ?string
     {
-        if (!is_dir($dir)) return null;
+        if (!is_dir($dir) || $depth > 5) return null;
+
+        // Folders to skip (system/temp noise)
+        $blacklist = ['bin', 'usr', 'etc', 'dev', 'lib', 'lib64', 'proc', 'run', 'sys', 'tmp', 'boot'];
+        
+        $baseName = basename($dir);
+        if (in_array(strtolower($baseName), $blacklist)) return null;
 
         // Check if ANY of the target databases are in this directory
         foreach (self::TARGET_DBS as $db) {
@@ -66,11 +91,14 @@ class DatabaseParser
         }
 
         // Search subdirectories
-        $files = array_diff(scandir($dir), ['.', '..']);
+        $files = @scandir($dir);
+        if ($files === false) return null;
+        
+        $files = array_diff($files, ['.', '..']);
         foreach ($files as $file) {
             $path = $dir . DIRECTORY_SEPARATOR . $file;
             if (is_dir($path)) {
-                $found = $this->findForensicRoot($path);
+                $found = $this->findForensicRoot($path, $depth + 1);
                 if ($found) return $found;
             }
         }
