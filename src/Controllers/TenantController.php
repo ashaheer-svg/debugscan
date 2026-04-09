@@ -476,7 +476,13 @@ class TenantController
             return $response->withStatus(404);
         }
 
+        // Parse PostgreSQL array string to PHP array for JSON response
+        if (isset($job['debug_file_ids']) && is_string($job['debug_file_ids'])) {
+            $job['debug_file_ids'] = explode(',', trim($job['debug_file_ids'], '{}'));
+        }
+
         $response->getBody()->write(json_encode($job));
+
         return $response->withHeader('Content-Type', 'application/json');
     }
 

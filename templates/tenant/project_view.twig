@@ -399,10 +399,15 @@
             .then(job => {
                 const isFinished = job.status === 'completed' || job.status === 'failed';
                 
-                job.debug_file_ids.forEach(fid => {
-                    const container = document.getElementById('progress-container-' + fid);
-                    const bar = document.getElementById('progress-bar-' + fid);
-                    const stage = document.getElementById('progress-stage-' + fid);
+                // Defensive: Ensure debug_file_ids is an array
+                const fileIds = typeof job.debug_file_ids === 'string' ? job.debug_file_ids.replace('{','').replace('}','').split(',') : job.debug_file_ids;
+                
+                if (fileIds) {
+                    fileIds.forEach(fid => {
+                        const container = document.getElementById('progress-container-' + fid);
+                        const bar = document.getElementById('progress-bar-' + fid);
+                        const stage = document.getElementById('progress-stage-' + fid);
+
                     const l1Btn = document.getElementById('l1-btn-' + fid);
                     const l2Btn = document.getElementById('l2-btn-' + fid);
                     const badge = document.getElementById(job.scan_level + '-badge-' + fid);
@@ -438,8 +443,9 @@
                                 badge.style.color = job.scan_level === 'level1' ? 'var(--success)' : 'var(--warning)';
                             }
                         }
-                    }
-                });
+                    });
+                }
+
 
                 if (isFinished) {
                     activeScans.delete(scanId);
@@ -601,8 +607,11 @@
                     files: data.debug_file_ids
                 });
                 pollScans();
-                setInterval(pollScans, 3000);
+                if (!window.pollInterval) {
+                   window.pollInterval = setInterval(pollScans, 3000);
+                }
             } else {
+
                 alert(data.message || 'Failed to start scan');
             }
         })

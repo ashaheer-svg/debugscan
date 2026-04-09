@@ -21,6 +21,8 @@ use App\Controllers\TenantController;
 use App\Controllers\AdminController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
+use App\Middleware\ViewDataMiddleware;
+
 
 
 class AppBootstrap
@@ -73,7 +75,14 @@ class AppBootstrap
                     new AiService(getenv('GROQ_API_KEY'))
                 );
             },
+            ViewDataMiddleware::class => function ($container) {
+                return new ViewDataMiddleware(
+                    $container->get(Environment::class),
+                    $container->get(PDO::class)
+                );
+            },
         ]);
+
 
         $container = $containerBuilder->build();
 
@@ -132,7 +141,9 @@ class AppBootstrap
             $group->get('/admin/scans', [AdminController::class, 'scans']);
             $group->get('/admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('/admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
-        })->add(new AuthMiddleware($container->get(PDO::class)));
+        })->add($container->get(ViewDataMiddleware::class))
+          ->add(new AuthMiddleware($container->get(PDO::class)));
+
 
         return $app;
     }
