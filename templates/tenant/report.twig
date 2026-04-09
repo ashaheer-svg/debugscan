@@ -23,7 +23,12 @@
 <section style="background: var(--white); padding: 32px; border-radius: var(--radius); box-shadow: var(--shadow-1); margin-bottom: 32px; border-left: 4px solid var(--primary);">
     <h3 style="margin-bottom: 16px; font-weight: 700;">Executive Summary</h3>
     <p style="font-size: 15px; color: var(--text-primary); line-height: 1.7;">
-        {{ job.result_summary|json_decode }}
+        {% set summary = job.result_summary|json_decode %}
+        {% if summary is iterable %}
+            {{ summary.text|default(summary|json_encode) }}
+        {% else %}
+            {{ summary|default('No summary available for this scan.') }}
+        {% endif %}
     </p>
 </section>
 
