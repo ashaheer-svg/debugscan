@@ -15,10 +15,14 @@
         <h1 class="page-title">Hardware Discovery Report</h1>
         <p class="page-subtitle">Platform audit generated from <code>{{ file.original_filename }}</code></p>
     </div>
-    <div style="display: flex; gap: 12px;">
+    <div style="display: flex; gap: 12px; align-items: center;">
+        {% if scans %}
+            <a href="/scans/report/{{ scans[0].id }}" class="btn" style="background: var(--success); color: white; width: auto; text-decoration: none; font-weight: 700;">View Latest AI Forensic</a>
+        {% endif %}
         <a href="/files/raw/{{ file.id }}" target="_blank" class="btn" style="background: var(--white); border: 1px solid var(--border); color: var(--text-primary); width: auto; text-decoration: none;">View Raw JSON</a>
     </div>
 </header>
+
 
 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 32px;">
     <!-- System Identity -->
@@ -182,4 +186,60 @@
     </div>
 </section>
 
+<!-- AI Analysis History (within 1 Year) -->
+<section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden; margin-top: 32px;">
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin: 0; letter-spacing: 0.5px;">Forensic Audit History (Last 1 Year)</h3>
+        <span style="font-size: 12px; color: var(--text-muted);">{{ pagination.count }} scan(s) found</span>
+    </div>
+    
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
+                <th style="padding: 12px 24px;">Date</th>
+                <th style="padding: 12px 0;">Audit Level</th>
+                <th style="padding: 12px 0;">Health Score</th>
+                <th style="padding: 12px 24px; text-align: right;">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scan in scans %}
+            <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
+                <td style="padding: 16px 24px; color: var(--text-secondary);">{{ scan.completed_at|date('M d, Y H:i') }}</td>
+                <td style="padding: 16px 0;">
+                    <span class="badge" style="background: {% if scan.scan_level == 'level1' %}var(--success-light){% else %}var(--warning-light){% endif %}; color: {% if scan.scan_level == 'level1' %}var(--success){% else %}var(--warning){% endif %}; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700;">
+                        {{ scan.scan_level|upper }}
+                    </span>
+                    {% if scan.debug_file_ids|length > 1 %}
+                        <span style="font-size: 10px; color: var(--text-muted); margin-left: 4px;">(Multi-File)</span>
+                    {% endif %}
+                </td>
+                <td style="padding: 16px 0; font-weight: 800; color: var(--text-primary);">
+                    {{ scan.health_score|default('--') }}{% if scan.health_score %}%{% endif %}
+                </td>
+                <td style="padding: 16px 24px; text-align: right;">
+                    <a href="/scans/report/{{ scan.id }}" class="btn btn-sm" style="background: var(--primary); color: white; text-decoration: none; padding: 4px 12px; font-size: 11px; border-radius: 4px;">Report</a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if not scans %}
+            <tr>
+                <td colspan="4" style="padding: 40px; text-align: center; color: var(--text-muted); font-size: 13px;">
+                    No AI forensic logs found for this hardware diagnostic in the last 1 year.
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    {% if pagination.total > 1 %}
+    <div style="padding: 16px 24px; border-top: 1px solid var(--row-border); display: flex; justify-content: center; gap: 8px;">
+        {% for i in 1..pagination.total %}
+            <a href="?page={{ i }}" class="btn btn-sm" style="padding: 4px 10px; width: auto; text-decoration: none; {% if i == pagination.current %}background: var(--primary); color: white;{% else %}background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);{% endif %}">{{ i }}</a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</section>
+
 {% endblock %}
+

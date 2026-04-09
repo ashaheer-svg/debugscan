@@ -19,9 +19,14 @@
         <p class="stat-label">Groq Tokens Consumed</p>
     </div>
     <div class="stat-card">
-        <h2 class="stat-value">99.8%</h2>
-        <p class="stat-label">Parser Success Rate</p>
+        <h2 class="stat-value">{{ cpu_load }}</h2>
+        <p class="stat-label">CPU Load (1m)</p>
     </div>
+    <div class="stat-card">
+        <h2 class="stat-value">{{ disk_free_gb }} GB</h2>
+        <p class="stat-label">Disk Free Space ({{ 100 - disk_used_percent }}%)</p>
+    </div>
+
 </div>
 
 <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">

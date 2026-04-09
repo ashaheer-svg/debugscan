@@ -45,13 +45,23 @@ class AdminController
         ");
         $recentActivity = $stmt->fetchAll();
 
+        // Platform Performance Metrics
+        $cpuLoad = function_exists('sys_getloadavg') ? sys_getloadavg()[0] : 0;
+        $diskFree = disk_free_space("/") ?: 1;
+        $diskTotal = disk_total_space("/") ?: 1;
+        $diskUsedPercent = round((($diskTotal - $diskFree) / $diskTotal) * 100, 1);
+
         $body = $this->view->render('admin/dashboard.twig', [
             'tenant_count' => $tenantCount,
             'total_scans' => $totalScans,
             'tokens_used' => $totalTokensUsed,
+            'cpu_load' => $cpuLoad,
+            'disk_free_gb' => round($diskFree / 1073741824, 2),
+            'disk_used_percent' => $diskUsedPercent,
             'recent_activity' => $recentActivity,
             'active_page' => 'admin_dash'
         ]);
+
         $response->getBody()->write($body);
         return $response;
     }
@@ -71,18 +81,41 @@ class AdminController
         ");
         $tenantsData = $stmt->fetchAll();
 
-        // Format storage strings
+        // Format storage strings and add breakdown
         $tenants = array_map(function($t) {
-            $bytes = (int)$t['total_storage_bytes'];
-            if ($bytes >= 1073741824) {
-                $t['storage_formatted'] = number_format($bytes / 1073741824, 2) . ' GB';
-            } elseif ($bytes >= 1048576) {
-                $t['storage_formatted'] = number_format($bytes / 1048576, 2) . ' MB';
-            } else {
-                $t['storage_formatted'] = number_format($bytes / 1024, 2) . ' KB';
+            $tid = $t['id'];
+            
+            // Raw Uploads (linked in DB)
+            $rawBytes = (int)$t['total_storage_bytes'];
+            
+            // Extracted Workspace (Recursion)
+            $extractPath = __DIR__ . '/../../storage/extracted';
+            $extractBytes = 0;
+            // Only count folders belonging to this tenant's file IDs
+            $stmt = $this->pdo->prepare("SELECT id FROM debug_files WHERE tenant_id = :tid");
+            $stmt->execute(['tid' => $tid]);
+            $fids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+            foreach ($fids as $fid) {
+                $path = $extractPath . '/' . $fid;
+                if (is_dir($path)) {
+                    $extractBytes += $this->getFolderSize($path);
+                }
             }
+
+            // Database estimate (Findings/Jobs/Scans)
+            $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM scan_findings WHERE tenant_id = :tid");
+            $stmt->execute(['tid' => $tid]);
+            $findingsCount = $stmt->fetchColumn();
+            $dbEstimateBytes = $findingsCount * 1024; // Avg 1KB per finding
+
+            $t['raw_storage'] = $this->formatBytes($rawBytes);
+            $t['extract_storage'] = $this->formatBytes($extractBytes);
+            $t['db_storage'] = $this->formatBytes($dbEstimateBytes);
+            $t['total_formatted'] = $this->formatBytes($rawBytes + $extractBytes + $dbEstimateBytes);
+            
             return $t;
         }, $tenantsData);
+
 
         $body = $this->view->render('admin/tenants.twig', [
             'tenants' => $tenants,
@@ -337,4 +370,71 @@ class AdminController
 
         return $response->withHeader('Location', '/admin/settings?status=saved')->withStatus(302);
     }
+
+    public function scans(Request $request, Response $response): Response
+    {
+        $stmt = $this->pdo->query("
+            SELECT s.*, u.display_name as tenant_name, p.name as project_name
+            FROM scan_jobs s
+            JOIN users u ON s.tenant_id = u.id
+            JOIN projects p ON s.project_id = p.id
+            ORDER BY s.created_at DESC
+        ");
+        $scans = $stmt->fetchAll();
+
+        $body = $this->view->render('admin/scans.twig', [
+            'scans' => $scans,
+            'active_page' => 'admin_scans'
+        ]);
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function downloadRawData(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("SELECT result_summary FROM scan_jobs WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $summary = $stmt->fetchColumn();
+
+        // Note: The original packaged prompt isn't stored, but we can return the summary 
+        // or re-generate if needed. User requested "raw file set generated for ai review".
+        // For now, providing the summary as a representation.
+        
+        $response->getBody()->write($summary ?: json_encode(['error' => 'No data found']));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Content-Disposition', 'attachment; filename="raw_ai_payload_' . $id . '.json"');
+    }
+
+    public function downloadReport(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("SELECT result_raw_response FROM scan_jobs WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $raw = $stmt->fetchColumn();
+
+        $response->getBody()->write($raw ?: "No report data available.");
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Content-Disposition', 'attachment; filename="ai_report_' . $id . '.json"');
+    }
+
+    private function getFolderSize($path): int
+    {
+        $size = 0;
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
+            $size += $file->getSize();
+        }
+        return $size;
+    }
+
+    private function formatBytes($bytes): string
+    {
+        if ($bytes >= 1073741824) return number_format($bytes / 1073741824, 2) . ' GB';
+        if ($bytes >= 1048576) return number_format($bytes / 1048576, 2) . ' MB';
+        if ($bytes >= 1024) return number_format($bytes / 1024, 2) . ' KB';
+        return $bytes . ' B';
+    }
 }
+

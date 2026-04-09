@@ -110,15 +110,16 @@
                 <div style="padding: 24px; background: var(--bg-light); border-top: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 16px; align-items: center;">
                         <label style="font-size: 13px; font-weight: 600;">Analysis Level:</label>
-                        <select name="level" style="padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; background: var(--white);">
+                        <select id="scanLevel" name="level" style="padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; background: var(--white);">
                             <option value="level1">Level 1 (Standard Forensic Audit)</option>
                             <option value="level2">Level 2 (Deep Hardware Discovery)</option>
                         </select>
                     </div>
-                    <button type="submit" class="btn btn-primary" style="width: auto; padding: 10px 24px;">Queue Analysis Job</button>
+                    <button type="button" onclick="showTokenApproval()" class="btn btn-primary" style="width: auto; padding: 10px 24px;">Queue Analysis Job</button>
                 </div>
                 {% endif %}
             </form>
+
         </section>
 
         <!-- Scans Section -->
@@ -408,9 +409,23 @@
 
                     if (job.status === 'running' || job.status === 'queued') {
                         container.style.display = 'block';
-                        bar.style.width = (job.progress_percent || 0) + '%';
-                        stage.innerText = job.progress_stage || 'Queued...';
+                        
+                        // Stepped Progress Mapping
+                        const stages = ['Initializing', 'Extracting', 'Database Parsing', 'AI Analysis', 'Finalizing'];
+                        const currentStageIdx = stages.indexOf(job.progress_stage);
+                        const progress = currentStageIdx >= 0 ? ((currentStageIdx + 1) / stages.length) * 100 : (job.progress_percent || 0);
+                        
+                        bar.style.width = progress + '%';
+                        stage.innerHTML = `
+                            <div style="display: flex; gap: 4px; margin-top: 4px;">
+                                ${stages.map((s, i) => `
+                                    <div style="flex: 1; height: 3px; border-radius: 1px; background: ${i <= currentStageIdx ? 'var(--primary)' : 'var(--bg-light)'};"></div>
+                                `).join('')}
+                            </div>
+                            <div style="margin-top: 4px;">${job.progress_stage || 'Queued...'}</div>
+                        `;
                     } else if (isFinished) {
+
                         container.style.display = 'none';
                         if (job.status === 'completed') {
                             const btn = job.scan_level === 'level1' ? l1Btn : l2Btn;
@@ -546,7 +561,102 @@
     function closeCheckpointModal() {
         document.getElementById('checkpointModal').style.display = 'none';
     }
+
+    function showTokenApproval() {
+        const fileIds = Array.from(document.querySelectorAll('.file-check:checked')).map(cb => cb.value);
+        if (fileIds.length === 0) {
+            alert('Please select at least one log file to scan.');
+            return;
+        }
+
+        const level = document.getElementById('scanLevel').value;
+        const modal = document.getElementById('tokenModal');
+        const tokenLabel = document.getElementById('tokenAllocation');
+        const levelLabel = document.getElementById('modalScanLevel');
+        
+        // Final sanity check for auto-L2
+        const effectiveLevel = fileIds.length > 1 ? 'level2' : level;
+        
+        levelLabel.innerText = effectiveLevel === 'level1' ? 'LEVEL 1 (Standard Forensic Audit)' : 'LEVEL 2 (Deep Hardware / Multi-File Audit)';
+        tokenLabel.innerText = effectiveLevel === 'level1' ? '12,000 Tokens' : '40,000 Tokens'; // Estimates or limits
+        
+        modal.style.display = 'flex';
+    }
+
+    function confirmScan() {
+        document.getElementById('tokenModal').style.display = 'none';
+        const form = document.getElementById('scanForm');
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                activeScans.set(data.job_id, {
+                    level: formData.get('level'),
+                    files: data.debug_file_ids
+                });
+                pollScans();
+                setInterval(pollScans, 3000);
+            } else {
+                alert(data.message || 'Failed to start scan');
+            }
+        })
+        .catch(err => alert('Error starting scan: ' + err));
+    }
+
+    function cancelScan() {
+        document.getElementById('tokenModal').style.display = 'none';
+    }
+
+    function deleteScan(id) {
+        if (!confirm('Permanently delete this analysis record and its findings?')) return;
+        
+        fetch(`/scans/delete/${id}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message);
+        });
+    }
 </script>
+
+    <!-- Token Approval Modal -->
+    <div id="tokenModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: var(--white); width: 100%; max-width: 480px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">
+            <div style="padding: 32px; text-align: center;">
+                <div style="font-size: 40px; margin-bottom: 16px;">🎟️</div>
+                <h3 style="margin-bottom: 8px;">Token Allocation Approval</h3>
+                <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">
+                    This analysis job requires a token allocation from your tenant balance.
+                </p>
+                
+                <div style="background: var(--bg-light); border-radius: 8px; padding: 20px; text-align: left; border: 1px solid var(--border); margin-bottom: 24px;">
+                    <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Scan Level</span>
+                        <span id="modalScanLevel" style="font-size: 13px; font-weight: 700; color: var(--primary);">--</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Token Allotment</span>
+                        <span id="tokenAllocation" style="font-size: 18px; font-weight: 900; color: var(--text-primary);">--</span>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 12px;">
+                    <button onclick="confirmScan()" class="btn btn-primary" style="flex: 1;">Approve & Execute</button>
+                    <button onclick="cancelScan()" class="btn" style="flex: 1; background: var(--bg-light); border: 1px solid var(--border);">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Checkpoints Modal -->
     <div id="checkpointModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
         <div style="background: var(--white); width: 90%; max-width: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);">

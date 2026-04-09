@@ -11,7 +11,6 @@ use Slim\Factory\AppFactory;
 use Twig\Environment;
 use Twig\Loader\FilesystemLoader;
 use PDO;
-use App\Database;
 use App\Services\AuthService;
 use App\Services\FileService;
 use App\Services\ScanService;
@@ -23,7 +22,6 @@ use App\Controllers\AdminController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 
-require __DIR__ . '/../vendor/autoload.php';
 
 class AppBootstrap
 {
@@ -113,6 +111,7 @@ class AppBootstrap
             $group->post('/projects/scan/{id}', [TenantController::class, 'startScan']);
             $group->get('/scans/status/{id}', [TenantController::class, 'getScanStatus']);
             $group->get('/scans/report/{id}', [TenantController::class, 'viewReport']);
+            $group->post('/scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
             // Log File Analysis Routes
             $group->get('/files/raw/{id}', [TenantController::class, 'viewRawData']);
@@ -130,6 +129,9 @@ class AppBootstrap
             $group->get('/admin/logs', [AdminController::class, 'logs']);
             $group->get('/admin/settings', [AdminController::class, 'settings']);
             $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);
+            $group->get('/admin/scans', [AdminController::class, 'scans']);
+            $group->get('/admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
+            $group->get('/admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
         })->add(new AuthMiddleware($container->get(PDO::class)));
 
         return $app;

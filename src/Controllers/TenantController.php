@@ -273,12 +273,18 @@ class TenantController
         }
 
         try {
+            // Multi-file scans are automatically classified as Level 2
+            if (count($fileIds) > 1) {
+                $level = 'level2';
+            }
+
             // Get system model setting
             $stmt = $this->pdo->query("SELECT level1_model, level2_model FROM system_settings LIMIT 1");
             $settings = $stmt->fetch();
             $model = ($level === 'level1') ? $settings['level1_model'] : $settings['level2_model'];
 
             $jobId = $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
+
             
             if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
                 $response->getBody()->write(json_encode([
@@ -379,12 +385,50 @@ class TenantController
         // Decode Data
         $data = json_decode($file['extraction_data'] ?: '{}', true);
 
+        // Fetch Scan History (paginated)
+        $page = (int)($request->getQueryParams()['page'] ?? 1);
+        $limit = 5;
+        $offset = ($page - 1) * $limit;
+
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM scan_jobs 
+            WHERE :fid = ANY(debug_file_ids) 
+            AND tenant_id = :tid 
+            AND completed_at > NOW() - INTERVAL '1 year'
+            ORDER BY completed_at DESC 
+            LIMIT :limit OFFSET :offset
+        ");
+        $stmt->bindValue(':fid', $fileId);
+        $stmt->bindValue(':tid', $tenantId);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $scans = $stmt->fetchAll();
+
+        // Total scans count for pagination
+        $stmt = $this->pdo->prepare("
+            SELECT COUNT(*) FROM scan_jobs 
+            WHERE :fid = ANY(debug_file_ids) 
+            AND tenant_id = :tid 
+            AND completed_at > NOW() - INTERVAL '1 year'
+        ");
+        $stmt->execute(['fid' => $fileId, 'tid' => $tenantId]);
+        $totalScans = $stmt->fetchColumn();
+        $totalPages = ceil($totalScans / $limit);
+
         $body = $this->view->render('tenant/hardware_report.twig', [
             'file' => $file,
             'project' => $project,
             'data' => $data,
+            'scans' => $scans,
+            'pagination' => [
+                'current' => $page,
+                'total' => $totalPages,
+                'count' => $totalScans
+            ],
             'active_page' => 'projects'
         ]);
+
         $response->getBody()->write($body);
         return $response;
     }
@@ -435,4 +479,21 @@ class TenantController
         $response->getBody()->write(json_encode($job));
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function deleteScan(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        $stmt = $this->pdo->prepare("DELETE FROM scan_jobs WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+
+        if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+            $response->getBody()->write(json_encode(['success' => true, 'message' => 'Analysis record deleted.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        return $response->withHeader('Location', '/dashboard')->withStatus(302);
+    }
 }
+

@@ -31,7 +31,7 @@ foreach ($samples as $sample) {
     
     try {
         // 1. Extract
-        $extractedFiles = $fileService::processFile($fileId, $sample);
+        $extractedFiles = $fileService->processFile($fileId, $sample);
         echo "Extracted " . count($extractedFiles) . " files. ";
         
         // 2. Parse

@@ -51,9 +51,14 @@
                 </td>
                 <td style="padding: 16px 0; font-weight: 600;">{{ tenant.tokens_available|number_format }}</td>
                 <td style="padding: 16px 0; color: var(--text-secondary);">
-                    <div style="font-weight: 600; color: var(--text-primary);">{{ tenant.storage_formatted }}</div>
-                    <div style="font-size: 11px;">{{ tenant.total_entries }} entries</div>
+                    <div style="font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">{{ tenant.total_formatted }}</div>
+                    <div style="font-size: 10px; line-height: 1.4;">
+                        <span style="color: var(--text-muted);">RAW:</span> {{ tenant.raw_storage }}<br>
+                        <span style="color: var(--text-muted);">EXTR:</span> {{ tenant.extract_storage }}<br>
+                        <span style="color: var(--text-muted);">DB:</span> {{ tenant.db_storage }}
+                    </div>
                 </td>
+
                 <td style="padding: 16px 0; text-align: right; white-space: nowrap;">
                     <button class="btn btn-sm btn-allocate" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" style="background: var(--bg-light); color: var(--primary); font-weight: 600; padding: 4px 12px; font-size: 11px;">Allocate</button>
                     
