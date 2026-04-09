@@ -393,19 +393,16 @@ class AdminController
     public function downloadRawData(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
-        $stmt = $this->pdo->prepare("SELECT result_summary FROM scan_jobs WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT result_input_payload FROM scan_jobs WHERE id = :id");
         $stmt->execute(['id' => $id]);
-        $summary = $stmt->fetchColumn();
+        $payload = $stmt->fetchColumn();
 
-        // Note: The original packaged prompt isn't stored, but we can return the summary 
-        // or re-generate if needed. User requested "raw file set generated for ai review".
-        // For now, providing the summary as a representation.
-        
-        $response->getBody()->write($summary ?: json_encode(['error' => 'No data found']));
+        $response->getBody()->write($payload ?: json_encode(['error' => 'No raw payload data found']));
         return $response
             ->withHeader('Content-Type', 'application/json')
             ->withHeader('Content-Disposition', 'attachment; filename="raw_ai_payload_' . $id . '.json"');
     }
+
 
     public function downloadReport(Request $request, Response $response, array $args): Response
     {

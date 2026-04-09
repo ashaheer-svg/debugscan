@@ -158,19 +158,23 @@ while (true) {
                 completed_at = NOW(), 
                 health_score = :health, 
                 result_summary = :summary,
+                result_input_payload = :payload,
                 findings_count = :count,
                 checkpoints = :cp,
                 total_duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000
             WHERE id = :id
+
         ");
 
         $stmt->execute([
             'id' => $job['id'],
             'health' => $analysis['health_score'] ?? 'N/A',
             'summary' => json_encode($analysis['summary'] ?? ''),
+            'payload' => json_encode($allDiagnosticData),
             'count' => count($analysis['findings'] ?? []),
             'cp' => json_encode($checkpoints)
         ]);
+
         
         $addCheckpoint('system', 'Workflow Finished', 'success');
 

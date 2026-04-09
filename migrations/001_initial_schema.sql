@@ -137,7 +137,9 @@ CREATE TABLE scan_jobs (
     ai_output_tokens_used INTEGER,
     ai_prompt_version VARCHAR(20),
     result_summary JSONB,
+    result_input_payload JSONB,
     result_raw_response TEXT,
+
     health_score VARCHAR(20),
     findings_count INTEGER DEFAULT 0,
     error_message TEXT,
