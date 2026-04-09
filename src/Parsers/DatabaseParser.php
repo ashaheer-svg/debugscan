@@ -32,9 +32,13 @@ class DatabaseParser
 
     private ?string $relevanceRegex = null;
 
-    public function __construct(string $extractPath)
+    private ?callable $onProgress = null;
+
+    public function __construct(string $extractPath, ?callable $onProgress = null)
     {
         $this->extractPath = rtrim($extractPath, DIRECTORY_SEPARATOR);
+        $this->onProgress = $onProgress;
+        
         $this->locateDatabases();
         $this->detectRelativeCutoffs();
         
@@ -45,16 +49,24 @@ class DatabaseParser
 
     private function locateDatabases(): void
     {
-        // 1. Try "Fast Path" first (Standard Synology locations)
+        // 1. Expanded "Fast Path" list (Standard Synology locations)
         $fastPaths = [
-            $this->extractPath . DIRECTORY_SEPARATOR . 'dsm' . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'synolog',
-            $this->extractPath . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'synolog'
+            'dsm/var/log/synolog',
+            'var/log/synolog',
+            'synolog',
+            'var/log',
+            'dsm/var/log',
+            'logs/synolog'
         ];
 
-        foreach ($fastPaths as $path) {
+        foreach ($fastPaths as $relPath) {
+            $path = $this->extractPath . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $relPath);
+            if ($this->onProgress) ($this->onProgress)("Discovery: Checking $relPath");
+            
             if (is_dir($path)) {
                 foreach (self::TARGET_DBS as $db) {
                     if (file_exists($path . DIRECTORY_SEPARATOR . $db)) {
+                        if ($this->onProgress) ($this->onProgress)("Discovery: Found Databases in $relPath");
                         $this->forensicRoot = $path;
                         break 2;
                     }
@@ -62,8 +74,9 @@ class DatabaseParser
             }
         }
 
-        // 2. If fast-path failed, perform a depth-limited recursive search
+        // 2. If fast-path failed, perform a very depth-limited recursive search
         if (!$this->forensicRoot) {
+            if ($this->onProgress) ($this->onProgress)("Discovery: Deep-Scan started...");
             $this->forensicRoot = $this->findForensicRoot($this->extractPath);
         }
         
@@ -81,13 +94,18 @@ class DatabaseParser
 
     private function findForensicRoot(string $dir, int $depth = 0): ?string
     {
-        if (!is_dir($dir) || $depth > 5) return null;
+        // Limit depth even further to avoid hangups on massive extractions
+        if (!is_dir($dir) || $depth > 3) return null;
 
         // Folders to skip (system/temp noise)
-        $blacklist = ['bin', 'usr', 'etc', 'dev', 'lib', 'lib64', 'proc', 'run', 'sys', 'tmp', 'boot'];
+        $blacklist = ['bin', 'usr', 'etc', 'dev', 'lib', 'lib64', 'proc', 'run', 'sys', 'tmp', 'boot', 'target', 'node_modules'];
         
         $baseName = basename($dir);
         if (in_array(strtolower($baseName), $blacklist)) return null;
+
+        if ($this->onProgress && $depth > 0) {
+            ($this->onProgress)("Discovery: Scanning " . basename(dirname($dir)) . "/" . $baseName);
+        }
 
         // Check if ANY of the target databases are in this directory
         foreach (self::TARGET_DBS as $db) {
@@ -100,7 +118,7 @@ class DatabaseParser
         $files = @scandir($dir);
         if ($files === false) return null;
         
-        $files = array_diff($files, ['.', '..']);
+        $files = array_diff($files, ['.', '..', '.git', '.svn']);
         foreach ($files as $file) {
             $path = $dir . DIRECTORY_SEPARATOR . $file;
             if (is_dir($path)) {
@@ -132,7 +150,7 @@ class DatabaseParser
         $this->cutoffDate = date('Y-m-d', $this->cutoffUnix);
     }
 
-    public function parseAll(?callable $onProgress = null): array
+    public function parseAll(): array
     {
         $results = [];
         $stats = ['root_path' => $this->forensicRoot ?? 'not found'];
@@ -145,7 +163,7 @@ class DatabaseParser
             try {
                 switch ($name) {
                     case '.SYNOSYSDB':
-                        $res = $this->parseSystemEvents($path, $onProgress);
+                        $res = $this->parseSystemEvents($path, $this->onProgress);
                         $results['system_events'] = $res['data'];
                         $stats['system_events'] = $res['stats'];
                         break;
