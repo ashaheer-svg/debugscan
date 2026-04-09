@@ -10,9 +10,10 @@ use Exception;
 class DatabaseParser
 {
     private string $extractPath;
-    private int $cutoffUnix;
-    private string $cutoffDate;
+    private int $cutoffUnix = 0;
+    private string $cutoffDate = "";
     private array $dbPaths = [];
+    private ?string $forensicRoot = null;
 
     const TARGET_DBS = [
         '.SYNOSYSDB',
@@ -21,26 +22,32 @@ class DatabaseParser
         '.SYNODISKDB'
     ];
 
+    /**
+     * Patterns that indicate high-relevance events regardless of info level
+     */
+    const RELEVANCE_PATTERNS = [
+        'Storage Pool', 'RAID', 'degraded', 'crashed', 'booted up', 'improper shutdown',
+        'power supply', 'Bad Sector', 'UNC', 'ioerr', 'Disk', 'removed', 'inserted'
+    ];
+
     public function __construct(string $extractPath)
     {
         $this->extractPath = rtrim($extractPath, DIRECTORY_SEPARATOR);
-        $this->cutoffUnix = time() - (365 * 86400);
-        $this->cutoffDate = date('Y-m-d', $this->cutoffUnix);
-        
         $this->locateDatabases();
+        $this->detectRelativeCutoffs();
     }
 
     private function locateDatabases(): void
     {
-        // 1. Find the forensic root by looking for .SYNOSYSDB recursively
-        $forensicRoot = $this->findForensicRoot($this->extractPath);
+        // 1. Find the forensic root by looking for ANY target database recursively
+        $this->forensicRoot = $this->findForensicRoot($this->extractPath);
         
-        if (!$forensicRoot) {
+        if (!$this->forensicRoot) {
             return; // No databases found
         }
 
         foreach (self::TARGET_DBS as $dbName) {
-            $path = $forensicRoot . DIRECTORY_SEPARATOR . $dbName;
+            $path = $this->forensicRoot . DIRECTORY_SEPARATOR . $dbName;
             if (file_exists($path)) {
                 $this->dbPaths[$dbName] = $path;
             }
@@ -51,9 +58,11 @@ class DatabaseParser
     {
         if (!is_dir($dir)) return null;
 
-        // Check if .SYNOSYSDB is in this directory
-        if (file_exists($dir . DIRECTORY_SEPARATOR . '.SYNOSYSDB')) {
-            return $dir;
+        // Check if ANY of the target databases are in this directory
+        foreach (self::TARGET_DBS as $db) {
+            if (file_exists($dir . DIRECTORY_SEPARATOR . $db)) {
+                return $dir;
+            }
         }
 
         // Search subdirectories
@@ -69,24 +78,57 @@ class DatabaseParser
         return null;
     }
 
+    private function detectRelativeCutoffs(): void
+    {
+        $latestTime = 0;
+
+        // 1. Find max timestamp across available DBs
+        if (isset($this->dbPaths['.SYNOSYSDB'])) {
+            try {
+                $pdo = $this->getPdo($this->dbPaths['.SYNOSYSDB']);
+                $latestTime = (int)$pdo->query("SELECT MAX(time) FROM logs")->fetchColumn();
+            } catch (Exception $e) {}
+        }
+
+        // Fallback to current time if no logs found
+        $baseTime = ($latestTime > 0) ? $latestTime : time();
+        
+        // 2. Set 365-day cutoff relative to detection
+        $this->cutoffUnix = $baseTime - (365 * 86400);
+        $this->cutoffDate = date('Y-m-d', $this->cutoffUnix);
+    }
+
     public function parseAll(): array
     {
         $results = [];
+        $stats = ['root_path' => $this->forensicRoot ?? 'not found'];
         
+        if (empty($this->dbPaths)) {
+            return ['errors' => ["No forensic databases located in $this->extractPath"], 'stats' => $stats];
+        }
+
         foreach ($this->dbPaths as $name => $path) {
             try {
                 switch ($name) {
                     case '.SYNOSYSDB':
-                        $results['system_events'] = $this->parseSystemEvents($path);
+                        $res = $this->parseSystemEvents($path);
+                        $results['system_events'] = $res['data'];
+                        $stats['system_events'] = $res['stats'];
                         break;
                     case '.SYNODISKHEALTHDB':
-                        $results['disk_health'] = $this->parseDiskHealth($path);
+                        $res = $this->parseDiskHealth($path);
+                        $results['disk_health'] = $res['data'];
+                        $stats['disk_health'] = $res['stats'];
                         break;
                     case '.SYNOCONNDB':
-                        $results['connection_logs'] = $this->parseConnections($path);
+                        $res = $this->parseConnections($path);
+                        $results['connection_logs'] = $res['data'];
+                        $stats['connection_logs'] = $res['stats'];
                         break;
                     case '.SYNODISKDB':
-                        $results['disk_events'] = $this->parseDiskEvents($path);
+                        $res = $this->parseDiskEvents($path);
+                        $results['disk_events'] = $res['data'];
+                        $stats['disk_events'] = $res['stats'];
                         break;
                 }
             } catch (Exception $e) {
@@ -94,7 +136,17 @@ class DatabaseParser
             }
         }
         
+        $results['stats'] = $stats;
         return $results;
+    }
+
+    private function isRelevant(string $msg, string $level): bool
+    {
+        if ($level !== 'info') return true; // Keep all warning/err
+        foreach (self::RELEVANCE_PATTERNS as $pattern) {
+            if (stripos($msg, $pattern) !== false) return true;
+        }
+        return false;
     }
 
     private function getPdo(string $path): PDO
@@ -109,18 +161,27 @@ class DatabaseParser
     {
         $pdo = $this->getPdo($path);
         
-        // Get Stats
-        $stats = $pdo->prepare("SELECT COUNT(*) as total, SUM(CASE WHEN level='err' THEN 1 ELSE 0 END) as errs, SUM(CASE WHEN level='warning' THEN 1 ELSE 0 END) as warns FROM logs WHERE time >= :cutoff");
-        $stats->execute(['cutoff' => $this->cutoffUnix]);
-        $summary = $stats->fetch();
-
-        // Get Rows
+        $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
+        
+        // Get Rows in window
         $stmt = $pdo->prepare("SELECT time, level, username, msg FROM logs WHERE time >= :cutoff ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
+        $allInWindow = $stmt->fetchAll();
+
+        // 2. Filter by relevance
+        $selected = [];
+        foreach ($allInWindow as $row) {
+            if ($this->isRelevant($row['msg'], $row['level'])) {
+                $selected[] = $row;
+            }
+        }
         
         return [
-            'summary' => $summary,
-            'rows' => $stmt->fetchAll()
+            'data' => [
+                'summary' => ['total' => $total, 'selected' => count($selected)],
+                'rows' => $selected
+            ],
+            'stats' => ['found' => $total, 'selected' => count($selected), 'cutoff_ts' => $this->cutoffUnix]
         ];
     }
 
@@ -128,16 +189,14 @@ class DatabaseParser
     {
         $pdo = $this->getPdo($path);
         
-        // Lifetime error counters
         $errors = $pdo->query("SELECT * FROM disk_error ORDER BY BadSector DESC, UNC DESC")->fetchAll();
-        
-        // Predictions
-        $stmt = $pdo->prepare("SELECT date, serial, model, slot, fail, ui_score, score, threshold, factors, msg FROM prediction WHERE date >= :cutoff ORDER BY date DESC");
-        $stmt->execute(['cutoff' => $this->cutoffDate]);
+        $predictions = $pdo->prepare("SELECT date, serial, model, slot, fail, ui_score, score, threshold, factors, msg FROM prediction WHERE date >= :cutoff ORDER BY date DESC");
+        $predictions->execute(['cutoff' => $this->cutoffDate]);
+        $predRows = $predictions->fetchAll();
         
         return [
-            'disk_error' => $errors,
-            'prediction' => $stmt->fetchAll()
+            'data' => ['disk_error' => $errors, 'prediction' => $predRows],
+            'stats' => ['disk_rows' => count($errors), 'predictions' => count($predRows)]
         ];
     }
 
@@ -145,43 +204,53 @@ class DatabaseParser
     {
         $pdo = $this->getPdo($path);
         
-        // Summary
-        $stmt = $pdo->prepare("SELECT protocol, level, COUNT(*) as cnt FROM logs WHERE time >= :cutoff GROUP BY protocol, level ORDER BY cnt DESC");
+        $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
+        
+        // Tiered filter: Warnings/Errors + aggregations
+        $stmt = $pdo->prepare("SELECT time, level, username, ip, protocol, msg FROM logs WHERE time >= :cutoff AND level IN ('warning', 'err') ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
-        $summaryGroups = $stmt->fetchAll();
+        $critical = $stmt->fetchAll();
 
-        // Failed login aggregation
         $stmt = $pdo->prepare("SELECT ip, username, COUNT(*) as attempts, MIN(time) as first_seen, MAX(time) as last_seen FROM logs WHERE time >= :cutoff AND level = 'warning' AND msg LIKE '%failed%' GROUP BY ip, username HAVING attempts >= 3 ORDER BY attempts DESC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
         $bruteForce = $stmt->fetchAll();
-
-        // Actual Errors/Warnings
-        $stmt = $pdo->prepare("SELECT time, level, username, ip, protocol, msg FROM logs WHERE time >= :cutoff AND level IN ('warning', 'err') ORDER BY time ASC");
-        $stmt->execute(['cutoff' => $this->cutoffUnix]);
         
         return [
-            'summary_groups' => $summaryGroups,
-            'brute_force' => $bruteForce,
-            'critical_events' => $stmt->fetchAll()
+            'data' => [
+                'summary_groups' => [], // Add if needed, simplifying for now
+                'brute_force' => $bruteForce,
+                'critical_events' => $critical
+            ],
+            'stats' => ['found' => $total, 'selected_critical' => count($critical)]
         ];
     }
 
     private function parseDiskEvents(string $path): array
     {
         $pdo = $this->getPdo($path);
-        
-        // Summary of events by drive
+        $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
+
         $stmt = $pdo->prepare("SELECT serial, model, slot, level, msg, COUNT(*) as cnt FROM logs WHERE time >= :cutoff AND level IN ('warning', 'err') GROUP BY serial, msg ORDER BY cnt DESC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
         $summary = $stmt->fetchAll();
 
-        // Detailed events
         $stmt = $pdo->prepare("SELECT time, level, model, serial, slot, container, msg, errtype, info FROM logs WHERE time >= :cutoff AND level IN ('info', 'warning', 'err') ORDER BY time ASC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
+        $allEvents = $stmt->fetchAll();
+
+        $selected = [];
+        foreach ($allEvents as $row) {
+            if ($this->isRelevant($row['msg'], $row['level'])) {
+                $selected[] = $row;
+            }
+        }
         
         return [
-            'drive_summary' => $summary,
-            'events' => $stmt->fetchAll()
+            'data' => [
+                'drive_summary' => $summary,
+                'events' => $selected
+            ],
+            'stats' => ['found' => $total, 'selected' => count($selected)]
         ];
     }
 }

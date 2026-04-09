@@ -124,11 +124,11 @@ while (true) {
                     $dbParser = new DatabaseParser($destPath);
                     $dbResults = $dbParser->parseAll();
                     
-                    // Persist for future reference
-                    $stmt = $pdo->prepare("UPDATE debug_files SET extended_data = :data WHERE id = :id");
-                    $stmt->execute(['id' => $fileId, 'data' => json_encode($dbResults, JSON_INVALID_UTF8_SUBSTITUTE)]);
-                    
-                    $addCheckpoint('forensic', 'Cache Population', 'success', ['file_id' => $fileId, 'tables' => array_keys($dbResults)]);
+                    $addCheckpoint('forensic', 'Cache Population', 'success', [
+                        'file_id' => $fileId, 
+                        'stats' => $dbResults['stats'] ?? [],
+                        'tables' => array_keys(array_filter($dbResults, fn($k) => $k !== 'stats', ARRAY_FILTER_USE_KEY))
+                    ]);
                  }
              }
 

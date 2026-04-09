@@ -57,9 +57,47 @@
                 </td>
                 <td style="padding: 16px 24px; text-align: right;">
                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
+                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn btn-sm" title="View Audit Logs" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; cursor: pointer;">LOG</button>
                         <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-sm" title="Download Raw Input" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">RAW ({{ scan.formatted_payload_size }})</a>
                         <a href="/admin/scans/report/{{ scan.id }}" class="btn btn-sm" title="Download AI Report" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">REP</a>
                         <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn btn-sm" style="width: auto; padding: 4px 8px; background: var(--primary); color: white; border: none; font-size: 10px; text-decoration: none;">VIEW</a>
+                    </div>
+                </td>
+            </tr>
+            <tr id="audit-{{ scan.id }}" style="display: none; background: #fafafa;">
+                <td colspan="6" style="padding: 16px 24px;">
+                    <div style="font-size: 11px; border-left: 2px solid var(--primary); padding-left: 16px;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 10px; text-transform: uppercase; color: var(--text-muted);">Forensic Extraction Audit Log</h4>
+                        {% set checkpoints = scan.checkpoints|json_decode %}
+                        {% if checkpoints %}
+                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
+                            {% for cp in checkpoints if cp.type == 'forensic' %}
+                                <div style="background: white; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
+                                    <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">{{ cp.stage }}</div>
+                                    {% if cp.data.stats %}
+                                        <ul style="list-style: none; padding: 0; margin: 0; font-family: monospace;">
+                                        {% for table, s in cp.data.stats %}
+                                            {% if table != 'root_path' %}
+                                            <li style="margin-bottom: 2px;">
+                                                <span style="color: var(--text-muted);">{{ table }}:</span> 
+                                                <strong>{{ s.found|default(0) }}</strong> found &rarr; 
+                                                <strong>{{ s.selected|default(s.selected_critical|default(0)) }}</strong> selected
+                                            </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        </ul>
+                                        <div style="margin-top: 8px; font-size: 9px; color: var(--text-muted);">
+                                            Path: <code>{{ cp.data.stats.root_path }}</code>
+                                        </div>
+                                    {% else %}
+                                        <div style="color: var(--text-muted);">{{ cp.message }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <p style="color: var(--text-muted); italic;">No detailed forensic logs available for this scan.</p>
+                        {% endif %}
                     </div>
                 </td>
             </tr>
@@ -72,4 +110,17 @@
         </tbody>
     </table>
 </section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleAudit(scanId) {
+    const row = document.getElementById('audit-' + scanId);
+    if (row.style.display === 'none') {
+        row.style.display = 'table-row';
+    } else {
+        row.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}
