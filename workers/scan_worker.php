@@ -98,35 +98,46 @@ while (true) {
 
              $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 20));
 
-             $destPath = $fileService->getExtractedPath($fileId);
-             if (!is_dir($destPath)) {
-                 $addCheckpoint('file', 'File Extraction', 'failed', ['file_id' => $fileId, 'error' => 'Extraction directory missing']);
-                 continue;
+             // 1. Check for cached forensic data
+             $stmt = $pdo->prepare("SELECT storage_path, extended_data FROM debug_files WHERE id = :id");
+             $stmt->execute(['id' => $fileId]);
+             $fileRecord = $stmt->fetch();
+             
+             $dbResults = null;
+             if ($fileRecord && $fileRecord['extended_data']) {
+                 $dbResults = json_decode($fileRecord['extended_data'], true);
              }
-             $addCheckpoint('file', 'File Extraction', 'success', ['file_id' => $fileId, 'path' => $destPath]);
+
+             // 2. Perform forensic extraction if cache missing
+             if (!$dbResults) {
+                 $updateProgress("Forensic Extraction (" . ($index + 1) . "/$fileCount)", 30 + (int)(($index / $fileCount) * 20));
+                 
+                 // Fallback: Check if we need to re-extract files
+                 if (!is_dir($destPath)) {
+                    $zipPath = $fileRecord['storage_path'] ?? '';
+                    if ($zipPath && file_exists($zipPath)) {
+                        $fileService->processFile($fileId, $zipPath);
+                    }
+                 }
+
+                 if (is_dir($destPath)) {
+                    $dbParser = new DatabaseParser($destPath);
+                    $dbResults = $dbParser->parseAll();
+                    
+                    // Persist for future reference
+                    $stmt = $pdo->prepare("UPDATE debug_files SET extended_data = :data WHERE id = :id");
+                    $stmt->execute(['id' => $fileId, 'data' => json_encode($dbResults, JSON_INVALID_UTF8_SUBSTITUTE)]);
+                    
+                    $addCheckpoint('forensic', 'Cache Population', 'success', ['file_id' => $fileId, 'tables' => array_keys($dbResults)]);
+                 }
+             }
 
              // Base diagnostic data
              $data = $parseService->parseAll($destPath);
              $addCheckpoint('file', 'Base Parsing', 'success', ['file_id' => $fileId, 'dsm' => $data['version']['product'] ?? 'unknown']);
 
-             // Level 1: Extended Database Parsing (SQLite Logs)
-             if ($job['scan_level'] === 'level1') {
-                 $updateProgress("Forensic Database Extraction (" . ($index + 1) . "/$fileCount)", 30 + (int)(($index / $fileCount) * 30));
-                 $dbParser = new DatabaseParser($destPath);
-                 $dbResults = $dbParser->parseAll();
-
-                 $rowCount = array_sum(array_map('count', $dbResults));
-                 $addCheckpoint('forensic', 'SQLite Extraction', 'success', [
-                     'file_id' => $fileId, 
-                     'rows_total' => $rowCount,
-                     'tables' => array_keys($dbResults)
-                 ]);
-
-                 // Persist extended data for future reference (Level 2 drills)
-                 $stmt = $pdo->prepare("UPDATE debug_files SET extended_data = :data WHERE id = :id");
-                 $stmt->execute(['id' => $fileId, 'data' => json_encode($dbResults)]);
-
-                 // Package data for AI prompt
+             // 3. Package forensic data if available (all levels)
+             if ($dbResults) {
                  $package = [
                      'system' => $packagingService->formatSystemEvents($dbResults['system_events'] ?? []),
                      'disk_health' => $packagingService->formatDiskHealth($dbResults['disk_health'] ?? []),
@@ -134,12 +145,9 @@ while (true) {
                      'disk_ops' => $packagingService->formatDiskEvents($dbResults['disk_events'] ?? [])
                  ];
                  $data['packaged_logs'] = $package;
-
-                 $addCheckpoint('forensic', 'Data Packaged', 'success', [
-                     'file_id' => $fileId,
-                     'package_size_bytes' => strlen(json_encode($package))
-                 ]);
              }
+
+             $allDiagnosticData[] = $data;
 
              $allDiagnosticData[] = $data;
         }

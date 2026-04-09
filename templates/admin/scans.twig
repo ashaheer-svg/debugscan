@@ -57,7 +57,7 @@
                 </td>
                 <td style="padding: 16px 24px; text-align: right;">
                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-sm" title="Download Raw Input" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">RAW</a>
+                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-sm" title="Download Raw Input" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">RAW ({{ scan.formatted_payload_size }})</a>
                         <a href="/admin/scans/report/{{ scan.id }}" class="btn btn-sm" title="Download AI Report" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">REP</a>
                         <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn btn-sm" style="width: auto; padding: 4px 8px; background: var(--primary); color: white; border: none; font-size: 10px; text-decoration: none;">VIEW</a>
                     </div>

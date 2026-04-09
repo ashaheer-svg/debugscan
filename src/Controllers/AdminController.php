@@ -374,13 +374,19 @@ class AdminController
     public function scans(Request $request, Response $response): Response
     {
         $stmt = $this->pdo->query("
-            SELECT s.*, u.display_name as tenant_name, p.name as project_name
+            SELECT s.*, u.display_name as tenant_name, p.name as project_name,
+                   OCTET_LENGTH(s.result_input_payload::text) as payload_size
             FROM scan_jobs s
             JOIN users u ON s.tenant_id = u.id
             JOIN projects p ON s.project_id = p.id
             ORDER BY s.created_at DESC
         ");
-        $scans = $stmt->fetchAll();
+        $scansData = $stmt->fetchAll();
+
+        $scans = array_map(function($s) {
+            $s['formatted_payload_size'] = $s['payload_size'] ? $this->formatBytes($s['payload_size']) : '0 B';
+            return $s;
+        }, $scansData);
 
         $body = $this->view->render('admin/scans.twig', [
             'scans' => $scans,

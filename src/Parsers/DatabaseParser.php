@@ -32,14 +32,41 @@ class DatabaseParser
 
     private function locateDatabases(): void
     {
-        $logDir = $this->extractPath . DIRECTORY_SEPARATOR . 'dsm' . DIRECTORY_SEPARATOR . 'var' . DIRECTORY_SEPARATOR . 'log' . DIRECTORY_SEPARATOR . 'synolog';
+        // 1. Find the forensic root by looking for .SYNOSYSDB recursively
+        $forensicRoot = $this->findForensicRoot($this->extractPath);
         
+        if (!$forensicRoot) {
+            return; // No databases found
+        }
+
         foreach (self::TARGET_DBS as $dbName) {
-            $path = $logDir . DIRECTORY_SEPARATOR . $dbName;
+            $path = $forensicRoot . DIRECTORY_SEPARATOR . $dbName;
             if (file_exists($path)) {
                 $this->dbPaths[$dbName] = $path;
             }
         }
+    }
+
+    private function findForensicRoot(string $dir): ?string
+    {
+        if (!is_dir($dir)) return null;
+
+        // Check if .SYNOSYSDB is in this directory
+        if (file_exists($dir . DIRECTORY_SEPARATOR . '.SYNOSYSDB')) {
+            return $dir;
+        }
+
+        // Search subdirectories
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($path)) {
+                $found = $this->findForensicRoot($path);
+                if ($found) return $found;
+            }
+        }
+
+        return null;
     }
 
     public function parseAll(): array
