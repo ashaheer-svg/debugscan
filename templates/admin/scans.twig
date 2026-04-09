@@ -71,7 +71,8 @@
                         {% set checkpoints = scan.checkpoints|json_decode %}
                         {% if checkpoints %}
                             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px;">
-                            {% for cp in checkpoints if cp.type == 'forensic' %}
+                            {% for cp in checkpoints %}
+                                {% if cp.type == 'forensic' %}
                                 <div style="background: white; padding: 8px; border-radius: 4px; border: 1px solid var(--border);">
                                     <div style="font-weight: 700; color: var(--primary); margin-bottom: 4px;">{{ cp.stage }}</div>
                                     {% if cp.data.stats %}
@@ -93,6 +94,7 @@
                                         <div style="color: var(--text-muted);">{{ cp.message }}</div>
                                     {% endif %}
                                 </div>
+                                {% endif %}
                             {% endfor %}
                             </div>
                         {% else %}

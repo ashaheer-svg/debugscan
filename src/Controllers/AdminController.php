@@ -384,7 +384,8 @@ class AdminController
         $scansData = $stmt->fetchAll();
 
         $scans = array_map(function($s) {
-            $s['formatted_payload_size'] = $s['payload_size'] ? $this->formatBytes($s['payload_size']) : '0 B';
+            $bytes = isset($s['payload_size']) ? (int)$s['payload_size'] : 0;
+            $s['formatted_payload_size'] = ($bytes > 0) ? $this->formatBytes($bytes) : '0 B';
             return $s;
         }, $scansData);
 
