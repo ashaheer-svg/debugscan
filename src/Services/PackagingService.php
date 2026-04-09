@@ -126,4 +126,4 @@ class PackagingService
         return implode("\n", $lines);
     }
 }
-// Deployment Trigger - 2026-04-08
+// Final Sync - Corrected Namespace
