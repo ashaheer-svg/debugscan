@@ -26,6 +26,9 @@
     --radius: 6px;
     --radius-sm: 4px;
     --radius-lg: 8px;
+    
+    --sidebar-width: 240px;
+    --sidebar-collapsed: 80px;
 }
 
 * {
@@ -42,6 +45,17 @@ body {
     line-height: 1.6;
 }
 
+/* Links (ActiveDesign Section III) */
+a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: all 0.2s;
+}
+a:hover {
+    color: var(--primary-hover);
+    text-decoration: underline;
+}
+
 /* Auth Layout */
 .auth-container {
     display: flex;
@@ -49,6 +63,7 @@ body {
     justify-content: center;
     min-height: 100vh;
     padding: 20px;
+    background-color: var(--bg-light);
 }
 
 .auth-card {
@@ -68,9 +83,10 @@ body {
 }
 
 .auth-title {
-    font-size: 22px;
+    font-size: 24px;
     font-weight: 700;
     margin-bottom: 4px;
+    color: var(--text-primary);
 }
 
 .auth-subtitle {
@@ -79,15 +95,15 @@ body {
     margin-bottom: 32px;
 }
 
-/* Forms */
+/* Forms (ActiveDesign Section IV) */
 .form-group {
     text-align: left;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 }
 
 .form-label {
     display: block;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
     color: var(--text-secondary);
@@ -102,7 +118,9 @@ body {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     font-size: 14px;
+    color: var(--text-primary);
     transition: all 0.2s;
+    background: var(--white);
 }
 
 .form-control:focus {
@@ -111,46 +129,154 @@ body {
     box-shadow: var(--shadow-1);
 }
 
-/* Buttons */
+.form-control::placeholder {
+    color: var(--text-muted);
+}
+
+/* Tables & Lists (ActiveDesign Section IV) */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--white);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-1);
+}
+
+.data-table th {
+    height: 48px;
+    padding: 0 16px;
+    text-align: left;
+    background: var(--bg-off-white);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table td {
+    height: 44px; /* Standard row height */
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--row-border);
+    color: var(--text-primary);
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background-color: var(--bg-light);
+}
+
+/* Cards (ActiveDesign Section III) */
+.card {
+    background: var(--white);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+    transition: all 0.2s ease-in-out;
+    border: 1px solid transparent;
+}
+
+.card:hover {
+    transform: scale(1.02);
+    box-shadow: var(--shadow-2);
+}
+
+/* Buttons (ActiveDesign Section IV) */
 .btn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 42px;
+    height: 38px; /* Medium size */
     padding: 10px 16px;
     border: none;
     border-radius: var(--radius-sm);
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s, transform 0.1s;
+    text-decoration: none !important;
+}
+
+.btn:active {
+    transform: scale(0.98);
 }
 
 .btn-primary {
     background-color: var(--primary);
     color: var(--white);
-    width: 100%;
 }
 
 .btn-primary:hover {
     background-color: var(--primary-hover);
 }
 
-.btn-primary:active {
-    background-color: var(--primary-active);
+.btn-outline {
+    background-color: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
 }
 
-/* Alerts */
-.alert {
-    padding: 12px 16px;
+.btn-outline:hover {
+    background-color: rgba(0, 102, 255, 0.05);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: var(--white);
+}
+
+.btn-danger:hover {
+    background-color: #E54D45;
+}
+
+/* Badges */
+.badge {
+    display: inline-flex;
+    padding: 4px 8px;
     border-radius: var(--radius-sm);
-    margin-bottom: 20px;
-    font-size: 13px;
-    border: 1px solid transparent;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
 }
 
-.alert-danger {
-    background: var(--danger-light);
-    border-color: var(--danger);
-    color: #E54D45;
+/* Responsive Utilities */
+@media (max-width: 768px) {
+    .hide-mobile {
+        display: none !important;
+    }
+    
+    .stack-mobile {
+        flex-direction: column !important;
+    }
+    
+    .auth-card {
+        padding: 24px;
+    }
+    
+    .sidebar {
+        width: 0 !important;
+        position: fixed;
+        left: -100%;
+        visibility: hidden;
+    }
+    
+    .main-content {
+        margin-left: 0 !important;
+    }
+}
+
+/* Shimmer (ActiveDesign Section IV) */
+.shimmer {
+    background: linear-gradient(90deg, #E0E6ED 25%, #F8F9FA 50%, #E0E6ED 75%);
+    background-size: 200% 100%;
+    animation: shimmer-anim 1.5s infinite;
+}
+
+@keyframes shimmer-anim {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
 }

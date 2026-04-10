@@ -7,12 +7,13 @@
         min-height: 100vh;
     }
     .sidebar {
-        width: 240px;
-        background: var(--white);
+        width: var(--sidebar-width);
+        background: var(--bg-light); /* Professional light gray sidebar */
         border-right: 1px solid var(--border);
         display: flex;
         flex-direction: column;
-        transition: width 0.3s;
+        transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 200;
     }
     .sidebar-header {
         padding: 24px;
@@ -21,8 +22,8 @@
         gap: 12px;
         border-bottom: 1px solid var(--row-border);
     }
-    .sidebar-logo { width: 32px; height: 32px; }
-    .sidebar-name { font-weight: 700; font-size: 16px; color: var(--primary); }
+    .sidebar-logo { width: 32px; height: 32px; object-fit: contain; }
+    .sidebar-name { font-weight: 700; font-size: 16px; color: var(--text-primary); letter-spacing: -0.02em; }
 
     .nav-list { list-style: none; padding: 24px 0; flex: 1; }
     .nav-item { padding: 4px 16px; }
@@ -35,11 +36,15 @@
         color: var(--text-secondary);
         text-decoration: none;
         transition: all 0.2s;
+        font-weight: 500;
     }
-    .nav-link:hover { background: var(--bg-light); color: var(--primary); }
-    .nav-link.active { background: var(--bg-light); color: var(--primary); font-weight: 600; }
+    .nav-link svg { color: var(--text-muted); transition: color 0.2s; }
+    .nav-link:hover { background: rgba(0, 102, 255, 0.05); color: var(--primary); }
+    .nav-link:hover svg { color: var(--primary); }
+    .nav-link.active { background: rgba(0, 102, 255, 0.08); color: var(--primary); font-weight: 600; }
+    .nav-link.active svg { color: var(--primary); }
 
-    .main-content { flex: 1; display: flex; flex-direction: column; background: var(--bg-light); }
+    .main-content { flex: 1; display: flex; flex-direction: column; background: var(--white); min-width: 0; }
     .top-nav {
         height: 64px;
         background: var(--white);
@@ -54,63 +59,47 @@
 
     /* Page Titles */
     .page-header { margin-bottom: 32px; }
-    .page-title { font-size: 24px; font-weight: 700; color: var(--text-primary); }
-    .page-subtitle { font-size: 14px; color: var(--text-secondary); }
+    .page-title { font-size: 28px; font-weight: 700; color: var(--text-primary); letter-spacing: -0.02em; }
+    .page-subtitle { font-size: 14px; color: var(--text-secondary); margin-top: 4px; }
 
-    /* KPI Cards */
+    /* KPI Cards (ActiveDesign Page-Specific Guides) */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; margin-bottom: 32px; }
-    .kpi-card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1); text-align: center; }
+    .kpi-card { 
+        background: var(--white); 
+        padding: 24px; 
+        border-radius: var(--radius); 
+        box-shadow: var(--shadow-1); 
+        text-align: center;
+        transition: all 0.2s ease;
+        border: 1px solid var(--row-border);
+    }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-2); }
     .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
-    .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
-    /* User Profile Card Styles */
-    .user-profile-card {
+    .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+
+    /* New Card Style for Modernizing Elements */
+    .dashboard-card {
         background: var(--white);
-        padding: 8px 16px;
-        border-radius: var(--radius-sm);
+        border-radius: var(--radius);
         box-shadow: var(--shadow-1);
+        padding: 20px;
+        transition: all 0.2s ease;
+        border: 1px solid var(--row-border);
+    }
+    .dashboard-card:hover { box-shadow: var(--shadow-2); }
+
+    /* User Profile & Layout Components */
+    .user-profile-card {
+        background: var(--bg-light);
+        padding: 6px 14px;
+        border-radius: 20px;
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
         font-size: 13px;
         border: 1px solid var(--border);
     }
-    .user-avatar {
-        width: 32px;
-        height: 32px;
-        background: var(--primary);
-        color: white;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 700;
-        text-transform: uppercase;
-    }
-    .user-meta { display: flex; flex-direction: column; line-height: 1.2; }
-    .user-name { font-weight: 700; color: var(--text-primary); }
-    .user-role { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; }
-    .user-actions { border-left: 1px solid var(--border); padding-left: 12px; display: flex; gap: 8px; }
-    .btn-icon { color: var(--text-secondary); cursor: pointer; transition: color 0.2s; }
-    .btn-icon:hover { color: var(--primary); }
-
-    /* Modal Styles */
-    .modal-overlay {
-        position: fixed;
-        top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
-    }
-    .modal-content {
-        background: white;
-        padding: 32px;
-        border-radius: var(--radius);
-        width: 100%;
-        max-width: 400px;
-        box-shadow: var(--shadow-2);
-    }
+    /* Rest same as inherited from core */
 </style>
 <script>
     function toggleProfileModal() {
@@ -124,7 +113,7 @@
 <div class="dashboard-layout">
     <aside class="sidebar">
         <div class="sidebar-header">
-            <img src="/assets/img/logo.svg" alt="DS" class="sidebar-logo">
+            <img src="/assets/img/logo-black.png" alt="DS" class="sidebar-logo">
             <span class="sidebar-name">DebugScan v3</span>
         </div>
         <nav class="nav-list">
