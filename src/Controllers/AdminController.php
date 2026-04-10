@@ -51,12 +51,14 @@ class AdminController
         $diskTotal = disk_total_space("/") ?: 1;
         $diskUsedPercent = round((($diskTotal - $diskFree) / $diskTotal) * 100, 1);
 
-        // Stuck Scans (Running but no heartbeat for > 5 mins)
+        // Stuck Scans (Running but no heartbeat for configurable mins)
         $stmt = $this->pdo->prepare("
             SELECT j.id, j.status, j.progress_stage, j.updated_at, u.display_name as tenant_name
             FROM scan_jobs j
             JOIN users u ON j.tenant_id = u.id
-            WHERE j.status = 'running' AND j.updated_at < (NOW() - INTERVAL '5 minutes')
+            JOIN system_settings s ON 1=1
+            WHERE j.status = 'running' 
+              AND j.updated_at < (NOW() - (s.stuck_alert_mins || ' minutes')::interval)
             ORDER BY j.updated_at ASC
         ");
         $stmt->execute();
@@ -370,6 +372,9 @@ class AdminController
             SET level1_model = :l1, 
                 level2_model = :l2, 
                 retention_days = :retention,
+                max_concurrent_scans = :max_scans,
+                stuck_alert_mins = :alert_mins,
+                auto_cancel_mins = :cancel_mins,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -378,6 +383,9 @@ class AdminController
             'l1' => $data['level1_model'],
             'l2' => $data['level2_model'],
             'retention' => (int)$data['retention_days'],
+            'max_scans' => (int)$data['max_concurrent_scans'],
+            'alert_mins' => (int)$data['stuck_alert_mins'],
+            'cancel_mins' => (int)$data['auto_cancel_mins'],
         ]);
 
         return $response->withHeader('Location', '/admin/settings?status=saved')->withStatus(302);
