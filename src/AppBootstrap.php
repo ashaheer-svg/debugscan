@@ -97,10 +97,16 @@ class AppBootstrap
         $container = $containerBuilder->build();
 
         // Setup Database Session Handler
-        $sessionHandler = new DatabaseSessionHandler($container->get(PDO::class));
-        session_set_save_handler($sessionHandler, true);
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
+        try {
+            $sessionHandler = new DatabaseSessionHandler($container->get(PDO::class));
+            session_set_save_handler($sessionHandler, true);
+            if (session_status() === PHP_SESSION_NONE) {
+                session_start();
+            }
+        } catch (\Exception $e) {
+            // If boot fails, we still want the error middleware to catch it if possible, 
+            // but we might need to log it manually here.
+            error_log("Bootstrap Session Failure: " . $e->getMessage());
         }
 
         // Initialize Slim App
@@ -110,7 +116,7 @@ class AppBootstrap
         // Add Middleware
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(
-            (getenv('APP_DEBUG') ?: 'false') === 'true',
+            true, // FORCE TRUE FOR DIAGNOSTICS
             true,
             true
         );
