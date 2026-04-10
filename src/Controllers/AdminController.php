@@ -455,7 +455,7 @@ class AdminController
                 }
             }
 
-            $this->logAction($request, 'user_deleted', 'system', 'all', ['reset_type' => 'factory_reset']);
+            $this->logAction($request, 'user_deleted', 'system', null, ['reset_type' => 'factory_reset']);
             
             $_SESSION['success'] = "System has been reset. All history and forensic data cleared.";
         } catch (\Exception $e) {
