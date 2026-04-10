@@ -223,13 +223,16 @@ while (true) {
              }
 
              $allDiagnosticData[] = $data;
-
-             $allDiagnosticData[] = $data;
         }
 
         // 4. Perform AI Analysis
         $updateProgress("AI Forensic Analysis (" . ucfirst($job['scan_level']) . ")", 70);
         
+        $addCheckpoint('ai', 'AI Analysis Started', 'success', [
+            'data_set_count' => count($allDiagnosticData),
+            'model' => $job['ai_model']
+        ]);
+
         $analysis = $aiService->analyze(
             $allDiagnosticData, 
             $job['ai_model'], 
