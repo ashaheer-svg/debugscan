@@ -94,7 +94,15 @@ while (true) {
     echo "Processing Job: {$job['id']} (Project: {$job['project_id']})\n";
 
     try {
+        // Safe initialization: try to recover existing checkpoints or start fresh
+        $existingCP = $job['checkpoints'] ?? '[]';
         $checkpoints = [];
+        try {
+            $checkpoints = is_string($existingCP) ? json_decode($existingCP, true) : ($existingCP ?: []);
+            if (!is_array($checkpoints)) $checkpoints = [];
+        } catch (\Throwable $e) {
+            $checkpoints = [];
+        }
         $addCheckpoint = function($level, $stage, $status, $meta = []) use (&$checkpoints, $pdo, $job) {
             $checkpoints[] = [
                 'level' => $level,
@@ -105,8 +113,9 @@ while (true) {
             ];
             $stmt = $pdo->prepare("UPDATE scan_jobs SET checkpoints = :cp, progress_stage = :stage WHERE id = :id");
             $stmt->execute(['cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE), 'stage' => $stage, 'id' => $job['id']]);
-
         };
+
+        $addCheckpoint('system', 'Worker Active', 'success', ['pid' => getmypid()]);
 
         // Update function for progress percent + Technical Heartbeat
         $updateProgress = function($stage, $percent = null) use ($pdo, $job) {

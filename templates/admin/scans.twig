@@ -145,34 +145,41 @@ function fetchStatus(scanId) {
 }
 
 function renderLogs(scanId, job) {
+    if (!job) return;
     const console = document.getElementById('log-console-' + scanId);
     const statusLabel = document.getElementById('log-status-' + scanId);
+    if (!console || !statusLabel) return;
     
-    statusLabel.innerText = `STATUS: ${job.status.toUpperCase()} (${job.progress_percent}%)`;
+    const status = (job.status || 'unknown').toUpperCase();
+    const percent = job.progress_percent || 0;
+    statusLabel.innerText = `STATUS: ${status} (${percent}%)`;
     
     let html = '';
-    if (job.checkpoints && job.checkpoints.length > 0) {
+    if (job.checkpoints && Array.isArray(job.checkpoints) && job.checkpoints.length > 0) {
         job.checkpoints.forEach(cp => {
-            const ts = cp.ts.split(' ')[1];
+            const ts = cp.ts ? (cp.ts.includes(' ') ? cp.ts.split(' ')[1] : cp.ts) : '--:--:--';
             const color = cp.status === 'success' ? '#6a9955' : '#f44747';
             const stageColor = '#569cd6';
+            const stage = cp.stage || 'Process Step';
+            const statusDisplay = (cp.status || 'Executing').toUpperCase();
             
-            html += `<div style="margin-bottom: 8px;">`;
-            html += `<span style="color: #808080;">[${ts}]</span> `;
-            html += `<span style="color: ${stageColor}; font-weight: bold;">${cp.stage}</span>: `;
-            html += `<span style="color: ${color};">${cp.status.toUpperCase()}</span>`;
+            html += `<div style="margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 4px;">`;
+            html += `<span style="color: #808080; font-family: monospace;">[${ts}]</span> `;
+            html += `<span style="color: ${stageColor}; font-weight: bold;">${stage}</span>: `;
+            html += `<span style="color: ${color}; font-size: 10px; font-weight: 800;">${statusDisplay}</span>`;
             
-            if (cp.meta && Object.keys(cp.meta).length > 0) {
-                html += `<div style="padding-left: 20px; color: #9cdcfe; font-size: 11px;">`;
+            if (cp.meta && typeof cp.meta === 'object' && Object.keys(cp.meta).length > 0) {
+                html += `<div style="padding-left: 20px; color: #9cdcfe; font-size: 11px; margin-top: 2px;">`;
                 Object.entries(cp.meta).forEach(([k, v]) => {
-                    html += `<div><span style="color: #cccccc;">${k}:</span> ${JSON.stringify(v)}</div>`;
+                    const val = typeof v === 'object' ? JSON.stringify(v) : v;
+                    html += `<div><span style="color: #cccccc; opacity: 0.7;">${k}:</span> ${val}</div>`;
                 });
                 html += `</div>`;
             }
             html += `</div>`;
         });
     } else {
-        html = `<div style="color: #808080;">// Waiting for job to start...</div>`;
+        html = `<div style="color: #808080; font-style: italic; padding: 10px;">// Initializing forensic technical audit stream...</div>`;
     }
     
     console.innerHTML = html;
