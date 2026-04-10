@@ -222,6 +222,7 @@ class TenantController
                     dsm_version = COALESCE(dsm_version, :dsm),
                     ram_gb = COALESCE(ram_gb, :ram),
                     cpu_model = COALESCE(cpu_model, :cpu),
+                    physical_location = COALESCE(physical_location, :loc),
                     updated_at = NOW()
                 WHERE id = :pid
             ");
@@ -231,6 +232,7 @@ class TenantController
                 'dsm' => $ver['product'] ?? null,
                 'ram' => $hw['ram_gb'] ?? null,
                 'cpu' => $hw['cpu_model'] ?? null,
+                'loc' => $hw['location'] ?? null,
                 'pid' => $id
             ]);
 

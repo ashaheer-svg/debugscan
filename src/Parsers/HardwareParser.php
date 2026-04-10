@@ -36,7 +36,10 @@ class HardwareParser implements ParserInterface
             }
         }
 
-        // 3. CPU Info
+        // 3. Extract Location from SNMP (Hardwarev2.md Section 3.7)
+        $hardware['location'] = $this->parseLocation($extractedPath);
+
+        // 4. CPU Info
         if (file_exists($extractedPath . '/dsm/proc/cpuinfo')) {
             $cpuContent = file_get_contents($extractedPath . '/dsm/proc/cpuinfo');
             if (preg_match('/model name\s+: (.*)/', $cpuContent, $matches)) {
@@ -45,7 +48,7 @@ class HardwareParser implements ParserInterface
             $hardware['cpu_cores'] = substr_count($cpuContent, 'processor');
         }
 
-        // 4. RAM (Hardwarev2.md Section 3.1.3)
+        // 5. RAM (Hardwarev2.md Section 3.1.3)
         if (file_exists($extractedPath . '/dsm/proc/meminfo')) {
             $memContent = file_get_contents($extractedPath . '/dsm/proc/meminfo');
             if (preg_match('/MemTotal:\s+(\d+)/', $memContent, $matches)) {
@@ -56,7 +59,7 @@ class HardwareParser implements ParserInterface
             }
         }
 
-        // 5. Uptime
+        // 6. Uptime
         if (file_exists($extractedPath . '/dsm/proc/uptime')) {
             $uptimeContent = trim(file_get_contents($extractedPath . '/dsm/proc/uptime'));
             $parts = explode(' ', $uptimeContent);
@@ -65,6 +68,20 @@ class HardwareParser implements ParserInterface
         }
 
         return $hardware;
+    }
+
+    private function parseLocation(string $path): ?string
+    {
+        $file = $path . '/dsm/etc/snmp/snmpd.conf';
+        if (!file_exists($file)) $file = $path . '/dsm/etc.defaults/snmp/snmpd.conf';
+        if (!file_exists($file)) return null;
+
+        $content = file_get_contents($file);
+        if (preg_match('/^sysLocation\s+"?([^"\n]+)"?/m', $content, $matches)) {
+            return trim($matches[1]);
+        }
+
+        return null;
     }
 
     private function parseSynoInfo(string $path): array

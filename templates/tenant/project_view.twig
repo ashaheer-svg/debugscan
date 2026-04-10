@@ -221,9 +221,13 @@
                     <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">RAM</dt>
                     <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.ram_gb ? project.ram_gb ~ ' GB' : '--' }}</dd>
                 </div>
-                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
                     <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Serial</dt>
                     <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: monospace;">{{ project.serial_number|default('--') }}</dd>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Location</dt>
+                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.physical_location|default('--') }}</dd>
                 </div>
             </dl>
         </div>

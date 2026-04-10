@@ -10,6 +10,7 @@
 
 | Version | Date | Summary of Changes |
 |---|---|---|
+| 3.5 | 2026-04-10 | Added Section 3.7 (System Location Extraction). Documentation for extracting user-defined physical location from SNMP configurations (`/etc/snmp/snmpd.conf`). |
 | 3.4 | 2026-04-04 | Full consistency audit. Fixed contradiction: Section 3.3.2 incorrectly claimed no superblock cache in DSM 7.x — corrected to match Section 2.3.3 (present on enterprise rack units). Fixed contradiction: Section 3.2.3 incorrectly claimed per-disk runtime files are DSM 7.x only — corrected with full availability table showing presence from DSM 6.2.x; advanced status files (unc_status, reset_fail_status, etc.) are DSM 7.0+ only. Updated Section 5.1 storage stack partition table to distinguish sata-style vs sda-style models. Updated Section 5.6 expansion integration to correctly describe both naming styles and mark sata expansion naming as unconfirmed. Simplified Section 2.2.1 expansion naming to reference Section 9. Fixed Section 3.2.1 to mark `satae` expansion naming as unconfirmed. Updated both quick reference tables (2.6, 3.6) to include per-disk bay/container files, diskmaps entries, and corrected version availability notes. Updated Section 4.3 drive health table to reference Section 9 for bay/unit attribution. Updated Section 5.2 to clarify [8/5] notation is model-specific. |
 | 3.3 | 2026-04-04 | Added Section 9 (Drive Bay Detection & Expansion Unit Topology). Documents `container` file (which unit) and `id` file (physical bay number), `diskmaps_curr/boot.result` format and parser, physical bay ≠ device number on some rack models (RS1221rp+), expansion drive naming patterns for sda-style models, `syno_disks_group` clarified as non-expansion indicator. Includes per-version availability table and full code pattern. Based on analysis of 9 debug files including DS1821+, RS1221rp+ (×2), RS3617rpxs (×2), RS818+-j, RS2212+, DS916+-j, DS215+-j. Also identified 3 new previously unseen files: DS1821+ (DSM 7.3.2), RS1221rp+ (DSM 7.3, two units). |
 | 3.2 | 2026-04-04 | Added Section 7 (Network Issues): interface health detection, APIPA/link-down detection, per-interface error counters, ethtool link speed/duplex anomalies, network config, SMB/NFS, UPS, HA, Active Insight. Added Section 8 (Performance Issues and Optimizations): Synology extended top.result format, I/O wait thresholds, memory/swap analysis, disk I/O stats, D-state process log, Btrfs COW and data scrubbing, diskprediction JSON, resource-hungry process identification, 18-row fact-based recommendations table. |
@@ -32,6 +33,7 @@
 7. [Network Issues](#7-network-issues)
 8. [Performance Issues and Optimizations](#8-performance-issues-and-optimizations)
 9. [Drive Bay Detection & Expansion Unit Topology](#9-drive-bay-detection--expansion-unit-topology)
+10. [System Location Extraction](#10-system-location-extraction)
 
 ---
 
@@ -798,6 +800,36 @@ Synology maintains per-disk runtime status files in a dedicated directory. **Thi
 | `id` (physical bay number) | ✓ | ✓ | ✓ | ✓ |
 | `model`, `serial`, `vendor` | ✓ | ✓ | ✓ | ✓ |
 | `smart`, `temperature` | ✓ | ✓ | ✓ | ✓ |
+
+---
+
+### 3.7 System Location Extraction
+
+**Goal:** Extract the user-defined physical location of the NAS.
+**Authoritative Source:** SNMP configuration.
+
+Most Synology users do not explicitly set a "Location" unless they configure SNMP for remote monitoring. If configured, the `sysLocation` field provides the most reliable user-defined physical location.
+
+**File:** `dsm/etc/snmp/snmpd.conf` (or `dsm/etc.defaults/snmpd.conf` if custom one is absent)
+
+**Key Content Pattern:**
+```conf
+sysLocation "Data Center 1, Rack 4, U12"
+sysContact "admin@example.com"
+```
+
+**Parser Logic:**
+1. Search for the line starting with `sysLocation`.
+2. Extract the quoted string or the remainder of the line.
+3. If absent, fallback to `Unknown` or metadata from the project.
+
+```python
+# Regex to match sysLocation:
+match = re.search(r'^sysLocation\s+"?([^"\n]+)"?', snmp_text, re.MULTILINE)
+location = match.group(1) if match else "Unknown"
+```
+
+Availability: Present on all DSM versions where the SNMP service has been initialized at least once.
 | `bad_sec_ct`, `adv_status` | ✓ | ✓ | ✓ | ✓ |
 | `unc_status`, `unc_weight` | — | ✓ | ✓ | ✓ |
 | `reset_fail_status`, `reset_fail_weight` | — | ✓ | ✓ | ✓ |
