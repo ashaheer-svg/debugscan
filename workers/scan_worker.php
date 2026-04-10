@@ -40,6 +40,11 @@ function parsePgArray(?string $pgArray): array {
 echo "AI DebugScan v3 - Scan Worker Started\n";
 echo "====================================\n";
 
+// 0. Initial Recovery: Rescue Zombie Jobs
+$stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'queued', error_message = 'Recovered from system restart/crash' WHERE status = 'running'");
+$stmt->execute();
+echo "Startup: Rescued any leftover zombie jobs.\n";
+
 while (true) {
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
@@ -54,9 +59,28 @@ while (true) {
     $job = $stmt->fetch();
 
     if (!$job) {
+        // Periodic check for stuck/timed-out jobs
+        $timeoutMins = 30;
+        $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'retry', error_message = 'Technical Timeout: Exceeded 30 minute processing limit', completed_at = NOW() WHERE status = 'running' AND updated_at < (NOW() - INTERVAL '30 minutes')");
+        $stmt->execute();
+        
         $pdo->rollBack();
         if (isset($argv[1]) && $argv[1] === 'once') break;
         sleep(2);
+        continue;
+    }
+
+    // 1.5 Concurrency Check
+    $stmtSettings = $pdo->query("SELECT max_concurrent_scans FROM system_settings LIMIT 1");
+    $maxConcurrency = (int)($stmtSettings->fetchColumn() ?: 2);
+    
+    $stmtRunning = $pdo->query("SELECT COUNT(*) FROM scan_jobs WHERE status = 'running'");
+    $runningCount = (int)$stmtRunning->fetchColumn();
+    
+    if ($runningCount >= $maxConcurrency) {
+        $pdo->rollBack();
+        echo "Concurrency limit reached ($runningCount/$maxConcurrency). Waiting...\n";
+        sleep(5);
         continue;
     }
 
@@ -82,10 +106,16 @@ while (true) {
 
         };
 
-        // Update function for progress percent
-        $updateProgress = function($stage, $percent) use ($pdo, $job) {
-            $stmt = $pdo->prepare("UPDATE scan_jobs SET progress_stage = :stage, progress_percent = :percent WHERE id = :id");
-            $stmt->execute(['stage' => $stage, 'percent' => $percent, 'id' => $job['id']]);
+        // Update function for progress percent + Technical Heartbeat
+        $updateProgress = function($stage, $percent = null) use ($pdo, $job) {
+            if ($percent !== null) {
+                $stmt = $pdo->prepare("UPDATE scan_jobs SET progress_stage = :stage, progress_percent = :percent, updated_at = NOW() WHERE id = :id");
+                $stmt->execute(['stage' => $stage, 'percent' => (int)$percent, 'id' => $job['id']]);
+            } else {
+                // Heartbeat only update
+                $stmt = $pdo->prepare("UPDATE scan_jobs SET progress_stage = :stage, updated_at = NOW() WHERE id = :id");
+                $stmt->execute(['stage' => $stage, 'id' => $job['id']]);
+            }
         };
 
         $addCheckpoint('system', 'Initializing', 'success', ['files' => count(parsePgArray($job['debug_file_ids'] ?? ''))]);
@@ -136,7 +166,11 @@ while (true) {
 
              // Base diagnostic data
              $data = $parseService->parseAll($destPath);
-             $addCheckpoint('file', 'Base Parsing', 'success', ['file_id' => $fileId, 'dsm' => $data['version']['product'] ?? 'unknown']);
+             $addCheckpoint('file', 'Technical Audit: Hardware Identity Discovery', 'success', [
+                 'file_id' => $fileId, 
+                 'discovery' => 'Hardware components mapped successfully',
+                 'dsm_version' => $data['version']['product'] ?? 'unknown'
+             ]);
 
              // 3. Package forensic data if available (all levels)
              if ($dbResults) {
@@ -165,8 +199,11 @@ while (true) {
 
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],
-            'findings_count' => count($analysis['findings'] ?? []),
-            'health_score' => $analysis['health_score'] ?? 'N/A'
+            'technical_stats' => [
+                'findings' => count($analysis['findings'] ?? []),
+                'health_score' => $analysis['health_score'] ?? 'N/A',
+                'lines_analyzed' => count($allDiagnosticData)
+            ]
         ]);
 
         $updateProgress("Finalizing Report", 95);
@@ -223,9 +260,10 @@ while (true) {
 
         echo "Job Completed: {$job['id']}\n";
 
-    } catch (\Exception $e) {
+    } catch (\Throwable $e) {
+        // Catch ANY error (ArgumentCount, Type, etc) to prevent worker death
         $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'failed', error_message = :err, completed_at = NOW() WHERE id = :id");
-        $stmt->execute(['id' => $job['id'], 'err' => $e->getMessage()]);
-        echo "Job Failed: {$job['id']} - {$e->getMessage()}\n";
+        $stmt->execute(['id' => $job['id'], 'err' => "Fatal Error: " . $e->getMessage()]);
+        echo "Job Fatal Error: {$job['id']} - {$e->getMessage()}\n";
     }
 }

@@ -104,7 +104,7 @@ class DatabaseParser
         if (in_array(strtolower($baseName), $blacklist)) return null;
 
         if ($this->onProgress && $depth > 0) {
-            ($this->onProgress)("Discovery: Scanning " . basename(dirname($dir)) . "/" . $baseName);
+            ($this->onProgress)("Discovery: [FORENSIC] Locating Databases in " . basename($dir));
         }
 
         // Check if ANY of the target databases are in this directory
@@ -222,7 +222,7 @@ class DatabaseParser
         while ($row = $stmt->fetch()) {
             $scanned++;
             if ($onProgress && $scanned % 5000 === 0) {
-                $onProgress("Scanning System Events: " . number_format($scanned) . " / " . number_format($total));
+                $onProgress("Technical Audit: Extracting System Events (" . number_format($scanned) . " / " . number_format($total) . " total lines)");
             }
 
             if ($this->isRelevant($row['msg'], $row['level'])) {
@@ -269,7 +269,7 @@ class DatabaseParser
         while ($row = $stmt->fetch()) {
             $scanned++;
             if ($onProgress && $scanned % 5000 === 0) {
-                $onProgress("Scanning Connection Logs: " . number_format($scanned));
+                $onProgress("Technical Audit: Analyzing Connection Logs (" . number_format($scanned) . " lines processed)");
             }
             $critical[] = $row;
         }
@@ -306,7 +306,7 @@ class DatabaseParser
         while ($row = $stmt->fetch()) {
             $scanned++;
             if ($onProgress && $scanned % 5000 === 0) {
-                $onProgress("Scanning Drive Events: " . number_format($scanned) . " / " . number_format($total));
+                $onProgress("Technical Audit: Extracting Disk Events (" . number_format($scanned) . " / " . number_format($total) . " lines)");
             }
 
             if ($this->isRelevant($row['msg'] ?? '', $row['level'] ?? '')) {
