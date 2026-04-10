@@ -13,7 +13,7 @@ class HardwareParser implements ParserInterface
 
         // 1. Model & Serial from synoinfo.conf (Hardwarev2.md Section 2.1.1 & 4.2)
         $synoInfo = $this->parseSynoInfo($extractedPath);
-        $hardware['serial'] = $synoInfo['serialno'] ?? null;
+        $hardware['serial'] = $synoInfo['serialno'] ?? $synoInfo['serial_sn'] ?? $synoInfo['sn'] ?? null;
 
         if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
             $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));

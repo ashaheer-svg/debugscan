@@ -168,10 +168,36 @@ while (true) {
 
              // Base diagnostic data
              $data = $parseService->parseAll($destPath);
+
+             // 3. Propagate hardware metadata to projects table if missing
+             $hw = $data['hardware'] ?? [];
+             $ver = $data['version'] ?? [];
+             if (!empty($hw)) {
+                $stmtProj = $pdo->prepare("
+                    UPDATE projects SET
+                        model = COALESCE(model, :model),
+                        serial_number = COALESCE(serial_number, :serial),
+                        dsm_version = COALESCE(dsm_version, :dsm),
+                        ram_gb = COALESCE(ram_gb, :ram),
+                        cpu_model = COALESCE(cpu_model, :cpu),
+                        updated_at = NOW()
+                    WHERE id = :pid
+                ");
+                $stmtProj->execute([
+                    'model' => $hw['model'] ?? null,
+                    'serial' => $hw['serial'] ?? null,
+                    'dsm' => $ver['product'] ?? null,
+                    'ram' => $hw['ram_gb'] ?? null,
+                    'cpu' => $hw['cpu_model'] ?? null,
+                    'pid' => $job['project_id']
+                ]);
+             }
+
              $addCheckpoint('file', 'Technical Audit: Hardware Identity Discovery', 'success', [
                  'file_id' => $fileId, 
                  'discovery' => 'Hardware components mapped successfully',
-                 'dsm_version' => $data['version']['product'] ?? 'unknown'
+                 'serial' => $hw['serial'] ?? 'unknown',
+                 'dsm_version' => $ver['product'] ?? 'unknown'
              ]);
 
              // 3. Package forensic data if available (all levels)

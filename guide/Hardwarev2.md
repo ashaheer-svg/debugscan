@@ -207,6 +207,17 @@ model = parts[-1].upper()   # → "RS818+"
 cpu_family = parts[1] if len(parts) > 2 else "unknown"  # → "avoton"
 ```
 
+#### 2.1.2 NAS Serial Number
+
+**File:** `dsm/etc/synoinfo.conf` (also check `dsm/etc.defaults/synoinfo.conf`)
+
+**Key field:**
+```
+serialno="1650LWN001234"
+```
+
+The serial number is a unique 13-character identifier for the NAS hardware. Use this for authoritative device tracking.
+
 #### 2.1.2 DSM Version
 
 **File:** `dsm/etc/VERSION`
@@ -565,6 +576,7 @@ Key fields per volume:
 |---|---|---|
 | DSM version | `dsm/etc/VERSION` | Parse key=value format |
 | Hardware model | `dsm/etc/synoinfo.conf` | `unique=` field |
+| NAS Serial Number | `dsm/etc/synoinfo.conf` | `serialno=` field |
 | RAM | `dsm/proc/meminfo` | `MemTotal` field |
 | CPU | `dsm/proc/cpuinfo` | `model name`, `cpu cores` |
 | Uptime | `dsm/proc/uptime` | Seconds since boot |
@@ -612,6 +624,17 @@ DS1821+
 ```
 
 No parsing needed beyond `.strip()`.
+
+#### 3.1.2 NAS Serial Number
+
+**File:** `dsm/etc/synoinfo.conf`
+
+**Key field:** 
+```
+serialno="2140SLN123456"
+```
+
+Same as DSM 6.x, the `serialno` key remains the authoritative source for the device serial number.
 
 #### 3.1.2 DSM Version
 
@@ -1028,6 +1051,7 @@ Synology's built-in system integrity check result. Expected content: `Check Succ
 |---|---|---|
 | DSM version | `dsm/etc.defaults/VERSION` | Parse key=value |
 | Hardware model | `dsm/proc/sys/kernel/syno_hw_version` | Single line |
+| NAS Serial Number | `dsm/etc/synoinfo.conf` | `serialno=` field |
 | RAM | `dsm/proc/meminfo` | Use `MemAvailable` |
 | CPU | `dsm/proc/cpuinfo` | `model name`, `cpu cores` |
 | Uptime | `dsm/proc/uptime` | Seconds since boot |
@@ -1078,6 +1102,7 @@ Extract and present the following categories in order. Each indicator should inc
 |---|---|---|
 | Hardware model | DSM 6.x: parse `unique=` from synoinfo.conf | `dsm/etc/synoinfo.conf` |
 | | DSM 7.x: read file directly | `dsm/proc/sys/kernel/syno_hw_version` |
+| NAS Serial Number | Read `serialno` field | `dsm/etc/synoinfo.conf` |
 | DSM version | `productversion` field | `dsm/etc/VERSION` or `dsm/etc.defaults/VERSION` |
 | DSM build | `buildnumber` field | Same |
 | DSM build date | `builddate` field | Same |
