@@ -50,4 +50,22 @@ class AuthService
     {
         return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
     }
+
+    public function updateProfile(string $userId, string $displayName, ?string $password = null): void
+    {
+        if ($password) {
+            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, password_hash = :pass, updated_at = NOW() WHERE id = :id");
+            $stmt->execute([
+                'name' => $displayName,
+                'pass' => $this->hashPassword($password),
+                'id' => $userId
+            ]);
+        } else {
+            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, updated_at = NOW() WHERE id = :id");
+            $stmt->execute([
+                'name' => $displayName,
+                'id' => $userId
+            ]);
+        }
+    }
 }

@@ -76,4 +76,28 @@ class AuthController
         session_destroy();
         return $response->withHeader('Location', '/login')->withStatus(302);
     }
+
+    public function updateProfile(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $displayName = trim($data['display_name'] ?? '');
+        $password = !empty($data['password']) ? $data['password'] : null;
+
+        if (empty($displayName)) {
+            $_SESSION['error'] = "Display Name cannot be empty.";
+            return $response->withHeader('Location', $request->getHeaderLine('Referer'))->withStatus(302);
+        }
+
+        try {
+            $userId = $_SESSION['user_id'];
+            $this->authService->updateProfile($userId, $displayName, $password);
+            
+            $_SESSION['name'] = $displayName;
+            $_SESSION['success'] = "Profile updated successfully.";
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "Failed to update profile: " . $e->getMessage();
+        }
+
+        return $response->withHeader('Location', $request->getHeaderLine('Referer'))->withStatus(302);
+    }
 }

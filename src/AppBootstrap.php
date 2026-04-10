@@ -131,6 +131,9 @@ class AppBootstrap
             $group->get('/scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('/scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
+            // Profile Routes
+            $group->post('/profile/update', [AuthController::class, 'updateProfile']);
+            
             // Log File Analysis Routes
             $group->get('/files/raw/{id}', [TenantController::class, 'viewRawData']);
             $group->get('/files/report/{id}', [TenantController::class, 'viewHardwareReport']);

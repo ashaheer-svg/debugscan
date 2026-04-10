@@ -27,13 +27,14 @@ class ViewDataMiddleware implements MiddlewareInterface
         $userId = $request->getAttribute('user_id');
 
         if ($userId) {
-            $stmt = $this->pdo->prepare("SELECT display_name, tokens_available FROM users WHERE id = :id");
+            $stmt = $this->pdo->prepare("SELECT display_name, tokens_available, role FROM users WHERE id = :id");
             $stmt->execute(['id' => $userId]);
             $user = $stmt->fetch();
 
             if ($user) {
                 $this->twig->addGlobal('user_name', $user['display_name']);
                 $this->twig->addGlobal('tokens_available', $user['tokens_available']);
+                $this->twig->addGlobal('user_role', $user['role']);
             }
         }
 
