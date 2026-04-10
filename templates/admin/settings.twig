@@ -3,92 +3,111 @@
 {% block title %}System Settings - AI DebugScan v3{% endblock %}
 
 {% block admin_content %}
-<h1 class="admin-title">AI & System Configuration</h1>
+<header class="page-header">
+    <h1 class="page-title">AI & System Configuration</h1>
+    <p class="page-subtitle">Governance policies, AI model routing, and core performance tuning.</p>
+</header>
 
 {% if error %}
-<div class="alert alert-danger">{{ error }}</div>
+<div style="background: var(--danger-light); color: var(--danger); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 32px; font-weight: 600; border: 1px solid var(--danger);">
+    {{ error }}
+</div>
 {% endif %}
 
 <form action="/admin/settings/update" method="POST">
-    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px;">
+    <div class="responsive-grid" style="align-items: start;">
         
         <!-- AI Model Selection -->
-        <section style="background: var(--white); padding: 32px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
-            <h3 style="margin-bottom: 24px; font-weight: 700; color: var(--text-primary);">AI Engine Configuration</h3>
+        <section class="card">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">AI Engine Configuration</h3>
             
             <div class="form-group">
                 <label for="level1_model" class="form-label">Level 1 Scan Model (Standard)</label>
-                <select id="level1_model" name="level1_model" class="form-control">
+                <select id="level1_model" name="level1_model" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
                     {% for model in models %}
-                    <option value="{{ model.id }}" {% if settings.level1_model == model.id %}selected{% endif %}>{{ model.id }} ({{ model.owned_by }})</option>
+                    <option value="{{ model.id }}" {% if settings.level1_model == model.id %}selected{% endif %}>{{ model.id }}</option>
                     {% endfor %}
                 </select>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Optimized for rapid hardware identity discovery.</p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Optimized for rapid hardware identity discovery and extraction.</p>
             </div>
 
             <div class="form-group" style="margin-top: 24px;">
                 <label for="level2_model" class="form-label">Level 2 Scan Model (Deep Forensic)</label>
-                <select id="level2_model" name="level2_model" class="form-control">
+                <select id="level2_model" name="level2_model" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
                     {% for model in models %}
-                    <option value="{{ model.id }}" {% if settings.level2_model == model.id %}selected{% endif %}>{{ model.id }} ({{ model.owned_by }})</option>
+                    <option value="{{ model.id }}" {% if settings.level2_model == model.id %}selected{% endif %}>{{ model.id }}</option>
                     {% endfor %}
                 </select>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Optimized for cross-referenced multi-file log analysis.</p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Optimized for high-context archival log cross-referencing.</p>
             </div>
         </section>
 
         <!-- System Governance -->
-        <section style="background: var(--white); padding: 32px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
-            <h3 style="margin-bottom: 24px; font-weight: 700; color: var(--text-primary);">Forensic Governance</h3>
+        <section class="card">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">Forensic Governance</h3>
             
             <div class="form-group">
                 <label for="retention_days" class="form-label">Data Retention Period (Days)</label>
-                <input type="number" id="retention_days" name="retention_days" class="form-control" value="{{ settings.retention_days }}" min="7" max="365">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Extracted logs and reports will be purged after this period.</p>
+                <input type="number" id="retention_days" name="retention_days" class="form-control" value="{{ settings.retention_days }}" min="7" max="365" style="background: var(--bg-light); border-color: var(--border);">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Logs and reports will be permanently purged after this window.</p>
             </div>
 
             <div class="form-group" style="margin-top: 24px;">
                 <label for="max_concurrent_scans" class="form-label">Max Concurrent Worker Scans</label>
-                <input type="number" id="max_concurrent_scans" name="max_concurrent_scans" class="form-control" value="{{ settings.max_concurrent_scans }}" min="1" max="10">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Limit simultaneous forensic extractions to maintain VPS stability.</p>
+                <input type="number" id="max_concurrent_scans" name="max_concurrent_scans" class="form-control" value="{{ settings.max_concurrent_scans }}" min="1" max="10" style="background: var(--bg-light); border-color: var(--border);">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Simultaneous extractions permitted to maintain VPS stability.</p>
             </div>
 
-            <div class="form-group" style="margin-top: 24px;">
-                <label for="stuck_alert_mins" class="form-label">Stuck Scan Alert Threshold (Minutes)</label>
-                <input type="number" id="stuck_alert_mins" name="stuck_alert_mins" class="form-control" value="{{ settings.stuck_alert_mins|default(5) }}" min="1" max="60">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Flag scans as "Stuck" on the dashboard if no heartbeat is received for this long.</p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px;">
+                <div class="form-group">
+                    <label for="stuck_alert_mins" class="form-label">Heartbeat Alert (m)</label>
+                    <input type="number" id="stuck_alert_mins" name="stuck_alert_mins" class="form-control" value="{{ settings.stuck_alert_mins|default(5) }}" min="1" max="60" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+                <div class="form-group">
+                    <label for="auto_cancel_mins" class="form-label">Auto-Cancel (m)</label>
+                    <input type="number" id="auto_cancel_mins" name="auto_cancel_mins" class="form-control" value="{{ settings.auto_cancel_mins|default(30) }}" min="5" max="240" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
             </div>
-
-            <div class="form-group" style="margin-top: 24px;">
-                <label for="auto_cancel_mins" class="form-label">Auto-Cancellation Timeout (Minutes)</label>
-                <input type="number" id="auto_cancel_mins" name="auto_cancel_mins" class="form-control" value="{{ settings.auto_cancel_mins|default(30) }}" min="5" max="240">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Automatically mark scans as RETRY if they exceed this limit.</p>
-            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-weight: 500;">Configure thresholds for job monitoring and automatic reclamation.</p>
         </section>
 
     </div>
 
     <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
-        <button type="submit" class="btn btn-primary" style="width: auto; padding: 12px 32px;">
-            Save System Settings
+        <button type="submit" class="btn btn-primary" style="width: auto; padding: 12px 48px; font-weight: 700;">
+            Apply System Configuration
         </button>
     </div>
 </form>
 
 <!-- Danger Zone -->
-<section style="margin-top: 64px; border: 1px solid #ff000033; background: #fff5f5; padding: 32px; border-radius: var(--radius);">
-    <h3 style="color: #d32f2f; margin-bottom: 8px; font-weight: 700;">Danger Zone</h3>
-    <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
-        Perform a **Factory Reset** of the operational history. This will permanently delete all projects, diagnostic logs, and scan reports across all tenants. 
-        <br><strong style="color: #d32f2f;">User accounts and AI settings will be preserved.</strong>
+<section class="card" style="margin-top: 64px; border: 1px solid var(--danger); background: var(--danger-light); padding: 32px;">
+    <h3 style="color: var(--danger); margin: 0 0 12px 0; font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;">Danger Zone</h3>
+    <p style="color: var(--text-primary); margin-bottom: 24px; font-size: 14px; font-weight: 600; line-height: 1.6;">
+        Perform a factory reset of the forensic environment. This will permanently delete all projects, diagnostic log files, and scan indices across all tenant partitions.
     </p>
 
-    <form action="/admin/settings/reset" method="POST" id="resetForm">
-        <button type="button" class="btn btn-danger" onclick="confirmReset()" style="background: #d32f2f; border: none; width: auto; padding: 12px 32px;">
-            Factory Reset System History
-        </button>
-    </form>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 24px;">
+        <p style="color: var(--text-muted); font-size: 12px; margin: 0; font-weight: 500;">
+            User account registry and AI settings will be preserved. This operation is IRREVERSIBLE.
+        </p>
+        <form action="/admin/settings/reset" method="POST" id="resetForm">
+            <button type="button" class="btn btn-danger" onclick="confirmReset()" style="width: auto; padding: 12px 32px; font-weight: 700;">
+                Factory Reset All History
+            </button>
+        </form>
+    </div>
 </section>
+
+<script>
+function confirmReset() {
+    if (confirm("WARNING: This will permanently delete all forensic data and history. This action cannot be undone.\n\nAre you absolutely sure?")) {
+        if (confirm("LAST CHANCE: All diagnostic logs and extraction workspaces will be wiped. Type 'CONFIRM' to proceed.")) {
+            document.getElementById('resetForm').submit();
+        }
+    }
+}
+</script>
 
 <script>
 function confirmReset() {

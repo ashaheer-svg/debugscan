@@ -10,70 +10,70 @@
     </div>
 </header>
 
-<section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden;">
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+<section class="card" style="padding: 0; overflow: hidden;">
+    <table class="data-table">
         <thead>
-            <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
-                <th style="padding: 12px 24px;">ID / Date</th>
-                <th style="padding: 12px 0;">Tenant / Project</th>
-                <th style="padding: 12px 0;">Level</th>
-                <th style="padding: 12px 0;">Progress / Status</th>
-                <th style="padding: 12px 0;">Tokens</th>
-                <th style="padding: 12px 24px; text-align: right;">Audit Toolbox</th>
+            <tr>
+                <th style="padding-left: 24px;">ID / Date</th>
+                <th>Tenant / Project</th>
+                <th>Level</th>
+                <th>Progress / Status</th>
+                <th>AI Usage</th>
+                <th style="padding-right: 24px; text-align: right;">Audit Toolbox</th>
             </tr>
         </thead>
         <tbody>
             {% for scan in scans %}
-            <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
-                <td style="padding: 16px 24px;">
-                    <div style="font-family: monospace; font-weight: 700; font-size: 11px;">{{ scan.id|slice(0, 8) }}...</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">{{ scan.created_at|date('M d, H:i') }}</div>
+            <tr>
+                <td style="padding-left: 24px;">
+                    <div style="font-family: monospace; font-weight: 700; font-size: 11px; color: var(--text-primary);">#{{ scan.id|slice(0, 8) }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ scan.created_at|date('M d, H:i') }}</div>
                 </td>
-                <td style="padding: 16px 0;">
-                    <div style="font-weight: 600;">{{ scan.tenant_name }}</div>
-                    <div style="font-size: 11px; color: var(--text-muted);">{{ scan.project_name }}</div>
+                <td>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 13px;">{{ scan.tenant_name }}</div>
+                    <div style="font-size: 11px; color: var(--primary); font-weight: 600;">{{ scan.project_name }}</div>
                 </td>
-                <td style="padding: 16px 0;">
-                    <span class="badge" style="background: {% if scan.scan_level == 'level1' %}var(--success-light){% else %}var(--warning-light){% endif %}; color: {% if scan.scan_level == 'level1' %}var(--success){% else %}var(--warning){% endif %}; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700;">
+                <td>
+                    <span class="badge" style="background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
                         {{ scan.scan_level|upper }}
                     </span>
                 </td>
-                <td style="padding: 16px 0;">
-                    <div style="display: flex; flex-direction: column; gap: 4px; width: 120px;">
-                        <span style="font-size: 11px; font-weight: 700; color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' %}var(--error){% else %}var(--primary){% endif %}; text-transform: uppercase;">
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 4px; width: 140px;">
+                        <span style="font-size: 10px; font-weight: 800; color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--danger){% else %}var(--primary){% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
                             {{ scan.status }}
                         </span>
                         {% if scan.status in ['queued', 'running'] %}
                         <div style="height: 4px; background: var(--bg-light); border-radius: 2px; overflow: hidden;">
-                            <div style="width: {{ scan.progress_percent }}%; height: 100%; background: var(--primary);"></div>
+                            <div class="shimmer" style="width: {{ scan.progress_percent }}%; height: 100%; background: var(--primary);"></div>
                         </div>
-                        <div style="font-size: 9px; color: var(--text-muted);">{{ scan.progress_stage }}</div>
+                        <div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">{{ scan.progress_stage }}</div>
                         {% endif %}
                     </div>
                 </td>
-                <td style="padding: 16px 0;">
-                    <div style="font-weight: 700;">{{ (scan.ai_input_tokens_used + scan.ai_output_tokens_used)|number_format }}</div>
-                    <div style="font-size: 10px; color: var(--text-muted);">Charged: {{ scan.tokens_charged|number_format }}</div>
+                <td>
+                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">{{ (scan.ai_input_tokens_used + scan.ai_output_tokens_used)|number_format }} <span style="font-size: 10px; color: var(--text-muted);">TKN</span></div>
+                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Charged: {{ scan.tokens_charged|number_format }}</div>
                 </td>
-                <td style="padding: 16px 24px; text-align: right;">
+                <td style="padding-right: 24px; text-align: right;">
                     <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn btn-sm" title="View Audit Logs" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; cursor: pointer;">LOG</button>
-                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-sm" title="Download Raw Input" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">RAW ({{ scan.formatted_payload_size }})</a>
-                        <a href="/admin/scans/report/{{ scan.id }}" class="btn btn-sm" title="Download AI Report" style="width: auto; padding: 4px 8px; background: var(--bg-light); border: 1px solid var(--border); font-size: 10px; text-decoration: none;">REP</a>
-                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn btn-sm" style="width: auto; padding: 4px 8px; background: var(--primary); color: white; border: none; font-size: 10px; text-decoration: none;">VIEW</a>
+                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn btn-outline" title="View Audit Logs" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">LOG</button>
+                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-outline" title="Download Raw Input" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">RAW</a>
+                        <a href="/admin/scans/report/{{ scan.id }}" class="btn btn-outline" title="Download AI Report" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">REP</a>
+                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn btn-primary" style="height: 28px; padding: 0 12px; font-size: 10px; font-weight: 700;">VIEW</a>
                     </div>
                 </td>
             </tr>
-            <tr id="audit-{{ scan.id }}" style="display: none; background: #fafafa;">
-                <td colspan="6" style="padding: 16px 24px;">
-                    <div style="font-size: 11px; border-left: 2px solid var(--primary); padding-left: 16px;">
-                        <h4 style="margin: 0 0 12px 0; font-size: 10px; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between;">
-                            <span>Forensic Technical Log</span>
+            <tr id="audit-{{ scan.id }}" style="display: none; background: var(--bg-off-white);">
+                <td colspan="6" style="padding: 24px;">
+                    <div style="font-size: 11px; border-left: 3px solid var(--primary); padding-left: 20px;">
+                        <h4 style="margin: 0 0 16px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; letter-spacing: 0.1em;">
+                            <span>Forensic Technical Log Stream</span>
                             <span id="log-status-{{ scan.id }}" style="color: var(--primary);"></span>
                         </h4>
                         
-                        <div id="log-console-{{ scan.id }}" style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 6px; font-family: 'Cascadia Code', 'Source Code Pro', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.5; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);">
-                            <div style="color: #6a9955;">// Initializing technical audit stream...</div>
+                        <div id="log-console-{{ scan.id }}" style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 6px; font-family: 'Cascadia Code', 'Source Code Pro', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6; box-shadow: var(--shadow-2);">
+                            <div style="color: #6a9955; font-style: italic;">// Initializing technical audit stream...</div>
                         </div>
                     </div>
                 </td>
@@ -81,7 +81,10 @@
             {% endfor %}
             {% if not scans %}
             <tr>
-                <td colspan="6" style="padding: 48px; text-align: center; color: var(--text-muted);">No analysis jobs have been executed yet.</td>
+                <td colspan="6" style="padding: 80px; text-align: center; color: var(--text-muted);">
+                    <div style="font-size: 40px; margin-bottom: 16px; opacity: 0.3;">⏳</div>
+                    <div style="font-weight: 600; color: var(--text-primary);">No analysis jobs discovered</div>
+                </td>
             </tr>
             {% endif %}
         </tbody>
