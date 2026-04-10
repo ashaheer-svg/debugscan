@@ -52,13 +52,14 @@ class AdminController
         $diskUsedPercent = round((($diskTotal - $diskFree) / $diskTotal) * 100, 1);
 
         // Stuck Scans (Running but no heartbeat for configurable mins)
+        // If settings missing, default to 30 mins
         $stmt = $this->pdo->prepare("
             SELECT j.id, j.status, j.progress_stage, j.updated_at, u.display_name as tenant_name
             FROM scan_jobs j
             JOIN users u ON j.tenant_id = u.id
-            JOIN system_settings s ON 1=1
+            LEFT JOIN system_settings s ON 1=1
             WHERE j.status = 'running' 
-              AND j.updated_at < (NOW() - (s.stuck_alert_mins || ' minutes')::interval)
+              AND j.updated_at < (NOW() - (COALESCE(s.stuck_alert_mins, 30) || ' minutes')::interval)
             ORDER BY j.updated_at ASC
         ");
         $stmt->execute();
