@@ -116,7 +116,7 @@ class AppBootstrap
         // Add Middleware
         $app->addRoutingMiddleware();
         $app->addErrorMiddleware(
-            (getenv('APP_DEBUG') ?: 'false') === 'true',
+            true, // Force enabled for emergency diagnostic
             true,
             true
         );
