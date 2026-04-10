@@ -424,6 +424,71 @@ class AdminController
             ->withHeader('Content-Disposition', 'attachment; filename="ai_report_' . $id . '.json"');
     }
 
+    public function resetSystem(Request $request, Response $response): Response
+    {
+        try {
+            // 1. Database Cleanup (Truncate operational tables)
+            $tables = [
+                'sessions',
+                'audit_log',
+                'extraction_errors',
+                'scan_findings',
+                'scan_jobs',
+                'debug_files',
+                'projects'
+            ];
+
+            foreach ($tables as $table) {
+                // TRUNCATE is faster and handles identity resets better than DELETE
+                $this->pdo->exec("TRUNCATE TABLE $table CASCADE");
+            }
+
+            // 2. Filesystem Cleanup
+            $storageFolders = [
+                __DIR__ . '/../../storage/uploads',
+                __DIR__ . '/../../storage/extracted'
+            ];
+
+            foreach ($storageFolders as $folder) {
+                if (is_dir($folder)) {
+                    $this->emptyDirectory($folder);
+                }
+            }
+
+            $this->logAction($request, 'system_factory_reset', 'system', 'all', ['status' => 'success']);
+            
+            $_SESSION['success'] = "System has been reset. All history and forensic data cleared.";
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "Failed to reset system: " . $e->getMessage();
+        }
+
+        return $response->withHeader('Location', '/admin/settings')->withStatus(302);
+    }
+
+    private function emptyDirectory(string $dir): void
+    {
+        $files = array_diff(scandir($dir), ['.', '..', '.gitignore']);
+        foreach ($files as $file) {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            if (is_dir($path)) {
+                $this->deleteDirectoryRecursive($path);
+            } else {
+                @unlink($path);
+            }
+        }
+    }
+
+    private function deleteDirectoryRecursive(string $dir): void
+    {
+        if (!is_dir($dir)) return;
+        $files = array_diff(scandir($dir), ['.', '..']);
+        foreach ($files as $file) {
+            $path = $dir . DIRECTORY_SEPARATOR . $file;
+            is_dir($path) ? $this->deleteDirectoryRecursive($path) : @unlink($path);
+        }
+        @rmdir($dir);
+    }
+
     private function getFolderSize($path): int
     {
         $size = 0;

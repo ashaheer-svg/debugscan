@@ -62,4 +62,29 @@
         </button>
     </div>
 </form>
+
+<!-- Danger Zone -->
+<section style="margin-top: 64px; border: 1px solid #ff000033; background: #fff5f5; padding: 32px; border-radius: var(--radius);">
+    <h3 style="color: #d32f2f; margin-bottom: 8px; font-weight: 700;">Danger Zone</h3>
+    <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">
+        Perform a **Factory Reset** of the operational history. This will permanently delete all projects, diagnostic logs, and scan reports across all tenants. 
+        <br><strong style="color: #d32f2f;">User accounts and AI settings will be preserved.</strong>
+    </p>
+
+    <form action="/admin/settings/reset" method="POST" id="resetForm">
+        <button type="button" class="btn btn-danger" onclick="confirmReset()" style="background: #d32f2f; border: none; width: auto; padding: 12px 32px;">
+            Factory Reset System History
+        </button>
+    </form>
+</section>
+
+<script>
+function confirmReset() {
+    if (confirm("WARNING: This will permanently delete all forensic data and history. This action cannot be undone.\n\nAre you absolutely sure?")) {
+        if (confirm("LAST CHANCE: All diagnostic logs and extraction workspaces will be wiped. Type 'CONFIRM' to proceed.")) {
+            document.getElementById('resetForm').submit();
+        }
+    }
+}
+</script>
 {% endblock %}

@@ -147,6 +147,7 @@ class AppBootstrap
             $group->get('/admin/logs', [AdminController::class, 'logs']);
             $group->get('/admin/settings', [AdminController::class, 'settings']);
             $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);
+            $group->post('/admin/settings/reset', [AdminController::class, 'resetSystem']);
             $group->get('/admin/scans', [AdminController::class, 'scans']);
             $group->get('/admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('/admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
