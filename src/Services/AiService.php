@@ -10,16 +10,16 @@ use RuntimeException;
 class AiService
 {
     private Client $client;
-    private string $apiKey;
+    private ?string $apiKey;
     private string $baseUrl = 'https://api.groq.com/openai/v1/';
 
-    public function __construct(string $apiKey)
+    public function __construct(?string $apiKey)
     {
         $this->apiKey = $apiKey;
         $this->client = new Client([
             'base_uri' => $this->baseUrl,
             'headers' => [
-                'Authorization' => "Bearer {$this->apiKey}",
+                'Authorization' => "Bearer " . ($this->apiKey ?? ''),
                 'Content-Type' => 'application/json',
             ],
             'timeout' => 60.0,

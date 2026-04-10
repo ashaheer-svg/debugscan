@@ -47,9 +47,15 @@ class AdminController
 
         // Platform Performance Metrics
         $cpuLoad = function_exists('sys_getloadavg') ? sys_getloadavg()[0] : 0;
-        $diskFree = disk_free_space("/") ?: 1;
-        $diskTotal = disk_total_space("/") ?: 1;
-        $diskUsedPercent = round((($diskTotal - $diskFree) / $diskTotal) * 100, 1);
+        
+        $diskFree = @disk_free_space("/") ?: 1;
+        $diskTotal = @disk_total_space("/") ?: 1;
+        
+        // Ensure we don't divide by zero or pass non-numeric to round
+        $diskFreeNumeric = is_numeric($diskFree) ? (float)$diskFree : 1.0;
+        $diskTotalNumeric = is_numeric($diskTotal) ? (float)$diskTotal : 1.0;
+        
+        $diskUsedPercent = round((($diskTotalNumeric - $diskFreeNumeric) / $diskTotalNumeric) * 100, 1);
 
         // Stuck Scans (Running but no heartbeat for configurable mins)
         // If settings missing, default to 30 mins

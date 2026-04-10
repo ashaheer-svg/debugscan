@@ -78,10 +78,11 @@ class AppBootstrap
                 );
             },
             AdminController::class => function ($container) {
+                $apiKey = getenv('GROQ_API_KEY');
                 return new AdminController(
                     $container->get(Environment::class),
                     $container->get(PDO::class),
-                    new AiService(getenv('GROQ_API_KEY'))
+                    new AiService($apiKey === false ? null : $apiKey)
                 );
             },
             ViewDataMiddleware::class => function ($container) {
