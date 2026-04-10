@@ -51,6 +51,17 @@ class AdminController
         $diskTotal = disk_total_space("/") ?: 1;
         $diskUsedPercent = round((($diskTotal - $diskFree) / $diskTotal) * 100, 1);
 
+        // Stuck Scans (Running but no heartbeat for > 5 mins)
+        $stmt = $this->pdo->prepare("
+            SELECT j.id, j.status, j.progress_stage, j.updated_at, u.display_name as tenant_name
+            FROM scan_jobs j
+            JOIN users u ON j.tenant_id = u.id
+            WHERE j.status = 'running' AND j.updated_at < (NOW() - INTERVAL '5 minutes')
+            ORDER BY j.updated_at ASC
+        ");
+        $stmt->execute();
+        $stuckScans = $stmt->fetchAll();
+
         $body = $this->view->render('admin/dashboard.twig', [
             'tenant_count' => $tenantCount,
             'total_scans' => $totalScans,
@@ -59,6 +70,7 @@ class AdminController
             'disk_free_gb' => round($diskFree / 1073741824, 2),
             'disk_used_percent' => $diskUsedPercent,
             'recent_activity' => $recentActivity,
+            'stuck_scans' => $stuckScans,
             'active_page' => 'admin_dash'
         ]);
 
@@ -504,6 +516,39 @@ class AdminController
         if ($bytes >= 1048576) return number_format($bytes / 1048576, 2) . ' MB';
         if ($bytes >= 1024) return number_format($bytes / 1024, 2) . ' KB';
         return $bytes . ' B';
+    }
+
+    public function getScanStatus(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("SELECT id, status, progress_stage, progress_percent, checkpoints, updated_at FROM scan_jobs WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $job = $stmt->fetch();
+
+        if ($job && is_string($job['checkpoints'])) {
+            $job['checkpoints'] = json_decode($job['checkpoints'], true);
+        }
+
+        $response->getBody()->write(json_encode($job));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    public function abortScan(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        
+        // Mark as error (Admin Aborted) instead of hard delete
+        $stmt = $this->pdo->prepare("
+            UPDATE scan_jobs 
+            SET status = 'error', 
+                error_message = 'Aborted by System Administrator', 
+                completed_at = NOW() 
+            WHERE id = :id AND status IN ('running', 'queued')
+        ");
+        $stmt->execute(['id' => $id]);
+
+        $response->getBody()->write(json_encode(['success' => true]));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
 

@@ -152,6 +152,8 @@ class AppBootstrap
             $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);
             $group->post('/admin/settings/reset', [AdminController::class, 'resetSystem']);
             $group->get('/admin/scans', [AdminController::class, 'scans']);
+            $group->get('/admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
+            $group->post('/admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('/admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('/admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
         })->add($container->get(ViewDataMiddleware::class))

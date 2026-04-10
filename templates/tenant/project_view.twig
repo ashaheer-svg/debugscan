@@ -147,7 +147,7 @@
                             </span>
                         </td>
                         <td style="padding: 16px 0;">
-                            <span style="color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' %}var(--error){% else %}var(--warning){% endif %}; font-weight: 600;">
+                            <span style="color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--error){% elseif scan.status == 'retry' %}#f6993f{% else %}var(--warning){% endif %}; font-weight: 600;">
                                 {{ scan.status|upper }}
                             </span>
                         </td>
