@@ -402,7 +402,8 @@ class AdminController
     {
         $stmt = $this->pdo->query("
             SELECT s.*, u.display_name as tenant_name, p.name as project_name,
-                   COALESCE(OCTET_LENGTH(CAST(s.result_input_payload AS TEXT)), 0) as payload_size
+                   COALESCE(OCTET_LENGTH(CAST(s.result_input_payload AS TEXT)), 0) as payload_size,
+                   COALESCE(OCTET_LENGTH(CAST(s.result_raw_response AS TEXT)), 0) as report_size
             FROM scan_jobs s
             JOIN users u ON s.tenant_id = u.id
             JOIN projects p ON s.project_id = p.id
@@ -411,8 +412,10 @@ class AdminController
         $scansData = $stmt->fetchAll();
 
         $scans = array_map(function($s) {
-            $bytes = isset($s['payload_size']) ? (int)$s['payload_size'] : 0;
-            $s['formatted_payload_size'] = ($bytes > 0) ? $this->formatBytes($bytes) : '0 B';
+            $pBytes = isset($s['payload_size']) ? (int)$s['payload_size'] : 0;
+            $rBytes = isset($s['report_size']) ? (int)$s['report_size'] : 0;
+            $s['formatted_payload_size'] = ($pBytes > 0) ? $this->formatBytes($pBytes) : '0 B';
+            $s['formatted_report_size'] = ($rBytes > 0) ? $this->formatBytes($rBytes) : '0 B';
             return $s;
         }, $scansData);
 

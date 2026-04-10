@@ -56,11 +56,24 @@
                     <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Charged: {{ scan.tokens_charged|number_format }}</div>
                 </td>
                 <td style="padding-right: 24px; text-align: right;">
-                    <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn btn-outline" title="View Audit Logs" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">LOG</button>
-                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn btn-outline" title="Download Raw Input" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">RAW</a>
-                        <a href="/admin/scans/report/{{ scan.id }}" class="btn btn-outline" title="Download AI Report" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">REP</a>
-                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn btn-primary" style="height: 28px; padding: 0 12px; font-size: 10px; font-weight: 700;">VIEW</a>
+                    <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn-action" data-tooltip="View Forensic Technical Logs" aria-label="Logs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        </button>
+                        
+                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn-action" data-tooltip="Download Raw AI Payload" aria-label="Raw Data" style="width: auto; padding: 0 10px; gap: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+                            <span style="font-size: 10px; font-weight: 700;">{{ scan.formatted_payload_size }}</span>
+                        </a>
+
+                        <a href="/admin/scans/report/{{ scan.id }}" class="btn-action" data-tooltip="Download Final AI Report" aria-label="Report" style="width: auto; padding: 0 10px; gap: 6px;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            <span style="font-size: 10px; font-weight: 700;">{{ scan.formatted_report_size }}</span>
+                        </a>
+
+                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn-action btn-success-alt" data-tooltip="Launch Professional Dashboard" aria-label="View Dashboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        </a>
                     </div>
                 </td>
             </tr>
