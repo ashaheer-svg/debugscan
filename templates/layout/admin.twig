@@ -47,6 +47,21 @@
 
     /* Admin Specific Styling */
     .admin-title { font-size: 24px; font-weight: 700; color: #2D3436; margin-bottom: 32px; }
+    
+    /* KPI Grid & Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; margin-bottom: 32px; }
+    .kpi-card { 
+        background: var(--white); 
+        padding: 24px; 
+        border-radius: var(--radius); 
+        box-shadow: var(--shadow-1); 
+        text-align: center;
+        border: 1px solid var(--border);
+        border-top: 4px solid var(--primary);
+    }
+    .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
+    .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
+
     .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 32px; }
     .stat-card { background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1); border-top: 4px solid var(--primary); }
     .stat-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
@@ -112,8 +127,8 @@
 {% block content %}
 <div class="admin-layout">
     <aside class="admin-sidebar">
-        <div class="admin-header" style="display: flex; align-items: center; justify-content: center; padding: 20px;">
-            <img src="/assets/img/logo-white.png" alt="AI DebugScan" style="height: 48px; width: auto; object-fit: contain;">
+        <div class="admin-header" style="display: flex; align-items: center; justify-content: center; padding: 16px;">
+            <img src="/assets/img/logo-white.png" alt="AI DebugScan" style="height: 38px; width: auto; object-fit: contain;">
         </div>
         <nav class="admin-nav">
             <a href="/admin" class="admin-nav-link {% if active_page == 'admin_dash' %}active{% endif %}">
