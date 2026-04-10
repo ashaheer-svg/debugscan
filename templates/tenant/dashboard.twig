@@ -51,7 +51,7 @@
                     <span class="badge" style="background: var(--info-light); color: var(--info);">{{ scan.status|upper }}</span>
                 </td>
                 <td>
-                    <span style="font-weight: 700; color: {% if scan.health_score == 'A' or (scan.health_score|default('0')|replace({'%':''}) is numeric and scan.health_score|replace({'%':''})|number_format > 80) %}var(--success){% else %}var(--warning){% endif %};">{{ scan.health_score|default('N/A') }}</span>
+                    <span style="font-weight: 700; color: {% if scan.health_score == 'A' or (scan.health_score != 'N/A' and scan.health_score|default('0')|replace({'%':''})|number_format > 80) %}var(--success){% else %}var(--warning){% endif %};">{{ scan.health_score|default('N/A') }}</span>
                 </td>
                 <td style="color: var(--text-secondary); font-size: 13px;">{{ scan.completed_at ? scan.completed_at|date('M d, Y H:i') : 'Pending' }}</td>
                 <td style="padding-right: 24px; text-align: right;">
