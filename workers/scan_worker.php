@@ -60,9 +60,11 @@ while (true) {
 
     if (!$job) {
         // Periodic check for stuck/timed-out jobs
-        $timeoutMins = 30;
-        $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'retry', error_message = 'Technical Timeout: Exceeded 30 minute processing limit', completed_at = NOW() WHERE status = 'running' AND updated_at < (NOW() - INTERVAL '30 minutes')");
-        $stmt->execute();
+        $stmtSettings = $pdo->query("SELECT auto_cancel_mins FROM system_settings LIMIT 1");
+        $timeoutMins = (int)($stmtSettings->fetchColumn() ?: 30);
+        
+        $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'retry', error_message = 'Technical Timeout: Exceeded ' || :tm || ' minute processing limit', completed_at = NOW() WHERE status = 'running' AND updated_at < (NOW() - (:tm2 || ' minutes')::interval)");
+        $stmt->execute(['tm' => $timeoutMins, 'tm2' => $timeoutMins]);
         
         $pdo->rollBack();
         if (isset($argv[1]) && $argv[1] === 'once') break;

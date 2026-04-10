@@ -49,8 +49,20 @@
 
             <div class="form-group" style="margin-top: 24px;">
                 <label for="max_concurrent_scans" class="form-label">Max Concurrent Worker Scans</label>
-                <input type="number" id="max_concurrent_scans" name="max_concurrent_scans" class="form-control" value="{{ settings.max_concurrent_scans }}" disabled>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Locked based on VPS license tier.</p>
+                <input type="number" id="max_concurrent_scans" name="max_concurrent_scans" class="form-control" value="{{ settings.max_concurrent_scans }}" min="1" max="10">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Limit simultaneous forensic extractions to maintain VPS stability.</p>
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <label for="stuck_alert_mins" class="form-label">Stuck Scan Alert Threshold (Minutes)</label>
+                <input type="number" id="stuck_alert_mins" name="stuck_alert_mins" class="form-control" value="{{ settings.stuck_alert_mins|default(5) }}" min="1" max="60">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Flag scans as "Stuck" on the dashboard if no heartbeat is received for this long.</p>
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <label for="auto_cancel_mins" class="form-label">Auto-Cancellation Timeout (Minutes)</label>
+                <input type="number" id="auto_cancel_mins" name="auto_cancel_mins" class="form-control" value="{{ settings.auto_cancel_mins|default(30) }}" min="5" max="240">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Automatically mark scans as RETRY if they exceed this limit.</p>
             </div>
         </section>
 
