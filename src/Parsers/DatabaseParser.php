@@ -32,7 +32,7 @@ class DatabaseParser
 
     private ?string $relevanceRegex = null;
 
-    private ?callable $onProgress = null;
+    private $onProgress = null;
 
     public function __construct(string $extractPath, ?callable $onProgress = null)
     {
@@ -173,12 +173,12 @@ class DatabaseParser
                         $stats['disk_health'] = $res['stats'];
                         break;
                     case '.SYNOCONNDB':
-                        $res = $this->parseConnections($path, $onProgress);
+                        $res = $this->parseConnections($path, $this->onProgress);
                         $results['connection_logs'] = $res['data'];
                         $stats['connection_logs'] = $res['stats'];
                         break;
                     case '.SYNODISKDB':
-                        $res = $this->parseDiskEvents($path, $onProgress);
+                        $res = $this->parseDiskEvents($path, $this->onProgress);
                         $results['disk_events'] = $res['data'];
                         $stats['disk_events'] = $res['stats'];
                         break;
