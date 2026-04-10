@@ -98,6 +98,8 @@ while (true) {
 
              $updateProgress("Extracting Data (" . ($index + 1) . "/$fileCount)", 10 + (int)(($index / $fileCount) * 20));
 
+             $destPath = __DIR__ . '/../storage/extracted' . DIRECTORY_SEPARATOR . $fileId;
+
              // 1. Check for cached forensic data
              $stmt = $pdo->prepare("SELECT storage_path, extended_data FROM debug_files WHERE id = :id");
              $stmt->execute(['id' => $fileId]);
