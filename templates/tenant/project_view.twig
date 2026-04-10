@@ -7,8 +7,8 @@
 {% block dashboard_content %}
 <header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
     <div>
-        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
-            <a href="/projects" style="text-decoration: none; color: var(--text-muted); font-size: 13px;">Projects</a>
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <a href="/projects" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Projects</a>
             <span style="color: var(--text-muted); font-size: 13px;">/</span>
             <span style="color: var(--text-primary); font-size: 13px; font-weight: 600;">{{ project.name }}</span>
         </div>
@@ -16,7 +16,7 @@
         <p class="page-subtitle">{{ project.notes|default('No description provided for this case.') }}</p>
     </div>
     <div style="display: flex; gap: 12px;">
-        <button type="button" class="btn" style="background: var(--white); border: 1px solid var(--border); color: var(--text-primary); width: auto;">Edit Project</button>
+        <button type="button" class="btn btn-outline" style="width: auto;">Edit Project</button>
     </div>
 </header>
 
@@ -36,65 +36,65 @@
     <div style="display: flex; flex-direction: column; gap: 32px;">
         
         <!-- Files Section -->
-        <section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden;">
-            <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
+        <section class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-off-white);">
                 <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Diagnostic Log Files</h3>
-                <span style="font-size: 12px; color: var(--text-muted);">{{ files|length }} file(s) attached</span>
+                <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">{{ files|length }} file(s) attached</span>
             </div>
             
             <form id="scanForm" action="/projects/scan/{{ project.id }}" method="POST">
-                <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <table class="data-table">
                     <thead>
-                        <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
-                            <th style="padding: 12px 24px; width: 40px;">
+                        <tr>
+                            <th style="width: 40px;">
                                 <input type="checkbox" id="selectAll">
                             </th>
-                            <th style="padding: 12px 0;">Filename</th>
-                            <th style="padding: 12px 0;">Size</th>
-                            <th style="padding: 12px 0;">Base Extraction</th>
-                            <th style="padding: 12px 0;">Forensic Audit</th>
-                            <th style="padding: 12px 24px; text-align: right;">Actions</th>
+                            <th>Filename</th>
+                            <th>Size</th>
+                            <th>Base Extraction</th>
+                            <th>Forensic Audit</th>
+                            <th style="text-align: right;">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for file in files %}
-                        <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;" id="file-row-{{ file.id }}">
-                            <td style="padding: 16px 24px;">
+                        <tr id="file-row-{{ file.id }}">
+                            <td style="padding-left: 24px;">
                                 <input type="checkbox" name="file_ids[]" value="{{ file.id }}" class="file-check">
                             </td>
-                            <td style="padding: 16px 0;">
-                                <div style="font-weight: 500;">{{ file.original_filename }}</div>
+                            <td>
+                                <div style="font-weight: 600; color: var(--text-primary);">{{ file.original_filename }}</div>
                                 <div style="font-size: 11px; color: var(--text-muted);">{{ file.created_at|date('M d, H:i') }}</div>
                             </td>
-                            <td style="padding: 16px 0; color: var(--text-secondary);">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
-                            <td style="padding: 16px 0;">
-                                <span id="extraction-status-{{ file.id }}" style="font-size: 10px; font-weight: 700; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase;">
+                            <td style="color: var(--text-secondary);">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
+                            <td>
+                                <span id="extraction-status-{{ file.id }}" style="font-size: 10px; font-weight: 800; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
                                     {{ file.extraction_status }}
                                 </span>
                             </td>
-                            <td style="padding: 16px 0;">
+                            <td>
                                 <div class="forensic-status-{{ file.id }}" style="display: flex; flex-direction: column; gap: 4px;">
                                     <div style="display: flex; gap: 4px;">
-                                        <span id="l1-badge-{{ file.id }}" class="badge" title="Level 1" style="background: var(--bg-light); color: var(--text-muted); font-size: 10px; padding: 2px 6px;">L1</span>
-                                        <span id="l2-badge-{{ file.id }}" class="badge" title="Level 2" style="background: var(--bg-light); color: var(--text-muted); font-size: 10px; padding: 2px 6px;">L2</span>
+                                        <span id="l1-badge-{{ file.id }}" class="badge" title="Level 1" style="background: var(--bg-light); color: var(--text-muted);">L1</span>
+                                        <span id="l2-badge-{{ file.id }}" class="badge" title="Level 2" style="background: var(--bg-light); color: var(--text-muted);">L2</span>
                                     </div>
                                     <div id="progress-container-{{ file.id }}" style="display: none;">
                                         <div style="height: 4px; background: var(--bg-light); border-radius: 2px; overflow: hidden; width: 80px;">
-                                            <div id="progress-bar-{{ file.id }}" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+                                            <div id="progress-bar-{{ file.id }}" class="shimmer" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
                                         </div>
-                                        <div id="progress-stage-{{ file.id }}" style="font-size: 9px; color: var(--primary); font-weight: 600;">Queued...</div>
+                                        <div id="progress-stage-{{ file.id }}" style="font-size: 9px; color: var(--primary); font-weight: 700; text-transform: uppercase; margin-top: 2px;">Queued...</div>
                                     </div>
                                 </div>
                             </td>
-                            <td style="padding: 16px 24px; text-align: right;">
+                            <td style="padding-right: 24px; text-align: right;">
                                 <div style="display: flex; gap: 6px; justify-content: flex-end;">
-                                    <a href="/files/raw/{{ file.id }}" target="_blank" class="btn btn-sm" title="Raw JSON" style="background: var(--bg-light); color: var(--text-secondary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--border); text-decoration: none;">JSON</a>
-                                    <a href="/files/report/{{ file.id }}" class="btn btn-sm" title="Hardware Report" style="background: var(--primary-light); color: var(--primary); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--primary-light); text-decoration: none;">HW</a>
+                                    <a href="/files/raw/{{ file.id }}" target="_blank" class="btn btn-outline" title="Raw JSON" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700; border-width: 1px;">JSON</a>
+                                    <a href="/files/report/{{ file.id }}" class="btn btn-primary" title="Hardware Report" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700;">HW</a>
                                     
-                                    <a href="#" id="l1-btn-{{ file.id }}" class="btn btn-sm" title="Level 1 Report" style="display: none; background: var(--success-light); color: var(--success); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--success-light); text-decoration: none;">L1</a>
-                                    <a href="#" id="l2-btn-{{ file.id }}" class="btn btn-sm" title="Level 2 Report" style="display: none; background: var(--warning-light); color: var(--warning); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--warning-light); text-decoration: none;">L2</a>
+                                    <a href="#" id="l1-btn-{{ file.id }}" class="btn btn-primary" title="Level 1" style="display: none; height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700; background: var(--success);">L1</a>
+                                    <a href="#" id="l2-btn-{{ file.id }}" class="btn btn-primary" title="Level 2" style="display: none; height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700; background: var(--warning);">L2</a>
 
-                                    <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn btn-sm" style="background: var(--white); color: var(--error); width: auto; padding: 4px 8px; font-size: 10px; border: 1px solid var(--error-light);">DELETE</button>
+                                    <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn btn-outline" style="height: 28px; padding: 0 8px; font-size: 10px; font-weight: 700; border-color: var(--danger); color: var(--danger);">DEL</button>
                                 </div>
                             </td>
                         </tr>
@@ -103,19 +103,21 @@
                 </table>
                 
                 {% if not files %}
-                <div style="padding: 48px; text-align: center; color: var(--text-muted);">
-                    No log files uploaded yet. Use the panel on the right to upload a Synology debug.dat file.
+                <div style="padding: 64px; text-align: center; color: var(--text-muted);">
+                    <div style="font-size: 40px; margin-bottom: 16px; opacity: 0.3;">📄</div>
+                    <div style="font-weight: 600; color: var(--text-primary);">No log files uploaded yet</div>
+                    <div style="font-size: 13px; margin-top: 4px;">Use the panel on the right to upload a Synology debug.dat file.</div>
                 </div>
                 {% else %}
                 <div style="padding: 24px; background: var(--bg-light); border-top: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 16px; align-items: center;">
-                        <label style="font-size: 13px; font-weight: 600;">Analysis Level:</label>
-                        <select id="scanLevel" name="level" style="padding: 8px 12px; border-radius: 4px; border: 1px solid var(--border); font-size: 13px; background: var(--white);">
+                        <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em;">AI Audit Level:</label>
+                        <select id="scanLevel" name="level" style="padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; background: var(--white); cursor: pointer; font-weight: 600;">
                             <option value="level1">Level 1 (Standard Forensic Audit)</option>
                             <option value="level2">Level 2 (Deep Hardware Discovery)</option>
                         </select>
                     </div>
-                    <button type="button" onclick="showTokenApproval()" class="btn btn-primary" style="width: auto; padding: 10px 24px;">Queue Analysis Job</button>
+                    <button type="button" onclick="showTokenApproval()" class="btn btn-primary" style="width: auto; padding: 10px 32px; font-weight: 700;">Queue Analysis Job &nbsp; &#9656;</button>
                 </div>
                 {% endif %}
             </form>
@@ -123,49 +125,54 @@
         </section>
 
         <!-- Scans Section -->
-        <section style="background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow-1); overflow: hidden;">
-            <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border);">
+        <section class="card" style="padding: 0; overflow: hidden;">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); background: var(--bg-off-white);">
                 <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Analysis History</h3>
             </div>
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <table class="data-table">
                 <thead>
-                    <tr style="border-bottom: 1px solid var(--row-border); font-size: 11px; font-weight: 600; text-transform: uppercase; color: var(--text-muted);">
-                        <th style="padding: 12px 24px;">Job ID</th>
-                        <th style="padding: 12px 0;">Level</th>
-                        <th style="padding: 12px 0;">Status</th>
-                        <th style="padding: 12px 0;">Result</th>
-                        <th style="padding: 12px 24px; text-align: right;">Action</th>
+                    <tr>
+                        <th style="padding-left: 24px;">Job ID</th>
+                        <th>Level</th>
+                        <th>Status</th>
+                        <th>Health Score</th>
+                        <th style="padding-right: 24px; text-align: right;">Action</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for scan in scans %}
-                    <tr style="border-bottom: 1px solid var(--row-border); font-size: 13px;">
-                        <td style="padding: 16px 24px; font-family: monospace; font-size: 11px;">{{ scan.id|slice(0, 8) }}...</td>
-                        <td style="padding: 16px 0;">
-                            <span style="font-size: 11px; font-weight: 700; color: var(--text-secondary); background: #f0f2f5; padding: 2px 6px; border-radius: 3px;">
+                    <tr>
+                        <td style="padding-left: 24px; font-family: monospace; font-size: 11px; color: var(--text-secondary);">#{{ scan.id|slice(0, 8) }}</td>
+                        <td>
+                            <span class="badge" style="background: var(--bg-light); color: var(--text-primary);">
                                 {{ scan.scan_level|upper }}
                             </span>
                         </td>
-                        <td style="padding: 16px 0;">
-                            <span style="color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--error){% elseif scan.status == 'retry' %}#f6993f{% else %}var(--warning){% endif %}; font-weight: 600;">
-                                {{ scan.status|upper }}
+                        <td>
+                            <span style="color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--danger){% elseif scan.status == 'retry' %}var(--warning){% else %}var(--primary){% endif %}; font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+                                {{ scan.status }}
                             </span>
                         </td>
-                        <td style="padding: 16px 0;">
+                        <td>
                             {% if scan.health_score %}
-                            <span style="font-weight: 700;">{{ scan.health_score }}%</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="width: 60px; height: 6px; background: var(--bg-light); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: {{ scan.health_score }}%; height: 100%; background: {% if scan.health_score > 80 %}var(--success){% elseif scan.health_score > 50 %}var(--warning){% else %}var(--danger){% endif %};"></div>
+                                </div>
+                                <span style="font-weight: 700; font-size: 12px; font-family: monospace;">{{ scan.health_score }}%</span>
+                            </div>
                             {% else %}
-                            <span style="color: var(--text-muted);">--</span>
+                            <span style="color: var(--text-muted); font-size: 12px;">--</span>
                             {% endif %}
                         </td>
-                        <td style="padding: 16px 24px; text-align: right;">
+                        <td style="padding-right: 24px; text-align: right;">
                             <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                                <button onclick="openCheckpointModal('{{ scan.id }}')" class="btn btn-sm" style="background: var(--bg-light); color: var(--text-secondary); border: 1px solid var(--border); padding: 4px 10px; font-size: 10px; font-weight: 600;">INSPECT</button>
+                                <button onclick="openCheckpointModal('{{ scan.id }}')" class="btn btn-outline" style="height: 28px; padding: 0 10px; font-size: 10px; font-weight: 700;">INSPECT</button>
                                 
                                 {% if scan.status == 'completed' %}
-                                <a href="/scans/report/{{ scan.id }}" class="btn btn-sm" style="background: var(--primary); color: white; text-decoration: none; padding: 4px 12px; font-size: 11px; border-radius: 4px;">View Report</a>
+                                <a href="/scans/report/{{ scan.id }}" class="btn btn-primary" style="height: 28px; padding: 0 12px; font-size: 11px; font-weight: 700;">View Report</a>
                                 {% else %}
-                                <span style="color: var(--text-muted); font-size: 11px;">Processing...</span>
+                                <span style="color: var(--text-muted); font-size: 11px; font-style: italic;">Processing...</span>
                                 {% endif %}
                             </div>
                         </td>
@@ -174,7 +181,7 @@
                 </tbody>
             </table>
             {% if not scans %}
-            <div style="padding: 32px; text-align: center; color: var(--text-muted); font-size: 13px;">
+            <div style="padding: 48px; text-align: center; color: var(--text-muted); font-size: 13px;">
                 No analysis jobs found for this project.
             </div>
             {% endif %}
@@ -184,41 +191,41 @@
     <!-- Right Sidebar: Upload & Summary -->
     <aside style="display: flex; flex-direction: column; gap: 24px;">
         
-        <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+        <div class="card">
             <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Upload Debug Log</h3>
             <div id="uploadContainer">
-                <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; background: var(--bg-light); cursor: pointer;" onclick="document.getElementById('debug_log').click()">
-                    <div style="font-size: 24px; margin-bottom: 8px;">📁</div>
-                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px;">Click to select file</p>
-                    <p style="font-size: 11px; color: var(--text-muted);">Synology debug.dat or .zip</p>
+                <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; background: var(--bg-light); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="document.getElementById('debug_log').click()">
+                    <div style="font-size: 32px; margin-bottom: 8px;">📤</div>
+                    <p style="font-size: 13px; color: var(--text-primary); font-weight: 600; margin-bottom: 4px;">Click or Drag to Upload</p>
+                    <p style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Synology debug.dat or .zip</p>
                     <input type="file" id="debug_log" name="debug_log" style="display: none;">
                 </div>
-                <p style="font-size: 11px; color: var(--text-muted); line-height: 1.4;">
-                    Logs stay within your tenant partition and are encrypted at rest.
+                <p style="font-size: 11px; color: var(--text-muted); line-height: 1.5; font-weight: 500;">
+                    Logs stay within your isolated tenant partition and are encrypted at rest.
                 </p>
             </div>
         </div>
 
-        <div style="background: var(--white); padding: 24px; border-radius: var(--radius); box-shadow: var(--shadow-1);">
+        <div class="card">
             <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Project Summary</h3>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">Model</span>
-                    <span style="font-size: 13px; font-weight: 600;">{{ project.model|default('--') }}</span>
+            <dl style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
+                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Model</dt>
+                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.model|default('--') }}</dd>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">DSM Version</span>
-                    <span style="font-size: 13px; font-weight: 600;">{{ project.dsm_version|default('--') }}</span>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
+                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">DSM Version</dt>
+                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.dsm_version|default('--') }}</dd>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">RAM</span>
-                    <span style="font-size: 13px; font-weight: 600;">{{ project.ram_gb ? project.ram_gb ~ ' GB' : '--' }}</span>
+                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
+                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">RAM</dt>
+                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.ram_gb ? project.ram_gb ~ ' GB' : '--' }}</dd>
                 </div>
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="font-size: 13px; color: var(--text-muted);">Serial</span>
-                    <span style="font-size: 13px; font-weight: 600; font-family: monospace;">{{ project.serial_number|default('--') }}</span>
+                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
+                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Serial</dt>
+                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: monospace;">{{ project.serial_number|default('--') }}</dd>
                 </div>
-            </div>
+            </dl>
         </div>
 
     </aside>
