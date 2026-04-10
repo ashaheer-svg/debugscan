@@ -28,10 +28,18 @@ class ScanService
         $maxInput = ($level === 'level1') ? $settings['level1_max_input_tokens'] : $settings['level2_max_input_tokens'];
         $maxOutput = ($level === 'level1') ? $settings['level1_max_output_tokens'] : $settings['level2_max_output_tokens'];
 
-        // 2. Insert the job
+        // 2. Insert the job with initial "Confirmed" checkpoint
+        $initialCP = json_encode([[
+            'level' => 'system',
+            'stage' => 'Job Confirmed',
+            'status' => 'success',
+            'meta' => ['confirmed_at' => date('Y-m-d H:i:s')],
+            'ts' => date('Y-m-d H:i:s')
+        ]]);
+
         $stmt = $this->pdo->prepare("
-            INSERT INTO scan_jobs (tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens, status)
-            VALUES (:tenant_id, :project_id, :scan_level, :debug_file_ids, :ai_model, :max_input, :max_output, 'queued')
+            INSERT INTO scan_jobs (tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens, status, checkpoints)
+            VALUES (:tenant_id, :project_id, :scan_level, :debug_file_ids, :ai_model, :max_input, :max_output, 'queued', :cp)
             RETURNING id
         ");
 
@@ -46,6 +54,7 @@ class ScanService
             'ai_model' => $model,
             'max_input' => $maxInput,
             'max_output' => $maxOutput,
+            'cp' => $initialCP
         ]);
 
         $result = $stmt->fetch();

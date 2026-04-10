@@ -300,6 +300,13 @@ while (true) {
         echo "Job Completed: {$job['id']}\n";
 
     } catch (\Throwable $e) {
+        $addCheckpoint('system', 'Fatal Error', 'failed', [
+            'message' => $e->getMessage(),
+            'code' => $e->getCode(),
+            'file' => basename($e->getFile()),
+            'line' => $e->getLine()
+        ]);
+
         // Catch ANY error (ArgumentCount, Type, etc) to prevent worker death
         $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'failed', error_message = :err, completed_at = NOW() WHERE id = :id");
         $stmt->execute(['id' => $job['id'], 'err' => "Fatal Error: " . $e->getMessage()]);
