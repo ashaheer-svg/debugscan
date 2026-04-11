@@ -11,14 +11,18 @@ class HardwareParser implements ParserInterface
         $major = $context['majorversion'] ?? 7;
         $hardware = [];
 
-        // 1. Model & Serial from synoinfo.conf (Hardwarev2.md Section 2.1.1 & 4.2)
-        $synoInfo = $this->parseSynoInfo($extractedPath);
-        $hardware['serial'] = $synoInfo['serialno'] ?? $synoInfo['serial_sn'] ?? $synoInfo['sn'] ?? null;
+        // 1. NAS Serial from /proc/sys/kernel/syno_serial (Hardwarev2.md Section 2.1.1 & 3.1.1)
+        // FIXED: Serial is NOT in synoinfo.conf (keys 'serialno', 'serial_sn', 'sn' don't exist)
+        // Correct source: /proc/sys/kernel/syno_serial (works on both DSM 6.x and 7.x)
+        $hardware['serial'] = $this->getSerialFromProc($extractedPath);
 
+        // 2. Model extraction (Hardwarev2.md Section 2.1.1 & 3.1.1)
+        $synoInfo = $this->parseSynoInfo($extractedPath);
         if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
+            // DSM 7.x: dedicated proc file
             $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));
         } else {
-            // For DSM 6.x or older, fallback to synoinfo.conf "unique" field
+            // DSM 6.x: extract from synoinfo.conf "unique" field (format: synology_<cpu>_<model>)
             $unique = $synoInfo['unique'] ?? '';
             if (!empty($unique)) {
                 $parts = explode('_', $unique);
@@ -28,18 +32,10 @@ class HardwareParser implements ParserInterface
             }
         }
 
-        // 2. Supplement Serial from load_info.result if missing
-        if (empty($hardware['serial'])) {
-            $loadInfo = $this->getLoadInfo($extractedPath);
-            if ($loadInfo && isset($loadInfo['serial'])) {
-                $hardware['serial'] = $loadInfo['serial'];
-            }
-        }
-
         // 3. Extract Location from SNMP (Hardwarev2.md Section 3.7)
         $hardware['location'] = $this->parseLocation($extractedPath);
 
-        // 4. CPU Info
+        // 4. CPU Info (Hardwarev2.md Section 2.1.4 & 3.1.4)
         if (file_exists($extractedPath . '/dsm/proc/cpuinfo')) {
             $cpuContent = file_get_contents($extractedPath . '/dsm/proc/cpuinfo');
             if (preg_match('/model name\s+: (.*)/', $cpuContent, $matches)) {
@@ -48,7 +44,7 @@ class HardwareParser implements ParserInterface
             $hardware['cpu_cores'] = substr_count($cpuContent, 'processor');
         }
 
-        // 5. RAM (Hardwarev2.md Section 3.1.3)
+        // 5. RAM (Hardwarev2.md Section 2.1.3 & 3.1.3)
         if (file_exists($extractedPath . '/dsm/proc/meminfo')) {
             $memContent = file_get_contents($extractedPath . '/dsm/proc/meminfo');
             if (preg_match('/MemTotal:\s+(\d+)/', $memContent, $matches)) {
@@ -70,6 +66,29 @@ class HardwareParser implements ParserInterface
         return $hardware;
     }
 
+    /**
+     * Extract NAS serial number from /proc/sys/kernel/syno_serial
+     * Replaces incorrect logic that looked for non-existent synoinfo.conf keys
+     * @return string|null Serial number or null if not found
+     */
+    private function getSerialFromProc(string $path): ?string
+    {
+        $serFile = $path . '/dsm/proc/sys/kernel/syno_serial';
+        if (file_exists($serFile)) {
+            $serial = trim(file_get_contents($serFile));
+            return !empty($serial) ? $serial : null;
+        }
+
+        // Fallback to custom serial if standard one missing (rare)
+        $customFile = $path . '/dsm/proc/sys/kernel/syno_custom_serial';
+        if (file_exists($customFile)) {
+            $serial = trim(file_get_contents($customFile));
+            return !empty($serial) ? $serial : null;
+        }
+
+        return null;
+    }
+
     private function parseLocation(string $path): ?string
     {
         $file = $path . '/dsm/etc/snmp/snmpd.conf';
@@ -88,7 +107,7 @@ class HardwareParser implements ParserInterface
     {
         $file = $path . '/dsm/etc/synoinfo.conf';
         if (!file_exists($file)) $file = $path . '/dsm/etc.defaults/synoinfo.conf';
-        
+
         if (!file_exists($file)) return [];
 
         $content = file_get_contents($file);

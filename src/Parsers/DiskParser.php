@@ -20,12 +20,16 @@ class DiskParser implements ParserInterface
                 $disks[$id] = [
                     'model' => $disk['model'] ?? '',
                     'serial' => $disk['serial'] ?? '',
+                    'vendor' => $disk['vendor'] ?? '',
+                    'firmware' => $disk['firm'] ?? '',
                     'size_gb' => round(($disk['size_total'] ?? 0) / 1024 / 1024 / 1024, 2),
                     'temp' => $disk['temp'] ?? 0,
                     'status' => $disk['status'] ?? '',
                     'smart_status' => $disk['smart_status'] ?? '',
                     'unc' => $disk['unc'] ?? 0,
                     'is_ssd' => $disk['isSsd'] ?? false,
+                    'firmware_status' => $disk['firmware_status'] ?? null,  // '-' = up to date, or version string = update pending
+                    'exceed_bad_sector_thr' => $disk['exceed_bad_sector_thr'] ?? false,
                     'slot' => $disk['slot_id'] ?? null,
                     'container' => $disk['container']['str'] ?? null
                 ];
@@ -56,7 +60,8 @@ class DiskParser implements ParserInterface
             }
 
             // Advanced Health Indicators (Hardwarev2.md Section 3.2.3 & 4.3)
-            $healthFiles = [
+            // Status files (indicate current condition)
+            $statusFiles = [
                 'bad_sec_ct' => 'bad_sectors',
                 'unc_status' => 'unc_status',
                 'timeout_status' => 'timeout_status',
@@ -64,10 +69,29 @@ class DiskParser implements ParserInterface
                 'predict_status' => 'predict_status',
                 'adv_status' => 'adv_status'
             ];
-            foreach ($healthFiles as $file => $key) {
+            foreach ($statusFiles as $file => $key) {
                 if (file_exists($dir . '/' . $file)) {
                     $disks[$diskName][$key] = trim(file_get_contents($dir . '/' . $file));
                 }
+            }
+
+            // Weight-based predictive indicators (ADDED: Hardwarev2.md Section 4.3 drive health table)
+            // These are aggregated risk scores for drive failure prediction
+            $weightFiles = [
+                'reset_fail_weight' => 'reset_fail_weight',  // Drive reset failures indicator
+                'timeout_weight' => 'timeout_weight',        // I/O timeout risk score
+                'unc_weight' => 'unc_weight'                 // Uncorrectable error risk score
+            ];
+            foreach ($weightFiles as $file => $key) {
+                if (file_exists($dir . '/' . $file)) {
+                    $value = trim(file_get_contents($dir . '/' . $file));
+                    $disks[$diskName][$key] = is_numeric($value) ? (int)$value : $value;
+                }
+            }
+
+            // SSD wear indicator
+            if (file_exists($dir . '/remain_life')) {
+                $disks[$diskName]['remain_life_percent'] = (int)trim(file_get_contents($dir . '/remain_life'));
             }
         }
 
