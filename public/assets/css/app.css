@@ -233,6 +233,17 @@ a:hover {
     background-color: #E54D45;
 }
 
+.btn-warning-alt {
+    background-color: var(--warning-light) !important;
+    color: var(--warning) !important;
+    border: 1px solid var(--warning) !important;
+}
+
+.btn-warning-alt:hover {
+    background-color: var(--warning) !important;
+    color: var(--white) !important;
+}
+
 /* Badges */
 .badge {
     display: inline-flex;

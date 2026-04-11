@@ -53,58 +53,30 @@ class AiService
 
     /**
      * Send diagnostic data to Groq for analysis.
-     * Returns both findings and the full prompt used (for transparency).
+     * Returns findings, the full prompt used, and truncation status.
      */
-    public function analyze(array $diagnosticData, string $model, int $maxTokens): array
+    public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000): array
     {
         $systemPrompt = $this->getSystemPrompt();
+        $isTruncated = false;
         
-        // Assemble User Prompt
-        $userPrompt = "SYNOLOGY FORENSIC DIAGNOSTIC REQUEST\n";
-        $userPrompt .= "====================================\n\n";
+        // Assemble User Prompt (Full Raw JSON Mode)
+        $userPrompt = "SYNOLOGY FORENSIC DIAGNOSTIC REQUEST (FULL SPECTRUM)\n";
+        $userPrompt .= "=================================================\n\n";
         
         foreach ($diagnosticData as $index => $fileData) {
             $userPrompt .= "### DATA SET " . ($index + 1) . "\n";
             
-            // 1. Hardware Identity
-            $hw = $fileData['hardware'] ?? [];
-            $userPrompt .= "#### DEVICE IDENTITY\n";
-            $userPrompt .= sprintf("- Model: %s | Serial: %s | DSM: %s\n", 
-                $fileData['version']['model'] ?? 'Unknown',
-                $fileData['version']['serial'] ?? 'Unknown',
-                $fileData['version']['version'] ?? 'Unknown'
-            );
+            // Generate full RAW JSON for this specific file record
+            $rawJson = json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
             
-            // 2. Physical Layout & RAID
-            $userPrompt .= "#### STORAGE & VOLUME ARCHITECTURE\n";
-            $userPrompt .= "Pools/Volumes: " . json_encode($fileData['volumes'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
-            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
-            $userPrompt .= "RAID Config: " . json_encode($fileData['raid'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
-
-            // 3. Data Integrity & Scrubbing
-            if (isset($fileData['btrfs'])) {
-                $userPrompt .= "#### DATA INTEGRITY SIGNALS\n";
-                $userPrompt .= json_encode($fileData['btrfs'], JSON_PRETTY_PRINT) . "\n\n";
+            // Implement dynamic character transparency limit
+            if (strlen($rawJson) > $maxChars) {
+                $isTruncated = true;
+                $rawJson = substr($rawJson, 0, $maxChars) . "\n\n[!!! FORENSIC DATA TRUNCATED AT " . number_format($maxChars) . " CHARACTERS TO PRESERVE AI CONTEXT WINDOW !!!]";
             }
 
-            // 4. Foreman Forensic Signal (SQL Extractions)
-            if (isset($fileData['packaged_logs'])) {
-                $userPrompt .= "#### FORENSIC EVIDENCE BLOCKS (Primary Signals)\n";
-                $userPrompt .= $fileData['packaged_logs']['system'] . "\n\n";
-                $userPrompt .= $fileData['packaged_logs']['disk_health'] . "\n\n";
-                $userPrompt .= $fileData['packaged_logs']['connections'] . "\n\n";
-                $userPrompt .= $fileData['packaged_logs']['disk_ops'] . "\n\n";
-            }
-
-            // 5. System Health & Load (Secondary Signals)
-            $userPrompt .= "#### SECONDARY DIAGNOSTIC SIGNALS\n";
-            $userPrompt .= "Network State: " . json_encode($fileData['network'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
-            $userPrompt .= "Disk IO & Pressure: " . json_encode($fileData['disk_io'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
-            $userPrompt .= "System Load: " . json_encode($fileData['system_load'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
-            
-            if (!isset($fileData['packaged_logs'])) {
-                $userPrompt .= "#### RAW TELEMETRY FALLBACK\n" . json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
-            }
+            $userPrompt .= "#### RAW DIAGNOSTIC PAYLOAD\n" . $rawJson . "\n\n";
         }
 
         $fullPromptString = "SYSTEM PROMPT:\n{$systemPrompt}\n\nUSER PROMPT:\n{$userPrompt}";
@@ -128,7 +100,8 @@ class AiService
             
             return [
                 'findings' => json_decode($content, true),
-                'full_prompt' => $fullPromptString
+                'full_prompt' => $fullPromptString,
+                'is_truncated' => $isTruncated
             ];
         } catch (\Exception $e) {
             throw new RuntimeException("AI Analysis failed: " . $e->getMessage());

@@ -228,26 +228,33 @@ while (true) {
         // 4. Perform AI Analysis
         $updateProgress("AI Forensic Analysis (" . ucfirst($job['scan_level']) . ")", 70);
         
+        $stmtSettings = $pdo->query("SELECT max_prompt_chars FROM system_settings LIMIT 1");
+        $maxChars = (int)($stmtSettings->fetchColumn() ?: 50000);
+
         $addCheckpoint('ai', 'AI Analysis Started', 'success', [
             'data_set_count' => count($allDiagnosticData),
-            'model' => $job['ai_model']
+            'model' => $job['ai_model'],
+            'char_limit' => $maxChars
         ]);
 
         $analysis = $aiService->analyze(
             $allDiagnosticData, 
             $job['ai_model'], 
-            (int)$job['max_output_tokens']
+            (int)$job['max_output_tokens'],
+            $maxChars
         );
 
         $findings = $analysis['findings'] ?? [];
         $actualPrompt = $analysis['full_prompt'] ?? json_encode($allDiagnosticData);
+        $isTruncated = $analysis['is_truncated'] ?? false;
 
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],
             'technical_stats' => [
                 'findings' => count($findings),
                 'health_score' => $findings['health_score'] ?? 'N/A',
-                'lines_analyzed' => count($allDiagnosticData)
+                'lines_analyzed' => count($allDiagnosticData),
+                'truncated' => $isTruncated
             ]
         ]);
 
@@ -263,6 +270,7 @@ while (true) {
                 health_score = :health, 
                 result_summary = :summary,
                 result_input_payload = :payload,
+                is_truncated = :truncated,
                 findings_count = :count,
                 checkpoints = :cp,
                 total_duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000
@@ -274,6 +282,7 @@ while (true) {
             'health' => $findings['health_score'] ?? 'N/A',
             'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
             'payload' => $actualPrompt,
+            'truncated' => $isTruncated ? 1 : 0,
             'count' => count($findings),
             'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)
         ]);

@@ -158,7 +158,10 @@ class TenantController
             
             foreach ($fids as $fid) {
                 if (!isset($fileReports[$fid][$level])) {
-                    $fileReports[$fid][$level] = $scan['id'];
+                    $fileReports[$fid][$level] = [
+                        'id' => $scan['id'],
+                        'truncated' => (bool)($scan['is_truncated'] ?? false)
+                    ];
                 }
             }
         }

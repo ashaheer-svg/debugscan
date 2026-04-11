@@ -382,6 +382,7 @@ class AdminController
                 max_concurrent_scans = :max_scans,
                 stuck_alert_mins = :alert_mins,
                 auto_cancel_mins = :cancel_mins,
+                max_prompt_chars = :max_prompt_chars,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -393,6 +394,7 @@ class AdminController
             'max_scans' => (int)$data['max_concurrent_scans'],
             'alert_mins' => (int)$data['stuck_alert_mins'],
             'cancel_mins' => (int)$data['auto_cancel_mins'],
+            'max_prompt_chars' => (int)($data['max_prompt_chars'] ?? 50000),
         ]);
 
         return $response->withHeader('Location', '/admin/settings?status=saved')->withStatus(302);
