@@ -97,7 +97,7 @@ class BtrfsScrubParser implements ParserInterface
             }
 
             // Look for RAID profile
-            if (preg_match(/profile[:\s]+(raid\d+|single)/i, $line, $m)) {
+            if (preg_match('/profile[:\s]+(raid\d+|single)/i', $line, $m)) {
                 if ($current_scrub !== null) {
                     $current_scrub['raid_profile'] = strtolower($m[1]);
                 }
