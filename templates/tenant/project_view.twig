@@ -88,9 +88,9 @@
                             </td>
                             <td style="padding-right: 24px; text-align: right;">
                                 <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                    <a href="/files/raw/{{ file.id }}" target="_blank" class="btn-action" data-tooltip="Raw JSON Data" aria-label="Raw JSON Data">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
-                                    </a>
+                                    <button type="button" onclick="openPromptModal('{{ file.id }}')" class="btn-action" data-tooltip="View Forensic AI Prompt" aria-label="View Forensic AI Prompt">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                    </button>
                                     <a href="/files/report/{{ file.id }}" class="btn-action" data-tooltip="Hardware Evidence" aria-label="Hardware Evidence">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
                                     </a>
@@ -666,6 +666,42 @@
             else alert(data.message);
         });
     }
+
+    function openPromptModal(fileId) {
+        const modal = document.getElementById('promptModal');
+        const title = document.getElementById('promptModalTitle');
+        const content = document.getElementById('promptModalContent');
+        const typeBadge = document.getElementById('promptTypeBadge');
+        
+        modal.style.display = 'flex';
+        content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching forensic payload...</div>';
+        
+        fetch(`/files/prompt/${fileId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                title.innerText = resp.title;
+                typeBadge.innerText = resp.type.toUpperCase();
+                typeBadge.style.background = resp.type === 'prompt' ? 'var(--info-light)' : 'var(--bg-deep)';
+                typeBadge.style.color = resp.type === 'prompt' ? 'var(--info)' : 'var(--text-muted)';
+                
+                // Formatted output
+                const displayData = typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data, null, 2);
+                content.innerHTML = `<pre style="margin: 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px; color: #e5e7eb; line-height: 1.6; white-space: pre-wrap; word-break: break-all;">${displayData}</pre>`;
+            } else {
+                content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load diagnostic data.'}</div>`;
+            }
+        })
+        .catch(err => {
+            content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
+        });
+    }
+
+    function closePromptModal() {
+        document.getElementById('promptModal').style.display = 'none';
+    }
 </script>
 
     <!-- Token Approval Modal -->
@@ -709,6 +745,28 @@
             </div>
             <div style="padding: 16px 24px; border-top: 1px solid var(--border); background: var(--bg-light); text-align: right;">
                 <button onclick="closeCheckpointModal()" class="btn" style="width: auto; padding: 8px 20px; background: var(--white); color: var(--text-primary); border: 1px solid var(--border);">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Styled Prompt Modal -->
+    <div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+        <div style="background: #1a1b1e; width: 90%; max-width: 900px; height: 80vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: #232429;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <h3 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Forensic Data View</h3>
+                    <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px;">IDLE</span>
+                </div>
+                <button onclick="closePromptModal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">&times;</button>
+            </div>
+            
+            <div id="promptModalContent" style="flex-grow: 1; padding: 32px; overflow-y: auto; background: #0f1012;">
+                <!-- Content will be injected here -->
+            </div>
+            
+            <div style="padding: 16px 32px; border-top: 1px solid rgba(255,255,255,0.05); background: #232429; display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 12px; color: #6b7280; font-family: monospace;">Secured Forensic Partition | read-only node</span>
+                <button onclick="closePromptModal()" class="btn" style="width: auto; padding: 10px 24px; background: var(--primary); color: #fff; border: none; font-weight: 700; border-radius: 8px;">Close Inspector</button>
             </div>
         </div>
     </div>

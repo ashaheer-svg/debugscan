@@ -156,7 +156,8 @@ class AppBootstrap
             $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
             $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
             $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);
-            $group->get('scans/status/{id}', [TenantController::class, 'getScanStatus']);
+            $group->get('files/prompt/{id}', [TenantController::class, 'getPromptData']);
+            $group->get('files/report/{id}', [TenantController::class, 'viewHardwareReport']);
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             

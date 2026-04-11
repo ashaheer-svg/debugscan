@@ -387,22 +387,51 @@ class TenantController
         return $response;
     }
 
-    public function viewRawData(Request $request, Response $response, array $args): Response
+    public function getPromptData(Request $request, Response $response, array $args): Response
     {
         $fileId = $args['id'];
         $tenantId = $request->getAttribute('tenant_id');
 
+        // 1. Try to find the latest successful scan job that included this file
+        $stmt = $this->pdo->prepare("
+            SELECT result_input_payload, scan_level, id
+            FROM scan_jobs 
+            WHERE :fid = ANY(debug_file_ids) 
+              AND tenant_id = :tid 
+              AND status = 'completed'
+            ORDER BY created_at DESC 
+            LIMIT 1
+        ");
+        $stmt->execute(['fid' => $fileId, 'tid' => $tenantId]);
+        $scan = $stmt->fetch();
+
+        if ($scan && !empty($scan['result_input_payload'])) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'title' => 'AI Analysis Prompt (' . strtoupper($scan['scan_level']) . ')',
+                'data' => $scan['result_input_payload'],
+                'type' => 'prompt'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        // 2. Fallback to raw extraction data if no scan found
         $stmt = $this->pdo->prepare("SELECT extraction_data FROM debug_files WHERE id = :id AND tenant_id = :tid");
         $stmt->execute(['id' => $fileId, 'tid' => $tenantId]);
         $data = $stmt->fetchColumn();
 
-        if (!$data) {
-            $response->getBody()->write(json_encode(['error' => 'No extraction data available or file not found.']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        if ($data) {
+            $response->getBody()->write(json_encode([
+                'success' => true,
+                'title' => 'Raw Technical Metadata',
+                'data' => $data,
+                'type' => 'raw'
+            ]));
+            return $response->withHeader('Content-Type', 'application/json');
         }
 
-        $response->getBody()->write($data);
-        return $response->withHeader('Content-Type', 'application/json');
+        $response->getBody()->write(json_encode(['success' => false, 'message' => 'No diagnostic data available.']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
     }
 
     public function viewHardwareReport(Request $request, Response $response, array $args): Response
