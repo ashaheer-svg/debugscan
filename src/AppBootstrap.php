@@ -113,8 +113,28 @@ class AppBootstrap
         AppFactory::setContainer($container);
         $app = AppFactory::create();
 
-        // Add Middleware
+        // Standard Slim 4 Middlewares
+        $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
+        
+        // Handle trailing slashes (Redirect or remove)
+        $app->add(function ($request, $handler) {
+            $uri = $request->getUri();
+            $path = $uri->getPath();
+            
+            if ($path != '/' && str_ends_with($path, '/')) {
+                // Remove trailing slash and redirect
+                $path = rtrim($path, '/');
+                $uri = $uri->withPath($path);
+                
+                $response = new \Slim\Psr7\Response();
+                return $response
+                    ->withHeader('Location', (string)$uri)
+                    ->withStatus(301);
+            }
+            
+            return $handler->handle($request);
+        });
         $app->addErrorMiddleware(
             true, // Emergency diagnostic enabled
             true,
@@ -127,43 +147,43 @@ class AppBootstrap
         $app->get('/auth/logout', [AuthController::class, 'logout']);
 
         // Authenticated Routes
-        $app->group('', function ($group) {
-            $group->get('/', [TenantController::class, 'dashboard']); // Primary root entry
-            $group->get('/dashboard', [TenantController::class, 'dashboard']);
-            $group->get('/projects', [TenantController::class, 'projects']);
-            $group->post('/projects/create', [TenantController::class, 'createProject']);
-            $group->get('/projects/view/{id}', [TenantController::class, 'viewProject']);
-            $group->post('/projects/upload/{id}', [TenantController::class, 'uploadLog']);
-            $group->post('/projects/scan/{id}', [TenantController::class, 'startScan']);
-            $group->get('/scans/status/{id}', [TenantController::class, 'getScanStatus']);
-            $group->get('/scans/report/{id}', [TenantController::class, 'viewReport']);
-            $group->post('/scans/delete/{id}', [TenantController::class, 'deleteScan']);
+        $app->group('/', function ($group) {
+            $group->get('', [TenantController::class, 'dashboard']); // Primary root entry
+            $group->get('dashboard', [TenantController::class, 'dashboard']);
+            $group->get('projects', [TenantController::class, 'projects']);
+            $group->post('projects/create', [TenantController::class, 'createProject']);
+            $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
+            $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
+            $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);
+            $group->get('scans/status/{id}', [TenantController::class, 'getScanStatus']);
+            $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
+            $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
             // Profile Routes
-            $group->post('/profile/update', [AuthController::class, 'updateProfile']);
+            $group->post('profile/update', [AuthController::class, 'updateProfile']);
             
             // Log File Analysis Routes
-            $group->get('/files/raw/{id}', [TenantController::class, 'viewRawData']);
-            $group->get('/files/report/{id}', [TenantController::class, 'viewHardwareReport']);
-            $group->post('/files/delete/{id}', [TenantController::class, 'deleteLogFile']);
+            $group->get('files/raw/{id}', [TenantController::class, 'viewRawData']);
+            $group->get('files/report/{id}', [TenantController::class, 'viewHardwareReport']);
+            $group->post('files/delete/{id}', [TenantController::class, 'deleteLogFile']);
             
             // Admin Routes
-            $group->get('/admin', [AdminController::class, 'dashboard']);
-            $group->get('/admin/tenants', [AdminController::class, 'tenants']);
-            $group->post('/admin/tenants/create', [AdminController::class, 'createTenant']);
-            $group->post('/admin/tenants/update', [AdminController::class, 'updateTenant']);
-            $group->post('/admin/tenants/toggle-status', [AdminController::class, 'toggleTenantStatus']);
-            $group->post('/admin/tenants/delete', [AdminController::class, 'deleteTenant']);
-            $group->post('/admin/tenants/allocate', [AdminController::class, 'allocateTokens']);
-            $group->get('/admin/logs', [AdminController::class, 'logs']);
-            $group->get('/admin/settings', [AdminController::class, 'settings']);
-            $group->post('/admin/settings/update', [AdminController::class, 'updateSettings']);
-            $group->post('/admin/settings/reset', [AdminController::class, 'resetSystem']);
-            $group->get('/admin/scans', [AdminController::class, 'scans']);
-            $group->get('/admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
-            $group->post('/admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
-            $group->get('/admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
-            $group->get('/admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
+            $group->get('admin', [AdminController::class, 'dashboard']);
+            $group->get('admin/tenants', [AdminController::class, 'tenants']);
+            $group->post('admin/tenants/create', [AdminController::class, 'createTenant']);
+            $group->post('admin/tenants/update', [AdminController::class, 'updateTenant']);
+            $group->post('admin/tenants/toggle-status', [AdminController::class, 'toggleTenantStatus']);
+            $group->post('admin/tenants/delete', [AdminController::class, 'deleteTenant']);
+            $group->post('admin/tenants/allocate', [AdminController::class, 'allocateTokens']);
+            $group->get('admin/logs', [AdminController::class, 'logs']);
+            $group->get('admin/settings', [AdminController::class, 'settings']);
+            $group->post('admin/settings/update', [AdminController::class, 'updateSettings']);
+            $group->post('admin/settings/reset', [AdminController::class, 'resetSystem']);
+            $group->get('admin/scans', [AdminController::class, 'scans']);
+            $group->get('admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
+            $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
+            $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
+            $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class)));
 
