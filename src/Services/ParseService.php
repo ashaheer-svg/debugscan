@@ -9,6 +9,9 @@ use App\Parsers\VersionParser;
 use App\Parsers\HardwareParser;
 use App\Parsers\DiskParser;
 use App\Parsers\RaidParser;
+use App\Parsers\VolumeParser;
+use App\Parsers\NetworkParser;
+use App\Parsers\LogParser;
 use RuntimeException;
 
 class ParseService
@@ -23,6 +26,9 @@ class ParseService
             'hardware' => new HardwareParser(),
             'disks' => new DiskParser(),
             'raid' => new RaidParser(),
+            'volumes' => new VolumeParser(),
+            'network' => new NetworkParser(),
+            'logs' => new LogParser(),
         ];
     }
 
