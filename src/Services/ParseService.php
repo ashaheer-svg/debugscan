@@ -87,4 +87,4 @@ class ParseService
     public function addParser(string $key, ParserInterface $parser): void
     {
         $this->parsers[$key] = $parser;
-    }
+    }}
