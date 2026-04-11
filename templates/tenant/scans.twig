@@ -1,0 +1,99 @@
+{% extends "layout/dashboard.twig" %}
+
+{% set active_page = 'scans' %}
+
+{% block title %}Analysis Jobs - AI DebugScan v3{% endblock %}
+
+{% block dashboard_content %}
+<header class="page-header">
+    <h1 class="page-title">Analysis Jobs</h1>
+    <p class="page-subtitle">Historical archive of all forensic diagnostic sessions.</p>
+</header>
+
+<div class="card" style="padding: 0; overflow: hidden;">
+    {% if scans %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="padding-left: 24px;">Project / ID</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Health</th>
+                <th>Created At</th>
+                <th style="padding-right: 24px; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for scan in scans %}
+            <tr>
+                <td style="padding-left: 24px;">
+                    <div style="font-weight: 600; color: var(--text-primary);">{{ scan.project_name }}</div>
+                    <div style="font-size: 11px; color: var(--text-muted); font-family: monospace;">#{{ scan.id|slice(0, 8) }}</div>
+                </td>
+                <td>
+                    {% if scan.status == 'completed' %}
+                        <span class="badge" style="background: var(--success-light); color: var(--success);">COMPLETED</span>
+                    {% elseif scan.status == 'running' %}
+                        <span class="badge" style="background: var(--info-light); color: var(--info);">RUNNING</span>
+                    {% elseif scan.status == 'error' %}
+                        <span class="badge" style="background: var(--error-light); color: var(--error);">ERROR</span>
+                    {% else %}
+                        <span class="badge" style="background: var(--bg-deep); color: var(--text-muted);">{{ scan.status|upper }}</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <div style="font-size: 13px; font-weight: 600;">{{ scan.progress_percent }}%</div>
+                    <div style="font-size: 11px; color: var(--text-muted);">{{ scan.progress_stage|default('Initializing') }}</div>
+                </td>
+                <td>
+                    <span style="font-weight: 700; color: {% if scan.health_score == 'A' %}var(--success){% elseif scan.health_score != 'N/A' and (scan.health_score|default('0')|replace({'%':''})|trim) matches '/^[0-9]+$/' and (scan.health_score|default('0')|replace({'%':''})|number_format > 80) %}var(--success){% else %}var(--warning){% endif %};">
+                        {{ scan.health_score|default('N/A') }}
+                    </span>
+                </td>
+                <td style="color: var(--text-secondary); font-size: 13px;">
+                    {{ scan.created_at|date('M d, Y H:i') }}
+                </td>
+                <td style="padding-right: 24px; text-align: right;">
+                    <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                        <a href="/scans/report/{{ scan.id }}" class="btn-action" data-tooltip="View Full Report">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                        </a>
+                        <button onclick="deleteScan('{{ scan.id }}')" class="btn-action btn-danger-alt" data-tooltip="Delete Record">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 80px; text-align: center; color: var(--text-muted);">
+        <div style="font-size: 48px; margin-bottom: 24px; opacity: 0.2;">📜</div>
+        <h3 style="color: var(--text-primary); font-weight: 600;">No analysis history yet</h3>
+        <p style="margin-top: 8px;">Completed forensic scans will appear here automatically.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    async function deleteScan(id) {
+        if (!confirm('Are you sure you want to delete this analysis record? This action cannot be undone.')) return;
+        
+        try {
+            const response = await fetch(`/scans/delete/${id}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            const result = await response.json();
+            if (result.success) {
+                window.location.reload();
+            } else {
+                alert(result.message || 'Failed to delete record.');
+            }
+        } catch (e) {
+            alert('A network error occurred.');
+        }
+    }
+</script>
+{% endblock %}

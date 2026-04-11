@@ -70,6 +70,29 @@ class TenantController
         return $response;
     }
 
+    public function scans(Request $request, Response $response): Response
+    {
+        $tenantId = $request->getAttribute('tenant_id');
+
+        // Fetch ALL jobs for this tenant
+        $stmt = $this->pdo->prepare("
+            SELECT s.*, p.name as project_name 
+            FROM scan_jobs s
+            JOIN projects p ON s.project_id = p.id
+            WHERE s.tenant_id = :tid
+            ORDER BY s.created_at DESC
+        ");
+        $stmt->execute(['tid' => $tenantId]);
+        $scans = $stmt->fetchAll();
+
+        $body = $this->view->render('tenant/scans.twig', [
+            'scans' => $scans,
+            'active_page' => 'scans'
+        ]);
+        $response->getBody()->write($body);
+        return $response;
+    }
+
     public function projects(Request $request, Response $response): Response
     {
         $tenantId = $request->getAttribute('tenant_id');

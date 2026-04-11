@@ -150,6 +150,7 @@ class AppBootstrap
         $app->group('/', function ($group) {
             $group->get('', [TenantController::class, 'dashboard']); // Primary root entry
             $group->get('dashboard', [TenantController::class, 'dashboard']);
+            $group->get('scans', [TenantController::class, 'scans']); // Unified analysis jobs list
             $group->get('projects', [TenantController::class, 'projects']);
             $group->post('projects/create', [TenantController::class, 'createProject']);
             $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
