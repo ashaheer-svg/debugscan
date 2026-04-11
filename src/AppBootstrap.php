@@ -128,6 +128,7 @@ class AppBootstrap
 
         // Authenticated Routes
         $app->group('', function ($group) {
+            $group->get('/', [TenantController::class, 'dashboard']); // Primary root entry
             $group->get('/dashboard', [TenantController::class, 'dashboard']);
             $group->get('/projects', [TenantController::class, 'projects']);
             $group->post('/projects/create', [TenantController::class, 'createProject']);
