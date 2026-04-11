@@ -88,4 +88,3 @@ class ParseService
     {
         $this->parsers[$key] = $parser;
     }
-}
