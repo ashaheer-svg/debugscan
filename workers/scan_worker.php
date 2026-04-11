@@ -239,11 +239,14 @@ while (true) {
             (int)$job['max_output_tokens']
         );
 
+        $findings = $analysis['findings'] ?? [];
+        $actualPrompt = $analysis['full_prompt'] ?? json_encode($allDiagnosticData);
+
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],
             'technical_stats' => [
-                'findings' => count($analysis['findings'] ?? []),
-                'health_score' => $analysis['health_score'] ?? 'N/A',
+                'findings' => count($findings),
+                'health_score' => $findings['health_score'] ?? 'N/A',
                 'lines_analyzed' => count($allDiagnosticData)
             ]
         ]);
@@ -264,25 +267,22 @@ while (true) {
                 checkpoints = :cp,
                 total_duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000
             WHERE id = :id
-
         ");
 
         $stmt->execute([
             'id' => $job['id'],
-            'health' => $analysis['health_score'] ?? 'N/A',
-            'summary' => json_encode($analysis['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
-            'payload' => json_encode($allDiagnosticData, JSON_INVALID_UTF8_SUBSTITUTE),
-            'count' => count($analysis['findings'] ?? []),
+            'health' => $findings['health_score'] ?? 'N/A',
+            'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
+            'payload' => $actualPrompt,
+            'count' => count($findings),
             'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)
         ]);
 
-
-        
         $addCheckpoint('system', 'Workflow Finished', 'success');
 
         // 6. Save individual findings
-        if (isset($analysis['findings'])) {
-            foreach ($analysis['findings'] as $finding) {
+        if (isset($findings['findings'])) {
+            foreach ($findings['findings'] as $finding) {
                 $stmt = $pdo->prepare("
                     INSERT INTO scan_findings (scan_job_id, tenant_id, category, severity, title, description, recommendation, evidence)
                     VALUES (:job_id, :tenant_id, :category, :severity, :title, :description, :recommendation, :evidence)

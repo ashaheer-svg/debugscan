@@ -53,6 +53,7 @@ class AiService
 
     /**
      * Send diagnostic data to Groq for analysis.
+     * Returns both findings and the full prompt used (for transparency).
      */
     public function analyze(array $diagnosticData, string $model, int $maxTokens): array
     {
@@ -75,24 +76,38 @@ class AiService
             );
             
             // 2. Physical Layout & RAID
-            $userPrompt .= "#### STORAGE ARCHITECTURE\n";
+            $userPrompt .= "#### STORAGE & VOLUME ARCHITECTURE\n";
             $userPrompt .= "Pools/Volumes: " . json_encode($fileData['volumes'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
-            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
+            $userPrompt .= "Disk Bay Map: " . json_encode($fileData['disks'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
+            $userPrompt .= "RAID Config: " . json_encode($fileData['raid'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
 
+            // 3. Data Integrity & Scrubbing
+            if (isset($fileData['btrfs'])) {
+                $userPrompt .= "#### DATA INTEGRITY SIGNALS\n";
+                $userPrompt .= json_encode($fileData['btrfs'], JSON_PRETTY_PRINT) . "\n\n";
+            }
 
-            // 3. Level 1 Packaged Logs (Forensic signal)
+            // 4. Foreman Forensic Signal (SQL Extractions)
             if (isset($fileData['packaged_logs'])) {
-                $userPrompt .= "#### FORENSIC EVIDENCE BLOCKS (SQLite Extractions)\n";
+                $userPrompt .= "#### FORENSIC EVIDENCE BLOCKS (Primary Signals)\n";
                 $userPrompt .= $fileData['packaged_logs']['system'] . "\n\n";
                 $userPrompt .= $fileData['packaged_logs']['disk_health'] . "\n\n";
                 $userPrompt .= $fileData['packaged_logs']['connections'] . "\n\n";
                 $userPrompt .= $fileData['packaged_logs']['disk_ops'] . "\n\n";
-            } else {
-                // Fallback to basic JSON if no packaged logs
-                $userPrompt .= "#### BASIC TELEMETRY\n" . json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
+            }
 
+            // 5. System Health & Load (Secondary Signals)
+            $userPrompt .= "#### SECONDARY DIAGNOSTIC SIGNALS\n";
+            $userPrompt .= "Network State: " . json_encode($fileData['network'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
+            $userPrompt .= "Disk IO & Pressure: " . json_encode($fileData['disk_io'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n";
+            $userPrompt .= "System Load: " . json_encode($fileData['system_load'] ?? [], JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
+            
+            if (!isset($fileData['packaged_logs'])) {
+                $userPrompt .= "#### RAW TELEMETRY FALLBACK\n" . json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE) . "\n\n";
             }
         }
+
+        $fullPromptString = "SYSTEM PROMPT:\n{$systemPrompt}\n\nUSER PROMPT:\n{$userPrompt}";
 
         try {
             $response = $this->client->post('chat/completions', [
@@ -111,7 +126,10 @@ class AiService
             $result = json_decode($response->getBody()->getContents(), true);
             $content = $result['choices'][0]['message']['content'] ?? '{}';
             
-            return json_decode($content, true);
+            return [
+                'findings' => json_decode($content, true),
+                'full_prompt' => $fullPromptString
+            ];
         } catch (\Exception $e) {
             throw new RuntimeException("AI Analysis failed: " . $e->getMessage());
         }

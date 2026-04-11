@@ -36,7 +36,7 @@ class PackagingService
                 $this->ts((int)$r['time']), 
                 $r['level'], 
                 $r['username'] ?: 'SYSTEM', 
-                mb_strimwidth($msg, 0, 150, '...')
+                mb_strimwidth($msg, 0, 500, '...')
             );
         }
 
@@ -124,6 +124,39 @@ class PackagingService
         }
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Format D: Btrfs Scrub History & Data Integrity.
+     */
+    public function formatBtrfsScrub(array $data): string
+    {
+        if (empty($data) || isset($data['error'])) {
+            return "## [SYNORSYNC] Btrfs Scrub: No history or scrub not enabled.";
+        }
+
+        $lines = ["## [SYNORSYNC] Btrfs Scrub & Data Integrity History"];
+        foreach ($data as $volume => $stats) {
+            $lines[] = sprintf("Volume %s: %s | Last Finished: %s | Status: %s",
+                $volume,
+                $stats['last_status'] ?? 'Unknown',
+                $stats['last_finished'] ?? 'Never',
+                $stats['detail'] ?? 'N/A'
+            );
+        }
+        return implode("\n", $lines);
+    }
+
+    /**
+     * Format E: High-Density IO & Load Profile.
+     */
+    public function formatLoadProfile(array $data): string
+    {
+        return json_encode([
+            'load' => $data['system_load'] ?? [],
+            'io_pressure' => $data['disk_io'] ?? [],
+            'ram' => $data['memory_util'] ?? []
+        ], JSON_PRETTY_PRINT);
     }
 }
 // Final Sync - Corrected Namespace
