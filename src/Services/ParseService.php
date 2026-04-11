@@ -12,6 +12,12 @@ use App\Parsers\RaidParser;
 use App\Parsers\VolumeParser;
 use App\Parsers\NetworkParser;
 use App\Parsers\LogParser;
+use App\Parsers\BtrfsScrubParser;
+use App\Parsers\DStateParser;
+use App\Parsers\DfResultParser;
+use App\Parsers\DiskstatsParser;
+use App\Parsers\TopResultParser;
+use App\Parsers\VmstatParser;
 use RuntimeException;
 
 class ParseService
@@ -29,6 +35,12 @@ class ParseService
             'volumes' => new VolumeParser(),
             'network' => new NetworkParser(),
             'logs' => new LogParser(),
+            'btrfs' => new BtrfsScrubParser(),
+            'dstate' => new DStateParser(),
+            'storage_util' => new DfResultParser(),
+            'disk_io' => new DiskstatsParser(),
+            'system_load' => new TopResultParser(),
+            'memory_util' => new VmstatParser(),
         ];
     }
 
