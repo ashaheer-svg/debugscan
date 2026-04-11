@@ -45,11 +45,11 @@ class TenantController
 
         $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
         $stmt->execute(['tid' => $tenantId]);
-        $tokensAvailable = $stmt->fetchColumn();
+        $tokensAvailable = $stmt->fetchColumn() ?: 0;
 
         // Recent Scans
         $stmt = $this->pdo->prepare("
-            SELECT s.id, p.name as project_name, s.status, s.health_score, s.completed_at 
+            SELECT s.id, s.project_id, p.name as project_name, s.status, s.health_score, s.completed_at 
             FROM scan_jobs s
             JOIN projects p ON s.project_id = p.id
             WHERE s.tenant_id = :tid
@@ -60,9 +60,9 @@ class TenantController
         $recentScans = $stmt->fetchAll();
 
         $body = $this->view->render('tenant/dashboard.twig', [
-            'project_count' => $projectCount,
-            'scan_count' => $scanCount,
-            'tokens_available' => $tokensAvailable,
+            'project_count' => (int)$projectCount,
+            'scan_count' => (int)$scanCount,
+            'tokens_available' => (int)$tokensAvailable,
             'recent_scans' => $recentScans,
             'user_name' => $_SESSION['name'] ?? 'User',
         ]);
