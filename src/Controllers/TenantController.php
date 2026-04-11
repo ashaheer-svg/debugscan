@@ -147,10 +147,27 @@ class TenantController
         $stmt->execute(['pid' => $id]);
         $scans = $stmt->fetchAll();
 
+        // Build mapping of file_id => latest report_id per level
+        $fileReports = [];
+        foreach ($scans as $scan) {
+            if ($scan['status'] !== 'completed') continue;
+            
+            // Parse Postgres array string like "{uuid1,uuid2}"
+            $fids = explode(',', trim($scan['debug_file_ids'], '{}'));
+            $level = $scan['scan_level']; // e.g., 'level1' or 'level2'
+            
+            foreach ($fids as $fid) {
+                if (!isset($fileReports[$fid][$level])) {
+                    $fileReports[$fid][$level] = $scan['id'];
+                }
+            }
+        }
+
         $body = $this->view->render('tenant/project_view.twig', [
             'project' => $project,
             'files' => $files,
             'scans' => $scans,
+            'file_reports' => $fileReports,
             'active_page' => 'projects',
             'success' => $_SESSION['success'] ?? null,
             'error' => $_SESSION['error'] ?? null,
