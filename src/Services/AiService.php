@@ -51,6 +51,7 @@ class AiService
         }
     }
 
+    /**
      * Send diagnostic data to Groq for analysis.
      * Returns findings, the full prompt used, and truncation status.
      */
