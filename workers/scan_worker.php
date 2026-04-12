@@ -10,6 +10,15 @@ if (file_exists(__DIR__ . '/../.env')) {
     $dotenv->load();
 }
 
+// Ensure storage/logs exists for startup tracking
+$logDir = __DIR__ . '/../storage/logs';
+if (!is_dir($logDir)) {
+    @mkdir($logDir, 0755, true);
+}
+@file_put_contents($logDir . '/worker_startup.log', "[" . date('Y-m-d H:i:s') . "] Worker process started (v3.1 - Enhanced AI Trace)\n", FILE_APPEND);
+
+echo "AI DebugScan Worker v3.1 Started...\n";
+
 use App\Database;
 use App\Services\AiService;
 use App\Services\FileService;
