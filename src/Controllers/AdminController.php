@@ -75,7 +75,7 @@ class AdminController
             'tenant_count' => $tenantCount,
             'total_scans' => $totalScans,
             'tokens_used' => $totalTokensUsed,
-            'cpu_load' => $cpuLoad,
+            'cpu_load' => number_format($cpuLoad, 2),
             'disk_free_gb' => round($diskFree / 1073741824, 2),
             'disk_used_percent' => $diskUsedPercent,
             'recent_activity' => $recentActivity,

@@ -49,7 +49,13 @@
     .admin-title { font-size: 24px; font-weight: 700; color: #2D3436; margin-bottom: 32px; }
     
     /* KPI Grid & Cards */
-    .kpi-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 24px; margin-bottom: 32px; }
+    .kpi-grid { 
+        display: grid; 
+        grid-template-columns: repeat(5, 1fr); 
+        gap: 24px; 
+        margin-bottom: 32px; 
+        width: 100%;
+    }
     .kpi-card { 
         background: var(--white); 
         padding: 24px; 
@@ -58,6 +64,8 @@
         text-align: center;
         border: 1px solid var(--border);
         border-top: 4px solid var(--primary);
+        min-width: 0; /* Prevents overflow-driven expansion */
+        width: 100%;
     }
     .kpi-value { font-size: 28px; font-weight: 700; color: var(--text-primary); }
     .kpi-label { font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; letter-spacing: 0.05em; }
