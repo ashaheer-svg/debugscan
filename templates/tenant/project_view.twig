@@ -32,36 +32,55 @@
 {% endif %}
 
 <div style="display: flex; flex-direction: column; gap: 32px;">
-    <!-- Top Panels: Summary & Upload -->
-    <div style="display: grid; grid-template-columns: 1fr 400px; gap: 32px;">
-        <!-- Project Summary -->
-        <section class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-                <h3 style="font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Case Overview
-                </h3>
-                <p style="font-size: 14px; color: var(--text-secondary); line-height: 1.6; margin: 0;">{{ project.notes|default('No specific case notes provided. Use the edit button to add forensic context.') }}</p>
-            </div>
-            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; gap: 24px;">
-                <div>
-                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Total Logs</div>
-                    <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">{{ files|length }}</div>
+    <!-- Top Dashboard Area: 3-Column Layout -->
+    <div style="display: grid; grid-template-columns: 280px 1fr 340px; gap: 24px;">
+        
+        <!-- Project Details (Summary) -->
+        <section class="card" style="padding: 20px;">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 16px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Project Details
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--bg-light);">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">CASE ID</span>
+                    <span style="font-size: 12px; font-family: monospace; font-weight: 700; color: var(--primary);">#{{ project.case_id|default(project.id|slice(0,8)) }}</span>
                 </div>
-                <div>
-                    <div style="font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px;">Audits Run</div>
-                    <div style="font-size: 18px; font-weight: 800; color: var(--text-primary);">{{ scans|length }}</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--bg-light);">
+                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">CREATED</span>
+                    <span style="font-size: 12px; font-weight: 600;">{{ project.created_at|date('M d, Y') }}</span>
+                </div>
+                <div style="display: flex; gap: 24px; padding-top: 4px;">
+                    <div>
+                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Logs</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--text-primary);">{{ files|length }}</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Audits</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--text-primary);">{{ scans|length }}</div>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Upload Panel -->
-        <section class="card" style="background: var(--bg-deep); border: 2px dashed var(--primary); border-radius: 12px; padding: 32px; text-align: center; transition: all 0.2s; position: relative;">
+        <!-- Case Overview (Now properly named and distinct) -->
+        <section class="card" style="padding: 20px;">
+            <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 12px; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Forensic Notes
+            </h3>
+            <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin: 0; max-height: 120px; overflow-y: auto;">
+                {{ project.notes|default('No forensic context provided yet.') }}
+            </p>
+        </section>
+
+        <!-- Upload Panel (Compact and aligned) -->
+        <section class="card" style="background: var(--bg-deep); border: 2px dashed var(--primary); border-radius: 12px; padding: 20px; text-align: center; transition: all 0.2s; position: relative;">
             <input type="file" id="debug_log" style="position: absolute; inset: 0; opacity: 0; cursor: pointer; z-index: 2;">
             <div style="pointer-events: none;">
-                <div style="font-size: 32px; margin-bottom: 12px;">📁</div>
-                <h3 style="font-size: 15px; font-weight: 700; color: var(--primary); margin-bottom: 4px;">Upload New Debug Log</h3>
-                <p style="font-size: 12px; color: var(--text-muted); margin: 0;">Click or drag Synology .dat file here</p>
+                <div style="font-size: 24px; margin-bottom: 4px;">📁</div>
+                <h3 style="font-size: 13px; font-weight: 700; color: var(--primary); margin-bottom: 2px;">Upload Diagnostic Log</h3>
+                <p style="font-size: 11px; color: var(--text-muted); margin: 0;">Drag & drop Synology .dat file</p>
             </div>
         </section>
     </div>
