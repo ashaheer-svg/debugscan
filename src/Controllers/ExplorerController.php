@@ -4,7 +4,7 @@ namespace App\Controllers;
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-use Slim\Views\Twig;
+use Twig\Environment as Twig;
 use RuntimeException;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -23,9 +23,12 @@ class ExplorerController
 
     public function index(Request $request, Response $response): Response
     {
-        return $this->view->render($response, 'admin/explorer.twig', [
-            'basePath' => $this->basePath
+        $body = $this->view->render('admin/explorer.twig', [
+            'basePath' => $this->basePath,
+            'active_page' => 'admin_explorer'
         ]);
+        $response->getBody()->write($body);
+        return $response;
     }
 
     public function list(Request $request, Response $response): Response
@@ -38,36 +41,40 @@ class ExplorerController
 
         // Security check: Ensure requested path is within base path
         if (!$fullPath || strpos($fullPath, $this->basePath) !== 0) {
-            return $response->withStatus(403)->withJson(['error' => 'Path access denied.']);
+            return $this->jsonResponse($response, ['error' => 'Path access denied.'], 403);
         }
 
         $items = [];
-        $dir = new \DirectoryIterator($fullPath);
+        try {
+            $dir = new \DirectoryIterator($fullPath);
+            foreach ($dir as $fileinfo) {
+                if ($fileinfo->isDot()) continue;
 
-        foreach ($dir as $fileinfo) {
-            if ($fileinfo->isDot()) continue;
+                $name = $fileinfo->getFilename();
 
-            $name = $fileinfo->getFilename();
-
-            // Filter sensitive files if safety toggle is off
-            if (!$showSensitive) {
-                if (in_array($name, ['.env', '.git', '.github', '.agent', 'vendor'])) {
-                    continue;
+                // Filter sensitive files if safety toggle is off
+                if (!$showSensitive) {
+                    if (in_array(strtolower($name), ['.env', '.git', '.github', '.agent', 'vendor'])) {
+                        continue;
+                    }
                 }
+
+                $relativePath = ltrim(substr($fileinfo->getPathname(), strlen($this->basePath)), DIRECTORY_SEPARATOR);
+                
+                // Optimized directory sizing
+                $size = $fileinfo->isDir() ? $this->getDirSize($fileinfo->getPathname()) : $fileinfo->getSize();
+
+                $items[] = [
+                    'name' => $name,
+                    'path' => $relativePath,
+                    'is_dir' => $fileinfo->isDir(),
+                    'size' => $this->formatSize($size),
+                    'raw_size' => $size,
+                    'modified' => date('Y-m-d H:i:s', $fileinfo->getMTime()),
+                ];
             }
-
-            $relativePath = ltrim(substr($fileinfo->getPathname(), strlen($this->basePath)), DIRECTORY_SEPARATOR);
-            
-            $size = $fileinfo->isDir() ? $this->getDirSize($fileinfo->getPathname()) : $fileinfo->getSize();
-
-            $items[] = [
-                'name' => $name,
-                'path' => $relativePath,
-                'is_dir' => $fileinfo->isDir(),
-                'size' => $this->formatSize($size),
-                'raw_size' => $size,
-                'modified' => date('Y-m-d H:i:s', $fileinfo->getMTime()),
-            ];
+        } catch (\Exception $e) {
+            return $this->jsonResponse($response, ['error' => 'Cannot read directory: ' . $e->getMessage()], 500);
         }
 
         // Sort: Directories first, then alphabetical
@@ -77,11 +84,10 @@ class ExplorerController
             return strcasecmp($a['name'], $b['name']);
         });
 
-        $response->getBody()->write(json_encode([
+        return $this->jsonResponse($response, [
             'currentPath' => ltrim($subPath, DIRECTORY_SEPARATOR),
             'items' => $items
-        ]));
-        return $response->withHeader('Content-Type', 'application/json');
+        ]);
     }
 
     public function download(Request $request, Response $response): Response
@@ -94,64 +100,74 @@ class ExplorerController
         }
 
         $filename = basename($fullPath);
-        $response = $response
-            ->withHeader('Content-Type', 'application/octet-stream')
-            ->withHeader('Content-Disposition', 'attachment; filename="' . $filename . '"')
-            ->withHeader('Expires', '0')
-            ->withHeader('Cache-Control', 'must-revalidate')
-            ->withHeader('Pragma', 'public');
-
-        $response->getBody()->write(file_get_contents($fullPath));
-        return $response;
+        
+        // Memory-safe streaming download
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($fullPath));
+        header('Pragma: public');
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        
+        readfile($fullPath);
+        exit; // Terminate to prevent Slim from sending extra content
     }
 
     public function delete(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
         $subPath = $data['path'] ?? '';
-        $allowDelete = ($data['allowDelete'] ?? 'false') === 'true';
+        $allowDelete = ($data['allowDelete'] ?? false) === true;
 
         if (!$allowDelete) {
-            return $response->withStatus(403)->withJson(['error' => 'Deletion mode is disabled.']);
+            return $this->jsonResponse($response, ['error' => 'Deletion mode is disabled.'], 403);
         }
 
         $fullPath = realpath($this->basePath . DIRECTORY_SEPARATOR . $subPath);
 
         if (!$fullPath || strpos($fullPath, $this->basePath) !== 0) {
-            return $response->withStatus(403)->withJson(['error' => 'Delete access denied.']);
+            return $this->jsonResponse($response, ['error' => 'Delete access denied.'], 403);
         }
 
         // Final safety: Do not allow deleting core config files even with force enabled
-        if (in_array(basename($fullPath), ['index.php', '.htaccess', 'AppBootstrap.php'])) {
-            return $response->withStatus(403)->withJson(['error' => 'Cannot delete core system files via explorer.']);
+        $safeBase = strtolower(basename($fullPath));
+        if (in_array($safeBase, ['index.php', '.htaccess', 'appbootstrap.php', 'database.php'])) {
+            return $this->jsonResponse($response, ['error' => 'Core system files are protected and cannot be deleted.'], 403);
         }
 
-        if (is_dir($fullPath)) {
-            $this->recursiveDelete($fullPath);
-        } else {
-            unlink($fullPath);
+        try {
+            if (is_dir($fullPath)) {
+                $this->recursiveDelete($fullPath);
+            } else {
+                unlink($fullPath);
+            }
+        } catch (\Exception $e) {
+            return $this->jsonResponse($response, ['error' => 'Delete failed: ' . $e->getMessage()], 500);
         }
 
-        $response->getBody()->write(json_encode(['success' => true]));
-        return $response->withHeader('Content-Type', 'application/json');
+        return $this->jsonResponse($response, ['success' => true]);
     }
 
     private function getDirSize($path): int
     {
         $size = 0;
-        // Optimization: For huge folders like vendor, we might want to skip or estimate
-        // but for now, we provide the user's requested 'capacity shown'
-        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS)) as $file) {
-            $size += $file->getSize();
+        try {
+            $it = new RecursiveDirectoryIterator($path, RecursiveDirectoryIterator::SKIP_DOTS);
+            foreach (new RecursiveIteratorIterator($it) as $file) {
+                $size += $file->getSize();
+            }
+        } catch (\Exception $e) {
+            // Silently fail for inaccessible subdirs (permissions)
         }
         return $size;
     }
 
     private function formatSize($bytes): string
     {
+        if ($bytes <= 0) return '0 B';
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
-        for ($i = 0; $bytes > 1024; $i++) $bytes /= 1024;
-        return round($bytes, 2) . ' ' . $units[$i];
+        $i = floor(log($bytes, 1024));
+        return round($bytes / pow(1024, $i), 2) . ' ' . $units[$i];
     }
 
     private function recursiveDelete($dir): void
@@ -166,5 +182,13 @@ class ExplorerController
             }
         }
         rmdir($dir);
+    }
+
+    private function jsonResponse(Response $response, array $data, int $status = 200): Response
+    {
+        $response->getBody()->write(json_encode($data));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($status);
     }
 }
