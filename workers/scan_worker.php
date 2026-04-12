@@ -167,8 +167,16 @@ while (true) {
                     $dbParser = new DatabaseParser($destPath, $updateProgress);
                     $dbResults = $dbParser->parseAll();
                     
+                    $rowCount = 0;
+                    if (isset($dbResults['stats'])) {
+                        foreach ($dbResults['stats'] as $table => $count) {
+                            $rowCount += (int)$count;
+                        }
+                    }
+
                     $addCheckpoint('forensic', 'Cache Population', 'success', [
                         'file_id' => $fileId, 
+                        'capacity' => "$rowCount forensic records extracted",
                         'stats' => $dbResults['stats'] ?? [],
                         'tables' => array_keys(array_filter($dbResults, fn($k) => $k !== 'stats', ARRAY_FILTER_USE_KEY))
                     ]);
@@ -207,6 +215,8 @@ while (true) {
              $addCheckpoint('file', 'Technical Audit: Hardware Identity Discovery', 'success', [
                  'file_id' => $fileId, 
                  'discovery' => 'Hardware components mapped successfully',
+                 'capacity' => !empty($hw) ? 'Hardware metadata identified' : 'No hardware metadata found',
+                 'data_link' => "/files/report/$fileId",
                  'serial' => $hw['serial'] ?? 'unknown',
                  'dsm_version' => $ver['product'] ?? 'unknown'
              ]);
@@ -230,10 +240,14 @@ while (true) {
         
         $stmtSettings = $pdo->query("SELECT max_prompt_chars FROM system_settings LIMIT 1");
         $maxChars = (int)($stmtSettings->fetchColumn() ?: 50000);
+        
+        $totalInputChars = strlen(json_encode($allDiagnosticData));
 
         $addCheckpoint('ai', 'AI Analysis Started', 'success', [
             'data_set_count' => count($allDiagnosticData),
             'model' => $job['ai_model'],
+            'capacity' => number_format($totalInputChars) . ' characters in raw payload',
+            'data_link' => "/admin/scans/raw/{$job['id']}",
             'char_limit' => $maxChars
         ]);
 
@@ -250,6 +264,8 @@ while (true) {
 
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],
+            'data_link' => "/scans/report/{$job['id']}",
+            'capacity' => count($findings) . " forensic findings generated",
             'technical_stats' => [
                 'findings' => count($findings),
                 'health_score' => $findings['health_score'] ?? 'N/A',
