@@ -41,23 +41,27 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                 Project Details
             </h3>
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--bg-light);">
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">CASE ID</span>
-                    <span style="font-size: 12px; font-family: monospace; font-weight: 700; color: var(--primary);">#{{ project.case_id|default(project.id|slice(0,8)) }}</span>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid var(--bg-light);">
+                    <span style="font-size: 10px; font-weight: 700; color: var(--text-muted);">MODEL / DSM</span>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--text-primary);">{{ project.model|default('--') }} ({{ project.dsm_version|default('--') }})</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px solid var(--bg-light);">
-                    <span style="font-size: 11px; font-weight: 600; color: var(--text-muted);">CREATED</span>
-                    <span style="font-size: 12px; font-weight: 600;">{{ project.created_at|date('M d, Y') }}</span>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid var(--bg-light);">
+                    <span style="font-size: 10px; font-weight: 700; color: var(--text-muted);">RAM / SERIAL</span>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--text-primary);">{{ project.ram_gb ? project.ram_gb ~ 'GB' : '--' }} | {{ project.serial_number|default('--') }}</span>
                 </div>
-                <div style="display: flex; gap: 24px; padding-top: 4px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 6px; border-bottom: 1px solid var(--bg-light);">
+                    <span style="font-size: 10px; font-weight: 700; color: var(--text-muted);">LOCATION</span>
+                    <span style="font-size: 11px; font-weight: 700; color: var(--text-primary);">{{ project.physical_location|default('--') }}</span>
+                </div>
+                <div style="display: flex; gap: 20px; padding-top: 4px;">
                     <div>
-                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Logs</div>
-                        <div style="font-size: 16px; font-weight: 800; color: var(--text-primary);">{{ files|length }}</div>
+                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Logs Attached</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--primary);">{{ files|length }}</div>
                     </div>
                     <div>
-                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Audits</div>
-                        <div style="font-size: 16px; font-weight: 800; color: var(--text-primary);">{{ scans|length }}</div>
+                        <div style="font-size: 9px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Audits</div>
+                        <div style="font-size: 16px; font-weight: 800; color: var(--primary);">{{ scans|length }}</div>
                     </div>
                 </div>
             </div>
@@ -266,52 +270,7 @@
         </section>
     </div>
 
-    <!-- Right Sidebar: Upload & Summary -->
-    <aside style="display: flex; flex-direction: column; gap: 24px;">
-        
-        <div class="card">
-            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Upload Debug Log</h3>
-            <div id="uploadContainer">
-                <div id="dropZone" style="border: 2px dashed var(--border); border-radius: var(--radius); padding: 24px; text-align: center; margin-bottom: 16px; background: var(--bg-light); cursor: pointer; transition: all 0.2s;" onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='var(--border)'" onclick="document.getElementById('debug_log').click()">
-                    <div style="font-size: 32px; margin-bottom: 8px;">📤</div>
-                    <p style="font-size: 13px; color: var(--text-primary); font-weight: 600; margin-bottom: 4px;">Click or Drag to Upload</p>
-                    <p style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Synology debug.dat or .zip</p>
-                    <input type="file" id="debug_log" name="debug_log" style="display: none;">
-                </div>
-                <p style="font-size: 11px; color: var(--text-muted); line-height: 1.5; font-weight: 500;">
-                    Logs stay within your isolated tenant partition and are encrypted at rest.
-                </p>
-            </div>
-        </div>
-
-        <div class="card">
-            <h3 style="font-size: 15px; font-weight: 700; margin-bottom: 16px;">Project Summary</h3>
-            <dl style="display: flex; flex-direction: column; gap: 12px; margin: 0;">
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
-                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Model</dt>
-                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.model|default('--') }}</dd>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
-                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">DSM Version</dt>
-                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.dsm_version|default('--') }}</dd>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
-                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">RAM</dt>
-                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.ram_gb ? project.ram_gb ~ ' GB' : '--' }}</dd>
-                </div>
-                <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--row-border); padding-bottom: 8px;">
-                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Serial</dt>
-                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary); font-family: monospace;">{{ project.serial_number|default('--') }}</dd>
-                </div>
-                <div style="display: flex; justify-content: space-between; padding-bottom: 4px;">
-                    <dt style="font-size: 12px; font-weight: 600; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">Location</dt>
-                    <dd style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">{{ project.physical_location|default('--') }}</dd>
-                </div>
-            </dl>
-        </div>
-
-    </aside>
-</div>
+{% endblock %}
 
 <!-- Upload Progress Modal -->
 <div id="uploadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
