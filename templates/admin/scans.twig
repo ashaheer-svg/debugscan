@@ -60,6 +60,10 @@
                         <button onclick="toggleAudit('{{ scan.id }}')" class="btn-action" data-tooltip="View Forensic Technical Logs" aria-label="Logs">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                         </button>
+
+                        <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action" data-tooltip="Inspect AI Input Context" aria-label="Inspect AI">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        </button>
                         
                         <a href="/admin/scans/raw/{{ scan.id }}" class="btn-action" data-tooltip="Download Raw AI Payload" aria-label="Raw Data" style="width: auto; padding: 0 10px; gap: 6px;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
@@ -103,6 +107,28 @@
         </tbody>
     </table>
 </section>
+
+<!-- Styled Prompt Modal (Reused from Tenant for consistancy) -->
+<div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
+    <div style="background: #1a1b1e; width: 90%; max-width: 900px; height: 80vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: #232429;">
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <h3 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Global AI Trace</h3>
+                <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px;">AI TRACE</span>
+            </div>
+            <button onclick="closePromptModal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">&times;</button>
+        </div>
+        
+        <div id="promptModalContent" style="flex-grow: 1; padding: 32px; overflow-y: auto; background: #0f1012;">
+            <!-- Content will be injected here -->
+        </div>
+        
+        <div style="padding: 16px 32px; border-top: 1px solid rgba(255,255,255,0.05); background: #232429; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 12px; color: #6b7280; font-family: monospace;">Secured Forensic Trace | Administrator Only</span>
+            <button onclick="closePromptModal()" class="btn" style="width: auto; padding: 10px 24px; background: var(--primary); color: #fff; border: none; font-weight: 700; border-radius: 8px;">Close Trace</button>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -184,6 +210,51 @@ function renderLogs(scanId, job) {
     
     console.innerHTML = html;
     console.scrollTop = console.scrollHeight;
+}
+
+function openScanPromptModal(jobId) {
+    const modal = document.getElementById('promptModal');
+    const title = document.getElementById('promptModalTitle');
+    const content = document.getElementById('promptModalContent');
+    
+    modal.style.display = 'flex';
+    content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching global AI context trace...</div>';
+    
+    fetch(`/admin/scans/prompt/${jobId}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            title.innerText = resp.title;
+            
+            let data = resp.data;
+            if (typeof data === 'string' && data.includes('USER PROMPT:')) {
+                const parts = data.split('USER PROMPT:');
+                data = `<div style="margin-bottom: 24px;">
+                            <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">System Context & Forensic Rules</div>
+                            <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #9cdcfe; font-size: 12px;">${parts[0].replace('SYSTEM PROMPT:', '').trim()}</pre>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">User Data & Telemetry Payload</div>
+                            <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #ce9178; font-size: 12px;">${parts[1].trim()}</pre>
+                        </div>`;
+            } else {
+                data = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e5e7eb; white-space: pre-wrap;">${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>`;
+            }
+            
+            content.innerHTML = data;
+        } else {
+            content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load AI trace.'}</div>`;
+        }
+    })
+    .catch(err => {
+        content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
+    });
+}
+
+function closePromptModal() {
+    document.getElementById('promptModal').style.display = 'none';
 }
 </script>
 {% endblock %}

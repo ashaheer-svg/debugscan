@@ -437,6 +437,34 @@ class TenantController
         return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
     }
 
+    public function getScanPromptData(Request $request, Response $response, array $args): Response
+    {
+        $jobId = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        $stmt = $this->pdo->prepare("
+            SELECT result_input_payload, scan_level, project_id
+            FROM scan_jobs 
+            WHERE id = :id AND tenant_id = :tid
+        ");
+        $stmt->execute(['id' => $jobId, 'tid' => $tenantId]);
+        $scan = $stmt->fetch();
+
+        if (!$scan || empty($scan['result_input_payload'])) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'AI Context Payload not found or not yet generated.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'title' => 'Full AI Context Trace (' . strtoupper($scan['scan_level']) . ')',
+            'data' => $scan['result_input_payload'],
+            'type' => 'prompt'
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
     public function viewHardwareReport(Request $request, Response $response, array $args): Response
     {
         $fileId = $args['id'];

@@ -442,6 +442,32 @@ class AdminController
             ->withHeader('Content-Disposition', 'attachment; filename="raw_ai_payload_' . $id . '.json"');
     }
 
+    public function getScanPromptData(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("
+            SELECT result_input_payload, scan_level
+            FROM scan_jobs 
+            WHERE id = :id
+        ");
+        $stmt->execute(['id' => $id]);
+        $scan = $stmt->fetch();
+
+        if (!$scan || empty($scan['result_input_payload'])) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'AI Context Payload not found.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'title' => 'Admin Technical Trace (' . strtoupper($scan['scan_level']) . ')',
+            'data' => $scan['result_input_payload'],
+            'type' => 'prompt'
+        ]));
+        
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
 
     public function downloadReport(Request $request, Response $response, array $args): Response
     {

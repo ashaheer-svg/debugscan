@@ -248,6 +248,9 @@
                                 <a href="/scans/report/{{ scan.id }}" class="btn-action btn-success-alt" data-tooltip="View Final Analysis Report" aria-label="View Analysis Report">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
                                 </a>
+                                <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action" data-tooltip="View Full AI Context Trace" aria-label="AI Prompt Trace">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"></polyline><line x1="9" y1="20" x2="15" y2="20"></line><line x1="12" y1="4" x2="12" y2="20"></line></svg>
+                                </button>
                                 {% else %}
                                 <div class="btn-action" data-tooltip="Processing..." style="opacity: 0.5; cursor: wait;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -706,6 +709,52 @@
                 content.innerHTML = `<pre style="margin: 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px; color: #e5e7eb; line-height: 1.6; white-space: pre-wrap; word-break: break-all;">${displayData}</pre>`;
             } else {
                 content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load diagnostic data.'}</div>`;
+            }
+        })
+        .catch(err => {
+            content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
+        });
+    }
+
+    function openScanPromptModal(jobId) {
+        const modal = document.getElementById('promptModal');
+        const title = document.getElementById('promptModalTitle');
+        const content = document.getElementById('promptModalContent');
+        const typeBadge = document.getElementById('promptTypeBadge');
+        
+        modal.style.display = 'flex';
+        content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching full AI context trace...</div>';
+        
+        fetch(`/scans/prompt/${jobId}`, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(resp => {
+            if (resp.success) {
+                title.innerText = resp.title;
+                typeBadge.innerText = 'AI TRACE';
+                typeBadge.style.background = 'var(--primary)';
+                typeBadge.style.color = '#fff';
+                
+                // Formatted output - split into SYSTEM and USER prompts if possible for clarity
+                let data = resp.data;
+                if (typeof data === 'string' && data.includes('USER PROMPT:')) {
+                    const parts = data.split('USER PROMPT:');
+                    data = `<div style="margin-bottom: 24px;">
+                                <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">System Context & Forensic Rules</div>
+                                <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #9cdcfe; font-size: 12px;">${parts[0].replace('SYSTEM PROMPT:', '').trim()}</pre>
+                            </div>
+                            <div>
+                                <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">User Data & Telemetry Payload</div>
+                                <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #ce9178; font-size: 12px;">${parts[1].trim()}</pre>
+                            </div>`;
+                } else {
+                    data = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e5e7eb; white-space: pre-wrap;">${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>`;
+                }
+                
+                content.innerHTML = data;
+            } else {
+                content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load AI trace.'}</div>`;
             }
         })
         .catch(err => {

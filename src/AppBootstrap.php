@@ -157,6 +157,7 @@ class AppBootstrap
             $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
             $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);
             $group->get('scans/status/{id}', [TenantController::class, 'getScanStatus']);
+            $group->get('scans/prompt/{id}', [TenantController::class, 'getScanPromptData']);
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
@@ -182,6 +183,7 @@ class AppBootstrap
             $group->post('admin/settings/reset', [AdminController::class, 'resetSystem']);
             $group->get('admin/scans', [AdminController::class, 'scans']);
             $group->get('admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
+            $group->get('admin/scans/prompt/{id}', [AdminController::class, 'getScanPromptData']);
             $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
