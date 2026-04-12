@@ -258,22 +258,13 @@ while (true) {
             $allDiagnosticData, 
             $job['ai_model'], 
             (int)$job['max_output_tokens'],
-            $maxChars
+            $maxChars,
+            (string)$job['id']
         );
 
         $findings = $analysis['findings'] ?? [];
         $actualPrompt = $analysis['full_prompt'] ?? null;
         $isTruncated = $analysis['is_truncated'] ?? false;
-
-        // Technical Audit Logging (Pre-DB persistence)
-        if ($actualPrompt) {
-            $logDir = __DIR__ . '/../storage/logs';
-            if (!is_dir($logDir)) {
-                @mkdir($logDir, 0755, true);
-            }
-            $logPath = $logDir . '/ai_prompt_' . $job['id'] . '.txt';
-            @file_put_contents($logPath, $actualPrompt);
-        }
 
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],

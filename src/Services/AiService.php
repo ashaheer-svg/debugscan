@@ -51,11 +51,10 @@ class AiService
         }
     }
 
-    /**
      * Send diagnostic data to Groq for analysis.
      * Returns findings, the full prompt used, and truncation status.
      */
-    public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000): array
+    public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000, string $jobId = 'unknown'): array
     {
         $systemPrompt = $this->getSystemPrompt();
         $isTruncated = false;
@@ -94,6 +93,12 @@ class AiService
         }
 
         $fullPromptString = "SYSTEM PROMPT:\n{$systemPrompt}\n\nUSER PROMPT:\n{$userPrompt}";
+
+        // Pre-Flight Local Audit (Persistent even if API fails/413s)
+        $logDir = __DIR__ . '/../../storage/logs';
+        if (is_dir($logDir)) {
+            @file_put_contents($logDir . '/ai_prompt_' . $jobId . '.txt', $fullPromptString);
+        }
 
         try {
             $response = $this->client->post('chat/completions', [
