@@ -70,10 +70,11 @@ class AiService
             // Generate full RAW JSON for this specific file record
             $rawJson = json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
             
-            // Implement dynamic character transparency limit
+            // Standard safety: Groq 413 gateway limits are often around 100k-200k total request size.
+            // We enforce a strict per-file limit here.
             if (strlen($rawJson) > $maxChars) {
                 $isTruncated = true;
-                $rawJson = substr($rawJson, 0, $maxChars) . "\n\n[!!! FORENSIC DATA TRUNCATED AT " . number_format($maxChars) . " CHARACTERS TO PRESERVE AI CONTEXT WINDOW !!!]";
+                $rawJson = substr($rawJson, 0, $maxChars) . "\n\n[!!! DATA TRUNCATED: RECORD EXCEEDS SAFETY LIMIT (" . number_format($maxChars) . " chars) !!!]";
             }
 
             $userPrompt .= "#### RAW DIAGNOSTIC PAYLOAD\n" . $rawJson . "\n\n";
