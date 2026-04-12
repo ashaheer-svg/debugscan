@@ -253,13 +253,20 @@ while (true) {
         );
 
         $findings = $analysis['findings'] ?? [];
-        $actualPrompt = $analysis['full_prompt'] ?? json_encode($allDiagnosticData);
+        $actualPrompt = $analysis['full_prompt'] ?? null;
         $isTruncated = $analysis['is_truncated'] ?? false;
+
+        // Technical Audit Logging (Pre-DB persistence)
+        if ($actualPrompt) {
+            $logPath = __DIR__ . '/../storage/logs/ai_prompt_' . $job['id'] . '.txt';
+            @file_put_contents($logPath, $actualPrompt);
+        }
 
         $addCheckpoint('ai', 'AI Report Generated', 'success', [
             'model' => $job['ai_model'],
             'data_link' => "/scans/report/{$job['id']}",
             'capacity' => count($findings) . " forensic findings generated",
+            'payload_stored' => $actualPrompt ? 'Full Prompt' : 'Raw Data Only',
             'technical_stats' => [
                 'findings' => count($findings),
                 'health_score' => $findings['health_score'] ?? 'N/A',
@@ -291,9 +298,9 @@ while (true) {
             'id' => $job['id'],
             'health' => $findings['health_score'] ?? 'N/A',
             'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
-            'payload' => $actualPrompt,
+            'payload' => $actualPrompt ?? json_encode($allDiagnosticData),
             'truncated' => $isTruncated ? 1 : 0,
-            'count' => count($findings),
+            'count' => count($findings['findings'] ?? []),
             'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)
         ]);
 
