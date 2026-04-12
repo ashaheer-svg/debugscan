@@ -492,10 +492,8 @@
 
                 if (isFinished) {
                     activeScans.delete(scanId);
-                    if (job.status === 'completed') {
-                        // Optionally reload if we want the history table updated too
-                        // location.reload(); 
-                    }
+                    // Force refresh to update Analysis History table at the bottom
+                    location.reload(); 
                 }
             })
             .catch(e => console.error("Poll error:", e));
