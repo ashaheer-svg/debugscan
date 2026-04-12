@@ -667,6 +667,17 @@
 
     function deleteScan(id) {
         if (!confirm('Permanently delete this analysis record and its findings?')) return;
+        fetch(`/scans/delete/${id}`, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) location.reload();
+            else alert(data.message);
+        });
+    }
+
     function openPromptModal(fileId) {
         const modal = document.getElementById('promptModal');
         const title = document.getElementById('promptModalTitle');

@@ -221,15 +221,9 @@ while (true) {
                  'dsm_version' => $ver['product'] ?? 'unknown'
              ]);
 
-             // 3. Package forensic data if available (all levels)
+             // 3. Package raw forensic data if available (all levels)
              if ($dbResults) {
-                 $package = [
-                     'system' => $packagingService->formatSystemEvents($dbResults['system_events'] ?? []),
-                     'disk_health' => $packagingService->formatDiskHealth($dbResults['disk_health'] ?? []),
-                     'connections' => $packagingService->formatConnections($dbResults['connection_logs'] ?? []),
-                     'disk_ops' => $packagingService->formatDiskEvents($dbResults['disk_events'] ?? [])
-                 ];
-                 $data['packaged_logs'] = $package;
+                 $data['forensic_extractions'] = $dbResults;
              }
 
              $allDiagnosticData[] = $data;
