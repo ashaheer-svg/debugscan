@@ -517,7 +517,7 @@
                         if (job.status === 'completed') {
                             const btn = job.scan_level === 'level1' ? l1Btn : l2Btn;
                             if (btn) {
-                                btn.style.display = 'inline-block';
+                                btn.style.display = 'flex'; // Use flex for perfect centering
                                 btn.href = '/scans/report/' + job.id;
                             }
                             if (badge) {
