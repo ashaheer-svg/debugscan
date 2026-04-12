@@ -41,6 +41,37 @@
                 <h3 style="font-size: 16px; font-weight: 700; margin: 0;">Diagnostic Log Files</h3>
                 <span style="font-size: 12px; color: var(--text-muted); font-weight: 500;">{{ files|length }} file(s) attached</span>
             </div>
+
+            <!-- Selection-Based Action Bar -->
+            <div id="actionBar" style="padding: 12px 24px; background: #fff; border-bottom: 1px solid var(--row-border); display: flex; gap: 8px; align-items: center; transition: opacity 0.2s; opacity: 0.5; pointer-events: none;">
+                <span style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-right: 8px;">Audit Actions:</span>
+                
+                <button type="button" id="btn-view-prompt" class="btn-action" data-tooltip="View Forensic AI Prompt" aria-label="View AI Prompt">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </button>
+
+                <a id="btn-hardware" href="#" class="btn-action" data-tooltip="Hardware Evidence" aria-label="Hardware Evidence">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
+                </a>
+
+                <div style="width: 1px; height: 20px; background: var(--row-border); margin: 0 4px;"></div>
+
+                <a id="btn-l1" href="#" class="btn-action btn-success-alt" data-tooltip="View Level 1 Report" aria-label="Level 1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8a3 3 0 0 0-3 3"/></svg>
+                </a>
+
+                <a id="btn-l2" href="#" class="btn-action btn-warning-alt" data-tooltip="View Level 2 Report" aria-label="Level 2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                </a>
+
+                <div style="width: 1px; height: 20px; background: var(--row-border); margin: 0 4px;"></div>
+
+                <button type="button" id="btn-delete-file" class="btn-action btn-danger-alt" data-tooltip="Delete Log File" aria-label="Delete File">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                </button>
+
+                <span id="selectionHint" style="font-size: 11px; color: var(--text-muted); margin-left: 12px; font-style: italic;">Select one file to enable access audit actions.</span>
+            </div>
             
             <form id="scanForm" action="/projects/scan/{{ project.id }}" method="POST">
                 <table class="data-table" style="table-layout: fixed; width: 100%;">
@@ -49,21 +80,24 @@
                             <th style="width: 40px; padding-left: 24px;">
                                 <input type="checkbox" id="selectAll">
                             </th>
-                            <th style="width: 35%;">Filename</th>
+                            <th style="width: auto;">Filename</th>
                             <th style="width: 100px;">Size</th>
                             <th style="width: 140px;">Base Extraction</th>
-                            <th style="width: 150px;">Forensic Audit</th>
-                            <th style="width: 180px; text-align: right; padding-right: 24px;">Actions</th>
+                            <th style="width: 150px; padding-right: 24px;">Forensic Audit</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for file in files %}
                         <tr id="file-row-{{ file.id }}">
                             <td style="padding-left: 24px;">
-                                <input type="checkbox" name="file_ids[]" value="{{ file.id }}" class="file-check">
+                                <input type="checkbox" name="file_ids[]" value="{{ file.id }}" class="file-check" 
+                                    data-file-id="{{ file.id }}"
+                                    data-l1-id="{{ file_reports[file.id].level1.id|default('') }}"
+                                    data-l2-id="{{ file_reports[file.id].level2.id|default('') }}"
+                                    data-truncated="{{ (file_reports[file.id].level1.truncated or file_reports[file.id].level2.truncated) ? '1' : '0' }}">
                             </td>
-                            <td style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                <div style="font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis;" title="{{ file.original_filename }}">{{ file.original_filename }}</div>
+                            <td>
+                                <div style="font-weight: 600; color: var(--text-primary);">{{ file.original_filename }}</div>
                                 <div style="font-size: 11px; color: var(--text-muted);">{{ file.created_at|date('M d, H:i') }}</div>
                             </td>
                             <td style="color: var(--text-secondary); font-size: 13px;">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
@@ -72,7 +106,7 @@
                                     {{ file.extraction_status }}
                                 </span>
                             </td>
-                            <td>
+                            <td style="padding-right: 24px;">
                                 <div class="forensic-status-{{ file.id }}" style="display: flex; flex-direction: column; gap: 4px;">
                                     <div style="display: flex; gap: 4px;">
                                         <span id="l1-badge-{{ file.id }}" class="badge" title="Level 1" style="background: {% if file_reports[file.id].level1 %}var(--success-light){% else %}var(--bg-light){% endif %}; color: {% if file_reports[file.id].level1 %}var(--success){% else %}var(--text-muted){% endif %};">L1</span>
@@ -84,33 +118,6 @@
                                         </div>
                                         <div id="progress-stage-{{ file.id }}" style="font-size: 9px; color: var(--primary); font-weight: 700; text-transform: uppercase; margin-top: 2px;">Queued...</div>
                                     </div>
-                                </div>
-                            </td>
-                            <td style="padding-right: 24px; text-align: right;">
-                                <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                    {% set level1 = file_reports[file.id].level1 %}
-                                    {% set level2 = file_reports[file.id].level2 %}
-                                    {% set is_truncated = (level1 and level1.truncated) or (level2 and level2.truncated) %}
-                                    <button type="button" onclick="openPromptModal('{{ file.id }}')" 
-                                            class="btn-action {% if is_truncated %}btn-warning-alt{% endif %}" 
-                                            data-tooltip="View Forensic AI Prompt{% if is_truncated %} (Truncated){% endif %}" 
-                                            aria-label="View Forensic AI Prompt">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                    </button>
-                                    <a href="/files/report/{{ file.id }}" class="btn-action" data-tooltip="Hardware Evidence" aria-label="Hardware Evidence">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
-                                    </a>
-                                    
-                                    <a href="{% if file_reports[file.id].level1 %}/scans/report/{{ file_reports[file.id].level1.id }}{% else %}#{% endif %}" id="l1-btn-{{ file.id }}" class="btn-action btn-success-alt" data-tooltip="View Level 1 Report" aria-label="Level 1" style="display: {% if file_reports[file.id].level1 %}flex{% else %}none{% endif %};">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8a3 3 0 0 0-3 3"/></svg>
-                                    </a>
-                                    <a href="{% if file_reports[file.id].level2 %}/scans/report/{{ file_reports[file.id].level2.id }}{% else %}#{% endif %}" id="l2-btn-{{ file.id }}" class="btn-action btn-warning-alt" data-tooltip="View Level 2 Report" aria-label="Level 2" style="display: {% if file_reports[file.id].level2 %}flex{% else %}none{% endif %};">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
-                                    </a>
-
-                                    <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn-action btn-danger-alt" data-tooltip="Delete Log File" aria-label="Delete Log File">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -286,8 +293,68 @@
 </div>
 
 <script>
-    const selectAll = document.getElementById('selectAll');
-    const fileChecks = document.querySelectorAll('.file-check');
+    // Selection Bar Logic
+    const actionBar = document.getElementById('actionBar');
+    const selectionHint = document.getElementById('selectionHint');
+    const btnViewPrompt = document.getElementById('btn-view-prompt');
+    const btnHardware = document.getElementById('btn-hardware');
+    const btnL1 = document.getElementById('btn-l1');
+    const btnL2 = document.getElementById('btn-l2');
+    const btnDeleteFile = document.getElementById('btn-delete-file');
+
+    document.querySelectorAll('.file-check').forEach(cb => {
+        cb.addEventListener('change', updateActionBar);
+    });
+
+    document.getElementById('selectAll').addEventListener('change', function() {
+        document.querySelectorAll('.file-check').forEach(cb => {
+            cb.checked = this.checked;
+        });
+        updateActionBar();
+    });
+
+    function updateActionBar() {
+        const checked = document.querySelectorAll('.file-check:checked');
+        
+        if (checked.length === 1) {
+            const el = checked[0];
+            const fileId = el.dataset.fileId;
+            const l1Id = el.dataset.l1Id;
+            const l2Id = el.dataset.l2Id;
+            
+            actionBar.style.opacity = '1';
+            actionBar.style.pointerEvents = 'auto';
+            selectionHint.style.display = 'none';
+
+            // Bind actions
+            btnViewPrompt.onclick = () => openPromptModal(fileId);
+            btnHardware.href = `/files/report/${fileId}`;
+            btnDeleteFile.onclick = () => deleteFile(fileId);
+
+            // Level 1 Report
+            if (l1Id) {
+                btnL1.style.display = 'inline-flex';
+                btnL1.href = `/scans/report/${l1Id}`;
+            } else {
+                btnL1.style.display = 'none';
+            }
+
+            // Level 2 Report
+            if (l2Id) {
+                btnL2.style.display = 'inline-flex';
+                btnL2.href = `/scans/report/${l2Id}`;
+            } else {
+                btnL2.style.display = 'none';
+            }
+        } else {
+            actionBar.style.opacity = '0.5';
+            actionBar.style.pointerEvents = 'none';
+            selectionHint.style.display = 'inline';
+            selectionHint.innerText = checked.length > 1 ? 'Select exactly one file for detailed audit actions.' : 'Select one file to enable access audit actions.';
+        }
+    }
+
+    const currentUserRole = '{{ user_role }}';
     const fileInput = document.getElementById('debug_log');
     const uploadModal = document.getElementById('uploadModal');
     const progressBar = document.getElementById('progressBar');
@@ -296,12 +363,6 @@
     const modalStatus = document.getElementById('modalStatus');
     const modalIcon = document.getElementById('modalIcon');
     const processingSteps = document.getElementById('processingSteps');
-    
-    if (selectAll) {
-        selectAll.addEventListener('change', () => {
-            fileChecks.forEach(cb => cb.checked = selectAll.checked);
-        });
-    }
 
     if (fileInput) {
         fileInput.addEventListener('change', function() {
