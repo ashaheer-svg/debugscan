@@ -258,7 +258,11 @@ while (true) {
 
         // Technical Audit Logging (Pre-DB persistence)
         if ($actualPrompt) {
-            $logPath = __DIR__ . '/../storage/logs/ai_prompt_' . $job['id'] . '.txt';
+            $logDir = __DIR__ . '/../storage/logs';
+            if (!is_dir($logDir)) {
+                @mkdir($logDir, 0755, true);
+            }
+            $logPath = $logDir . '/ai_prompt_' . $job['id'] . '.txt';
             @file_put_contents($logPath, $actualPrompt);
         }
 

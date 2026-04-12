@@ -141,6 +141,16 @@ class AppBootstrap
             true
         );
 
+        // Ensure storage directories exist
+        $storageRoot = __DIR__ . '/../storage';
+        $subDirs = ['uploads', 'extracted', 'logs', 'reports'];
+        foreach ($subDirs as $dir) {
+            $path = $storageRoot . '/' . $dir;
+            if (!is_dir($path)) {
+                @mkdir($path, 0755, true);
+            }
+        }
+
         // Routes
         $app->get('/login', [AuthController::class, 'showLogin']);
         $app->post('/auth/login', [AuthController::class, 'login']);
