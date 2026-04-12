@@ -60,14 +60,27 @@ class AiService
         $systemPrompt = $this->getSystemPrompt();
         $isTruncated = false;
         
-        // Assemble User Prompt (Full Raw JSON Mode)
+        // Assemble User Prompt (Hybrid Mode: JSON + Markdown Tables)
         $userPrompt = "SYNOLOGY FORENSIC DIAGNOSTIC REQUEST (FULL SPECTRUM)\n";
         $userPrompt .= "=================================================\n\n";
         
         foreach ($diagnosticData as $index => $fileData) {
             $userPrompt .= "### DATA SET " . ($index + 1) . "\n";
             
-            // Generate full RAW JSON for this specific file record
+            // OPTIMIZATION: Flatten dense tables to Markdown to save tokens/avoid 413
+            if (isset($fileData['logs']['critical_events'])) {
+                $fileData['logs']['critical_events'] = $this->flattenLogsToMarkdown($fileData['logs']['critical_events']);
+            }
+            if (isset($fileData['disks'])) {
+                $fileData['disks'] = $this->flattenDisksToMarkdown($fileData['disks']);
+            }
+            if (isset($fileData['packaged_logs'])) {
+                foreach ($fileData['packaged_logs'] as $logType => $content) {
+                    // Packaged logs are already string-based, no changes needed
+                }
+            }
+            
+            // Generate full RAW JSON for this optimized record
             $rawJson = json_encode($fileData, JSON_PRETTY_PRINT | JSON_INVALID_UTF8_SUBSTITUTE);
             
             // Standard safety: Groq 413 gateway limits are often around 100k-200k total request size.
@@ -107,6 +120,45 @@ class AiService
         } catch (\Exception $e) {
             throw new RuntimeException("AI Analysis failed: " . $e->getMessage());
         }
+    }
+
+    private function flattenLogsToMarkdown(array $events): string
+    {
+        if (empty($events)) return "No critical events found.";
+        
+        $md = "| Source | Timestamp/Message |\n";
+        $md .= "| :--- | :--- |\n";
+        foreach (array_slice($events, 0, 100) as $event) {
+            $source = $event['source'] ?? 'unknown';
+            $content = str_replace(["\n", "\r", "|"], [" ", "", "\\|"], $event['content'] ?? '');
+            $md .= "| {$source} | {$content} |\n";
+        }
+        
+        if (count($events) > 100) {
+            $md .= "| ... | (Truncated " . (count($events) - 100) . " additional events) |\n";
+        }
+        
+        return $md;
+    }
+
+    private function flattenDisksToMarkdown(array $disks): string
+    {
+        if (empty($disks)) return "No disk telemetry detected.";
+        
+        $md = "| Bay | Model | Status | Temp | Size | Errors (Reset/UNC) |\n";
+        $md .= "| :--- | :--- | :--- | :--- | :--- | :--- |\n";
+        foreach ($disks as $id => $d) {
+            $bay = $d['bay'] ?? $id;
+            $model = $d['model'] ?? 'Unknown';
+            $status = strtoupper($d['status'] ?? 'None');
+            $temp = ($d['temp'] ?? '??') . 'C';
+            $size = ($d['size_gb'] ?? '0') . 'GB';
+            $rFail = $d['reset_fail_status'] ?? 'normal';
+            $unc = $d['unc_status'] ?? 'normal';
+            
+            $md .= "| {$bay} | {$model} | {$status} | {$temp} | {$size} | R:{$rFail} / U:{$unc} |\n";
+        }
+        return $md;
     }
 
     private function getSystemPrompt(): string
