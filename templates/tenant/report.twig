@@ -17,7 +17,7 @@
     </div>
     <div style="text-align: right; background: var(--bg-light); padding: 16px 24px; border-radius: var(--radius); border: 1px solid var(--border);">
         <span style="font-size: 11px; font-weight: 800; color: var(--text-muted); display: block; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.1em;">Health Score</span>
-        <div style="font-size: 40px; font-weight: 900; color: {% if job.health_score == 'A' %}var(--success){% elseif job.health_score == 'F' or job.health_score|replace('%','')|number_format < 40 %}var(--danger){% else %}var(--warning){% endif %}; line-height: 1;">
+        <div style="font-size: 40px; font-weight: 900; color: {% if job.health_score == 'A' %}var(--success){% elseif job.health_score == 'F' or job.health_score|replace({'%':''})|number_format < 40 %}var(--danger){% else %}var(--warning){% endif %}; line-height: 1;">
             {{ job.health_score }}
         </div>
     </div>

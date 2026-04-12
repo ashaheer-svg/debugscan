@@ -1,0 +1,176 @@
+{% extends "layout/admin.twig" %}
+
+{% block title %}Forensic File Explorer - Admin{% endblock %}
+
+{% block content %}
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
+    <div>
+        <h1 class="page-title">Forensic File Explorer</h1>
+        <p class="page-subtitle">Direct VPS filesystem management and capacity audit.</p>
+    </div>
+    
+    <div style="display: flex; gap: 16px; align-items: center; background: var(--bg-light); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border);">
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--text-secondary); cursor: pointer;">
+            <input type="checkbox" id="toggleSensitive" onchange="loadDirectory(currentPath)"> 
+            Access Sensitive (.env/.git)
+        </label>
+        <div style="width: 1px; height: 16px; background: var(--border);"></div>
+        <label style="display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--danger); cursor: pointer;">
+            <input type="checkbox" id="toggleDelete"> 
+            Enable Deletion Mode
+        </label>
+    </div>
+</header>
+
+<div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-sm);">
+    <div style="padding: 12px 24px; background: var(--bg-off-white); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px;">
+        <div id="breadcrumbs" style="display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 13px; color: var(--text-muted); flex-grow: 1;">
+            <!-- Breadcrumbs injected here -->
+        </div>
+        <button onclick="loadDirectory(currentPath)" class="btn-action" style="padding: 0 10px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+        </button>
+    </div>
+
+    <table class="data-table" id="explorerTable">
+        <thead>
+            <tr>
+                <th style="padding-left: 24px; width: 50%;">Name</th>
+                <th>Size / Capacity</th>
+                <th>Last Modified</th>
+                <th style="padding-right: 24px; text-align: right;">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="explorerBody">
+            <!-- Files injected here -->
+        </tbody>
+    </table>
+</div>
+
+<style>
+    .explorer-item:hover { background: rgba(0,0,0,0.02); }
+    .breadcrumb-item { cursor: pointer; color: var(--primary); font-weight: 600; }
+    .breadcrumb-item:hover { text-decoration: underline; }
+    .folder-icon { color: #ebcb8b; margin-right: 8px; }
+    .file-icon { color: #81a1c1; margin-right: 8px; }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let currentPath = '';
+
+async function loadDirectory(path = '') {
+    currentPath = path;
+    const showSensitive = document.getElementById('toggleSensitive').checked;
+    const tbody = document.getElementById('explorerBody');
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    
+    tbody.innerHTML = '<tr><td colspan="4" style="padding: 40px; text-align: center; color: var(--text-muted);">Calculating capacity...</td></tr>';
+    
+    updateBreadcrumbs(path);
+
+    try {
+        const response = await fetch(`/admin/explorer/list?path=${encodeURIComponent(path)}&showSensitive=${showSensitive}`);
+        const data = await response.json();
+        
+        if (data.error) throw new Error(data.error);
+
+        let html = '';
+        
+        // Parent folder link
+        if (path !== '') {
+            const parent = path.split('/').slice(0, -1).join('/');
+            html += `
+                <tr onclick="loadDirectory('${parent}')" style="cursor: pointer; background: var(--bg-off-white);">
+                    <td style="padding-left: 24px;" colspan="4">
+                        <span style="font-weight: 700; color: var(--text-muted);">.. [UP ONE LEVEL]</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        data.items.forEach(item => {
+            const icon = item.is_dir ? 
+                `<svg class="folder-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M10 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2h-8l-2-2z"/></svg>` :
+                `<svg class="file-icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg>`;
+
+            html += `
+                <tr class="explorer-item" style="${item.is_dir ? 'cursor: pointer' : ''}" onclick="${item.is_dir ? `loadDirectory('${item.path.replace(/'/g, "\\'")}')` : ''}">
+                    <td style="padding-left: 24px; display: flex; align-items: center;">
+                        ${icon}
+                        <span style="font-weight: ${item.is_dir ? '700' : '500'}; color: var(--text-primary);">${item.name}</span>
+                    </td>
+                    <td style="font-family: monospace; font-size: 12px; color: ${item.is_dir ? 'var(--primary)' : 'var(--text-secondary)'}; font-weight: ${item.is_dir ? '700' : '400'};">
+                        ${item.size}
+                    </td>
+                    <td style="font-size: 12px; color: var(--text-muted);">${item.modified}</td>
+                    <td style="padding-right: 24px; text-align: right;" onclick="event.stopPropagation()">
+                        <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                            ${!item.is_dir ? `<a href="/admin/explorer/download?path=${encodeURIComponent(item.path)}" class="btn-action" data-tooltip="Download">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            </a>` : ''}
+                            <button onclick="deleteItem('${item.path.replace(/'/g, "\\'")}', ${item.is_dir})" class="btn-action btn-danger-alt delete-btn" style="display: none;" data-tooltip="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        });
+        tbody.innerHTML = html;
+        updateDeleteVisibility();
+    } catch (e) {
+        tbody.innerHTML = `<tr><td colspan="4" style="padding: 40px; text-align: center; color: var(--danger);">Error: ${e.message}</td></tr>`;
+    }
+}
+
+function updateBreadcrumbs(path) {
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    let html = `<span class="breadcrumb-item" onclick="loadDirectory('')">ROOT</span>`;
+    
+    if (path) {
+        const parts = path.split('/');
+        let current = '';
+        parts.forEach(part => {
+            current += (current ? '/' : '') + part;
+            html += ` <span style="opacity: 0.5;">/</span> <span class="breadcrumb-item" onclick="loadDirectory('${current.replace(/'/g, "\\'")}')">${part}</span>`;
+        });
+    }
+    breadcrumbs.innerHTML = html;
+}
+
+function updateDeleteVisibility() {
+    const isDeleteMode = document.getElementById('toggleDelete').checked;
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.style.display = isDeleteMode ? 'flex' : 'none';
+    });
+}
+
+document.getElementById('toggleDelete').addEventListener('change', updateDeleteVisibility);
+
+async function deleteItem(path, isDir) {
+    if (!confirm(`Are you sure you want to permanently delete this ${isDir ? 'FOLDER and ALL its contents' : 'file'}?\n\nPath: ${path}`)) return;
+    
+    try {
+        const response = await fetch('/admin/explorer/delete', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            body: JSON.stringify({ path: path, allowDelete: true })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            loadDirectory(currentPath);
+        } else {
+            alert(result.error || 'Failed to delete item.');
+        }
+    } catch (e) {
+        alert('Network error during deletion.');
+    }
+}
+
+// Initial load
+loadDirectory('');
+</script>
+{% endblock %}

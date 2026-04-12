@@ -19,6 +19,7 @@ use App\Services\ParseService;
 use App\Controllers\AuthController;
 use App\Controllers\TenantController;
 use App\Controllers\AdminController;
+use App\Controllers\ExplorerController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
@@ -197,6 +198,12 @@ class AppBootstrap
             $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
+            
+            // Forensic File Explorer
+            $group->get('admin/explorer', [ExplorerController::class, 'index']);
+            $group->get('admin/explorer/list', [ExplorerController::class, 'list']);
+            $group->get('admin/explorer/download', [ExplorerController::class, 'download']);
+            $group->post('admin/explorer/delete', [ExplorerController::class, 'delete']);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class)));
 
