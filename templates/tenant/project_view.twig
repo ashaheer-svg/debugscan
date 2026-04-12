@@ -62,8 +62,8 @@
                             <td style="padding-left: 24px;">
                                 <input type="checkbox" name="file_ids[]" value="{{ file.id }}" class="file-check">
                             </td>
-                            <td>
-                                <div style="font-weight: 600; color: var(--text-primary);">{{ file.original_filename }}</div>
+                            <td style="max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                <div style="font-weight: 600; color: var(--text-primary); overflow: hidden; text-overflow: ellipsis;" title="{{ file.original_filename }}">{{ file.original_filename }}</div>
                                 <div style="font-size: 11px; color: var(--text-muted);">{{ file.created_at|date('M d, H:i') }}</div>
                             </td>
                             <td style="color: var(--text-secondary); font-size: 13px;">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
