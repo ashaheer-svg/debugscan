@@ -36,11 +36,13 @@ class AppBootstrap
             $dotenv->load();
         }
 
-        // Initialize Container
-        $containerBuilder = new ContainerBuilder();
+        // Calculate Base Path (Ensures routing works in subdirectories)
+        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if ($basePath === '/' || $basePath === '.') $basePath = '';
 
         // Add application dependencies to container
         $containerBuilder->addDefinitions([
+            'base_path' => $basePath,
             PDO::class => function () {
                 return Database::getConnection();
             },
@@ -65,7 +67,8 @@ class AppBootstrap
             AuthController::class => function ($container) {
                 return new AuthController(
                     $container->get(Environment::class),
-                    $container->get(AuthService::class)
+                    $container->get(AuthService::class),
+                    $container->get('base_path')
                 );
             },
             TenantController::class => function ($container) {
@@ -74,7 +77,8 @@ class AppBootstrap
                     $container->get(PDO::class),
                     new FileService($container->get(PDO::class), __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted'),
                     new ScanService($container->get(PDO::class)),
-                    new ParseService()
+                    new ParseService(),
+                    $container->get('base_path')
                 );
             },
             AdminController::class => function ($container) {
@@ -82,7 +86,8 @@ class AppBootstrap
                 return new AdminController(
                     $container->get(Environment::class),
                     $container->get(PDO::class),
-                    new AiService($apiKey === false ? null : $apiKey)
+                    new AiService($apiKey === false ? null : $apiKey),
+                    $container->get('base_path')
                 );
             },
             ViewDataMiddleware::class => function ($container) {
@@ -135,30 +140,22 @@ class AppBootstrap
         AppFactory::setContainer($container);
         $app = AppFactory::create();
 
-        // Standard Slim 4 Middlewares
+        // Dynamic Base Path Detection (Ensures routing works in subdirectories)
+        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
+        if (strlen($basePath) > 1) {
+            $app->setBasePath($basePath);
+        }
+
+        // Standard Slim 4 Middlewares (Applied LIFO)
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
+
+        if ($basePath !== '') {
+            $app->setBasePath($basePath);
+        }
         
-        // Handle trailing slashes (Redirect or remove)
-        $app->add(function ($request, $handler) {
-            $uri = $request->getUri();
-            $path = $uri->getPath();
-            
-            if ($path != '/' && str_ends_with($path, '/')) {
-                // Remove trailing slash and redirect
-                $path = rtrim($path, '/');
-                $uri = $uri->withPath($path);
-                
-                $response = new \Slim\Psr7\Response();
-                return $response
-                    ->withHeader('Location', (string)$uri)
-                    ->withStatus(301);
-            }
-            
-            return $handler->handle($request);
-        });
         $app->addErrorMiddleware(
-            true, // Emergency diagnostic enabled
+            (getenv('APP_DEBUG') ?: 'false') === 'true',
             true,
             true
         );
@@ -228,7 +225,7 @@ class AppBootstrap
             $group->get('admin/explorer/download', [ExplorerController::class, 'download']);
             $group->post('admin/explorer/delete', [ExplorerController::class, 'delete']);
         })->add($container->get(ViewDataMiddleware::class))
-          ->add(new AuthMiddleware($container->get(PDO::class)));
+          ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
 
 
         return $app;

@@ -15,12 +15,14 @@ class AdminController
     private Environment $view;
     private PDO $pdo;
     private AiService $aiService;
+    private string $basePath;
 
-    public function __construct(Environment $view, PDO $pdo, AiService $aiService)
+    public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath)
     {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->aiService = $aiService;
+        $this->basePath = $basePath;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -162,7 +164,7 @@ class AdminController
 
         if (empty($orgName) || empty($email) || empty($password)) {
             $_SESSION['error'] = 'All fields are required to provision a tenant.';
-            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
         }
 
         try {
@@ -199,7 +201,7 @@ class AdminController
             }
         }
 
-        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
     public function updateTenant(Request $request, Response $response): Response
@@ -212,7 +214,7 @@ class AdminController
 
         if (!$id || empty($orgName) || empty($email)) {
             $_SESSION['error'] = 'ID, Organization Name, and Email are required.';
-            return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
         }
 
         try {
@@ -243,7 +245,7 @@ class AdminController
             }
         }
 
-        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
     public function toggleTenantStatus(Request $request, Response $response): Response
@@ -263,7 +265,7 @@ class AdminController
         $this->logAction($request, $status === 'active' ? 'user_updated' : 'user_deactivated', 'users', $id, ['new_status' => $status]);
 
         $_SESSION['success'] = "Tenant status changed to " . ucfirst($status) . ".";
-        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
     public function deleteTenant(Request $request, Response $response): Response
@@ -282,7 +284,7 @@ class AdminController
         $this->logAction($request, 'user_deleted', 'users', $id);
 
         $_SESSION['success'] = "Tenant permanently deleted.";
-        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
     public function allocateTokens(Request $request, Response $response): Response
@@ -302,7 +304,7 @@ class AdminController
         $this->logAction($request, 'tokens_allocated', 'users', $id, ['amount' => $amount]);
 
         $_SESSION['success'] = "Allocated {$amount} tokens successfully.";
-        return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
     private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = []): void
@@ -400,7 +402,7 @@ class AdminController
             'timezone' => $data['timezone'] ?? 'UTC',
         ]);
 
-        return $response->withHeader('Location', '/admin/settings?status=saved')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);
     }
 
     public function scans(Request $request, Response $response): Response
@@ -526,7 +528,7 @@ class AdminController
             $_SESSION['error'] = "Failed to reset system: " . $e->getMessage();
         }
 
-        return $response->withHeader('Location', '/admin/settings')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/admin/settings')->withStatus(302);
     }
 
     private function emptyDirectory(string $dir): void

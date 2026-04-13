@@ -17,10 +17,12 @@ use Slim\Exception\HttpUnauthorizedException;
 class AuthMiddleware implements MiddlewareInterface
 {
     private PDO $pdo;
+    private string $basePath;
 
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, string $basePath)
     {
         $this->pdo = $pdo;
+        $this->basePath = $basePath;
     }
 
     public function process(Request $request, Handler $handler): Response
@@ -38,7 +40,7 @@ class AuthMiddleware implements MiddlewareInterface
             
             // Redirect to login for UI requests
             $response = new \Slim\Psr7\Response();
-            return $response->withHeader('Location', '/login')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
         }
 
         // Set RLS Context

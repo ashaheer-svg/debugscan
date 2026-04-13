@@ -20,14 +20,16 @@ class TenantController
     private FileService $fileService;
     private ScanService $scanService;
     private ParseService $parseService;
+    private string $basePath;
 
-    public function __construct(Environment $view, PDO $pdo, FileService $fileService, ScanService $scanService, ParseService $parseService)
+    public function __construct(Environment $view, PDO $pdo, FileService $fileService, ScanService $scanService, ParseService $parseService, string $basePath)
     {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->fileService = $fileService;
         $this->scanService = $scanService;
         $this->parseService = $parseService;
+        $this->basePath = $basePath;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -120,7 +122,7 @@ class TenantController
             'notes' => $data['notes'] ?? '',
         ]);
 
-        return $response->withHeader('Location', '/projects')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
     }
 
     public function viewProject(Request $request, Response $response, array $args): Response
@@ -134,7 +136,7 @@ class TenantController
         $project = $stmt->fetch();
 
         if (!$project) {
-            return $response->withHeader('Location', '/projects')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
         }
 
         // Fetch Files
@@ -191,14 +193,14 @@ class TenantController
 
         if (!$file || $file->getError() !== UPLOAD_ERR_OK) {
             $_SESSION['error'] = 'Please select a valid Synology debug log file (.dat).';
-            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 
         // Validate extension
         $filename = $file->getClientFilename();
         if (!str_ends_with(strtolower($filename), '.dat') && !str_ends_with(strtolower($filename), '.zip')) {
             $_SESSION['error'] = 'Invalid file format. Please upload a .dat or .zip file.';
-            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 
         try {
@@ -301,7 +303,7 @@ class TenantController
             $_SESSION['error'] = 'Failed to process file: ' . $e->getMessage();
         }
 
-        return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
     }
 
     public function startScan(Request $request, Response $response, array $args): Response
@@ -314,7 +316,7 @@ class TenantController
 
         if (empty($fileIds)) {
             $_SESSION['error'] = 'Please select at least one log file to scan.';
-            return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 
         try {
@@ -353,7 +355,7 @@ class TenantController
             $_SESSION['error'] = 'Failed to queue scan: ' . $e->getMessage();
         }
 
-        return $response->withHeader('Location', "/projects/view/{$id}")->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
     }
 
     public function viewReport(Request $request, Response $response, array $args): Response
@@ -367,7 +369,7 @@ class TenantController
         $job = $stmt->fetch();
 
         if (!$job) {
-            return $response->withHeader('Location', '/dashboard')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);
         }
 
         // Fetch Findings
@@ -479,7 +481,7 @@ class TenantController
         $file = $stmt->fetch();
 
         if (!$file) {
-            return $response->withHeader('Location', '/projects')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
         }
 
         // Fetch Project Info
@@ -604,7 +606,7 @@ class TenantController
             return $response->withHeader('Content-Type', 'application/json');
         }
 
-        return $response->withHeader('Location', '/dashboard')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);
     }
 }
 

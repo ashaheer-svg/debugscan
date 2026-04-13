@@ -13,11 +13,13 @@ class AuthController
 {
     private Environment $view;
     private AuthService $authService;
+    private string $basePath;
 
-    public function __construct(Environment $view, AuthService $authService)
+    public function __construct(Environment $view, AuthService $authService, string $basePath)
     {
         $this->view = $view;
         $this->authService = $authService;
+        $this->basePath = $basePath;
     }
 
     public function showProfile(Request $request, Response $response): Response
@@ -42,7 +44,7 @@ class AuthController
         }
         
         if (isset($_SESSION['user_id'])) {
-            $redirect = $_SESSION['role'] === 'admin' ? '/admin' : '/dashboard';
+            $redirect = $_SESSION['role'] === 'admin' ? $this->basePath . '/admin' : $this->basePath . '/dashboard';
             return $response->withHeader('Location', $redirect)->withStatus(302);
         }
 
@@ -73,13 +75,13 @@ class AuthController
                 $_SESSION['name']      = $user['display_name'];
                 $_SESSION['timezone']  = $user['timezone'] ?? null;
 
-                $redirect = $user['role'] === 'admin' ? '/admin' : '/dashboard';
+                $redirect = $user['role'] === 'admin' ? $this->basePath . '/admin' : $this->basePath . '/dashboard';
                 return $response->withHeader('Location', $redirect)->withStatus(302);
             }
 
-            return $response->withHeader('Location', '/login?error=Invalid+credentials')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login?error=Invalid+credentials')->withStatus(302);
         } catch (\Exception $e) {
-            return $response->withHeader('Location', '/login?error=' . urlencode($e->getMessage()))->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login?error=' . urlencode($e->getMessage()))->withStatus(302);
         }
     }
 
@@ -89,7 +91,7 @@ class AuthController
             session_start();
         }
         session_destroy();
-        return $response->withHeader('Location', '/login')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
     }
 
     public function updateProfile(Request $request, Response $response): Response
