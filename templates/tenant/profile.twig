@@ -1,0 +1,61 @@
+{% extends "layout/dashboard.twig" %}
+
+{% block title %}Account Profile - AI DebugScan v3{% endblock %}
+
+{% block content %}
+<header class="page-header" style="margin-bottom: 32px;">
+    <h1 class="page-title">Personal Regional Configuration</h1>
+    <p class="page-subtitle">Manage your forensic identity and localized regional preferences.</p>
+</header>
+
+{% if session.success %}
+<div style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2); margin-bottom: 24px; font-weight: 600;">
+    {{ session.success }}
+</div>
+{% endif %}
+
+{% if session.error %}
+<div style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.2); margin-bottom: 24px; font-weight: 600;">
+    {{ session.error }}
+</div>
+{% endif %}
+
+<div style="max-width: 600px;">
+    <form action="/profile/update" method="POST" class="card" style="padding: 32px;">
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">Forensic Identity</h3>
+        
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label">Display Name</label>
+            <input type="text" name="display_name" class="form-control" value="{{ user_name }}" required style="background: var(--bg-light); border-color: var(--border);">
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">The name shown throughout the forensic reports and platform UI.</p>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px; margin-top: 40px;">Regional Customization</h3>
+        
+        <div class="form-group" style="margin-bottom: 24px;">
+            <label class="form-label">Local Timezone</label>
+            <select name="timezone" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
+                <option value="">Use System Default</option>
+                {% for tz in timezones %}
+                <option value="{{ tz }}" {% if user_timezone == tz %}selected{% endif %}>{{ tz }}</option>
+                {% endfor %}
+            </select>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Adjusts all project logs and scan timestamps to your specific region.</p>
+        </div>
+
+        <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px; margin-top: 40px;">Security Access</h3>
+        
+        <div class="form-group">
+            <label class="form-label">Update Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Leave blank to keep current" style="background: var(--bg-light); border-color: var(--border);">
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px;">Only enter a value if you wish to change your security credentials.</p>
+        </div>
+
+        <div style="margin-top: 40px; border-top: 1px solid var(--border); padding-top: 24px; display: flex; justify-content: flex-end;">
+            <button type="submit" class="btn btn-primary" style="width: auto; padding: 12px 32px; font-weight: 700;">
+                Update Regional Profile
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

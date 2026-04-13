@@ -99,13 +99,21 @@ class AppBootstrap
         
         // Global Timezone Synchronization
         try {
-            $pdo = $container->get(PDO::class);
-            $stmt = $pdo->query("SELECT timezone FROM system_settings LIMIT 1");
-            $tz = $stmt->fetchColumn();
-            if ($tz && in_array($tz, \DateTimeZone::listIdentifiers())) {
-                date_default_timezone_set($tz);
+            // Priority 1: Logged in User's Timezone
+            $userTz = $_SESSION['timezone'] ?? null;
+            
+            if ($userTz && in_array($userTz, \DateTimeZone::listIdentifiers())) {
+                date_default_timezone_set($userTz);
             } else {
-                date_default_timezone_set('UTC');
+                // Priority 2: System Global Default
+                $pdo = $container->get(PDO::class);
+                $stmt = $pdo->query("SELECT timezone FROM system_settings LIMIT 1");
+                $tz = $stmt->fetchColumn();
+                if ($tz && in_array($tz, \DateTimeZone::listIdentifiers())) {
+                    date_default_timezone_set($tz);
+                } else {
+                    date_default_timezone_set('UTC');
+                }
             }
         } catch (\Exception $e) {
             date_default_timezone_set('UTC'); // Robust fallback
@@ -187,6 +195,7 @@ class AppBootstrap
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
             // Profile Routes
+            $group->get('profile', [AuthController::class, 'showProfile']);
             $group->post('profile/update', [AuthController::class, 'updateProfile']);
             
             // Log File Analysis Routes

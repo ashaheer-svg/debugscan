@@ -20,6 +20,20 @@ class AuthController
         $this->authService = $authService;
     }
 
+    public function showProfile(Request $request, Response $response): Response
+    {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $body = $this->view->render('tenant/profile.twig', [
+            'timezones' => \DateTimeZone::listIdentifiers(),
+            'active_page' => 'profile'
+        ]);
+        $response->getBody()->write($body);
+        return $response;
+    }
+
     public function showLogin(Request $request, Response $response): Response
     {
         // Redirect if already logged in
@@ -57,6 +71,7 @@ class AuthController
                 $_SESSION['tenant_id'] = $user['tenant_id'];
                 $_SESSION['role']      = $user['role'];
                 $_SESSION['name']      = $user['display_name'];
+                $_SESSION['timezone']  = $user['timezone'] ?? null;
 
                 $redirect = $user['role'] === 'admin' ? '/admin' : '/dashboard';
                 return $response->withHeader('Location', $redirect)->withStatus(302);
@@ -81,6 +96,7 @@ class AuthController
     {
         $data = $request->getParsedBody();
         $displayName = trim($data['display_name'] ?? '');
+        $timezone = $data['timezone'] ?? null;
         $password = !empty($data['password']) ? $data['password'] : null;
 
         if (empty($displayName)) {
@@ -90,9 +106,10 @@ class AuthController
 
         try {
             $userId = $_SESSION['user_id'];
-            $this->authService->updateProfile($userId, $displayName, $password);
+            $this->authService->updateProfile($userId, $displayName, $timezone, $password);
             
             $_SESSION['name'] = $displayName;
+            $_SESSION['timezone'] = $timezone;
             $_SESSION['success'] = "Profile updated successfully.";
         } catch (\Exception $e) {
             $_SESSION['error'] = "Failed to update profile: " . $e->getMessage();

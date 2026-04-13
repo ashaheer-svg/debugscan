@@ -27,7 +27,7 @@ class ViewDataMiddleware implements MiddlewareInterface
         $userId = $request->getAttribute('user_id');
 
         if ($userId) {
-            $stmt = $this->pdo->prepare("SELECT display_name, tokens_available, role FROM users WHERE id = :id");
+            $stmt = $this->pdo->prepare("SELECT display_name, tokens_available, role, timezone FROM users WHERE id = :id");
             $stmt->execute(['id' => $userId]);
             $user = $stmt->fetch();
 
@@ -35,6 +35,8 @@ class ViewDataMiddleware implements MiddlewareInterface
                 $this->twig->addGlobal('user_name', $user['display_name']);
                 $this->twig->addGlobal('tokens_available', $user['tokens_available']);
                 $this->twig->addGlobal('user_role', $user['role']);
+                $this->twig->addGlobal('user_timezone', $user['timezone'] ?: 'UTC');
+                $this->twig->addGlobal('all_timezones', \DateTimeZone::listIdentifiers());
             }
         }
 

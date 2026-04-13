@@ -19,7 +19,7 @@ class AuthService
 
     public function authenticate(string $email, string $password): ?array
     {
-        $stmt = $this->pdo->prepare("SELECT id, email, password_hash, display_name, role, status, tenant_id FROM users WHERE email = :email");
+        $stmt = $this->pdo->prepare("SELECT id, email, password_hash, display_name, role, status, tenant_id, timezone FROM users WHERE email = :email");
         $stmt->execute(['email' => $email]);
         $user = $stmt->fetch();
 
@@ -51,19 +51,21 @@ class AuthService
         return password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
     }
 
-    public function updateProfile(string $userId, string $displayName, ?string $password = null): void
+    public function updateProfile(string $userId, string $displayName, ?string $timezone = null, ?string $password = null): void
     {
         if ($password) {
-            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, password_hash = :pass, updated_at = NOW() WHERE id = :id");
+            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, password_hash = :pass, timezone = :tz, updated_at = NOW() WHERE id = :id");
             $stmt->execute([
                 'name' => $displayName,
                 'pass' => $this->hashPassword($password),
+                'tz' => $timezone,
                 'id' => $userId
             ]);
         } else {
-            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, updated_at = NOW() WHERE id = :id");
+            $stmt = $this->pdo->prepare("UPDATE users SET display_name = :name, timezone = :tz, updated_at = NOW() WHERE id = :id");
             $stmt->execute([
                 'name' => $displayName,
+                'tz' => $timezone,
                 'id' => $userId
             ]);
         }
