@@ -6,7 +6,7 @@
 require_once __DIR__ . '/../vendor/autoload.php';
 
 // Direct PDO connection using environment variables
-$host = getenv('DB_HOST') ?: '142.91.101.142';
+$host = getenv('DB_HOST') ?: 'localhost';
 $db   = getenv('DB_NAME') ?: 'debugscan';
 $user = getenv('DB_USER') ?: 'ashaheer';
 $pass = getenv('DB_PASS') ?: 'fV-Q&#uQ6V2!4m!!Xp7';
