@@ -39,13 +39,9 @@ class AppBootstrap
         // Initialize Container
         $containerBuilder = new ContainerBuilder();
 
-        // Calculate Base Path (Ensures routing works in subdirectories)
-        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-        if ($basePath === '/' || $basePath === '.') $basePath = '';
-
         // Add application dependencies to container
         $containerBuilder->addDefinitions([
-            'base_path' => $basePath,
+            'base_path' => '',
             PDO::class => function () {
                 return Database::getConnection();
             },
@@ -152,10 +148,6 @@ class AppBootstrap
         // Standard Slim 4 Middlewares (Applied LIFO)
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
-
-        if ($basePath !== '') {
-            $app->setBasePath($basePath);
-        }
         
         $app->addErrorMiddleware(
             (getenv('APP_DEBUG') ?: 'false') === 'true',

@@ -46,10 +46,8 @@ class ViewDataMiddleware implements MiddlewareInterface
             }
         }
 
-        // Global Base Path (Ensures links work in subdirectories)
-        $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
-        if ($basePath === '/' || $basePath === '.') $basePath = '';
-        $this->twig->addGlobal('base_path', $basePath);
+        // Global Base Path (Ensures links work in subdirectories if ever needed)
+        $this->twig->addGlobal('base_path', '');
 
         return $handler->handle($request);
     }
