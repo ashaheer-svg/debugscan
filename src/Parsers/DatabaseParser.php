@@ -200,6 +200,9 @@ class DatabaseParser
 
     private function getPdo(string $path): PDO
     {
+        if (!extension_loaded('pdo_sqlite')) {
+            throw new Exception("Missing 'pdo_sqlite' PHP extension on this server. Deep forensic extraction disabled.");
+        }
         $pdo = new PDO("sqlite:" . $path);
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         $pdo->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);

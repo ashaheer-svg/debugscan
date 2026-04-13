@@ -273,10 +273,17 @@
         </section>
     </div> <!-- Closes the main flex column from line 34 -->
 
+<style>
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    .spinning { animation: spin 2s linear infinite; }
+</style>
+
 <!-- Upload Progress Modal -->
 <div id="uploadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: var(--white); width: 100%; max-width: 440px; padding: 32px; border-radius: var(--radius-lg); box-shadow: var(--shadow-3); text-align: center;">
-        <div id="modalIcon" style="font-size: 40px; margin-bottom: 16px;">🚀</div>
+        <div id="modalIcon" style="display: flex; justify-content: center; margin-bottom: 24px; color: var(--primary);">
+            <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19L19 19A4.5 4.5 0 0 0 19 10L17.7 10A7 7 0 1 0 5 13H17.5"/><polyline points="12 12 16 8 20 12"/><line x1="16" y1="16" x2="16" y2="8"/></svg>
+        </div>
         <h3 id="modalTitle" style="font-size: 18px; font-weight: 700; margin-bottom: 8px;">Uploading Debug Log</h3>
         <p id="modalStatus" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 24px;">Preparing transmission...</p>
         
@@ -309,6 +316,13 @@
     const modalIcon = document.getElementById('modalIcon');
     const processingSteps = document.getElementById('processingSteps');
 
+    const ICONS = {
+        upload: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.5 19L19 19A4.5 4.5 0 0 0 19 10L17.7 10A7 7 0 1 0 5 13H17.5"/><polyline points="12 12 16 8 20 12"/><line x1="16" y1="16" x2="16" y2="8"/></svg>`,
+        processing: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="spinning"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
+        success: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>`,
+        error: `<svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>`
+    };
+
     if (fileInput) {
         fileInput.addEventListener('change', function() {
             if (!this.files.length) return;
@@ -322,6 +336,8 @@
 
         const xhr = new XMLHttpRequest();
         uploadModal.style.display = 'flex';
+        modalIcon.innerHTML = ICONS.upload;
+        modalIcon.style.color = 'var(--primary)';
         
         // Stage 1: Uploading
         xhr.upload.addEventListener('progress', e => {
@@ -358,7 +374,8 @@
     }
 
     function transitionToProcessing() {
-        modalIcon.innerText = '⚙️';
+        modalIcon.innerHTML = ICONS.processing;
+        modalIcon.style.color = 'var(--primary)';
         modalTitle.innerText = 'Analyzing Debug Log';
         modalStatus.innerText = 'Finalizing extraction and mapping metadata...';
         progressBar.style.width = '100%';
@@ -378,14 +395,14 @@
         setTimeout(() => {
             stepParse.style.opacity = '1';
             stepParse.querySelector('.step-dot').style.background = 'var(--success)';
-            modalIcon.innerText = '✅';
+            modalIcon.innerHTML = ICONS.success;
             modalTitle.innerText = 'Extraction Successful';
             modalStatus.innerText = 'Hardware identity and storage topology mapped.';
         }, 1200);
     }
 
     function handleUploadError(msg) {
-        modalIcon.innerText = '❌';
+        modalIcon.innerHTML = ICONS.error;
         modalTitle.innerText = 'Upload Failed';
         modalStatus.innerText = msg || 'An unknown error occurred during processing.';
         modalStatus.style.color = 'var(--error)';
