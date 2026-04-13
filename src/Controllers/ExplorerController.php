@@ -70,6 +70,7 @@ class ExplorerController
                     'is_dir' => $fileinfo->isDir(),
                     'size' => $this->formatSize($size),
                     'raw_size' => $size,
+                    'mtime' => $fileinfo->getMTime(),
                     'modified' => date('Y-m-d H:i:s', $fileinfo->getMTime()),
                 ];
             }
@@ -77,10 +78,16 @@ class ExplorerController
             return $this->jsonResponse($response, ['error' => 'Cannot read directory: ' . $e->getMessage()], 500);
         }
 
-        // Sort: Directories first, then alphabetical
+        // Sort: Directories first, then by Date/Time (Most recent first)
         usort($items, function($a, $b) {
             if ($a['is_dir'] && !$b['is_dir']) return -1;
             if (!$a['is_dir'] && $b['is_dir']) return 1;
+            
+            // Primary sort: Most recent first
+            if ($a['mtime'] !== $b['mtime']) {
+                return $b['mtime'] <=> $a['mtime'];
+            }
+            // Secondary sort: Alphabetical
             return strcasecmp($a['name'], $b['name']);
         });
 
