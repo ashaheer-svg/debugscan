@@ -36,6 +36,9 @@ class AppBootstrap
             $dotenv->load();
         }
 
+        // Initialize Container
+        $containerBuilder = new ContainerBuilder();
+
         // Calculate Base Path (Ensures routing works in subdirectories)
         $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         if ($basePath === '/' || $basePath === '.') $basePath = '';
