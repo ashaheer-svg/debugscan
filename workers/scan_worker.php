@@ -302,7 +302,7 @@ while (true) {
             'id' => $job['id'],
             'health' => $findings['health_score'] ?? 'N/A',
             'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
-            'payload' => $actualPrompt ?? json_encode($allDiagnosticData),
+            'payload' => json_encode(['raw' => $actualPrompt], JSON_INVALID_UTF8_SUBSTITUTE) ?? json_encode($allDiagnosticData),
             'truncated' => $isTruncated ? 1 : 0,
             'count' => count($findings['findings'] ?? []),
             'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)

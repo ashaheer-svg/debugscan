@@ -458,10 +458,13 @@ class AdminController
             return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
 
+        $payloadData = json_decode($scan['result_input_payload'], true);
+        $displayData = is_array($payloadData) && isset($payloadData['raw']) ? $payloadData['raw'] : $scan['result_input_payload'];
+
         $response->getBody()->write(json_encode([
             'success' => true,
             'title' => 'Admin Technical Trace (' . strtoupper($scan['scan_level']) . ')',
-            'data' => $scan['result_input_payload'],
+            'data' => $displayData,
             'type' => 'prompt'
         ]));
         

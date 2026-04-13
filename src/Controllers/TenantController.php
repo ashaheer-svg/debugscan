@@ -409,10 +409,13 @@ class TenantController
         $scan = $stmt->fetch();
 
         if ($scan && !empty($scan['result_input_payload'])) {
+            $payloadData = json_decode($scan['result_input_payload'], true);
+            $displayData = is_array($payloadData) && isset($payloadData['raw']) ? $payloadData['raw'] : $scan['result_input_payload'];
+
             $response->getBody()->write(json_encode([
                 'success' => true,
                 'title' => 'AI Analysis Prompt (' . strtoupper($scan['scan_level']) . ')',
-                'data' => $scan['result_input_payload'],
+                'data' => $displayData,
                 'type' => 'prompt'
             ]));
             return $response->withHeader('Content-Type', 'application/json');
