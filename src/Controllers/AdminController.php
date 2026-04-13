@@ -363,6 +363,7 @@ class AdminController
         $body = $this->view->render('admin/settings.twig', [
             'settings' => $settings,
             'models' => $models,
+            'timezones' => \DateTimeZone::listIdentifiers(),
             'error' => $error ?? null,
             'active_page' => 'admin_settings'
         ]);
@@ -383,6 +384,7 @@ class AdminController
                 stuck_alert_mins = :alert_mins,
                 auto_cancel_mins = :cancel_mins,
                 max_prompt_chars = :max_prompt_chars,
+                timezone = :timezone,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -395,6 +397,7 @@ class AdminController
             'alert_mins' => (int)$data['stuck_alert_mins'],
             'cancel_mins' => (int)$data['auto_cancel_mins'],
             'max_prompt_chars' => (int)($data['max_prompt_chars'] ?? 50000),
+            'timezone' => $data['timezone'] ?? 'UTC',
         ]);
 
         return $response->withHeader('Location', '/admin/settings?status=saved')->withStatus(302);

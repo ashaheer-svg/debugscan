@@ -96,6 +96,20 @@ class AppBootstrap
 
 
         $container = $containerBuilder->build();
+        
+        // Global Timezone Synchronization
+        try {
+            $pdo = $container->get(PDO::class);
+            $stmt = $pdo->query("SELECT timezone FROM system_settings LIMIT 1");
+            $tz = $stmt->fetchColumn();
+            if ($tz && in_array($tz, \DateTimeZone::listIdentifiers())) {
+                date_default_timezone_set($tz);
+            } else {
+                date_default_timezone_set('UTC');
+            }
+        } catch (\Exception $e) {
+            date_default_timezone_set('UTC'); // Robust fallback
+        }
 
         // Setup Database Session Handler
         try {
