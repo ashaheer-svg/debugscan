@@ -53,9 +53,8 @@ class AppBootstrap
 
                 // Register custom filters
                 $twig->addFilter(new \Twig\TwigFilter('json_decode', function ($string) {
-                    if (!$string || !is_string($string)) return [];
-                    $decoded = json_decode($string, true);
-                    return is_array($decoded) ? $decoded : [];
+                    if ($string === null || $string === '') return null;
+                    return json_decode((string)$string, true);
                 }));
 
                 return $twig;
