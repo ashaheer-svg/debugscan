@@ -594,7 +594,7 @@ class AdminController
                 j.completed_at,
                 u.display_name as tenant_name,
                 p.name as project_name,
-                COALESCE(OCTET_LENGTH(j.result_input_payload), 0) as prompt_size_bytes
+                COALESCE(OCTET_LENGTH(j.result_input_payload::text), 0) as prompt_size_bytes
             FROM scan_jobs j
             JOIN users u ON j.tenant_id = u.id
             JOIN projects p ON j.project_id = p.id
