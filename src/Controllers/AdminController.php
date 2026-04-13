@@ -582,22 +582,35 @@ class AdminController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
-    public function abortScan(Request $request, Response $response, array $args): Response
+    public function aiAudit(Request $request, Response $response): Response
     {
-        $id = $args['id'];
-        
-        // Mark as error (Admin Aborted) instead of hard delete
-        $stmt = $this->pdo->prepare("
-            UPDATE scan_jobs 
-            SET status = 'error', 
-                error_message = 'Aborted by System Administrator', 
-                completed_at = NOW() 
-            WHERE id = :id AND status IN ('running', 'queued')
+        $stmt = $this->pdo->query("
+            SELECT 
+                j.id,
+                j.status,
+                j.ai_model,
+                COALESCE(j.ai_input_tokens_used, 0) as ai_input_tokens_used,
+                COALESCE(j.ai_output_tokens_used, 0) as ai_output_tokens_used,
+                j.completed_at,
+                u.display_name as tenant_name,
+                p.name as project_name,
+                COALESCE(OCTET_LENGTH(j.result_input_payload), 0) as prompt_size_bytes
+            FROM scan_jobs j
+            JOIN users u ON j.tenant_id = u.id
+            JOIN projects p ON j.project_id = p.id
+            WHERE j.status IN ('completed', 'error')
+            ORDER BY j.created_at DESC
+            LIMIT 100
         ");
-        $stmt->execute(['id' => $id]);
+        $logs = $stmt->fetchAll();
 
-        $response->getBody()->write(json_encode(['success' => true]));
-        return $response->withHeader('Content-Type', 'application/json');
+        $body = $this->view->render('admin/ai_audit.twig', [
+            'logs' => $logs,
+            'active_page' => 'admin_ai_audit'
+        ]);
+
+        $response->getBody()->write($body);
+        return $response;
     }
 }
 

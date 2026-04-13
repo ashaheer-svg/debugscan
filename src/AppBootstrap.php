@@ -198,6 +198,7 @@ class AppBootstrap
             $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
+            $group->get('admin/ai-audit', [AdminController::class, 'aiAudit']);
             
             // Forensic File Explorer
             $group->get('admin/explorer', [ExplorerController::class, 'index']);
