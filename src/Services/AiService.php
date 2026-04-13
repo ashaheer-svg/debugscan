@@ -117,11 +117,13 @@ class AiService
 
             $result = json_decode($response->getBody()->getContents(), true);
             $content = $result['choices'][0]['message']['content'] ?? '{}';
+            $usage = $result['usage'] ?? [];
             
             return [
                 'findings' => json_decode($content, true),
                 'full_prompt' => $fullPromptString,
-                'is_truncated' => $isTruncated
+                'is_truncated' => $isTruncated,
+                'usage' => $usage
             ];
         } catch (\Exception $e) {
             throw new RuntimeException("AI Analysis failed: " . $e->getMessage());

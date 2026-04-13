@@ -282,6 +282,7 @@ while (true) {
         $updateProgress("Finalizing Report", 95);
 
         // 5. Save results and mark as completed
+        $usage = $analysis['usage'] ?? [];
         $stmt = $pdo->prepare("
             UPDATE scan_jobs 
             SET status = 'completed', 
@@ -293,19 +294,23 @@ while (true) {
                 result_input_payload = :payload,
                 is_truncated = :truncated,
                 findings_count = :count,
+                ai_input_tokens_used = :in_tokens,
+                ai_output_tokens_used = :out_tokens,
                 checkpoints = :cp,
                 total_duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000
             WHERE id = :id
         ");
-
+        
         $stmt->execute([
-            'id' => $job['id'],
             'health' => $findings['health_score'] ?? 'N/A',
             'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
             'payload' => json_encode(['raw' => $actualPrompt], JSON_INVALID_UTF8_SUBSTITUTE) ?? json_encode($allDiagnosticData),
             'truncated' => $isTruncated ? 1 : 0,
             'count' => count($findings['findings'] ?? []),
-            'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE)
+            'in_tokens' => (int)($usage['prompt_tokens'] ?? 0),
+            'out_tokens' => (int)($usage['completion_tokens'] ?? 0),
+            'cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE),
+            'id' => $job['id']
         ]);
 
         $addCheckpoint('system', 'Workflow Finished', 'success');
