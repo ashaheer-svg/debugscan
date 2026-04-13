@@ -9,15 +9,14 @@ class HardwareParser implements ParserInterface
     public function parse(string $extractedPath, array &$context): array
     {
         $major = $context['majorversion'] ?? 7;
+        $synoInfo = $this->parseSynoInfo($extractedPath);
         $hardware = [];
 
-        // 1. NAS Serial from /proc/sys/kernel/syno_serial (Hardwarev2.md Section 2.1.1 & 3.1.1)
-        // FIXED: Serial is NOT in synoinfo.conf (keys 'serialno', 'serial_sn', 'sn' don't exist)
-        // Correct source: /proc/sys/kernel/syno_serial (works on both DSM 6.x and 7.x)
-        $hardware['serial'] = $this->getSerialFromProc($extractedPath);
+        // 1. NAS Serial from /proc/sys/kernel/syno_serial OR synoinfo.conf (Hardwarev2.md Section 2.1.1 & 3.1.1)
+        // Primary source: /proc/sys/kernel/syno_serial; Fallback: synoinfo.conf 'serialno'
+        $hardware['serial'] = $this->getSerialFromProc($extractedPath) ?: ($synoInfo['serialno'] ?? null);
 
         // 2. Model extraction (Hardwarev2.md Section 2.1.1 & 3.1.1)
-        $synoInfo = $this->parseSynoInfo($extractedPath);
         if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
             // DSM 7.x: dedicated proc file
             $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));

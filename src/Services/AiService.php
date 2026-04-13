@@ -67,6 +67,13 @@ class AiService
         foreach ($diagnosticData as $index => $fileData) {
             $userPrompt .= "### DATA SET " . ($index + 1) . "\n";
             
+            // Device Identity Header (Forensic Identity Transparency)
+            $userPrompt .= sprintf("- Device Identity: Model %s | Serial %s | DSM %s\n\n",
+                $fileData['hardware']['model'] ?? 'Unknown',
+                $fileData['hardware']['serial'] ?? 'Unknown',
+                $fileData['version']['product'] ?? 'Unknown'
+            );
+            
             // OPTIMIZATION: Flatten dense tables to Markdown to save tokens/avoid 413
             if (isset($fileData['logs']['critical_events'])) {
                 $fileData['logs']['critical_events'] = $this->flattenLogsToMarkdown($fileData['logs']['critical_events']);
@@ -85,9 +92,9 @@ class AiService
             
             // Standard safety: Groq 413 gateway limits are often around 100k-200k total request size.
             // We enforce a strict per-file limit here.
-            if (strlen($rawJson) > $maxChars) {
+            if (mb_strlen($rawJson) > $maxChars) {
                 $isTruncated = true;
-                $rawJson = substr($rawJson, 0, $maxChars) . "\n\n[!!! DATA TRUNCATED: RECORD EXCEEDS SAFETY LIMIT (" . number_format($maxChars) . " chars) !!!]";
+                $rawJson = mb_substr($rawJson, 0, $maxChars) . "\n\n[!!! DATA TRUNCATED: RECORD EXCEEDS SAFETY LIMIT (" . number_format($maxChars) . " chars) !!!]";
             }
 
             $userPrompt .= "#### RAW DIAGNOSTIC PAYLOAD\n" . $rawJson . "\n\n";
@@ -98,7 +105,7 @@ class AiService
         // Pre-Flight Local Audit (Persistent even if API fails/413s)
         $logDir = __DIR__ . '/../../storage/logs';
         if (is_dir($logDir)) {
-            @file_put_contents($logDir . '/ai_prompt_' . $jobId . '.txt', $fullPromptString);
+            @file_put_contents($logDir . '/ai_prompt_' . basename((string)$jobId) . '.txt', $fullPromptString);
         }
 
         try {
@@ -120,7 +127,7 @@ class AiService
             $usage = $result['usage'] ?? [];
             
             return [
-                'findings' => json_decode($content, true),
+                'findings' => json_decode($content, true) ?: [],
                 'full_prompt' => $fullPromptString,
                 'is_truncated' => $isTruncated,
                 'usage' => $usage
@@ -156,7 +163,7 @@ class AiService
         $md = "| Bay | Model | Status | Temp | Size | Errors (Reset/UNC) |\n";
         $md .= "| :--- | :--- | :--- | :--- | :--- | :--- |\n";
         foreach ($disks as $id => $d) {
-            $bay = $d['bay'] ?? $id;
+            $bay = $d['bay'] ?? ($d['slot'] ?? $id);
             $model = $d['model'] ?? 'Unknown';
             $status = strtoupper($d['status'] ?? 'None');
             $temp = ($d['temp'] ?? '??') . 'C';
