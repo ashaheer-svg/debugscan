@@ -24,14 +24,16 @@ use App\Services\AiService;
 use App\Services\FileService;
 use App\Services\ParseService;
 use App\Services\PackagingService;
+use App\Services\ExtractionConfigService;
 use App\Parsers\DatabaseParser;
 
 $pdo = Database::getConnection();
 Database::setTenantContext($pdo, null, 'admin'); // Bypass RLS for worker
 
-$parseService = new ParseService();
+$parseService     = new ParseService();
 $packagingService = new PackagingService();
-$fileService = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
+$fileService      = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
+$extractionConfig = new ExtractionConfigService($pdo);
 
 // Get AI credentials from environment
 $aiApiKey = getenv('GROQ_API_KEY') ?: ($_ENV['GROQ_API_KEY'] ?? '');
@@ -126,6 +128,9 @@ while (true) {
 
         $addCheckpoint('system', 'Worker Active', 'success', ['pid' => getmypid()]);
 
+        // Load extraction config once per job (L1 only; L2 uses full pipeline)
+        $l1Config = ($job['scan_level'] === 'level1') ? $extractionConfig->getRuntimeConfig() : [];
+
         // Update function for progress percent + Technical Heartbeat
         $updateProgress = function($stage, $percent = null) use ($pdo, $job) {
             if ($percent !== null) {
@@ -173,8 +178,9 @@ while (true) {
                  }
 
                  if (is_dir($destPath)) {
-                    $dbParser = new DatabaseParser($destPath, $updateProgress);
-                    $dbResults = $dbParser->parseAll();
+                     // $l1Config already loaded once for this job (above)
+                     $dbParser  = new DatabaseParser($destPath, $updateProgress, $l1Config);
+                     $dbResults = $dbParser->parseAll();
                     
                     $rowCount = 0;
                     if (isset($dbResults['stats'])) {
@@ -192,8 +198,8 @@ while (true) {
                  }
              }
 
-             // Base diagnostic data
-             $data = $parseService->parseAll($destPath);
+             // Base diagnostic data (pass config for L1 only; already loaded above)
+             $data = $parseService->parseAll($destPath, $l1Config ?? []);
 
              // 3. Propagate hardware metadata to projects table if missing
              $hw = $data['hardware'] ?? [];

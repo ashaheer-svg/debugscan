@@ -1,0 +1,409 @@
+{% extends "layout/admin.twig" %}
+
+{% block title %}Extraction Configuration - AI DebugScan v3{% endblock %}
+
+{% block head %}
+    {{ parent() }}
+    <style>
+        /* ============================================================
+           ADVANCED EXTRACTION CONFIGURATION PAGE STYLES
+        ============================================================ */
+        .ec-page-header {
+            margin-bottom: 32px;
+        }
+        .ec-summary-bar {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 24px;
+            margin-bottom: 32px;
+            box-shadow: var(--shadow-1);
+        }
+        .ec-summary-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+        }
+        .ec-summary-stat .value {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+        .ec-summary-stat .label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.04em;
+        }
+        .ec-summary-divider {
+            width: 1px;
+            height: 40px;
+            background: var(--border);
+        }
+        .ec-l1-badge {
+            margin-left: auto;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .ec-group {
+            margin-bottom: 48px;
+        }
+        .ec-group-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .ec-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+        }
+        .ec-group-line {
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* Section Cards */
+        .ec-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-1);
+            margin-bottom: 12px;
+            overflow: hidden;
+            transition: box-shadow 0.2s ease;
+        }
+        .ec-card:hover { box-shadow: var(--shadow-2); }
+        .ec-card.disabled { opacity: 0.6; }
+        .ec-card.always-on { border-left: 4px solid #10b981; }
+
+        .ec-card-body {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            align-items: center;
+            gap: 24px;
+            padding: 20px 24px;
+        }
+        .ec-card-left { display: flex; flex-direction: column; gap: 8px; }
+        .ec-card-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .ec-card-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .ec-card-parser {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: monospace;
+            background: var(--bg-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .ec-description {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            max-width: 680px;
+        }
+
+        /* Impact Badges */
+        .ec-impact {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .ec-impact.HIGH  { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+        .ec-impact.MEDIUM { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
+        .ec-impact.LOW   { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+
+        .ec-always-on-label {
+            font-size: 11px;
+            font-weight: 700;
+            color: #10b981;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Right Controls Column */
+        .ec-card-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 12px;
+            min-width: 180px;
+        }
+
+        /* Toggle Switch */
+        .ec-toggle-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .ec-toggle-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background: #d1d5db;
+            border-radius: 26px;
+            transition: background 0.25s ease;
+        }
+        .toggle-slider:before {
+            content: '';
+            position: absolute;
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.25s ease;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+        .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
+        .toggle-switch input:disabled + .toggle-slider { cursor: not-allowed; }
+        .toggle-switch input:disabled:checked + .toggle-slider { background: #10b981; }
+
+        /* Limit Input */
+        .ec-limit-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.2s ease;
+        }
+        .ec-limit-row.hidden { opacity: 0.3; pointer-events: none; }
+        .ec-limit-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+        .ec-limit-input {
+            width: 80px;
+            padding: 5px 8px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: var(--bg-light);
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+        .ec-limit-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            background: white;
+        }
+
+        /* Save Bar */
+        .ec-save-bar {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            border-top: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+            z-index: 100;
+            margin: 0 -32px -32px;
+        }
+        .ec-save-status {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .ec-save-status.saved { color: #10b981; }
+
+        /* Flash messages */
+        .flash-success {
+            background: #f0fdf4;
+            border: 1px solid #86efac;
+            color: #15803d;
+            padding: 12px 16px;
+            border-radius: var(--radius);
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+    </style>
+{% endblock %}
+
+{% block admin_content %}
+<header class="ec-page-header">
+    <h1 class="page-title" style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">Advanced Extraction Configuration</h1>
+    <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Control exactly which data sections are extracted and sent to the AI during a Level 1 scan. Disable unused sections and reduce row limits to minimize token usage.</p>
+</header>
+
+{% if status == 'saved' %}
+<div class="flash-success">
+    ✓ Extraction configuration saved. New settings will apply to all subsequent L1 scans.
+</div>
+{% endif %}
+
+{# Summary Bar #}
+<div class="ec-summary-bar">
+    <div class="ec-summary-stat">
+        <span class="value">{{ active_count }}</span>
+        <span class="label">Active Sections</span>
+    </div>
+    <div class="ec-summary-divider"></div>
+    <div class="ec-summary-stat">
+        <span class="value">{{ total_count - active_count }}</span>
+        <span class="label">Disabled Sections</span>
+    </div>
+    <div class="ec-summary-divider"></div>
+    <div class="ec-summary-stat">
+        <span class="value">{{ total_count }}</span>
+        <span class="label">Total Sections</span>
+    </div>
+    <span class="ec-l1-badge">⚡ Level 1 Scans Only</span>
+</div>
+
+<form id="ecForm" action="/admin/extraction-config/save" method="POST">
+    {% for group_name, sections in groups %}
+    <div class="ec-group">
+        <div class="ec-group-header">
+            <span class="ec-group-title">
+                {% if group_name == 'Core Identity' %}🔐{% elseif group_name == 'Storage Subsystem' %}💾{% elseif group_name == 'System Health' %}📊{% else %}🗄{% endif %}
+                {{ group_name }}
+            </span>
+            <div class="ec-group-line"></div>
+        </div>
+
+        {% for key, section in sections %}
+        <div class="ec-card {% if not section.is_enabled %}disabled{% endif %} {% if section.always_on %}always-on{% endif %}" id="card-{{ key }}">
+            <div class="ec-card-body">
+                {# Left: Info #}
+                <div class="ec-card-left">
+                    <div class="ec-card-title-row">
+                        <span class="ec-card-title">{{ section.label }}</span>
+                        <span class="ec-card-parser">{{ section.parser }}</span>
+                        <span class="ec-impact {{ section.impact }}">
+                            {% if section.impact == 'HIGH' %}🔴{% elseif section.impact == 'MEDIUM' %}🟡{% else %}🟢{% endif %}
+                            {{ section.impact }} Impact
+                        </span>
+                        {% if section.always_on %}
+                            <span class="ec-always-on-label">🔒 Always On</span>
+                        {% endif %}
+                    </div>
+                    <p class="ec-description">{{ section.description }}</p>
+                </div>
+
+                {# Right: Controls #}
+                <div class="ec-card-right">
+                    {% if section.always_on %}
+                        {# Locked toggle — always enabled #}
+                        <div class="ec-toggle-wrapper">
+                            <span class="ec-toggle-label">Always Enabled</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" checked disabled>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <input type="hidden" name="sections[{{ key }}][enabled]" value="1">
+                    {% else %}
+                        <div class="ec-toggle-wrapper">
+                            <span class="ec-toggle-label" id="lbl-{{ key }}">{{ section.is_enabled ? 'Enabled' : 'Disabled' }}</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox"
+                                       name="sections[{{ key }}][enabled]"
+                                       value="1"
+                                       id="toggle-{{ key }}"
+                                       {% if section.is_enabled %}checked{% endif %}
+                                       onchange="handleToggle('{{ key }}', this.checked)">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    {% endif %}
+
+                    {% if section.has_limit %}
+                    <div class="ec-limit-row {% if not section.is_enabled and not section.always_on %}hidden{% endif %}" id="limit-row-{{ key }}">
+                        <span class="ec-limit-label">{{ section.limit_label }}</span>
+                        <input type="number"
+                               class="ec-limit-input"
+                               name="sections[{{ key }}][max_rows]"
+                               value="{{ section.max_rows ?? '' }}"
+                               min="1"
+                               max="10000"
+                               placeholder="∞">
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    {# Sticky Save Bar #}
+    <div class="ec-save-bar">
+        <span class="ec-save-status {% if status == 'saved' %}saved{% endif %}">
+            {% if status == 'saved' %}✓ Settings saved successfully{% else %}Changes will apply to next L1 scan{% endif %}
+        </span>
+        <button type="submit" class="btn btn-primary" style="padding: 10px 40px; font-weight: 700;">
+            Save Extraction Configuration
+        </button>
+    </div>
+</form>
+
+<script>
+function handleToggle(key, enabled) {
+    const card     = document.getElementById('card-' + key);
+    const label    = document.getElementById('lbl-' + key);
+    const limitRow = document.getElementById('limit-row-' + key);
+
+    if (enabled) {
+        card.classList.remove('disabled');
+        label.textContent = 'Enabled';
+        if (limitRow) limitRow.classList.remove('hidden');
+    } else {
+        card.classList.add('disabled');
+        label.textContent = 'Disabled';
+        if (limitRow) limitRow.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}

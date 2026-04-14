@@ -16,10 +16,12 @@ use App\Services\FileService;
 use App\Services\ScanService;
 use App\Services\AiService;
 use App\Services\ParseService;
+use App\Services\ExtractionConfigService;
 use App\Controllers\AuthController;
 use App\Controllers\TenantController;
 use App\Controllers\AdminController;
 use App\Controllers\ExplorerController;
+use App\Controllers\ExtractionConfigController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
@@ -93,6 +95,16 @@ class AppBootstrap
                 return new ViewDataMiddleware(
                     $container->get(Environment::class),
                     $container->get(PDO::class)
+                );
+            },
+            ExtractionConfigService::class => function ($container) {
+                return new ExtractionConfigService($container->get(PDO::class));
+            },
+            ExtractionConfigController::class => function ($container) {
+                return new ExtractionConfigController(
+                    $container->get(Environment::class),
+                    $container->get(ExtractionConfigService::class),
+                    $container->get('base_path')
                 );
             },
         ]);
@@ -219,6 +231,10 @@ class AppBootstrap
             $group->get('admin/explorer/list', [ExplorerController::class, 'list']);
             $group->get('admin/explorer/download', [ExplorerController::class, 'download']);
             $group->post('admin/explorer/delete', [ExplorerController::class, 'delete']);
+
+            // Advanced Extraction Configuration
+            $group->get('admin/extraction-config', [ExtractionConfigController::class, 'showPage']);
+            $group->post('admin/extraction-config/save', [ExtractionConfigController::class, 'saveConfig']);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
 

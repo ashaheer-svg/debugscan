@@ -48,18 +48,28 @@ class ParseService
      * Run all registered parsers on the extracted directory.
      * 
      * @param string $extractedPath
+     * @param array  $config  Runtime config from ExtractionConfigService::getRuntimeConfig() (L1 only)
      * @return array Consolidated diagnostic data
      */
-    public function parseAll(string $extractedPath): array
+    public function parseAll(string $extractedPath, array $config = []): array
     {
         if (!is_dir($extractedPath)) {
             throw new RuntimeException("Extracted path does not exist: $extractedPath");
         }
 
         $results = [];
-        $context = []; // Shared state between parsers (e.g. DSM version)
+        // Inject config into context — parsers with inline limits read from here
+        $context = ['_config' => $config];
 
         foreach ($this->parsers as $key => $parser) {
+            // Skip disabled sections (never skip 'version' or 'hardware' — other parsers depend on them)
+            if (!in_array($key, ['version', 'hardware'], true)) {
+                $sectionEnabled = $config[$key]['is_enabled'] ?? true;
+                if (!$sectionEnabled) {
+                    continue; // Skip this parser entirely
+                }
+            }
+
             try {
                 $results[$key] = $parser->parse($extractedPath, $context);
                 // Update context for subsequent parsers
@@ -88,3 +98,4 @@ class ParseService
     {
         $this->parsers[$key] = $parser;
     }}
+

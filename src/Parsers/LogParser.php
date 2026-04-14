@@ -10,6 +10,7 @@ class LogParser implements ParserInterface
 
     public function parse(string $extractedPath, array &$context): array
     {
+        $maxEvents = $context['_config']['logs']['max_rows'] ?? 100;
         $logs = ['critical_events' => []];
         $logFiles = [
             $extractedPath . '/dsm/var/log/messages',
@@ -27,7 +28,7 @@ class LogParser implements ParserInterface
                     foreach ($this->keywords as $keyword) {
                         if (str_contains($lowerLine, $keyword)) {
                             $logs['critical_events'][] = [
-                                'source' => basename($file),
+                                'source'  => basename($file),
                                 'content' => trim($line),
                             ];
                             break;
@@ -37,9 +38,9 @@ class LogParser implements ParserInterface
             }
         }
 
-        // Limit the total log events sent to AI
-        if (count($logs['critical_events']) > 100) {
-             $logs['critical_events'] = array_slice($logs['critical_events'], -100);
+        // Apply admin-configured limit
+        if (count($logs['critical_events']) > $maxEvents) {
+             $logs['critical_events'] = array_slice($logs['critical_events'], -$maxEvents);
         }
 
         return $logs;

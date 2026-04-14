@@ -73,9 +73,9 @@ class DStateParser implements ParserInterface
         }
 
         return [
-            'd_state_events' => $events,
-            'summary' => $this->generateSummary($events),
-            '_tag' => '[D_STATE_PROCESSES]'
+            'd_state_events' => array_slice($events, 0, $context['_config']['dstate']['max_rows'] ?? 25),
+            'summary'        => $this->generateSummary($events),
+            '_tag'           => '[D_STATE_PROCESSES]'
         ];
     }
 

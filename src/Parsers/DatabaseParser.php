@@ -31,13 +31,14 @@ class DatabaseParser
     ];
 
     private ?string $relevanceRegex = null;
-
     private $onProgress = null;
+    private array $config = [];
 
-    public function __construct(string $extractPath, ?callable $onProgress = null)
+    public function __construct(string $extractPath, ?callable $onProgress = null, array $config = [])
     {
         $this->extractPath = rtrim($extractPath, DIRECTORY_SEPARATOR);
         $this->onProgress = $onProgress;
+        $this->config = $config;
         
         $this->locateDatabases();
         $this->detectRelativeCutoffs();
@@ -163,24 +164,35 @@ class DatabaseParser
             try {
                 switch ($name) {
                     case '.SYNOSYSDB':
-                        $res = $this->parseSystemEvents($path, $this->onProgress);
-                        $results['system_events'] = $res['data'];
-                        $stats['system_events'] = $res['stats'];
+                        if ($this->isSectionEnabled('db_system_events')) {
+                            $limit = $this->getSectionLimit('db_system_events');
+                            $res = $this->parseSystemEvents($path, $this->onProgress, $limit);
+                            $results['system_events'] = $res['data'];
+                            $stats['system_events'] = $res['stats'];
+                        }
                         break;
                     case '.SYNODISKHEALTHDB':
-                        $res = $this->parseDiskHealth($path);
-                        $results['disk_health'] = $res['data'];
-                        $stats['disk_health'] = $res['stats'];
+                        if ($this->isSectionEnabled('db_disk_health')) {
+                            $res = $this->parseDiskHealth($path);
+                            $results['disk_health'] = $res['data'];
+                            $stats['disk_health'] = $res['stats'];
+                        }
                         break;
                     case '.SYNOCONNDB':
-                        $res = $this->parseConnections($path, $this->onProgress);
-                        $results['connection_logs'] = $res['data'];
-                        $stats['connection_logs'] = $res['stats'];
+                        if ($this->isSectionEnabled('db_connection_logs')) {
+                            $limit = $this->getSectionLimit('db_connection_logs');
+                            $res = $this->parseConnections($path, $this->onProgress, $limit);
+                            $results['connection_logs'] = $res['data'];
+                            $stats['connection_logs'] = $res['stats'];
+                        }
                         break;
                     case '.SYNODISKDB':
-                        $res = $this->parseDiskEvents($path, $this->onProgress);
-                        $results['disk_events'] = $res['data'];
-                        $stats['disk_events'] = $res['stats'];
+                        if ($this->isSectionEnabled('db_disk_events')) {
+                            $limit = $this->getSectionLimit('db_disk_events');
+                            $res = $this->parseDiskEvents($path, $this->onProgress, $limit);
+                            $results['disk_events'] = $res['data'];
+                            $stats['disk_events'] = $res['stats'];
+                        }
                         break;
                 }
             } catch (Exception $e) {
@@ -190,6 +202,17 @@ class DatabaseParser
         
         $results['stats'] = $stats;
         return $results;
+    }
+
+    private function isSectionEnabled(string $key): bool
+    {
+        return $this->config[$key]['is_enabled'] ?? true;
+    }
+
+    private function getSectionLimit(string $key): ?int
+    {
+        $v = $this->config[$key]['max_rows'] ?? null;
+        return $v !== null ? (int)$v : null;
     }
 
     private function isRelevant(string $msg, string $level): bool
@@ -209,7 +232,7 @@ class DatabaseParser
         return $pdo;
     }
 
-    private function parseSystemEvents(string $path, ?callable $onProgress = null): array
+    private function parseSystemEvents(string $path, ?callable $onProgress = null, ?int $limit = null): array
     {
         $pdo = $this->getPdo($path);
         
@@ -232,12 +255,14 @@ class DatabaseParser
                 $selected[] = $row;
             }
         }
+
+        // Apply admin-configured row limit
+        if ($limit !== null && count($selected) > $limit) {
+            $selected = array_slice($selected, -$limit);
+        }
         
         return [
-            'data' => [
-                'summary' => ['total' => $total, 'selected' => count($selected)],
-                'rows' => $selected
-            ],
+            'data'  => ['summary' => ['total' => $total, 'selected' => count($selected)], 'rows' => $selected],
             'stats' => ['found' => $total, 'selected' => count($selected), 'cutoff_ts' => $this->cutoffUnix]
         ];
     }
@@ -257,7 +282,7 @@ class DatabaseParser
         ];
     }
 
-    private function parseConnections(string $path, ?callable $onProgress = null): array
+    private function parseConnections(string $path, ?callable $onProgress = null, ?int $limit = null): array
     {
         $pdo = $this->getPdo($path);
         
@@ -277,21 +302,21 @@ class DatabaseParser
             $critical[] = $row;
         }
 
+        if ($limit !== null && count($critical) > $limit) {
+            $critical = array_slice($critical, -$limit);
+        }
+
         $stmt = $pdo->prepare("SELECT ip, username, COUNT(*) as attempts, MIN(time) as first_seen, MAX(time) as last_seen FROM logs WHERE time >= :cutoff AND level = 'warning' AND msg LIKE '%failed%' GROUP BY ip, username HAVING attempts >= 3 ORDER BY attempts DESC");
         $stmt->execute(['cutoff' => $this->cutoffUnix]);
         $bruteForce = $stmt->fetchAll();
         
         return [
-            'data' => [
-                'summary_groups' => [],
-                'brute_force' => $bruteForce,
-                'critical_events' => $critical
-            ],
+            'data'  => ['summary_groups' => [], 'brute_force' => $bruteForce, 'critical_events' => $critical],
             'stats' => ['found' => $total, 'selected_critical' => count($critical)]
         ];
     }
 
-    private function parseDiskEvents(string $path, ?callable $onProgress = null): array
+    private function parseDiskEvents(string $path, ?callable $onProgress = null, ?int $limit = null): array
     {
         $pdo = $this->getPdo($path);
         $total = (int)$pdo->query("SELECT COUNT(*) FROM logs")->fetchColumn();
@@ -316,12 +341,13 @@ class DatabaseParser
                 $selected[] = $row;
             }
         }
+
+        if ($limit !== null && count($selected) > $limit) {
+            $selected = array_slice($selected, -$limit);
+        }
         
         return [
-            'data' => [
-                'drive_summary' => $summary,
-                'events' => $selected
-            ],
+            'data'  => ['drive_summary' => $summary, 'events' => $selected],
             'stats' => ['found' => $total, 'selected' => count($selected)]
         ];
     }
