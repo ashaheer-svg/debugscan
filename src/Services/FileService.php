@@ -50,6 +50,7 @@ class FileService
         'dsm/result/ifconfig.result',
         'dsm/result/route.result',
         'dsm/result/ethtool.',
+        'dsm/result/ethtool_stats.',
         'dsm/proc/net/dev',
         'dsm/etc/resolv.conf',
         'dsm/etc/sysconfig/network-scripts/',

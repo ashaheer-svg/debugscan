@@ -47,8 +47,10 @@ class ZipHelper
 
             $shouldExtract = false;
             foreach ($targets as $target) {
-                // Check for exact match or prefix (for directories)
-                if ($name === $target || (str_ends_with($target, '/') && str_starts_with($name, $target))) {
+                // Check for exact match, directory prefix (ends in /), or file group prefix (ends in .)
+                if ($name === $target || 
+                   (str_ends_with($target, '/') && str_starts_with($name, $target)) ||
+                   (str_ends_with($target, '.') && str_starts_with($name, $target))) {
                     $shouldExtract = true;
                     break;
                 }
