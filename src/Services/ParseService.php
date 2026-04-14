@@ -18,6 +18,7 @@ use App\Parsers\DfResultParser;
 use App\Parsers\DiskstatsParser;
 use App\Parsers\TopResultParser;
 use App\Parsers\VmstatParser;
+use App\Parsers\NetworkHardwareParser;
 use RuntimeException;
 
 class ParseService
@@ -34,6 +35,7 @@ class ParseService
             'raid' => new RaidParser(),
             'volumes' => new VolumeParser(),
             'network' => new NetworkParser(),
+            'network_hardware' => new NetworkHardwareParser(),
             'logs' => new LogParser(),
             'btrfs' => new BtrfsScrubParser(),
             'dstate' => new DStateParser(),

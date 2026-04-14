@@ -139,6 +139,15 @@ class ExtractionConfigService
             'has_limit'   => false,
             'always_on'   => false,
         ],
+        'network_hardware' => [
+            'group'       => 'System Health',
+            'label'       => 'Network Hardware Health',
+            'parser'      => 'NetworkHardwareParser',
+            'description' => 'Analyzes ethtool metrics, CRC errors, and connection states to detect failing cables, transceiver issues, and link flapping. Essential for diagnosing intermittent connectivity and physical layer packet loss.',
+            'impact'      => 'MEDIUM',
+            'has_limit'   => false,
+            'always_on'   => false,
+        ],
 
         // Group 4: SQLite Forensic Databases
         'db_system_events' => [
