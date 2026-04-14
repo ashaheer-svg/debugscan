@@ -21,6 +21,8 @@ class FileService
         'dsm/proc/mdstat',
         'dsm/proc/meminfo',
         'dsm/proc/sys/kernel/syno_hw_version',
+        'dsm/proc/sys/kernel/syno_serial',
+        'dsm/proc/sys/kernel/syno_custom_serial',
         'dsm/etc/synoinfo.conf',
         'dsm/etc.defaults/synoinfo.conf',
         'dsm/proc/cpuinfo',
