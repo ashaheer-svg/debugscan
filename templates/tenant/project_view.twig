@@ -3,6 +3,56 @@
 {% set active_page = 'projects' %}
 
 {% block title %}{{ project.name }} - Project View{% endblock %}
+ 
+{% block head %}
+    {{ parent() }}
+    <style>
+        /* Forensic Inspector Layout */
+        .fi-container { display: flex; height: 100%; }
+        .fi-sidebar { 
+            width: 240px; background: #151619; border-right: 1px solid rgba(255,255,255,0.05); 
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .fi-nav-item { 
+            padding: 12px 24px; font-size: 11px; font-weight: 700; color: #6b7280; 
+            text-transform: uppercase; letter-spacing: 0.05em; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.02);
+            transition: all 0.2s;
+        }
+        .fi-nav-item:hover { background: rgba(255,255,255,0.03); color: #fff; }
+        .fi-nav-item.active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-right: 3px solid #3b82f6; }
+        
+        .fi-main { flex: 1; overflow-y: auto; padding: 32px; scroll-behavior: smooth; }
+        .fi-section { margin-bottom: 40px; }
+        .fi-section-header { 
+            display: flex; align-items: center; gap: 10px; margin-bottom: 16px; 
+            padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .fi-section-title { font-size: 14px; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .fi-card { background: #1a1b1e; border: 1px solid rgba(255,255,255,0.05); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+        .fi-card-label { font-size: 10px; font-weight: 800; color: #3b82f6; text-transform: uppercase; margin-bottom: 4px; }
+        .fi-card-value { font-size: 16px; font-weight: 700; color: #e5e7eb; mb: 12px; }
+        
+        .fi-pre { 
+            background: rgba(0,0,0,0.2); padding: 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);
+            font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e5e7eb; line-height: 1.6; white-space: pre-wrap; 
+        }
+        .fi-json-key { color: #9cdcfe; }
+        .fi-json-string { color: #ce9178; }
+        .fi-json-number { color: #b5cea8; }
+
+        /* Tabs */
+        .fi-tabs { display: flex; gap: 4px; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 8px; margin-left: 20px; }
+        .fi-tab { 
+            padding: 4px 12px; font-size: 10px; font-weight: 800; color: #9ca3af; 
+            text-transform: uppercase; cursor: pointer; border-radius: 6px; transition: all 0.2s;
+        }
+        .fi-tab.active { background: #3b82f6; color: #fff; }
+
+        .fi-empty { text-align: center; padding: 60px 40px; color: #4b5563; }
+        .fi-identity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+    </style>
+{% endblock %}
 
 {% block dashboard_content %}
 <header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
@@ -701,12 +751,10 @@
 
     function openPromptModal(fileId) {
         const modal = document.getElementById('promptModal');
-        const title = document.getElementById('promptModalTitle');
         const content = document.getElementById('promptModalContent');
-        const typeBadge = document.getElementById('promptTypeBadge');
         
         modal.style.display = 'flex';
-        content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching forensic payload...</div>';
+        content.innerHTML = '<div class="fi-empty">Fetching forensic payload...</div>';
         
         fetch(`/files/prompt/${fileId}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -714,31 +762,19 @@
         .then(r => r.json())
         .then(resp => {
             if (resp.success) {
-                title.innerText = resp.title;
-                typeBadge.innerText = resp.type.toUpperCase();
-                typeBadge.style.background = resp.type === 'prompt' ? 'var(--info-light)' : 'var(--bg-deep)';
-                typeBadge.style.color = resp.type === 'prompt' ? 'var(--info)' : 'var(--text-muted)';
-                
-                // Formatted output
-                const displayData = typeof resp.data === 'string' ? resp.data : JSON.stringify(resp.data, null, 2);
-                content.innerHTML = `<pre style="margin: 0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 13px; color: #e5e7eb; line-height: 1.6; white-space: pre-wrap; word-break: break-all;">${displayData}</pre>`;
+                renderForensicInspector(resp.data, resp.title, resp.type.toUpperCase());
             } else {
                 content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load diagnostic data.'}</div>`;
             }
-        })
-        .catch(err => {
-            content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
         });
     }
 
     function openScanPromptModal(jobId) {
         const modal = document.getElementById('promptModal');
-        const title = document.getElementById('promptModalTitle');
         const content = document.getElementById('promptModalContent');
-        const typeBadge = document.getElementById('promptTypeBadge');
         
         modal.style.display = 'flex';
-        content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching full AI context trace...</div>';
+        content.innerHTML = '<div class="fi-empty">Fetching full AI context trace...</div>';
         
         fetch(`/scans/prompt/${jobId}`, {
             headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -746,39 +782,162 @@
         .then(r => r.json())
         .then(resp => {
             if (resp.success) {
-                title.innerText = resp.title;
-                typeBadge.innerText = 'AI TRACE';
-                typeBadge.style.background = 'var(--primary)';
-                typeBadge.style.color = '#fff';
-                
-                // Formatted output - split into SYSTEM and USER prompts if possible for clarity
-                let data = resp.data;
-                if (typeof data === 'string' && data.includes('USER PROMPT:')) {
-                    const parts = data.split('USER PROMPT:');
-                    data = `<div style="margin-bottom: 24px;">
-                                <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">System Context & Forensic Rules</div>
-                                <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #9cdcfe; font-size: 12px;">${parts[0].replace('SYSTEM PROMPT:', '').trim()}</pre>
-                            </div>
-                            <div>
-                                <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">User Data & Telemetry Payload</div>
-                                <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #ce9178; font-size: 12px;">${parts[1].trim()}</pre>
-                            </div>`;
-                } else {
-                    data = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e5e7eb; white-space: pre-wrap;">${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>`;
-                }
-                
-                content.innerHTML = data;
+                renderForensicInspector(resp.data, resp.title, 'AI TRACE');
             } else {
                 content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load AI trace.'}</div>`;
             }
-        })
-        .catch(err => {
-            content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
         });
+    }
+
+    function renderForensicInspector(rawData, title, badgeText) {
+        const modalTitle = document.getElementById('promptModalTitle');
+        const typeBadge = document.getElementById('promptTypeBadge');
+        const content = document.getElementById('promptModalContent');
+        
+        modalTitle.innerText = title;
+        typeBadge.innerText = badgeText;
+        typeBadge.style.background = badgeText === 'AI TRACE' ? 'var(--primary)' : 'var(--info-light)';
+        
+        const parsed = parseForensicPrompt(rawData);
+        
+        let sidebarHtml = '';
+        let mainHtml = '<div id="fi-payload-view" class="fi-tab-content">';
+        
+        // 1. Data Sets
+        parsed.data_sets.forEach((set, idx) => {
+            const setId = `dataset-${idx}`;
+            sidebarHtml += `<div class="fi-nav-item" onclick="scrollToFiSection('${setId}')">Data Set ${idx + 1}</div>`;
+            
+            mainHtml += `<div id="${setId}" class="fi-section">
+                <div class="fi-section-header">
+                    <span style="font-size: 20px;">📦</span>
+                    <span class="fi-section-title">Data Set ${idx + 1}: Diagnostic Payload</span>
+                </div>`;
+            
+            if (set.identity) {
+                mainHtml += `<div class="fi-card fi-identity-grid">
+                    <div><div class="fi-card-label">Forensic Identity</div><div class="fi-card-value">${set.identity}</div></div>
+                </div>`;
+            }
+            
+            set.sections.forEach((sec, sidx) => {
+                const secId = `${setId}-sec-${sidx}`;
+                sidebarHtml += `<div class="fi-nav-item" style="padding-left: 40px; font-weight: 500; font-size: 10px;" onclick="scrollToFiSection('${secId}')">${sec.title}</div>`;
+                
+                mainHtml += `<div id="${secId}" style="margin-top: 24px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #3b82f6; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>${sec.is_json ? '📊' : '📄'}</span> ${sec.title}
+                    </div>
+                    <pre class="fi-pre">${sec.content.trim()}</pre>
+                </div>`;
+            });
+            
+            mainHtml += `</div>`;
+        });
+        
+        mainHtml += '</div>';
+        
+        // 2. System Prompt View (hidden by default)
+        mainHtml += `<div id="fi-system-view" class="fi-tab-content" style="display: none;">
+            <div class="fi-section">
+                <div class="fi-section-header">
+                    <span style="font-size: 20px;">⚙️</span>
+                    <span class="fi-section-title">System Context & Forensic Rules</span>
+                </div>
+                <pre class="fi-pre" style="color: #9cdcfe;">${parsed.system_prompt || 'No system instructions provided.'}</pre>
+            </div>
+        </div>`;
+
+        // Assemble Final UI
+        content.innerHTML = `
+            <div class="fi-container">
+                <div class="fi-sidebar">
+                    <div style="padding: 16px 24px; font-size: 10px; font-weight: 800; color: #4b5563; text-transform: uppercase;">Navigation</div>
+                    ${sidebarHtml}
+                </div>
+                <div class="fi-main">
+                    ${mainHtml}
+                </div>
+            </div>
+        `;
+
+        // Add Tab Switcher to header (if not already there)
+        const header = modalTitle.parentElement.parentElement;
+        if (!header.querySelector('.fi-tabs')) {
+            const tabs = document.createElement('div');
+            tabs.className = 'fi-tabs';
+            tabs.innerHTML = `
+                <div class="fi-tab active" onclick="switchFiTab('payload', this)">Payload Explorer</div>
+                <div class="fi-tab" onclick="switchFiTab('system', this)">System Prompt</div>
+            `;
+            modalTitle.parentElement.after(tabs);
+        }
+    }
+
+    function parseForensicPrompt(data) {
+        const result = { system_prompt: '', data_sets: [] };
+        if (typeof data !== 'string') return result;
+
+        // Split System/User
+        const promptParts = data.split('USER PROMPT:');
+        result.system_prompt = promptParts[0].replace('SYSTEM PROMPT:', '').trim();
+        
+        const userContent = promptParts[1] || '';
+        if (!userContent) return result;
+
+        // Split into Data Sets
+        const sets = userContent.split('### DATA SET').filter(s => s.trim());
+        
+        sets.forEach(setStr => {
+            const lines = setStr.split("\n");
+            const setObj = { identity: '', sections: [] };
+            
+            let currentSection = null;
+            
+            lines.forEach(line => {
+                if (line.startsWith('- Device Identity:')) {
+                    setObj.identity = line.replace('- Device Identity:', '').trim();
+                } else if (line.startsWith('####')) {
+                    if (currentSection) setObj.sections.push(currentSection);
+                    currentSection = { title: line.replace('####', '').trim(), content: '', is_json: false };
+                } else if (currentSection) {
+                    currentSection.content += line + "\n";
+                    if (line.startsWith('{') || line.startsWith('[')) currentSection.is_json = true;
+                }
+            });
+            if (currentSection) setObj.sections.push(currentSection);
+            result.data_sets.push(setObj);
+        });
+
+        return result;
+    }
+
+    function switchFiTab(type, el) {
+        document.querySelectorAll('.fi-tab').forEach(t => t.classList.remove('active'));
+        el.classList.add('active');
+        
+        if (type === 'payload') {
+            document.getElementById('fi-payload-view').style.display = 'block';
+            document.getElementById('fi-system-view').style.display = 'none';
+        } else {
+            document.getElementById('fi-payload-view').style.display = 'none';
+            document.getElementById('fi-system-view').style.display = 'block';
+        }
+    }
+
+    function scrollToFiSection(id) {
+        const el = document.getElementById(id);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth' });
+            document.querySelectorAll('.fi-nav-item').forEach(i => i.classList.remove('active'));
+            event.target.classList.add('active');
+        }
     }
 
     function closePromptModal() {
         document.getElementById('promptModal').style.display = 'none';
+        const tabSwitcher = document.querySelector('.fi-tabs');
+        if (tabSwitcher) tabSwitcher.remove();
     }
 </script>
 
@@ -829,22 +988,22 @@
 
     <!-- Styled Prompt Modal -->
     <div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-        <div style="background: #1a1b1e; width: 90%; max-width: 900px; height: 80vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="background: #1a1b1e; width: 95%; max-width: 1200px; height: 90vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
             <div style="padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: #232429;">
                 <div style="display: flex; align-items: center; gap: 16px;">
-                    <h3 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Forensic Data View</h3>
-                    <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px;">IDLE</span>
+                    <h1 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Forensic Data View</h1>
+                    <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 4px;">IDLE</span>
                 </div>
                 <button onclick="closePromptModal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">&times;</button>
             </div>
             
-            <div id="promptModalContent" style="flex-grow: 1; padding: 32px; overflow-y: auto; background: #0f1012;">
+            <div id="promptModalContent" style="flex-grow: 1; overflow: hidden; background: #0f1012; display: flex; flex-direction: column;">
                 <!-- Content will be injected here -->
             </div>
             
             <div style="padding: 16px 32px; border-top: 1px solid rgba(255,255,255,0.05); background: #232429; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 12px; color: #6b7280; font-family: monospace;">Secured Forensic Partition | read-only node</span>
-                <button onclick="closePromptModal()" class="btn" style="width: auto; padding: 10px 24px; background: var(--primary); color: #fff; border: none; font-weight: 700; border-radius: 8px;">Close Inspector</button>
+                <span style="font-size: 12px; color: #6b7280; font-family: monospace;">Secured Forensic Partition | Read-Only Audit Node</span>
+                <button onclick="closePromptModal()" class="btn" style="width: auto; padding: 10px 24px; background: var(--primary); color: #fff; border: none; font-weight: 700; border-radius: 8px;">Dismiss Inspector</button>
             </div>
         </div>
     </div>
