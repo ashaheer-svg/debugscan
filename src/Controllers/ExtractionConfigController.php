@@ -24,24 +24,30 @@ class ExtractionConfigController
 
     public function showPage(Request $request, Response $response): Response
     {
-        $config = $this->configService->getConfig();
+        $allConfig = $this->configService->getConfig(); // ['level1' => [...], 'level2' => [...]]
 
-        // Group sections for the template
+        // Group by section group name, with both level configs side by side
         $groups = [];
-        foreach ($config as $key => $section) {
-            $groups[$section['group']][$key] = $section;
+        foreach ($allConfig['level1'] as $key => $section) {
+            $groups[$section['group']][$key] = [
+                'meta'   => $section, // base metadata
+                'level1' => $section,
+                'level2' => $allConfig['level2'][$key],
+            ];
         }
 
-        // Count active sections for summary bar
-        $activeCount = count(array_filter($config, fn($s) => $s['is_enabled']));
-        $totalCount  = count($config);
+        // Per-level active counts for summary bar
+        $l1Active = count(array_filter($allConfig['level1'], fn($s) => $s['is_enabled']));
+        $l2Active = count(array_filter($allConfig['level2'], fn($s) => $s['is_enabled']));
+        $total    = count($allConfig['level1']);
 
         $body = $this->view->render('admin/extraction_config.twig', [
-            'groups'        => $groups,
-            'active_count'  => $activeCount,
-            'total_count'   => $totalCount,
-            'status'        => $request->getQueryParams()['status'] ?? null,
-            'active_page'   => 'admin_extraction',
+            'groups'     => $groups,
+            'l1_active'  => $l1Active,
+            'l2_active'  => $l2Active,
+            'total'      => $total,
+            'status'     => $request->getQueryParams()['status'] ?? null,
+            'active_page'=> 'admin_extraction',
         ]);
         $response->getBody()->write($body);
         return $response;

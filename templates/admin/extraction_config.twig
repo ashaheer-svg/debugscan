@@ -6,373 +6,370 @@
     {{ parent() }}
     <style>
         /* ============================================================
-           ADVANCED EXTRACTION CONFIGURATION PAGE STYLES
+           ADVANCED EXTRACTION CONFIGURATION PAGE — DUAL LEVEL LAYOUT
         ============================================================ */
-        .ec-page-header {
-            margin-bottom: 32px;
-        }
+        .ec-page-header { margin-bottom: 28px; }
+
+        /* Summary Bar */
         .ec-summary-bar {
             display: flex;
             align-items: center;
-            gap: 24px;
+            gap: 0;
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius);
-            padding: 16px 24px;
+            overflow: hidden;
             margin-bottom: 32px;
             box-shadow: var(--shadow-1);
         }
-        .ec-summary-stat {
+        .ec-summary-segment {
+            flex: 1;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            gap: 2px;
+            gap: 14px;
+            padding: 16px 24px;
+            border-right: 1px solid var(--border);
         }
-        .ec-summary-stat .value {
-            font-size: 22px;
-            font-weight: 800;
-            color: var(--primary);
+        .ec-summary-segment:last-child { border-right: none; flex: 0 0 auto; }
+        .ec-level-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
         }
-        .ec-summary-stat .label {
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            letter-spacing: 0.04em;
-        }
-        .ec-summary-divider {
-            width: 1px;
-            height: 40px;
-            background: var(--border);
-        }
-        .ec-l1-badge {
+        .ec-level-dot.l1 { background: #667eea; }
+        .ec-level-dot.l2 { background: #10b981; }
+        .ec-summary-text { display: flex; flex-direction: column; gap: 1px; }
+        .ec-summary-count { font-size: 20px; font-weight: 800; color: var(--text-primary); }
+        .ec-summary-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
+        .ec-badge-note {
             margin-left: auto;
+            padding: 8px 18px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
             font-size: 11px;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
+            border-radius: 20px;
         }
 
-        .ec-group {
-            margin-bottom: 48px;
-        }
+        /* Group Headers */
+        .ec-group { margin-bottom: 44px; }
         .ec-group-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 16px;
+            margin-bottom: 0;
         }
         .ec-group-title {
-            font-size: 13px;
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.08em; color: var(--text-muted); white-space: nowrap;
+        }
+        .ec-group-line { flex: 1; height: 1px; background: var(--border); }
+
+        /* Column Header Row */
+        .ec-col-headers {
+            display: grid;
+            grid-template-columns: 1fr 220px 220px;
+            gap: 0;
+            padding: 8px 24px 8px;
+            margin-top: 12px;
+            margin-bottom: 4px;
+        }
+        .ec-col-header {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.08em;
-            color: var(--text-muted);
+            letter-spacing: 0.07em;
         }
-        .ec-group-line {
-            flex: 1;
-            height: 1px;
-            background: var(--border);
+        .ec-col-header.l1 { color: #667eea; }
+        .ec-col-header.l2 { color: #10b981; }
+        .ec-col-header-dot {
+            width: 8px; height: 8px; border-radius: 50;
         }
+        .ec-col-header.l1 .ec-col-header-dot { background: #667eea; border-radius: 50%; }
+        .ec-col-header.l2 .ec-col-header-dot { background: #10b981; border-radius: 50%; }
 
-        /* Section Cards */
+        /* Section Cards — main 3-column grid */
         .ec-card {
+            display: grid;
+            grid-template-columns: 1fr 220px 220px;
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius);
             box-shadow: var(--shadow-1);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
             overflow: hidden;
             transition: box-shadow 0.2s ease;
         }
         .ec-card:hover { box-shadow: var(--shadow-2); }
-        .ec-card.disabled { opacity: 0.6; }
-        .ec-card.always-on { border-left: 4px solid #10b981; }
+        .ec-card.always-on { border-left: 3px solid #10b981; }
 
-        .ec-card-body {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            align-items: center;
-            gap: 24px;
-            padding: 20px 24px;
+        /* Left: Info pane */
+        .ec-card-info {
+            padding: 18px 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            border-right: 1px solid var(--border);
         }
-        .ec-card-left { display: flex; flex-direction: column; gap: 8px; }
         .ec-card-title-row {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
-        .ec-card-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
-        }
+        .ec-card-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
         .ec-card-parser {
-            font-size: 11px;
-            color: var(--text-muted);
-            font-family: monospace;
-            background: var(--bg-light);
-            padding: 2px 6px;
-            border-radius: 4px;
+            font-size: 11px; color: var(--text-muted); font-family: monospace;
+            background: var(--bg-light); padding: 2px 6px; border-radius: 4px;
         }
-        .ec-description {
-            font-size: 13px;
-            color: var(--text-secondary);
-            line-height: 1.6;
-            max-width: 680px;
-        }
+        .ec-description { font-size: 12px; color: var(--text-secondary); line-height: 1.55; }
 
-        /* Impact Badges */
+        /* Impact badges */
         .ec-impact {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 3px 10px;
-            border-radius: 12px;
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 2px 8px; border-radius: 10px;
+            font-size: 10px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
         }
-        .ec-impact.HIGH  { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
+        .ec-impact.HIGH   { background: #fef2f2; color: #dc2626; border: 1px solid #fca5a5; }
         .ec-impact.MEDIUM { background: #fffbeb; color: #d97706; border: 1px solid #fcd34d; }
-        .ec-impact.LOW   { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .ec-impact.LOW    { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
+        .ec-always-label  { font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.04em; }
 
-        .ec-always-on-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #10b981;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-
-        /* Right Controls Column */
-        .ec-card-right {
+        /* Level control columns */
+        .ec-level-col {
+            padding: 18px 20px;
             display: flex;
             flex-direction: column;
-            align-items: flex-end;
-            gap: 12px;
-            min-width: 180px;
+            align-items: flex-start;
+            gap: 10px;
+            border-right: 1px solid var(--border);
         }
+        .ec-level-col:last-child { border-right: none; }
+        .ec-level-col.l2 { background: #fafffe; }
+        .ec-level-col.disabled-col { opacity: 0.55; }
 
         /* Toggle Switch */
-        .ec-toggle-wrapper {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .ec-toggle-label {
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-secondary);
-        }
+        .ec-toggle-row { display: flex; align-items: center; gap: 9px; }
+        .ec-toggle-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); min-width: 56px; }
         .toggle-switch {
-            position: relative;
-            width: 48px;
-            height: 26px;
-            flex-shrink: 0;
+            position: relative; width: 44px; height: 24px; flex-shrink: 0;
         }
         .toggle-switch input { opacity: 0; width: 0; height: 0; }
         .toggle-slider {
-            position: absolute;
-            cursor: pointer;
-            inset: 0;
-            background: #d1d5db;
-            border-radius: 26px;
-            transition: background 0.25s ease;
+            position: absolute; cursor: pointer; inset: 0;
+            background: #d1d5db; border-radius: 24px; transition: background 0.22s ease;
         }
         .toggle-slider:before {
-            content: '';
-            position: absolute;
-            height: 20px;
-            width: 20px;
-            left: 3px;
-            bottom: 3px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.25s ease;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            content: ''; position: absolute; height: 18px; width: 18px;
+            left: 3px; bottom: 3px; background: white; border-radius: 50%;
+            transition: transform 0.22s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
-        .toggle-switch input:checked + .toggle-slider { background: var(--primary); }
-        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(22px); }
-        .toggle-switch input:disabled + .toggle-slider { cursor: not-allowed; }
-        .toggle-switch input:disabled:checked + .toggle-slider { background: #10b981; }
+        .toggle-switch input:checked + .toggle-slider { background: #667eea; }
+        .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
+        .toggle-switch.l2 input:checked + .toggle-slider { background: #10b981; }
+        .toggle-switch input:disabled + .toggle-slider { cursor: not-allowed; opacity: 0.7; }
 
         /* Limit Input */
         .ec-limit-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: opacity 0.2s ease;
+            display: flex; align-items: center; gap: 7px; transition: opacity 0.2s;
         }
-        .ec-limit-row.hidden { opacity: 0.3; pointer-events: none; }
+        .ec-limit-row.hidden { opacity: 0.25; pointer-events: none; }
         .ec-limit-label {
-            font-size: 11px;
-            font-weight: 600;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            white-space: nowrap;
+            font-size: 10px; font-weight: 600; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
         }
         .ec-limit-input {
-            width: 80px;
-            padding: 5px 8px;
-            border: 1px solid var(--border);
-            border-radius: var(--radius-sm);
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            background: var(--bg-light);
-            text-align: center;
+            width: 72px; padding: 4px 8px; border: 1px solid var(--border);
+            border-radius: var(--radius-sm); font-size: 13px; font-weight: 600;
+            color: var(--text-primary); background: var(--bg-light); text-align: center;
             transition: border-color 0.2s;
         }
-        .ec-limit-input:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: white;
-        }
+        .ec-limit-input:focus { outline: none; border-color: var(--primary); background: white; }
 
-        /* Save Bar */
+        /* Sticky Save Bar */
         .ec-save-bar {
-            position: sticky;
-            bottom: 0;
-            background: white;
-            border-top: 1px solid var(--border);
-            padding: 16px 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            position: sticky; bottom: 0;
+            background: white; border-top: 1px solid var(--border);
+            padding: 14px 24px;
+            display: flex; align-items: center; justify-content: space-between;
             box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
             z-index: 100;
             margin: 0 -32px -32px;
         }
-        .ec-save-status {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-        .ec-save-status.saved { color: #10b981; }
+        .ec-save-note { font-size: 13px; font-weight: 600; color: var(--text-muted); }
+        .ec-save-note.saved { color: #10b981; }
 
-        /* Flash messages */
         .flash-success {
-            background: #f0fdf4;
-            border: 1px solid #86efac;
-            color: #15803d;
-            padding: 12px 16px;
-            border-radius: var(--radius);
-            font-weight: 600;
-            margin-bottom: 24px;
+            background: #f0fdf4; border: 1px solid #86efac; color: #15803d;
+            padding: 12px 16px; border-radius: var(--radius);
+            font-weight: 600; margin-bottom: 20px;
         }
     </style>
 {% endblock %}
 
 {% block admin_content %}
 <header class="ec-page-header">
-    <h1 class="page-title" style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">Advanced Extraction Configuration</h1>
-    <p style="color: var(--text-muted); font-size: 14px; font-weight: 500;">Control exactly which data sections are extracted and sent to the AI during a Level 1 scan. Disable unused sections and reduce row limits to minimize token usage.</p>
+    <h1 style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">Advanced Extraction Configuration</h1>
+    <p style="color: var(--text-muted); font-size: 13px; font-weight: 500;">
+        Configure exactly which data is extracted and sent to the AI for each scan level.
+        Toggle sections on/off and set row limits to control token usage.
+    </p>
 </header>
 
 {% if status == 'saved' %}
-<div class="flash-success">
-    ✓ Extraction configuration saved. New settings will apply to all subsequent L1 scans.
-</div>
+<div class="flash-success">✓ Extraction configuration saved. New settings apply to subsequent scans.</div>
 {% endif %}
 
 {# Summary Bar #}
 <div class="ec-summary-bar">
-    <div class="ec-summary-stat">
-        <span class="value">{{ active_count }}</span>
-        <span class="label">Active Sections</span>
+    <div class="ec-summary-segment">
+        <div class="ec-level-dot l1"></div>
+        <div class="ec-summary-text">
+            <span class="ec-summary-count">{{ l1_active }}/{{ total }}</span>
+            <span class="ec-summary-label">L1 Sections Active</span>
+        </div>
     </div>
-    <div class="ec-summary-divider"></div>
-    <div class="ec-summary-stat">
-        <span class="value">{{ total_count - active_count }}</span>
-        <span class="label">Disabled Sections</span>
+    <div class="ec-summary-segment">
+        <div class="ec-level-dot l2"></div>
+        <div class="ec-summary-text">
+            <span class="ec-summary-count">{{ l2_active }}/{{ total }}</span>
+            <span class="ec-summary-label">L2 Sections Active</span>
+        </div>
     </div>
-    <div class="ec-summary-divider"></div>
-    <div class="ec-summary-stat">
-        <span class="value">{{ total_count }}</span>
-        <span class="label">Total Sections</span>
+    <div class="ec-summary-segment" style="flex: 0 0 auto; border-right: none;">
+        <span class="ec-badge-note">⚡ Applies to All Scan Levels</span>
     </div>
-    <span class="ec-l1-badge">⚡ Level 1 Scans Only</span>
 </div>
 
 <form id="ecForm" action="/admin/extraction-config/save" method="POST">
     {% for group_name, sections in groups %}
     <div class="ec-group">
+
+        {# Group Header #}
         <div class="ec-group-header">
             <span class="ec-group-title">
-                {% if group_name == 'Core Identity' %}🔐{% elseif group_name == 'Storage Subsystem' %}💾{% elseif group_name == 'System Health' %}📊{% else %}🗄{% endif %}
+                {% if group_name == 'Core Identity' %}🔐
+                {% elseif group_name == 'Storage Subsystem' %}💾
+                {% elseif group_name == 'System Health' %}📊
+                {% else %}🗄{% endif %}
                 {{ group_name }}
             </span>
             <div class="ec-group-line"></div>
         </div>
 
-        {% for key, section in sections %}
-        <div class="ec-card {% if not section.is_enabled %}disabled{% endif %} {% if section.always_on %}always-on{% endif %}" id="card-{{ key }}">
-            <div class="ec-card-body">
-                {# Left: Info #}
-                <div class="ec-card-left">
-                    <div class="ec-card-title-row">
-                        <span class="ec-card-title">{{ section.label }}</span>
-                        <span class="ec-card-parser">{{ section.parser }}</span>
-                        <span class="ec-impact {{ section.impact }}">
-                            {% if section.impact == 'HIGH' %}🔴{% elseif section.impact == 'MEDIUM' %}🟡{% else %}🟢{% endif %}
-                            {{ section.impact }} Impact
-                        </span>
-                        {% if section.always_on %}
-                            <span class="ec-always-on-label">🔒 Always On</span>
-                        {% endif %}
-                    </div>
-                    <p class="ec-description">{{ section.description }}</p>
-                </div>
-
-                {# Right: Controls #}
-                <div class="ec-card-right">
-                    {% if section.always_on %}
-                        {# Locked toggle — always enabled #}
-                        <div class="ec-toggle-wrapper">
-                            <span class="ec-toggle-label">Always Enabled</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox" checked disabled>
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                        <input type="hidden" name="sections[{{ key }}][enabled]" value="1">
-                    {% else %}
-                        <div class="ec-toggle-wrapper">
-                            <span class="ec-toggle-label" id="lbl-{{ key }}">{{ section.is_enabled ? 'Enabled' : 'Disabled' }}</span>
-                            <label class="toggle-switch">
-                                <input type="checkbox"
-                                       name="sections[{{ key }}][enabled]"
-                                       value="1"
-                                       id="toggle-{{ key }}"
-                                       {% if section.is_enabled %}checked{% endif %}
-                                       onchange="handleToggle('{{ key }}', this.checked)">
-                                <span class="toggle-slider"></span>
-                            </label>
-                        </div>
-                    {% endif %}
-
-                    {% if section.has_limit %}
-                    <div class="ec-limit-row {% if not section.is_enabled and not section.always_on %}hidden{% endif %}" id="limit-row-{{ key }}">
-                        <span class="ec-limit-label">{{ section.limit_label }}</span>
-                        <input type="number"
-                               class="ec-limit-input"
-                               name="sections[{{ key }}][max_rows]"
-                               value="{{ section.max_rows ?? '' }}"
-                               min="1"
-                               max="10000"
-                               placeholder="∞">
-                    </div>
-                    {% endif %}
-                </div>
+        {# Column headers (only render once, before first group's cards) #}
+        <div class="ec-col-headers">
+            <div></div>
+            <div class="ec-col-header l1">
+                <span class="ec-col-header-dot"></span>
+                ⚡ L1 Scan
             </div>
+            <div class="ec-col-header l2">
+                <span class="ec-col-header-dot"></span>
+                🔬 L2 Deep Forensic
+            </div>
+        </div>
+
+        {% for key, row in sections %}
+        {% set meta = row.meta %}
+        {% set l1   = row.level1 %}
+        {% set l2   = row.level2 %}
+
+        <div class="ec-card {% if meta.always_on %}always-on{% endif %}" id="card-{{ key }}">
+
+            {# Left: Info #}
+            <div class="ec-card-info">
+                <div class="ec-card-title-row">
+                    <span class="ec-card-title">{{ meta.label }}</span>
+                    <span class="ec-card-parser">{{ meta.parser }}</span>
+                    <span class="ec-impact {{ meta.impact }}">
+                        {% if meta.impact == 'HIGH' %}🔴{% elseif meta.impact == 'MEDIUM' %}🟡{% else %}🟢{% endif %}
+                        {{ meta.impact }}
+                    </span>
+                    {% if meta.always_on %}
+                        <span class="ec-always-label">🔒 Always On</span>
+                    {% endif %}
+                </div>
+                <p class="ec-description">{{ meta.description }}</p>
+            </div>
+
+            {# L1 Controls #}
+            <div class="ec-level-col {% if not l1.is_enabled %}disabled-col{% endif %}" id="col-l1-{{ key }}">
+                {% if meta.always_on %}
+                    <div class="ec-toggle-row">
+                        <span class="ec-toggle-label" style="color:#10b981;">Always On</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <input type="hidden" name="sections[level1][{{ key }}][enabled]" value="1">
+                {% else %}
+                    <div class="ec-toggle-row">
+                        <span class="ec-toggle-label" id="lbl-l1-{{ key }}">{{ l1.is_enabled ? 'Enabled' : 'Disabled' }}</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox"
+                                   name="sections[level1][{{ key }}][enabled]"
+                                   value="1"
+                                   {% if l1.is_enabled %}checked{% endif %}
+                                   onchange="handleToggle('l1', '{{ key }}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                {% endif %}
+
+                {% if meta.has_limit %}
+                <div class="ec-limit-row {% if not l1.is_enabled and not meta.always_on %}hidden{% endif %}" id="limit-l1-{{ key }}">
+                    <span class="ec-limit-label">{{ meta.limit_label }}</span>
+                    <input type="number"
+                           class="ec-limit-input"
+                           name="sections[level1][{{ key }}][max_rows]"
+                           value="{{ l1.max_rows ?? '' }}"
+                           min="1" max="10000" placeholder="∞">
+                </div>
+                {% endif %}
+            </div>
+
+            {# L2 Controls #}
+            <div class="ec-level-col l2 {% if not l2.is_enabled %}disabled-col{% endif %}" id="col-l2-{{ key }}">
+                {% if meta.always_on %}
+                    <div class="ec-toggle-row">
+                        <span class="ec-toggle-label" style="color:#10b981;">Always On</span>
+                        <label class="toggle-switch l2">
+                            <input type="checkbox" checked disabled>
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                    <input type="hidden" name="sections[level2][{{ key }}][enabled]" value="1">
+                {% else %}
+                    <div class="ec-toggle-row">
+                        <span class="ec-toggle-label" id="lbl-l2-{{ key }}">{{ l2.is_enabled ? 'Enabled' : 'Disabled' }}</span>
+                        <label class="toggle-switch l2">
+                            <input type="checkbox"
+                                   name="sections[level2][{{ key }}][enabled]"
+                                   value="1"
+                                   {% if l2.is_enabled %}checked{% endif %}
+                                   onchange="handleToggle('l2', '{{ key }}', this.checked)">
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+                {% endif %}
+
+                {% if meta.has_limit %}
+                <div class="ec-limit-row {% if not l2.is_enabled and not meta.always_on %}hidden{% endif %}" id="limit-l2-{{ key }}">
+                    <span class="ec-limit-label">{{ meta.limit_label }}</span>
+                    <input type="number"
+                           class="ec-limit-input"
+                           name="sections[level2][{{ key }}][max_rows]"
+                           value="{{ l2.max_rows ?? '' }}"
+                           min="1" max="10000" placeholder="∞">
+                </div>
+                {% endif %}
+            </div>
+
         </div>
         {% endfor %}
     </div>
@@ -380,27 +377,28 @@
 
     {# Sticky Save Bar #}
     <div class="ec-save-bar">
-        <span class="ec-save-status {% if status == 'saved' %}saved{% endif %}">
-            {% if status == 'saved' %}✓ Settings saved successfully{% else %}Changes will apply to next L1 scan{% endif %}
+        <span class="ec-save-note {% if status == 'saved' %}saved{% endif %}">
+            {% if status == 'saved' %}✓ Configuration saved successfully
+            {% else %}Changes will apply to subsequent scans{% endif %}
         </span>
         <button type="submit" class="btn btn-primary" style="padding: 10px 40px; font-weight: 700;">
-            Save Extraction Configuration
+            Save All Extraction Settings
         </button>
     </div>
 </form>
 
 <script>
-function handleToggle(key, enabled) {
-    const card     = document.getElementById('card-' + key);
-    const label    = document.getElementById('lbl-' + key);
-    const limitRow = document.getElementById('limit-row-' + key);
+function handleToggle(level, key, enabled) {
+    const col      = document.getElementById('col-' + level + '-' + key);
+    const label    = document.getElementById('lbl-' + level + '-' + key);
+    const limitRow = document.getElementById('limit-' + level + '-' + key);
 
     if (enabled) {
-        card.classList.remove('disabled');
+        col.classList.remove('disabled-col');
         label.textContent = 'Enabled';
         if (limitRow) limitRow.classList.remove('hidden');
     } else {
-        card.classList.add('disabled');
+        col.classList.add('disabled-col');
         label.textContent = 'Disabled';
         if (limitRow) limitRow.classList.add('hidden');
     }

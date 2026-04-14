@@ -191,33 +191,42 @@ class ExtractionConfigService
      * Load all extraction config rows from DB and merge with metadata.
      * Returns a keyed array: section_key => [metadata + db values]
      */
+    /**
+     * Load all extraction config rows from DB and merge with metadata.
+     * Returns: ['level1' => [key => section], 'level2' => [key => section]]
+     */
     public function getConfig(): array
     {
-        $stmt = $this->pdo->query("SELECT section_key, is_enabled, max_rows, updated_at FROM extraction_config ORDER BY section_key");
+        $stmt = $this->pdo->query("SELECT section_key, scan_level, is_enabled, max_rows, updated_at FROM extraction_config ORDER BY section_key, scan_level");
         $dbRows = [];
         foreach ($stmt->fetchAll() as $row) {
-            $dbRows[$row['section_key']] = $row;
+            $dbRows[$row['scan_level']][$row['section_key']] = $row;
         }
 
-        $result = [];
-        foreach (self::SECTION_METADATA as $key => $meta) {
-            $db = $dbRows[$key] ?? [];
-            $result[$key] = array_merge($meta, [
-                'section_key' => $key,
-                'is_enabled'  => isset($db['is_enabled']) ? (bool)$db['is_enabled'] : true,
-                'max_rows'    => $db['max_rows'] ?? null,
-                'updated_at'  => $db['updated_at'] ?? null,
-            ]);
+        $result = ['level1' => [], 'level2' => []];
+        foreach (['level1', 'level2'] as $level) {
+            foreach (self::SECTION_METADATA as $key => $meta) {
+                $db = $dbRows[$level][$key] ?? [];
+                $result[$level][$key] = array_merge($meta, [
+                    'section_key' => $key,
+                    'scan_level'  => $level,
+                    'is_enabled'  => isset($db['is_enabled']) ? (bool)$db['is_enabled'] : true,
+                    'max_rows'    => $db['max_rows'] ?? null,
+                    'updated_at'  => $db['updated_at'] ?? null,
+                ]);
+            }
         }
         return $result;
     }
 
     /**
      * Returns only the runtime config (key => [is_enabled, max_rows]) for the scanner.
+     * @param string $level 'level1' or 'level2'
      */
-    public function getRuntimeConfig(): array
+    public function getRuntimeConfig(string $level = 'level1'): array
     {
-        $stmt = $this->pdo->query("SELECT section_key, is_enabled, max_rows FROM extraction_config");
+        $stmt = $this->pdo->prepare("SELECT section_key, is_enabled, max_rows FROM extraction_config WHERE scan_level = :level");
+        $stmt->execute(['level' => $level]);
         $config = [];
         foreach ($stmt->fetchAll() as $row) {
             $config[$row['section_key']] = [
@@ -229,40 +238,44 @@ class ExtractionConfigService
     }
 
     /**
-     * Save a single section's settings.
+     * Save a single section's settings for a specific scan level.
      */
-    public function saveSection(string $key, bool $enabled, ?int $maxRows): void
+    public function saveSection(string $key, string $level, bool $enabled, ?int $maxRows): void
     {
         $stmt = $this->pdo->prepare("
-            INSERT INTO extraction_config (section_key, is_enabled, max_rows, updated_at)
-            VALUES (:key, :enabled, :max_rows, NOW())
-            ON CONFLICT (section_key) DO UPDATE
+            INSERT INTO extraction_config (section_key, scan_level, is_enabled, max_rows, updated_at)
+            VALUES (:key, :level, :enabled, :max_rows, NOW())
+            ON CONFLICT (section_key, scan_level) DO UPDATE
                 SET is_enabled = EXCLUDED.is_enabled,
                     max_rows   = EXCLUDED.max_rows,
                     updated_at = NOW()
         ");
         $stmt->execute([
             'key'      => $key,
+            'level'    => $level,
             'enabled'  => $enabled ? 1 : 0,
             'max_rows' => $maxRows,
         ]);
     }
 
     /**
-     * Save all sections from a bulk POST payload.
-     * $data: ['section_key' => ['enabled' => bool, 'max_rows' => int|null], ...]
+     * Save all sections from a bulk POST payload for both scan levels.
+     * $data: ['level1' => [section_key => ['enabled' => '1', 'max_rows' => '75']], 'level2' => [...]]
      */
     public function saveAll(array $data): void
     {
-        foreach (self::SECTION_METADATA as $key => $meta) {
-            if ($meta['always_on']) continue; // Never override always-on sections
+        foreach (['level1', 'level2'] as $level) {
+            $levelData = $data[$level] ?? [];
+            foreach (self::SECTION_METADATA as $key => $meta) {
+                if ($meta['always_on']) continue; // Never override always-on sections
 
-            $enabled = isset($data[$key]['enabled']) && $data[$key]['enabled'] === '1';
-            $maxRows = null;
-            if ($meta['has_limit'] && isset($data[$key]['max_rows']) && is_numeric($data[$key]['max_rows'])) {
-                $maxRows = max(1, (int)$data[$key]['max_rows']);
+                $enabled = isset($levelData[$key]['enabled']) && $levelData[$key]['enabled'] === '1';
+                $maxRows = null;
+                if ($meta['has_limit'] && isset($levelData[$key]['max_rows']) && is_numeric($levelData[$key]['max_rows'])) {
+                    $maxRows = max(1, (int)$levelData[$key]['max_rows']);
+                }
+                $this->saveSection($key, $level, $enabled, $maxRows);
             }
-            $this->saveSection($key, $enabled, $maxRows);
         }
     }
 }

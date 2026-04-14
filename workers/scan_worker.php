@@ -128,8 +128,9 @@ while (true) {
 
         $addCheckpoint('system', 'Worker Active', 'success', ['pid' => getmypid()]);
 
-        // Load extraction config once per job (L1 only; L2 uses full pipeline)
-        $l1Config = ($job['scan_level'] === 'level1') ? $extractionConfig->getRuntimeConfig() : [];
+        // Load extraction config for this scan's level (L1 and L2 both have configurable sections now)
+        $scanLevel = $job['scan_level'] ?? 'level1';
+        $l1Config  = $extractionConfig->getRuntimeConfig($scanLevel);
 
         // Update function for progress percent + Technical Heartbeat
         $updateProgress = function($stage, $percent = null) use ($pdo, $job) {
