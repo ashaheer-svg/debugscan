@@ -387,6 +387,7 @@ class AdminController
                 auto_cancel_mins = :cancel_mins,
                 max_prompt_chars = :max_prompt_chars,
                 timezone = :timezone,
+                debug_mode = :debug_mode,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -400,6 +401,7 @@ class AdminController
             'cancel_mins' => (int)$data['auto_cancel_mins'],
             'max_prompt_chars' => (int)($data['max_prompt_chars'] ?? 50000),
             'timezone' => $data['timezone'] ?? 'UTC',
+            'debug_mode' => isset($data['debug_mode']) ? 'true' : 'false',
         ]);
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);

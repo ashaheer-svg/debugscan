@@ -112,8 +112,18 @@ class AppBootstrap
 
         $container = $containerBuilder->build();
         
+        $isDebugMode = (getenv('APP_DEBUG') ?: 'false') === 'true';
+
         // Global Timezone Synchronization
         try {
+            $pdo = $container->get(PDO::class);
+            $stmt = $pdo->query("SELECT timezone, debug_mode FROM system_settings LIMIT 1");
+            $sysSettings = $stmt->fetch();
+            
+            if ($sysSettings && isset($sysSettings['debug_mode']) && $sysSettings['debug_mode']) {
+                $isDebugMode = true;
+            }
+
             // Priority 1: Logged in User's Timezone
             $userTz = $_SESSION['timezone'] ?? null;
             
@@ -121,9 +131,7 @@ class AppBootstrap
                 date_default_timezone_set($userTz);
             } else {
                 // Priority 2: System Global Default
-                $pdo = $container->get(PDO::class);
-                $stmt = $pdo->query("SELECT timezone FROM system_settings LIMIT 1");
-                $tz = $stmt->fetchColumn();
+                $tz = $sysSettings['timezone'] ?? null;
                 if ($tz && in_array($tz, \DateTimeZone::listIdentifiers())) {
                     date_default_timezone_set($tz);
                 } else {
@@ -162,7 +170,7 @@ class AppBootstrap
         $app->addRoutingMiddleware();
         
         $app->addErrorMiddleware(
-            (getenv('APP_DEBUG') ?: 'false') === 'true',
+            $isDebugMode,
             true,
             true
         );
