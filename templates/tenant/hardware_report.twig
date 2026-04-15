@@ -994,7 +994,7 @@
                 <tbody>
                     {% set events = logs.critical_events %}
                     {# Handle if already flattened to markdown string #}
-                    {% if events is string %}
+                    {% if events is not iterable %}
                     <tr>
                         <td colspan="2" style="padding: 0;">
                             <pre class="hd-pre" style="margin: 0; border-radius: 0; border-left: none;">{{ events }}</pre>
