@@ -438,35 +438,34 @@
         {% endif %}
     </div>
 
-    {# Storage Utilisation (df) #}
+    {# Storage Utilisation (df) — DfResultParser: data.storage_util.filesystems is keyed by mountpoint #}
     <div class="hd-section">
         <div class="hd-section-title"><span class="hd-section-title-dot" style="background: #f59e0b;"></span> Storage Utilisation (Filesystem Usage)</div>
         {% set storUtil = data.storage_util %}
-        {% if storUtil and storUtil is not empty and storUtil.error is not defined %}
+        {% set fsList = storUtil.filesystems|default(null) %}
+        {% if fsList and fsList|length > 0 %}
         <div class="card" style="padding: 0; overflow: hidden;">
             <table class="hd-table">
                 <thead>
                     <tr>
-                        <th style="padding-left: 20px;">Filesystem</th>
+                        <th style="padding-left: 20px;">Device</th>
                         <th>Mount Point</th>
-                        <th>Size</th>
-                        <th>Used</th>
-                        <th>Available</th>
+                        <th>Total (GB)</th>
+                        <th>Used (GB)</th>
+                        <th>Available (GB)</th>
                         <th style="padding-right: 20px; text-align: right;">Usage</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% if storUtil is iterable %}
-                    {% for fs in storUtil %}
-                    {% if fs is not null and fs.filesystem is defined %}
+                    {% for mountpoint, fs in fsList %}
                     <tr>
-                        <td style="padding-left: 20px;" class="mono">{{ fs.filesystem|default('--') }}</td>
-                        <td class="mono">{{ fs.mount|default(fs.mounted_on|default('--')) }}</td>
-                        <td>{{ fs.size|default('--') }}</td>
-                        <td>{{ fs.used|default('--') }}</td>
-                        <td>{{ fs.available|default(fs.avail|default('--')) }}</td>
+                        <td style="padding-left: 20px;" class="mono">{{ fs.device|default('--') }}</td>
+                        <td class="mono">{{ mountpoint }}</td>
+                        <td>{{ fs.total_gb|default('--') }}</td>
+                        <td>{{ fs.used_gb|default('--') }}</td>
+                        <td style="color: {% if fs.health == 'critical' %}var(--danger){% elseif fs.health in ['warning','caution'] %}var(--warning){% else %}var(--success){% endif %}; font-weight: 700;">{{ fs.available_gb|default('--') }}</td>
                         <td style="padding-right: 20px; text-align: right;">
-                            {% set pct = fs.use_percent|default(fs.capacity|default(0))|replace({'%': ''})|trim %}
+                            {% set pct = fs.use_percent|default(0) %}
                             <div class="hd-bar-wrap" style="justify-content: flex-end;">
                                 <span style="font-weight: 700; font-size: 12px; color: {% if pct > 90 %}var(--danger){% elseif pct > 75 %}var(--warning){% else %}var(--success){% endif %};">{{ pct }}%</span>
                                 <div class="hd-bar">
@@ -475,9 +474,7 @@
                             </div>
                         </td>
                     </tr>
-                    {% endif %}
                     {% endfor %}
-                    {% endif %}
                 </tbody>
             </table>
         </div>
@@ -802,8 +799,9 @@
     {# System Load #}
     <div class="hd-section">
         <div class="hd-section-title"><span class="hd-section-title-dot"></span> System Load &amp; Process Activity</div>
+        {# TopResultParser keys: load_average{1min,5min,15min}, io_load, cpu_load, cpu_stats{user_percent,system_percent,iowait_percent,idle_percent}, processes{total,zombie}, memory #}
         {% set sysLoad = data.system_load %}
-        {% if sysLoad and sysLoad is not empty and sysLoad.error is not defined %}
+        {% if sysLoad and sysLoad.load_average is defined or sysLoad.cpu_stats is defined %}
         <div class="card" style="padding: 0; overflow: hidden; margin-bottom: 20px;">
             <table class="hd-table">
                 <thead>
@@ -813,145 +811,152 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% if sysLoad.load_avg is defined %}
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (1m)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_avg.1m|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (5m)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_avg.5m|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (15m)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_avg.15m|default('--') }}</td></tr>
-                    {% endif %}
-                    {% if sysLoad.tasks is defined %}
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Total Tasks</td><td style="text-align: right; padding-right: 20px;">{{ sysLoad.tasks.total|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Running</td><td style="text-align: right; padding-right: 20px;">{{ sysLoad.tasks.running|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Sleeping</td><td style="text-align: right; padding-right: 20px;">{{ sysLoad.tasks.sleeping|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Stopped</td><td style="text-align: right; padding-right: 20px;">{{ sysLoad.tasks.stopped|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Zombie</td>
+                    {% if sysLoad.load_average is defined and sysLoad.load_average %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (1 min)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_average['1min']|default('--') }}</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (5 min)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_average['5min']|default('--') }}</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Load Average (15 min)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.load_average['15min']|default('--') }}</td></tr>
+                    {% if sysLoad.load_average.overload_factor is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU Overload Factor</td>
                         <td style="text-align: right; padding-right: 20px;">
-                            <span style="color: {{ sysLoad.tasks.zombie > 0 ? 'var(--danger)' : 'inherit' }}; font-weight: {{ sysLoad.tasks.zombie > 0 ? '700' : '400' }};">
-                                {{ sysLoad.tasks.zombie|default(0) }}
-                            </span>
+                            <span style="font-weight: 700; color: {% if sysLoad.load_average.cpu_bound %}var(--danger){% else %}var(--success){% endif %};">{{ sysLoad.load_average.overload_factor }}x</span>
                         </td>
                     </tr>
                     {% endif %}
-                    {% if sysLoad.cpu is defined %}
-                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU User %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu.user|default('--') }}%</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU System %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu.system|default('--') }}%</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU Idle %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu.idle|default('--') }}%</td></tr>
+                    {% endif %}
+                    {% if sysLoad.processes is defined and sysLoad.processes %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Total Processes</td><td style="text-align: right; padding-right: 20px;">{{ sysLoad.processes.total|default('--') }}</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Zombie Processes</td>
+                        <td style="text-align: right; padding-right: 20px;">
+                            {% set zcount = sysLoad.processes.zombie|default(sysLoad.zombie_processes|default(0)) %}
+                            <span style="color: {% if zcount > 0 %}var(--danger){% else %}inherit{% endif %}; font-weight: {% if zcount > 0 %}700{% else %}400{% endif %};">{{ zcount }}</span>
+                        </td>
+                    </tr>
+                    {% if sysLoad.processes.zombie_warning is defined %}
+                    <tr><td colspan="2" style="padding: 10px 20px; font-size: 12px; color: var(--danger); font-style: italic;">{{ sysLoad.processes.zombie_warning }}</td></tr>
+                    {% endif %}
+                    {% endif %}
+                    {% if sysLoad.cpu_stats is defined and sysLoad.cpu_stats %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU User %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu_stats.user_percent|default('--') }}%</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU System %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu_stats.system_percent|default('--') }}%</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU Nice %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu_stats.nice_percent|default('--') }}%</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">CPU Idle %</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.cpu_stats.idle_percent|default('--') }}%</td></tr>
                     <tr><td style="padding-left: 20px; font-weight: 600;">CPU I/O Wait %</td>
                         <td style="text-align: right; padding-right: 20px;" class="mono">
-                            <span style="color: {{ sysLoad.cpu.iowait > 20 ? 'var(--danger)' : 'inherit' }}; font-weight: {{ sysLoad.cpu.iowait > 20 ? '700' : '400' }};">
-                                {{ sysLoad.cpu.iowait|default('--') }}%
-                            </span>
+                            {% set iow = sysLoad.cpu_stats.iowait_percent|default(0) %}
+                            <span style="color: {% if iow > 20 %}var(--danger){% elseif iow > 10 %}var(--warning){% else %}inherit{% endif %}; font-weight: {% if iow > 10 %}700{% else %}400{% endif %};">{{ iow }}%</span>
+                            {% if sysLoad.cpu_stats.iowait_severity is defined %}
+                            <span class="hd-badge {% if sysLoad.cpu_stats.iowait_severity == 'critical' %}hd-badge-crit{% elseif sysLoad.cpu_stats.iowait_severity == 'warning' %}hd-badge-warn{% else %}hd-badge-muted{% endif %}" style="margin-left: 8px;">{{ sysLoad.cpu_stats.iowait_severity }}</span>
+                            {% endif %}
                         </td>
                     </tr>
+                    {% if sysLoad.cpu_stats.io_bottleneck is defined and sysLoad.cpu_stats.io_bottleneck %}
+                    <tr><td colspan="2" style="padding: 10px 20px; background: var(--danger-light); color: var(--danger); font-size: 12px; font-weight: 700;">⚠ I/O bottleneck detected — CPU is spending excessive time waiting on storage I/O</td></tr>
+                    {% endif %}
+                    {% endif %}
+                    {% if sysLoad.memory is defined and sysLoad.memory %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Memory Total</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.memory.total_gb|default('--') }} GB</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Memory Free</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.memory.free_gb|default('--') }} GB</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Memory Used</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ sysLoad.memory.used_gb|default('--') }} GB</td></tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
-
-        {# Top Processes #}
-        {% if sysLoad.processes is defined and sysLoad.processes|length > 0 %}
-        <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.08em;">Top Processes by CPU</div>
-        <div class="card" style="padding: 0; overflow: hidden;">
-            <table class="hd-table">
-                <thead>
-                    <tr>
-                        <th style="padding-left: 20px;">PID</th>
-                        <th>User</th>
-                        <th>Command</th>
-                        <th>CPU %</th>
-                        <th style="padding-right: 20px; text-align: right;">MEM %</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for proc in sysLoad.processes|slice(0, 15) %}
-                    <tr>
-                        <td style="padding-left: 20px;" class="mono">{{ proc.pid|default('--') }}</td>
-                        <td class="mono">{{ proc.user|default('--') }}</td>
-                        <td class="mono" style="font-size: 12px;">{{ proc.command|default(proc.cmd|default('--')) }}</td>
-                        <td>
-                            <span style="font-weight: 700; color: {{ proc.cpu > 50 ? 'var(--danger)' : (proc.cpu > 20 ? 'var(--warning)' : 'inherit') }};">
-                                {{ proc.cpu|default(0) }}%
-                            </span>
-                        </td>
-                        <td style="padding-right: 20px; text-align: right;">{{ proc.mem|default(proc.memory|default('--')) }}%</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        {% endif %}
 
         {% else %}
             <div class="hd-empty"><div class="hd-empty-icon">📉</div>System load data (top) not captured in this extraction.</div>
         {% endif %}
     </div>
 
-    {# Memory Utilisation #}
+    {# Memory Utilisation — VmstatParser keys: meminfo{key:{kb,gb}}, vmstat{key:int}, memory_pressure, swap_usage{total_gb,free_gb,used_gb,percent_used}, oom_risk #}
     <div class="hd-section">
-        <div class="hd-section-title"><span class="hd-section-title-dot" style="background: #6366f1;"></span> Memory Utilisation (vmstat)</div>
+        <div class="hd-section-title"><span class="hd-section-title-dot" style="background: #6366f1;"></span> Memory &amp; Pressure Analysis (vmstat + meminfo)</div>
         {% set memUtil = data.memory_util %}
-        {% if memUtil and memUtil is not empty and memUtil.error is not defined %}
+        {% if memUtil and (memUtil.meminfo is defined or memUtil.memory_pressure is defined) %}
+
+        {# Memory Pressure Banner #}
+        {% if memUtil.memory_pressure is defined %}
+        <div style="display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-radius: var(--radius); margin-bottom: 16px;
+            background: {% if memUtil.memory_pressure == 'critical' %}var(--danger-light){% elseif memUtil.memory_pressure == 'warning' %}var(--warning-light){% else %}var(--success-light){% endif %};
+            border: 1px solid {% if memUtil.memory_pressure == 'critical' %}var(--danger){% elseif memUtil.memory_pressure == 'warning' %}var(--warning){% else %}var(--success){% endif %}; margin-bottom: 16px;">
+            <span class="hd-badge {% if memUtil.memory_pressure == 'critical' %}hd-badge-crit{% elseif memUtil.memory_pressure == 'warning' %}hd-badge-warn{% else %}hd-badge-ok{% endif %}">Memory Pressure: {{ memUtil.memory_pressure|upper }}</span>
+            {% if memUtil.oom_risk is defined and memUtil.oom_risk %}
+            <span class="hd-badge hd-badge-crit">⚠ OOM RISK DETECTED</span>
+            {% endif %}
+        </div>
+        {% endif %}
+
         <div class="card" style="padding: 0; overflow: hidden;">
             <table class="hd-table">
                 <thead>
-                    <tr>
-                        <th style="padding-left: 20px;">Metric</th>
-                        <th style="padding-right: 20px; text-align: right;">Value</th>
-                    </tr>
+                    <tr><th style="padding-left: 20px;">Metric</th><th style="padding-right: 20px; text-align: right;">Value</th></tr>
                 </thead>
                 <tbody>
-                    {% if memUtil.memory is defined %}
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Total Memory</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.memory.total|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Free Memory</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.memory.free|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Used Memory</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.memory.used|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Buffer/Cache</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.memory.buff_cache|default(memUtil.memory.buffer|default('--')) }}</td></tr>
-                    {% elseif memUtil is iterable %}
-                    {% for key, val in memUtil %}
-                    {% if key not in ['error'] and val is not iterable %}
-                    <tr>
-                        <td style="padding-left: 20px; font-weight: 600; text-transform: capitalize;">{{ key|replace({'_': ' '}) }}</td>
-                        <td style="text-align: right; padding-right: 20px;" class="mono">{{ val }}</td>
+                    {% if memUtil.meminfo.memtotal is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Total RAM</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.meminfo.memtotal.gb|default('--') }} GB</td></tr>
+                    {% endif %}
+                    {% if memUtil.meminfo.memfree is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Free RAM</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.meminfo.memfree.gb|default('--') }} GB</td></tr>
+                    {% endif %}
+                    {% if memUtil.meminfo.memavailable is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Available RAM</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.meminfo.memavailable.gb|default('--') }} GB</td></tr>
+                    {% endif %}
+                    {% if memUtil.meminfo.cached is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Page Cache</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.meminfo.cached.gb|default('--') }} GB</td></tr>
+                    {% endif %}
+                    {% if memUtil.meminfo.shmem is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Shared Memory (tmpfs)</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.meminfo.shmem.gb|default('--') }} GB</td></tr>
+                    {% endif %}
+                    {% if memUtil.swap_usage is defined %}
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Swap Total</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.swap_usage.total_gb|default('--') }} GB</td></tr>
+                    <tr><td style="padding-left: 20px; font-weight: 600;">Swap Used</td>
+                        <td style="text-align: right; padding-right: 20px;">
+                            <span class="mono" style="color: {% if memUtil.swap_usage.swap_active %}var(--warning){% else %}inherit{% endif %}; font-weight: {% if memUtil.swap_usage.swap_active %}700{% else %}400{% endif %};">{{ memUtil.swap_usage.used_gb|default('--') }} GB ({{ memUtil.swap_usage.percent_used|default(0) }}%)</span>
+                        </td>
                     </tr>
-                    {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                    {% if memUtil.swap is defined %}
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Swap Total</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.swap.total|default('--') }}</td></tr>
-                    <tr><td style="padding-left: 20px; font-weight: 600;">Swap Free</td><td style="text-align: right; padding-right: 20px;" class="mono">{{ memUtil.swap.free|default('--') }}</td></tr>
+                    <tr><td colspan="2" style="padding: 8px 20px; font-size: 11px; color: var(--text-muted); font-style: italic;">{{ memUtil.swap_usage.type_note|default('') }}</td></tr>
                     {% endif %}
                 </tbody>
             </table>
         </div>
         {% else %}
-            <div class="hd-empty"><div class="hd-empty-icon">🧮</div>Memory utilisation data (vmstat) not captured in this extraction.</div>
+            <div class="hd-empty"><div class="hd-empty-icon">🧮</div>Memory data (vmstat/meminfo) not captured in this extraction.</div>
         {% endif %}
     </div>
 
-    {# D-State Processes #}
+    {# D-State — DStateParser keys: d_state_events[{timestamp,process_name,stack_trace,is_io_issue}], summary{total_events,severity,recommendation} #}
     <div class="hd-section">
-        <div class="hd-section-title"><span class="hd-section-title-dot" style="background: var(--danger);"></span> D-State Process Trace</div>
+        <div class="hd-section-title"><span class="hd-section-title-dot" style="background: var(--danger);"></span> D-State Process Trace (I/O Blocking Detection)</div>
         {% set dstate = data.dstate %}
-        {% if dstate and dstate is not empty and dstate.error is not defined %}
-            {% if dstate.processes is defined and dstate.processes|length > 0 %}
-            <div class="card" style="border-left: 3px solid var(--danger); padding: 16px 20px; margin-bottom: 12px; background: var(--danger-light);">
-                <span style="font-size: 13px; font-weight: 700; color: var(--danger);">⚠ {{ dstate.processes|length }} process(es) detected in uninterruptible D-state. This indicates potential I/O blocking.</span>
+        {% set dstateEvents = dstate.d_state_events|default([]) %}
+        {% set dstateSummary = dstate.summary|default(null) %}
+        {% if dstate is defined and dstate %}
+            {% if dstateEvents|length > 0 %}
+            <div class="card" style="border-left: 3px solid {% if dstateSummary.severity == 'critical' %}var(--danger){% else %}var(--warning){% endif %}; padding: 14px 18px; margin-bottom: 12px; background: var(--danger-light);">
+                <div style="font-size: 13px; font-weight: 700; color: var(--danger);">⚠ {{ dstateEvents|length }} D-State event(s) detected — {{ dstateSummary.severity|upper|default('UNKNOWN') }} severity. This indicates I/O blocking conditions.</div>
+                {% if dstateSummary.recommendation is defined %}
+                <div style="font-size: 12px; color: var(--text-secondary); margin-top: 6px;">{{ dstateSummary.recommendation }}</div>
+                {% endif %}
+                {% if dstateSummary.time_span_hours is defined and dstateSummary.time_span_hours > 0 %}
+                <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;">Events span: {{ dstateSummary.time_span_hours }}h · First: {{ dstateSummary.first_event }} · Last: {{ dstateSummary.last_event }}</div>
+                {% endif %}
             </div>
             <div class="card" style="padding: 0; overflow: hidden;">
                 <table class="hd-table">
                     <thead>
                         <tr>
-                            <th style="padding-left: 20px;">PID</th>
-                            <th>Process Name</th>
-                            <th>State</th>
-                            <th style="padding-right: 20px; text-align: right;">Detail</th>
+                            <th style="padding-left: 20px;">Timestamp</th>
+                            <th>Process</th>
+                            <th>I/O Related</th>
+                            <th style="padding-right: 20px; text-align: right;">Stack Trace (excerpt)</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for proc in dstate.processes %}
+                        {% for event in dstateEvents|slice(0, 20) %}
                         <tr>
-                            <td style="padding-left: 20px;" class="mono">{{ proc.pid|default('--') }}</td>
-                            <td class="mono">{{ proc.name|default(proc.comm|default('--')) }}</td>
-                            <td><span class="hd-badge hd-badge-crit">{{ proc.state|default('D') }}</span></td>
-                            <td style="padding-right: 20px; text-align: right; font-size: 12px; color: var(--text-muted);">{{ proc.wchan|default('--') }}</td>
+                            <td style="padding-left: 20px;" class="mono" style="font-size: 11px;">{{ event.timestamp|default(event.timestamp_raw|default('--')) }}</td>
+                            <td class="mono">{{ event.process_name|default('(unknown)') }}</td>
+                            <td><span class="hd-badge {% if event.is_io_issue %}hd-badge-crit{% else %}hd-badge-muted{% endif %}">{% if event.is_io_issue %}I/O BLOCK{% else %}OTHER{% endif %}</span></td>
+                            <td style="padding-right: 20px; text-align: right; font-size: 11px; color: var(--text-muted); font-family: monospace;">{{ event.stack_trace|slice(0, 80)|default('--') }}{% if event.stack_trace|length > 80 %}…{% endif %}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -960,11 +965,11 @@
             {% else %}
                 <div class="hd-empty" style="border-color: var(--success); background: var(--success-light);">
                     <div class="hd-empty-icon" style="opacity: 0.6;">✅</div>
-                    <span style="color: var(--success); font-weight: 700;">No D-State processes detected — I/O blocking conditions are not present.</span>
+                    <span style="color: var(--success); font-weight: 700;">No D-State events detected — {{ dstateSummary.recommendation|default('I/O blocking conditions are not present.') }}</span>
                 </div>
             {% endif %}
         {% else %}
-            <div class="hd-empty"><div class="hd-empty-icon">🔍</div>D-State process data not captured in this extraction.</div>
+            <div class="hd-empty"><div class="hd-empty-icon">🔍</div>D-State data not captured in this extraction.</div>
         {% endif %}
     </div>
 
