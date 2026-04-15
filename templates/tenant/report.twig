@@ -36,47 +36,69 @@
     </div>
 </section>
 
-<!-- Findings Section -->
-<div style="display: flex; justify-content: space-between; align-items: center; margin: 48px 0 24px 0;">
-    <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0;">Detailed Forensic Findings ({{ findings|length }})</h3>
-    <div style="height: 1px; flex: 1; background: var(--border); margin-left: 24px;"></div>
+<!-- Findings Section Toolbar -->
+<div style="display: flex; justify-content: space-between; align-items: center; margin: 48px 0 20px 0; flex-wrap: wrap; gap: 12px;">
+    <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0;">
+        Detailed Forensic Findings
+        <span style="font-size: 14px; font-weight: 500; color: var(--text-muted); margin-left: 8px;">({{ findings|length }})</span>
+    </h3>
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <!-- Severity Filter -->
+        <select id="findings-severity-filter" style="background: var(--bg-light); border: 1px solid var(--border); color: var(--text-primary); border-radius: var(--radius-sm); padding: 6px 12px; font-size: 13px; font-weight: 500; cursor: pointer;">
+            <option value="all">All Severities</option>
+            <option value="critical">Critical</option>
+            <option value="warning">Warning</option>
+            <option value="info">Info</option>
+        </select>
+        <!-- View Toggle -->
+        <div style="display: flex; background: var(--bg-light); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;">
+            <button id="view-toggle-cards" onclick="setFindingsView('cards')" title="Card View"
+                style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em;">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                Cards
+            </button>
+            <button id="view-toggle-table" onclick="setFindingsView('table')" title="Table View"
+                style="display: flex; align-items: center; gap: 6px; padding: 7px 14px; border: none; background: transparent; color: var(--text-muted); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em; border-left: 1px solid var(--border);">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="14" height="3" rx="1"/><rect x="1" y="6" width="14" height="3" rx="1"/><rect x="1" y="11" width="14" height="3" rx="1"/></svg>
+                Table
+            </button>
+        </div>
+    </div>
 </div>
 
-<div style="display: flex; flex-direction: column; gap: 24px;">
+<!-- ═══════════════════════════════════════════ CARD VIEW ═══ -->
+<div id="findings-card-view" style="display: flex; flex-direction: column; gap: 24px;">
     {% for finding in findings %}
-    <article class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--row-border);">
+    {% set evidence = finding.evidence|json_decode %}
+    <article class="finding-card card" data-severity="{{ finding.severity }}" style="padding: 0; overflow: hidden; border: 1px solid var(--row-border);">
         <header style="padding: 16px 24px; background: var(--bg-off-white); border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
             <div style="display: flex; align-items: center; gap: 12px;">
                 <span class="badge" style="
                     background: {% if finding.severity == 'critical' %}var(--danger-light){% elseif finding.severity == 'warning' %}var(--warning-light){% else %}var(--info-light){% endif %};
                     color: {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};
-                    border: 1px solid {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};
-                    ">
+                    border: 1px solid {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};">
                     {{ finding.severity|upper }}
                 </span>
                 <span style="font-size: 11px; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">{{ finding.category }}</span>
             </div>
             <span style="font-size: 11px; font-family: monospace; color: var(--text-muted); font-weight: 600;">#{{ finding.id|slice(0,8) }}</span>
         </header>
-        
         <div style="padding: 32px;">
             <div style="background: var(--bg-light); border-radius: var(--radius); padding: 24px; border-left: 3px solid var(--primary); margin-bottom: 24px;">
                 <h5 style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--primary); margin: 0 0 8px 0; letter-spacing: 0.1em;">Remediation Recommendation</h5>
                 <p style="font-size: 14px; color: var(--text-primary); font-weight: 600; margin: 0; line-height: 1.6;">{{ finding.recommendation }}</p>
             </div>
-
-            {% set evidence = finding.evidence|json_decode %}
             {% if evidence and (evidence.source or evidence.raw_fragment) %}
             <div style="border-top: 1px dashed var(--border); padding-top: 24px;">
                 <h5 style="font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin: 0 0 12px 0; letter-spacing: 0.1em;">Forensic Evidence Trace (Proof)</h5>
                 <div style="background: #1e1e1e; border-radius: var(--radius-sm); padding: 20px; font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace; font-size: 12px; color: #d4d4d4; overflow-x: auto; line-height: 1.6; border-left: 4px solid var(--info);">
                     {% if evidence.source %}
-                    <div style="margin-bottom: 12px; color: #4fc1ff; font-weight: 600; font-size: 11px;">[Source Component: {{ evidence.source }}] {% if evidence.timestamp %}@ {{ evidence.timestamp }}{% endif %}</div>
+                    <div style="margin-bottom: 12px; color: #4fc1ff; font-weight: 600; font-size: 11px;">[Source: {{ evidence.source }}]{% if evidence.timestamp %} @ {{ evidence.timestamp }}{% endif %}</div>
                     {% endif %}
                     {% if evidence.raw_fragment %}
                     <pre style="margin: 0; white-space: pre-wrap; word-break: break-all; color: #ce9178; font-size: 13px;">{{ evidence.raw_fragment }}</pre>
                     {% else %}
-                    <span style="opacity: 0.5; font-style: italic;">No raw fragment trace available for this metadata point.</span>
+                    <span style="opacity: 0.5; font-style: italic;">No raw fragment trace available.</span>
                     {% endif %}
                 </div>
             </div>
@@ -86,6 +108,81 @@
     {% endfor %}
 </div>
 
+<!-- ═══════════════════════════════════════════ TABLE VIEW ═══ -->
+<div id="findings-table-view" style="display: none;">
+    <div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--row-border);">
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+            <thead>
+                <tr style="background: var(--bg-off-white); border-bottom: 2px solid var(--row-border);">
+                    <th style="padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); width: 90px;">ID</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); width: 100px;">Severity</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); width: 130px;">Category</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted);">Recommendation</th>
+                    <th style="padding: 12px 16px; text-align: left; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); width: 160px;">Evidence Source</th>
+                    <th style="padding: 12px 16px; text-align: center; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); width: 70px;">Detail</th>
+                </tr>
+            </thead>
+            <tbody id="findings-table-body">
+                {% for finding in findings %}
+                {% set evidence = finding.evidence|json_decode %}
+                <tr class="finding-table-row" data-severity="{{ finding.severity }}"
+                    style="border-bottom: 1px solid var(--row-border); transition: background 0.12s; cursor: pointer;"
+                    onmouseover="this.style.background='var(--bg-off-white)'"
+                    onmouseout="this.style.background='transparent'"
+                    onclick="expandTableRow(this)">
+                    <td style="padding: 12px 16px; font-family: monospace; font-size: 11px; color: var(--text-muted); font-weight: 600;">#{{ finding.id|slice(0,8) }}</td>
+                    <td style="padding: 12px 16px;">
+                        <span style="
+                            display: inline-flex; align-items: center; gap: 5px;
+                            padding: 3px 9px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+                            background: {% if finding.severity == 'critical' %}var(--danger-light){% elseif finding.severity == 'warning' %}var(--warning-light){% else %}var(--info-light){% endif %};
+                            color: {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};
+                            border: 1px solid {% if finding.severity == 'critical' %}var(--danger){% elseif finding.severity == 'warning' %}var(--warning){% else %}var(--info){% endif %};">
+                            {% if finding.severity == 'critical' %}⚠{% elseif finding.severity == 'warning' %}△{% else %}ℹ{% endif %}
+                            {{ finding.severity|upper }}
+                        </span>
+                    </td>
+                    <td style="padding: 12px 16px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-muted);">{{ finding.category }}</td>
+                    <td style="padding: 12px 16px; color: var(--text-primary); font-weight: 500; line-height: 1.5;">
+                        <span class="rec-text">{{ finding.recommendation|slice(0, 120) }}{% if finding.recommendation|length > 120 %}…{% endif %}</span>
+                        <span class="rec-full" style="display:none;">{{ finding.recommendation }}</span>
+                    </td>
+                    <td style="padding: 12px 16px; font-size: 12px; color: var(--text-muted);">
+                        {% if evidence and evidence.source %}
+                            <span style="font-family: monospace; font-size: 11px; background: var(--bg-light); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--border);">{{ evidence.source }}</span>
+                        {% else %}
+                            <span style="opacity: 0.4; font-style: italic;">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 12px 16px; text-align: center;">
+                        <span class="expand-icon" style="display: inline-block; width: 22px; height: 22px; background: var(--bg-light); border: 1px solid var(--border); border-radius: 50%; line-height: 22px; font-size: 11px; color: var(--text-muted); transition: transform 0.2s, background 0.15s; user-select: none;">▾</span>
+                    </td>
+                </tr>
+                <!-- Expandable evidence row -->
+                <tr class="evidence-detail-row" data-severity="{{ finding.severity }}" style="display: none; background: var(--bg-light);">
+                    <td colspan="6" style="padding: 0;">
+                        <div style="padding: 20px 24px 24px 24px; border-top: 1px dashed var(--border);">
+                            {% if evidence and evidence.raw_fragment %}
+                            <div style="background: #1e1e1e; border-radius: var(--radius-sm); padding: 16px 20px; font-family: 'SFMono-Regular', Consolas, monospace; font-size: 12px; color: #d4d4d4; overflow-x: auto; line-height: 1.6; border-left: 4px solid var(--info);">
+                                {% if evidence.source %}
+                                <div style="margin-bottom: 10px; color: #4fc1ff; font-weight: 600; font-size: 11px;">[Source: {{ evidence.source }}]{% if evidence.timestamp %} @ {{ evidence.timestamp }}{% endif %}</div>
+                                {% endif %}
+                                <pre style="margin: 0; white-space: pre-wrap; word-break: break-all; color: #ce9178; font-size: 12px;">{{ evidence.raw_fragment }}</pre>
+                            </div>
+                            {% else %}
+                            <div style="color: var(--text-muted); font-size: 13px; font-style: italic; padding: 8px 0;">
+                                Full recommendation: {{ finding.recommendation }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
 {% if not findings %}
 <div class="card" style="padding: 64px; text-align: center; color: var(--text-muted);">
     <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2;">🛡️</div>
@@ -93,4 +190,85 @@
     <div style="margin-top: 4px;">This diagnostic session did not surface any critical anomalies.</div>
 </div>
 {% endif %}
+
+<style>
+#view-toggle-cards.active-view, #view-toggle-table.active-view {
+    background: var(--primary) !important;
+    color: #fff !important;
+}
+</style>
+
+<script>
+(function () {
+    // ── View toggle ──────────────────────────────────────────────
+    function setFindingsView(mode) {
+        const cardView  = document.getElementById('findings-card-view');
+        const tableView = document.getElementById('findings-table-view');
+        const btnCards  = document.getElementById('view-toggle-cards');
+        const btnTable  = document.getElementById('view-toggle-table');
+
+        if (mode === 'table') {
+            cardView.style.display  = 'none';
+            tableView.style.display = 'block';
+            btnCards.classList.remove('active-view');
+            btnTable.classList.add('active-view');
+        } else {
+            cardView.style.display  = 'flex';
+            tableView.style.display = 'none';
+            btnCards.classList.add('active-view');
+            btnTable.classList.remove('active-view');
+        }
+        try { localStorage.setItem('forensic_report_view', mode); } catch(e) {}
+    }
+    window.setFindingsView = setFindingsView;
+
+    // ── Expandable table rows ────────────────────────────────────
+    function expandTableRow(row) {
+        const detailRow = row.nextElementSibling;
+        if (!detailRow || !detailRow.classList.contains('evidence-detail-row')) return;
+        const icon = row.querySelector('.expand-icon');
+        const recText = row.querySelector('.rec-text');
+        const recFull = row.querySelector('.rec-full');
+        const isOpen  = detailRow.style.display !== 'none';
+
+        if (isOpen) {
+            detailRow.style.display = 'none';
+            if (icon) { icon.textContent = '▾'; icon.style.transform = 'rotate(0deg)'; icon.style.background = 'var(--bg-light)'; }
+            if (recText) recText.style.display = '';
+            if (recFull) recFull.style.display = 'none';
+        } else {
+            detailRow.style.display = 'table-row';
+            if (icon) { icon.textContent = '▴'; icon.style.transform = 'rotate(0deg)'; icon.style.background = 'var(--primary)'; icon.style.color = '#fff'; icon.style.borderColor = 'var(--primary)'; }
+            if (recText) recText.style.display = 'none';
+            if (recFull) recFull.style.display = '';
+        }
+    }
+    window.expandTableRow = expandTableRow;
+
+    // ── Severity filter ──────────────────────────────────────────
+    document.getElementById('findings-severity-filter').addEventListener('change', function () {
+        const val = this.value;
+        document.querySelectorAll('.finding-card').forEach(function(el) {
+            el.style.display = (val === 'all' || el.dataset.severity === val) ? '' : 'none';
+        });
+        document.querySelectorAll('.finding-table-row').forEach(function(el) {
+            const show = (val === 'all' || el.dataset.severity === val);
+            el.style.display = show ? '' : 'none';
+            // Also hide its evidence detail row if filtering it out
+            const next = el.nextElementSibling;
+            if (next && next.classList.contains('evidence-detail-row')) {
+                next.style.display = show ? next.style.display : 'none';
+            }
+        });
+    });
+
+    // ── Restore saved view preference ───────────────────────────
+    try {
+        const saved = localStorage.getItem('forensic_report_view') || 'cards';
+        setFindingsView(saved);
+    } catch(e) {
+        setFindingsView('cards');
+    }
+})();
+</script>
 {% endblock %}
