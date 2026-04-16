@@ -342,7 +342,42 @@ while (true) {
             }
         }
 
-        echo "Job Completed: {$job['id']}\n";
+        // 7. Update User tokens and counters
+        $inTokens = (int)($usage['prompt_tokens'] ?? 0);
+        $outTokens = (int)($usage['completion_tokens'] ?? 0);
+        $totalTokens = $inTokens + $outTokens;
+        $lvl = $job['scan_level'] ?? 'level1';
+        
+        $stmt = $pdo->prepare("
+            UPDATE users 
+            SET tokens_available = GREATEST(0, tokens_available - :used),
+                tokens_used = tokens_used + :used,
+                scans_level1_count = scans_level1_count + :l1_inc,
+                scans_level2_count = scans_level2_count + :l2_inc
+            WHERE id = :tenant_id
+        ");
+        $stmt->execute([
+            'used' => $totalTokens,
+            'l1_inc' => ($lvl === 'level1') ? 1 : 0,
+            'l2_inc' => ($lvl === 'level2') ? 1 : 0,
+            'tenant_id' => $job['tenant_id']
+        ]);
+
+        // 8. Audit log entry for token usage
+        $stmt = $pdo->prepare("
+            INSERT INTO audit_log (tenant_id, action, details)
+            VALUES (:tenant_id, 'tokens_deducted', :details)
+        ");
+        $stmt->execute([
+            'tenant_id' => $job['tenant_id'],
+            'details' => json_encode([
+                'job_id' => $job['id'],
+                'amount' => $totalTokens,
+                'scan_level' => $lvl
+            ])
+        ]);
+
+        echo "Job Completed: {$job['id']} | Tokens Used: $totalTokens\n";
 
     } catch (\Throwable $e) {
         $addCheckpoint('system', 'Fatal Error', 'failed', [
