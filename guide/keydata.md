@@ -93,3 +93,5 @@ sequenceDiagram
 | 1.3.1 | 2026-04-08 | Antigravity | Creation of KeyData.md (Project Brain File). |
 | 1.4.0 | 2026-04-08 | Antigravity | Added Folder Structure Map and Loading Diagrams (Markdown). |
 | 1.5.0 | 2026-04-08 | Antigravity | Official Domain Configuration (dev.activelk.com) and VPS apply. |
+| 1.6.0 | 2026-04-15 | Antigravity | Integrated Network Telemetry Parser & Advanced Forensic Inspector Tabbed UI. |
+| 1.6.1 | 2026-04-15 | Antigravity | Implemented Granular L1/L2 Extraction Config & Developer Debug Mode. |
