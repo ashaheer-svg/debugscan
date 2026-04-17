@@ -21,9 +21,42 @@
     </div>
     <div class="kpi-card">
         <h2 class="kpi-value">{{ tokens_available|number_format }}</h2>
-        <p class="kpi-label">Available Tokens</p>
+        <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <p class="kpi-label" style="margin: 0;">Available Tokens</p>
+            <button onclick="document.getElementById('tokenModal').style.display='flex'" class="btn-action" style="padding: 2px 8px; font-size: 11px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Request More</button>
+        </div>
     </div>
 </div>
+
+<!-- Request Tokens Modal -->
+<div id="tokenModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="card" style="width: 400px; padding: 24px;">
+        <h2 style="margin-top: 0;">Request AI Tokens</h2>
+        <p style="font-size: 14px; color: var(--text-secondary);">Tokens are requested in blocks of 20,000. An administrator will review your request and grant the tokens via a magic link.</p>
+        
+        <form action="/tokens/purchase" method="POST">
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600;">Number of Blocks</label>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="number" name="blocks" value="1" min="1" max="10" style="width: 80px; padding: 8px; border: 1px solid var(--row-border); border-radius: 4px;">
+                    <span style="font-size: 14px; color: var(--text-muted);">x 20,000 = <strong id="tokenTotal">20,000</strong> tokens</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; justify-content: flex-end; gap: 12px;">
+                <button type="button" onclick="document.getElementById('tokenModal').style.display='none'" class="btn" style="background: transparent; color: var(--text-secondary);">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">Submit Request</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.querySelector('input[name="blocks"]').addEventListener('input', function(e) {
+    const blocks = parseInt(e.target.value) || 0;
+    document.getElementById('tokenTotal').textContent = (blocks * 20000).toLocaleString();
+});
+</script>
 
 <section class="card" style="padding: 0; overflow: hidden;">
     <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); background: var(--bg-off-white);">

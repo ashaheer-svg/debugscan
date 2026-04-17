@@ -21,6 +21,21 @@ class ScanService
      */
     public function queueScan(string $tenantId, string $projectId, array $fileIds, string $level, string $model): string
     {
+        // 0. Pre-flight check
+        $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
+        $stmt->execute(['tid' => $tenantId]);
+        $user = $stmt->fetch();
+        
+        if (!$user) {
+            throw new RuntimeException("Tenant user not found: $tenantId");
+        }
+
+        // Conservative estimates for total tokens (input + output)
+        $estimatedRequired = ($level === 'level1') ? 12000 : 40000;
+        if ($user['tokens_available'] < $estimatedRequired) {
+            throw new RuntimeException("INSUFFICIENT_TOKENS:" . $user['tokens_available'] . ":" . $estimatedRequired);
+        }
+
         // 1. Get default token limits for the level
         $stmt = $this->pdo->query("SELECT level1_max_input_tokens, level1_max_output_tokens, level2_max_input_tokens, level2_max_output_tokens FROM system_settings LIMIT 1");
         $settings = $stmt->fetch();

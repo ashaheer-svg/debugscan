@@ -1,0 +1,74 @@
+{% extends "layout/dashboard.twig" %}
+
+{% block title %}Token Transactions - AI DebugScan v3{% endblock %}
+
+{% block dashboard_content %}
+<header class="page-header">
+    <h1 class="page-title">Token Transaction History</h1>
+    <p class="page-subtitle">Detailed audit trail for your AI token acquisitions and usage.</p>
+</header>
+
+<section class="card" style="padding: 0; overflow: hidden;">
+    <div style="padding: 20px 24px; border-bottom: 1px solid var(--row-border); background: var(--bg-off-white);">
+        <h3 style="margin: 0; font-size: 16px; font-weight: 700;">Transaction Log</h3>
+    </div>
+    
+    {% if logs %}
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th style="padding-left: 24px;">Date</th>
+                <th>Action</th>
+                <th>Details</th>
+                <th style="padding-right: 24px;">Tokens</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for log in logs %}
+            {% set details = log.details|json_decode %}
+            <tr>
+                <td style="padding-left: 24px; color: var(--text-secondary); font-size: 13px;">{{ log.created_at|date('M d, Y H:i:s') }}</td>
+                <td>
+                    {% if log.action == 'tokens_deducted' %}
+                        <span class="badge" style="background: var(--error-light); color: var(--error);">DEDUCTION</span>
+                    {% elseif log.action == 'tokens_allocated' or log.action == 'tokens_redeemed' %}
+                        <span class="badge" style="background: var(--success-light); color: var(--success);">CREDIT</span>
+                    {% else %}
+                        <span class="badge" style="background: var(--info-light); color: var(--info);">{{ log.action|upper|replace({'_':' '}) }}</span>
+                    {% endif %}
+                </td>
+                <td style="font-size: 13px;">
+                    {% if log.action == 'tokens_deducted' %}
+                        AI Analysis Scan (Job: {{ details.job_id|slice(0,8) }})
+                    {% elseif log.action == 'tokens_requested' %}
+                        Purchase Request for {{ details.amount|number_format }} tokens
+                    {% elseif log.action == 'tokens_redeemed' %}
+                        Magic Link Redemption
+                    {% elseif log.action == 'tokens_allocated' %}
+                        Manual Admin Allocation
+                    {% else %}
+                        {{ log.details }}
+                    {% endif %}
+                </td>
+                <td style="padding-right: 24px; font-weight: 600; text-align: right;">
+                    {% if log.action == 'tokens_deducted' %}
+                        <span style="color: var(--error);">-{{ details.used|number_format }}</span>
+                    {% elseif log.action == 'tokens_allocated' or log.action == 'tokens_redeemed' %}
+                        <span style="color: var(--success);">+{{ details.amount|number_format }}</span>
+                    {% else %}
+                        <span style="color: var(--text-muted);">{{ details.amount|number_format|default('0') }}</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="padding: 64px; text-align: center; color: var(--text-muted); font-size: 14px;">
+        <div style="font-size: 40px; margin-bottom: 16px; opacity: 0.3;">📄</div>
+        <div style="font-weight: 600; color: var(--text-primary);">No transactions yet</div>
+        <div style="margin-top: 4px;">Token acquisitions and usage logs will appear here.</div>
+    </div>
+    {% endif %}
+</section>
+{% endblock %}

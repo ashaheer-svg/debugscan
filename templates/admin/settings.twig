@@ -104,6 +104,45 @@
             </div>
         </section>
 
+        <!-- SMTP Email Configuration -->
+        <section class="card" style="grid-column: span 2;">
+            <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">Outbound Email (SMTP)</h3>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 24px;">Required for sending token purchase magic links to the administrator.</p>
+            
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+                <div class="form-group">
+                    <label for="smtp_host" class="form-label">SMTP Host</label>
+                    <input type="text" id="smtp_host" name="smtp_host" class="form-control" value="{{ settings.smtp_host }}" placeholder="smtp.gmail.com" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+                <div class="form-group">
+                    <label for="smtp_port" class="form-label">SMTP Port</label>
+                    <input type="number" id="smtp_port" name="smtp_port" class="form-control" value="{{ settings.smtp_port|default(587) }}" placeholder="587" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+                <div class="form-group">
+                    <label for="smtp_encryption" class="form-label">Encryption</label>
+                    <select id="smtp_encryption" name="smtp_encryption" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
+                        <option value="tls" {% if settings.smtp_encryption == 'tls' %}selected{% endif %}>STARTTLS (587)</option>
+                        <option value="ssl" {% if settings.smtp_encryption == 'ssl' %}selected{% endif %}>SSL/TLS (465)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="responsive-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 20px;">
+                <div class="form-group">
+                    <label for="smtp_user" class="form-label">SMTP Username</label>
+                    <input type="text" id="smtp_user" name="smtp_user" class="form-control" value="{{ settings.smtp_user }}" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+                <div class="form-group">
+                    <label for="smtp_pass" class="form-label">SMTP Password</label>
+                    <input type="password" id="smtp_pass" name="smtp_pass" class="form-control" value="{{ settings.smtp_pass }}" placeholder="••••••••" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+                <div class="form-group">
+                    <label for="smtp_from" class="form-label">Sender Email (From)</label>
+                    <input type="email" id="smtp_from" name="smtp_from" class="form-control" value="{{ settings.smtp_from }}" placeholder="no-reply@activelk.com" style="background: var(--bg-light); border-color: var(--border);">
+                </div>
+            </div>
+        </section>
+
     </div>
 
     <div style="margin-top: 32px; display: flex; justify-content: flex-end;">

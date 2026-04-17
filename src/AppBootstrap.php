@@ -17,6 +17,7 @@ use App\Services\ScanService;
 use App\Services\AiService;
 use App\Services\ParseService;
 use App\Services\ExtractionConfigService;
+use App\Services\MailService;
 use App\Controllers\AuthController;
 use App\Controllers\TenantController;
 use App\Controllers\AdminController;
@@ -25,8 +26,6 @@ use App\Controllers\ExtractionConfigController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
-
-
 
 class AppBootstrap
 {
@@ -50,7 +49,7 @@ class AppBootstrap
             Environment::class => function () {
                 $loader = new FilesystemLoader(__DIR__ . '/../templates');
                 $twig = new Environment($loader, [
-                    'cache' => false, // Set to a path in production
+                    'cache' => false,
                     'debug' => (getenv('APP_DEBUG') ?: 'false') === 'true',
                 ]);
 
@@ -79,8 +78,12 @@ class AppBootstrap
                     new FileService($container->get(PDO::class), __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted'),
                     new ScanService($container->get(PDO::class)),
                     new ParseService(),
-                    $container->get('base_path')
+                    $container->get('base_path'),
+                    $container->get(MailService::class)
                 );
+            },
+            MailService::class => function ($container) {
+                return new MailService($container->get(PDO::class));
             },
             AdminController::class => function ($container) {
                 $apiKey = getenv('GROQ_API_KEY');
@@ -109,9 +112,7 @@ class AppBootstrap
             },
         ]);
 
-
         $container = $containerBuilder->build();
-        
         $isDebugMode = (getenv('APP_DEBUG') ?: 'false') === 'true';
 
         // Global Timezone Synchronization
@@ -119,18 +120,13 @@ class AppBootstrap
             $pdo = $container->get(PDO::class);
             $stmt = $pdo->query("SELECT timezone, debug_mode FROM system_settings LIMIT 1");
             $sysSettings = $stmt->fetch();
-            
             if ($sysSettings && isset($sysSettings['debug_mode']) && $sysSettings['debug_mode']) {
                 $isDebugMode = true;
             }
-
-            // Priority 1: Logged in User's Timezone
             $userTz = $_SESSION['timezone'] ?? null;
-            
             if ($userTz && in_array($userTz, \DateTimeZone::listIdentifiers())) {
                 date_default_timezone_set($userTz);
             } else {
-                // Priority 2: System Global Default
                 $tz = $sysSettings['timezone'] ?? null;
                 if ($tz && in_array($tz, \DateTimeZone::listIdentifiers())) {
                     date_default_timezone_set($tz);
@@ -139,7 +135,7 @@ class AppBootstrap
                 }
             }
         } catch (\Exception $e) {
-            date_default_timezone_set('UTC'); // Robust fallback
+            date_default_timezone_set('UTC');
         }
 
         // Setup Database Session Handler
@@ -150,8 +146,6 @@ class AppBootstrap
                 session_start();
             }
         } catch (\Exception $e) {
-            // If boot fails, we still want the error middleware to catch it if possible, 
-            // but we might need to log it manually here.
             error_log("Bootstrap Session Failure: " . $e->getMessage());
         }
 
@@ -159,30 +153,20 @@ class AppBootstrap
         AppFactory::setContainer($container);
         $app = AppFactory::create();
 
-        // Dynamic Base Path Detection (Ensures routing works in subdirectories)
         $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         if (strlen($basePath) > 1) {
             $app->setBasePath($basePath);
         }
 
-        // Standard Slim 4 Middlewares (Applied LIFO)
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
-        
-        $app->addErrorMiddleware(
-            $isDebugMode,
-            true,
-            true
-        );
+        $app->addErrorMiddleware($isDebugMode, true, true);
 
         // Ensure storage directories exist
         $storageRoot = __DIR__ . '/../storage';
-        $subDirs = ['uploads', 'extracted', 'logs', 'reports'];
-        foreach ($subDirs as $dir) {
+        foreach (['uploads', 'extracted', 'logs', 'reports'] as $dir) {
             $path = $storageRoot . '/' . $dir;
-            if (!is_dir($path)) {
-                @mkdir($path, 0755, true);
-            }
+            if (!is_dir($path)) @mkdir($path, 0755, true);
         }
 
         // Routes
@@ -190,11 +174,14 @@ class AppBootstrap
         $app->post('/auth/login', [AuthController::class, 'login']);
         $app->get('/auth/logout', [AuthController::class, 'logout']);
 
+        // Public Magic Link
+        $app->get('/redeem/{code}', [AdminController::class, 'redeemTokens']);
+
         // Authenticated Routes
         $app->group('/', function ($group) {
-            $group->get('', [TenantController::class, 'dashboard']); // Primary root entry
+            $group->get('', [TenantController::class, 'dashboard']);
             $group->get('dashboard', [TenantController::class, 'dashboard']);
-            $group->get('scans', [TenantController::class, 'scans']); // Unified analysis jobs list
+            $group->get('scans', [TenantController::class, 'scans']);
             $group->get('projects', [TenantController::class, 'projects']);
             $group->post('projects/create', [TenantController::class, 'createProject']);
             $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
@@ -204,6 +191,10 @@ class AppBootstrap
             $group->get('scans/prompt/{id}', [TenantController::class, 'getScanPromptData']);
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
+            
+            // Token Management
+            $group->get('tokens/transactions', [TenantController::class, 'transactions']);
+            $group->post('tokens/purchase', [TenantController::class, 'requestTokens']);
             
             // Profile Routes
             $group->get('profile', [AuthController::class, 'showProfile']);
@@ -234,18 +225,15 @@ class AppBootstrap
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);
             $group->get('admin/ai-audit', [AdminController::class, 'aiAudit']);
             
-            // Forensic File Explorer
             $group->get('admin/explorer', [ExplorerController::class, 'index']);
             $group->get('admin/explorer/list', [ExplorerController::class, 'list']);
             $group->get('admin/explorer/download', [ExplorerController::class, 'download']);
             $group->post('admin/explorer/delete', [ExplorerController::class, 'delete']);
 
-            // Advanced Extraction Configuration
             $group->get('admin/extraction-config', [ExtractionConfigController::class, 'showPage']);
             $group->post('admin/extraction-config/save', [ExtractionConfigController::class, 'saveConfig']);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
-
 
         return $app;
     }

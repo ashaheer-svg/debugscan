@@ -70,7 +70,7 @@ class AuthController
                     session_start();
                 }
                 $_SESSION['user_id']   = $user['id'];
-                $_SESSION['tenant_id'] = $user['tenant_id'];
+                $_SESSION['tenant_id'] = $user['tenant_id'] ?: ($user['role'] === 'tenant' ? $user['id'] : null);
                 $_SESSION['role']      = $user['role'];
                 $_SESSION['name']      = $user['display_name'];
                 $_SESSION['timezone']  = $user['timezone'] ?? null;

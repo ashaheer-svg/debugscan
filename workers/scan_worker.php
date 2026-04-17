@@ -348,20 +348,31 @@ while (true) {
         $totalTokens = $inTokens + $outTokens;
         $lvl = $job['scan_level'] ?? 'level1';
         
+        // Fetch balance before
+        $stmt = $pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
+        $stmt->execute(['tid' => $job['tenant_id']]);
+        $beforeBalance = (int)($stmt->fetchColumn() ?: 0);
+        $afterBalance = max(0, $beforeBalance - $totalTokens);
+
         $stmt = $pdo->prepare("
             UPDATE users 
-            SET tokens_available = GREATEST(0, tokens_available - :used),
+            SET tokens_available = :after,
                 tokens_used = tokens_used + :used,
                 scans_level1_count = scans_level1_count + :l1_inc,
                 scans_level2_count = scans_level2_count + :l2_inc
             WHERE id = :tenant_id
         ");
         $stmt->execute([
+            'after' => $afterBalance,
             'used' => $totalTokens,
             'l1_inc' => ($lvl === 'level1') ? 1 : 0,
             'l2_inc' => ($lvl === 'level2') ? 1 : 0,
             'tenant_id' => $job['tenant_id']
         ]);
+
+        // Update Job with tokens charged
+        $stmt = $pdo->prepare("UPDATE scan_jobs SET tokens_charged = :used WHERE id = :id");
+        $stmt->execute(['used' => $totalTokens, 'id' => $job['id']]);
 
         // 8. Audit log entry for token usage
         $stmt = $pdo->prepare("
@@ -373,6 +384,9 @@ while (true) {
             'details' => json_encode([
                 'job_id' => $job['id'],
                 'amount' => $totalTokens,
+                'used' => $totalTokens,
+                'before' => $beforeBalance,
+                'after' => $afterBalance,
                 'scan_level' => $lvl
             ])
         ]);

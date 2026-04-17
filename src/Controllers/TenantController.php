@@ -7,6 +7,7 @@ namespace App\Controllers;
 use App\Services\FileService;
 use App\Services\ParseService;
 use App\Services\ScanService;
+use App\Services\MailService;
 use PDO;
 use Ramsey\Uuid\Uuid;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -21,15 +22,24 @@ class TenantController
     private ScanService $scanService;
     private ParseService $parseService;
     private string $basePath;
+    private MailService $mailService;
 
-    public function __construct(Environment $view, PDO $pdo, FileService $fileService, ScanService $scanService, ParseService $parseService, string $basePath)
-    {
+    public function __construct(
+        Environment $view, 
+        PDO $pdo, 
+        FileService $fileService, 
+        ScanService $scanService, 
+        ParseService $parseService, 
+        string $basePath,
+        MailService $mailService
+    ) {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->fileService = $fileService;
         $this->scanService = $scanService;
         $this->parseService = $parseService;
         $this->basePath = $basePath;
+        $this->mailService = $mailService;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -345,14 +355,22 @@ class TenantController
 
             $_SESSION['success'] = 'Scan job queued successfully. Analysis is running in background.';
         } catch (\Exception $e) {
+            $msg = $e->getMessage();
+            if (str_starts_with($msg, "INSUFFICIENT_TOKENS:")) {
+                $parts = explode(':', $msg);
+                $balance = number_format((int)($parts[1] ?? 0));
+                $required = number_format((int)($parts[2] ?? 0));
+                $msg = "Insufficient tokens. You need at least {$required} tokens for this scan. Your current balance is {$balance}.";
+            }
+
             if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
                 $response->getBody()->write(json_encode([
                     'success' => false,
-                    'message' => 'Failed to queue scan: ' . $e->getMessage()
+                    'message' => 'Failed to queue scan: ' . $msg
                 ]));
-                return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
             }
-            $_SESSION['error'] = 'Failed to queue scan: ' . $e->getMessage();
+            $_SESSION['error'] = 'Failed to queue scan: ' . $msg;
         }
 
         return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
@@ -604,6 +622,88 @@ class TenantController
         if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
             $response->getBody()->write(json_encode(['success' => true, 'message' => 'Analysis record deleted.']));
             return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);
+    }
+
+    public function transactions(Request $request, Response $response): Response
+    {
+        $tenantId = $request->getAttribute('tenant_id');
+
+        $stmt = $this->pdo->prepare("
+            SELECT * FROM audit_log 
+            WHERE tenant_id = :tid 
+              AND action IN ('tokens_allocated', 'tokens_deducted', 'tokens_requested', 'tokens_redeemed')
+            ORDER BY created_at DESC
+        ");
+        $stmt->execute(['tid' => $tenantId]);
+        $logs = $stmt->fetchAll();
+
+        $body = $this->view->render('tenant/transactions.twig', [
+            'logs' => $logs,
+            'active_page' => 'transactions'
+        ]);
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function requestTokens(Request $request, Response $response): Response
+    {
+        $tenantId = $request->getAttribute('tenant_id');
+        $data = $request->getParsedBody();
+        $blocks = (int)($data['blocks'] ?? 1);
+        $amount = $blocks * 20000;
+
+        if ($amount <= 0) {
+            $_SESSION['error'] = "Invalid token amount requested.";
+            return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);
+        }
+
+        try {
+            $code = bin2hex(random_bytes(32));
+            
+            // 1. Create redemption record
+            $stmt = $this->pdo->prepare("
+                INSERT INTO token_redemptions (tenant_id, amount, code, status, expires_at)
+                VALUES (:tid, :amount, :code, 'pending', NOW() + INTERVAL '7 days')
+            ");
+            $stmt->execute([
+                'tid' => $tenantId,
+                'amount' => $amount,
+                'code' => $code
+            ]);
+
+            // 2. Audit log
+            $stmt = $this->pdo->prepare("
+                INSERT INTO audit_log (tenant_id, action, details)
+                VALUES (:tid, 'tokens_requested', :details)
+            ");
+            $stmt->execute([
+                'tid' => $tenantId,
+                'details' => json_encode(['amount' => $amount, 'blocks' => $blocks])
+            ]);
+
+            // 3. Send magic link to Admin
+            $redeemUrl = (getenv('APP_URL') ?: 'http://' . $_SERVER['HTTP_HOST']) . $this->basePath . "/redeem/" . $code;
+            $subject = "Token Purchase Request - " . ($_SESSION['name'] ?? 'Tenant');
+            $body = "
+                <h2>Token Purchase Request</h2>
+                <p><strong>Tenant:</strong> " . ($_SESSION['name'] ?? 'N/A') . "</p>
+                <p><strong>Amount:</strong> " . number_format($amount) . " Tokens ({$blocks} blocks of 20k)</p>
+                <p><strong>Date:</strong> " . date('Y-m-d H:i:s') . "</p>
+                <br>
+                <p>To approve and grant these tokens, click the magic link below:</p>
+                <p><a href='{$redeemUrl}' style='padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Approve & Grant Tokens</a></p>
+                <br>
+                <p>Or copy and paste this URL: <br> {$redeemUrl}</p>
+            ";
+
+            $this->mailService->send('shaheer@activelk.com', $subject, $body);
+
+            $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to the administrator for approval.";
+        } catch (\Exception $e) {
+            $_SESSION['error'] = "Failed to request tokens: " . $e->getMessage();
         }
 
         return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);

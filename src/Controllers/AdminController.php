@@ -298,10 +298,19 @@ class AdminController
             return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
         }
 
-        $stmt = $this->pdo->prepare("UPDATE users SET tokens_available = tokens_available + :amount, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
-        $stmt->execute(['amount' => $amount, 'id' => $id]);
+        $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $before = $stmt->fetchColumn() ?: 0;
+        $after = $before + $amount;
 
-        $this->logAction($request, 'tokens_allocated', 'users', $id, ['amount' => $amount]);
+        $stmt = $this->pdo->prepare("UPDATE users SET tokens_available = :after, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['after' => $after, 'id' => $id]);
+
+        $this->logAction($request, 'tokens_allocated', 'users', $id, [
+            'amount' => $amount,
+            'before' => $before,
+            'after' => $after
+        ]);
 
         $_SESSION['success'] = "Allocated {$amount} tokens successfully.";
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
@@ -388,6 +397,12 @@ class AdminController
                 max_prompt_chars = :max_prompt_chars,
                 timezone = :timezone,
                 debug_mode = :debug_mode,
+                smtp_host = :smtp_host,
+                smtp_port = :smtp_port,
+                smtp_user = :smtp_user,
+                smtp_pass = :smtp_pass,
+                smtp_from = :smtp_from,
+                smtp_encryption = :smtp_encryption,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -402,6 +417,12 @@ class AdminController
             'max_prompt_chars' => (int)($data['max_prompt_chars'] ?? 50000),
             'timezone' => $data['timezone'] ?? 'UTC',
             'debug_mode' => isset($data['debug_mode']) ? 'true' : 'false',
+            'smtp_host' => $data['smtp_host'] ?? null,
+            'smtp_port' => (int)($data['smtp_port'] ?: 587),
+            'smtp_user' => $data['smtp_user'] ?? null,
+            'smtp_pass' => $data['smtp_pass'] ?? null,
+            'smtp_from' => $data['smtp_from'] ?? null,
+            'smtp_encryption' => $data['smtp_encryption'] ?? 'tls',
         ]);
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);
@@ -618,6 +639,79 @@ class AdminController
 
         $response->getBody()->write($body);
         return $response;
+    }
+
+    public function redeemTokens(Request $request, Response $response, array $args): Response
+    {
+        $code = $args['code'];
+
+        $this->pdo->beginTransaction();
+        try {
+            // 1. Find the pending redemption
+            $stmt = $this->pdo->prepare("SELECT * FROM token_redemptions WHERE code = :code AND status = 'pending' FOR UPDATE");
+            $stmt->execute(['code' => $code]);
+            $redemption = $stmt->fetch();
+
+            if (!$redemption) {
+                $this->pdo->rollBack();
+                $body = "
+                    <div style='font-family: sans-serif; text-align: center; padding: 50px;'>
+                        <h1 style='color: #dc3545;'>❌ Link Invalid or Expired</h1>
+                        <p style='font-size: 18px;'>This magic link has already been used or does not exist.</p>
+                        <p><a href='/'>Return to Home</a></p>
+                    </div>";
+                $response->getBody()->write($body);
+                return $response->withStatus(400);
+            }
+
+            // 2. Add tokens to tenant
+            $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
+            $stmt->execute(['tid' => $redemption['tenant_id']]);
+            $before = $stmt->fetchColumn() ?: 0;
+            $after = $before + $redemption['amount'];
+
+            $stmt = $this->pdo->prepare("UPDATE users SET tokens_available = :after, updated_at = NOW() WHERE id = :tid");
+            $stmt->execute(['after' => $after, 'tid' => $redemption['tenant_id']]);
+
+            // 3. Mark redemption as used
+            $stmt = $this->pdo->prepare("UPDATE token_redemptions SET status = 'redeemed', redeemed_at = NOW() WHERE id = :id");
+            $stmt->execute(['id' => $redemption['id']]);
+
+            // 4. Audit Log
+            $stmt = $this->pdo->prepare("
+                INSERT INTO audit_log (tenant_id, action, details)
+                VALUES (:tid, 'tokens_redeemed', :details)
+            ");
+            $stmt->execute([
+                'tid' => $redemption['tenant_id'],
+                'details' => json_encode([
+                    'amount' => $redemption['amount'],
+                    'before' => $before,
+                    'after' => $after,
+                    'code_excerpt' => substr($code, 0, 8) . '...'
+                ])
+            ]);
+
+            $this->pdo->commit();
+
+            $body = "
+                <div style='font-family: sans-serif; text-align: center; padding: 50px;'>
+                    <h1 style='color: #28a745;'>✔ Tokens Granted!</h1>
+                    <p style='font-size: 18px;'>Successfully added <strong>" . number_format($redemption['amount']) . " tokens</strong> to the account.</p>
+                    <p>The tenant can now proceed with their forensic analysis.</p>
+                    <p><a href='/admin' style='color: #007bff; text-decoration: none;'>Go to Admin Dashboard</a></p>
+                </div>
+            ";
+            $response->getBody()->write($body);
+            return $response;
+
+        } catch (\Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            $response->getBody()->write("<h2>Redemption Failed</h2><p>" . $e->getMessage() . "</p>");
+            return $response->withStatus(500);
+        }
     }
 }
 
