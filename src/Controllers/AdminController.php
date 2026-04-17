@@ -751,6 +751,9 @@ class AdminController
             }
             $response->getBody()->write("<h2>Redemption Failed</h2><p>" . $e->getMessage() . "</p>");
             return $response->withStatus(500);
+        }
+    }
+
     public function tenantAudit(Request $request, Response $response, array $args): Response
     {
         $tenantId = $args['id'];
