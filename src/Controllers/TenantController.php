@@ -684,27 +684,44 @@ class TenantController
                 'details' => json_encode(['amount' => $amount, 'blocks' => $blocks])
             ]);
 
+            $this->logAction($request, 'tokens_requested', 'users', $tenantId, [
+                'amount' => $amount,
+                'blocks' => $blocks
+            ]);
+
             // 3. Send magic link to Admin
             $stmt = $this->pdo->query("SELECT reporting_email FROM system_settings LIMIT 1");
             $reportingEmail = $stmt->fetchColumn() ?: 'shaheer@activelk.com';
 
-            $redeemUrl = (getenv('APP_URL') ?: 'http://' . $_SERVER['HTTP_HOST']) . $this->basePath . "/redeem/" . $code;
+            // Robust URL construction
+            $appUrl = rtrim(getenv('APP_URL') ?: 'http://' . ($_SERVER['HTTP_HOST'] ?? 'localhost'), '/');
+            $cleanBasePath = '/' . trim($this->basePath, '/');
+            $redeemUrl = $appUrl . ($cleanBasePath === '/' ? '' : $cleanBasePath) . "/redeem/" . $code;
+
             $subject = "Token Purchase Request - " . ($_SESSION['name'] ?? 'Tenant');
             $body = "
-                <h2>Token Purchase Request</h2>
-                <p><strong>Tenant:</strong> " . ($_SESSION['name'] ?? 'N/A') . "</p>
-                <p><strong>Amount:</strong> " . number_format($amount) . " Tokens ({$blocks} blocks of 20k)</p>
-                <p><strong>Date:</strong> " . date('Y-m-d H:i:s') . "</p>
-                <br>
-                <p>To approve and grant these tokens, click the magic link below:</p>
-                <p><a href='{$redeemUrl}' style='padding: 10px 20px; background: #007bff; color: white; text-decoration: none; border-radius: 5px;'>Approve & Grant Tokens</a></p>
-                <br>
-                <p>Or copy and paste this URL: <br> {$redeemUrl}</p>
+                <div style='font-family: sans-serif; line-height: 1.6; color: #333;'>
+                    <h2>Token Purchase Request</h2>
+                    <p>A tenant has requested additional AI tokens for forensic analysis.</p>
+                    <hr style='border: 0; border-top: 1px solid #eee;'>
+                    <p><strong>Tenant:</strong> " . ($_SESSION['name'] ?? 'N/A') . "</p>
+                    <p><strong>Amount:</strong> " . number_format($amount) . " Tokens ({$blocks} blocks of 20k)</p>
+                    <p><strong>Date:</strong> " . date('Y-m-d H:i:s') . "</p>
+                    <br>
+                    <p>To approve and grant these tokens, click the magic link below:</p>
+                    <p><a href='{$redeemUrl}' style='display: inline-block; padding: 12px 24px; background: #007bff; color: white; text-decoration: none; border-radius: 5px; font-weight: bold;'>Approve & Grant Tokens</a></p>
+                    <br>
+                    <p style='font-size: 12px; color: #666;'>If the button doesn't work, copy and paste this URL:<br> {$redeemUrl}</p>
+                </div>
             ";
 
-            $this->mailService->send($reportingEmail, $subject, $body);
+            $success = $this->mailService->send($reportingEmail, $subject, $body);
 
-            $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to the administrator for approval.";
+            if ($success) {
+                $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to the administrator for approval.";
+            } else {
+                $_SESSION['error'] = "Token request logged, but the notification email failed to send. Please contact the administrator manually.";
+            }
         } catch (\Exception $e) {
             $_SESSION['error'] = "Failed to request tokens: " . $e->getMessage();
         }
