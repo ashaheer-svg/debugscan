@@ -91,7 +91,8 @@ class AppBootstrap
                     $container->get(Environment::class),
                     $container->get(PDO::class),
                     new AiService($apiKey === false ? null : $apiKey),
-                    $container->get('base_path')
+                    $container->get('base_path'),
+                    $container->get(MailService::class)
                 );
             },
             ViewDataMiddleware::class => function ($container) {
@@ -216,6 +217,7 @@ class AppBootstrap
             $group->get('admin/logs', [AdminController::class, 'logs']);
             $group->get('admin/settings', [AdminController::class, 'settings']);
             $group->post('admin/settings/update', [AdminController::class, 'updateSettings']);
+            $group->post('admin/settings/test-email', [AdminController::class, 'testEmail']);
             $group->post('admin/settings/reset', [AdminController::class, 'resetSystem']);
             $group->get('admin/scans', [AdminController::class, 'scans']);
             $group->get('admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);

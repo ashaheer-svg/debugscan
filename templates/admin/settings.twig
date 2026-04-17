@@ -8,9 +8,15 @@
     <p class="page-subtitle">Governance policies, AI model routing, and core performance tuning.</p>
 </header>
 
-{% if error %}
+{% if error or session.error %}
 <div style="background: var(--danger-light); color: var(--danger); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 32px; font-weight: 600; border: 1px solid var(--danger);">
-    {{ error }}
+    {{ error ?: session.error }}
+</div>
+{% endif %}
+
+{% if success or session.success %}
+<div style="background: var(--success-light); color: var(--success); padding: 12px 16px; border-radius: var(--radius); margin-bottom: 32px; font-weight: 600; border: 1px solid var(--success);">
+    {{ success ?: session.success }}
 </div>
 {% endif %}
 
@@ -154,12 +160,17 @@
 
     </div>
 
-    <div style="margin-top: 32px; display: flex; justify-content: flex-end;">
+    <div style="margin-top: 32px; display: flex; justify-content: flex-end; gap: 16px;">
+        <button type="button" onclick="document.getElementById('testEmailForm').submit()" class="btn" style="width: auto; padding: 12px 24px; font-weight: 700; background: var(--bg-light); border: 1px solid var(--border); color: var(--text-primary);">
+            Test SMTP Configuration
+        </button>
         <button type="submit" class="btn btn-primary" style="width: auto; padding: 12px 48px; font-weight: 700;">
             Apply System Configuration
         </button>
     </div>
 </form>
+
+<form id="testEmailForm" action="/admin/settings/test-email" method="POST" style="display: none;"></form>
 
 <!-- Danger Zone -->
 <section class="card" style="margin-top: 64px; border: 1px solid var(--danger); background: var(--danger-light); padding: 32px;">

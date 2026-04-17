@@ -15,14 +15,16 @@ class AdminController
     private Environment $view;
     private PDO $pdo;
     private AiService $aiService;
+    private MailService $mailService;
     private string $basePath;
 
-    public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath)
+    public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath, MailService $mailService)
     {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->aiService = $aiService;
         $this->basePath = $basePath;
+        $this->mailService = $mailService;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -428,6 +430,39 @@ class AdminController
         ]);
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);
+    }
+
+    public function testEmail(Request $request, Response $response): Response
+    {
+        // 1. Fetch current settings (including the notification email)
+        $stmt = $this->pdo->query("SELECT reporting_email FROM system_settings LIMIT 1");
+        $reportingEmail = $stmt->fetchColumn();
+
+        if (!$reportingEmail) {
+            $_SESSION['error'] = "No reporting email configured. Please save your settings first.";
+            return $response->withHeader('Location', $this->basePath . '/admin/settings')->withStatus(302);
+        }
+
+        // 2. Attempt to send a test message
+        $subject = "SMTP Configuration Test - AI DebugScan v3";
+        $body = "
+            <h2>Diagnostic SMTP Test</h2>
+            <p>This is a test email triggered from the AI DebugScan v3 Admin Settings panel.</p>
+            <p><strong>Status:</strong> Verification Successful</p>
+            <p><strong>Timestamp:</strong> " . date('Y-m-d H:i:s') . "</p>
+            <hr>
+            <p style='font-size: 12px; color: #666;'>If you are receiving this message, your SMTP configuration is successfully routing outbound mail.</p>
+        ";
+
+        $success = $this->mailService->send($reportingEmail, $subject, $body);
+
+        if ($success) {
+            $_SESSION['success'] = "Test email successfully dispatched to {$reportingEmail}. Please check your inbox.";
+        } else {
+            $_SESSION['error'] = "Failed to send test email. Please check your SMTP credentials and logs.";
+        }
+
+        return $response->withHeader('Location', $this->basePath . '/admin/settings')->withStatus(302);
     }
 
     public function scans(Request $request, Response $response): Response

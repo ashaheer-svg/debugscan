@@ -15,6 +15,7 @@ ALTER TABLE system_settings ADD COLUMN reporting_email VARCHAR(255) DEFAULT 'sha
 -- but standard migrations usually handle these sequentially.
 ALTER TYPE audit_action ADD VALUE IF NOT EXISTS 'tokens_requested';
 ALTER TYPE audit_action ADD VALUE IF NOT EXISTS 'tokens_redeemed';
+ALTER TYPE audit_action ADD VALUE IF NOT EXISTS 'email_failed';
 
 -- 2. Create token_redemptions table
 CREATE TABLE IF NOT EXISTS token_redemptions (

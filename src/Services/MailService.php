@@ -59,7 +59,28 @@ class MailService
             $this->logMessage($to, $subject, $body, "SENT");
             return true;
         } catch (Exception $e) {
-            $this->logMessage($to, $subject, $body, "FAILED: " . $mail->ErrorInfo);
+            $errorMsg = $mail->ErrorInfo ?: $e->getMessage();
+            $this->logMessage($to, $subject, $body, "FAILED: " . $errorMsg);
+            
+            // Log to database audit_log for Admin visibility
+            try {
+                $stmt = $this->pdo->prepare("
+                    INSERT INTO audit_log (action, details, created_at)
+                    VALUES ('email_failed', :details, NOW())
+                ");
+                $stmt->execute([
+                    'details' => json_encode([
+                        'to' => $to,
+                        'subject' => $subject,
+                        'error' => $errorMsg,
+                        'smtp_host' => $settings['smtp_host'] ?? 'N/A'
+                    ])
+                ]);
+            } catch (\Exception $auditEx) {
+                // Ignore audit logging failures to avoid infinite loops or fatal errors
+                error_log("Failed to log email error to audit_log: " . $auditEx->getMessage());
+            }
+
             return false;
         }
     }
