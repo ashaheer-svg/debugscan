@@ -713,9 +713,9 @@ class TenantController
             $success = $this->mailService->send($reportingEmail, $subject, $body);
 
             if ($success) {
-                $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to the administrator for approval.";
+                $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to <strong>{$reportingEmail}</strong> for approval.";
             } else {
-                $_SESSION['error'] = "Token request logged, but the notification email failed to send. Please contact the administrator manually.";
+                $_SESSION['error'] = "Token request logged, but the notification email failed to send to <strong>{$reportingEmail}</strong>. Please check your SMTP settings.";
             }
         } catch (\Exception $e) {
             $_SESSION['error'] = "Failed to request tokens: " . $e->getMessage();
