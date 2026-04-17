@@ -23,7 +23,9 @@
         <h2 class="kpi-value">{{ tokens_available|number_format }}</h2>
         <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
             <p class="kpi-label" style="margin: 0;">Available Tokens</p>
-            <button onclick="document.getElementById('tokenModal').style.display='flex'" class="btn-action" style="padding: 2px 8px; font-size: 11px; background: var(--primary); color: white; border: none; border-radius: 4px; cursor: pointer;">Request More</button>
+            <button onclick="document.getElementById('tokenModal').style.display='flex'" class="btn-action" title="Request More Tokens" style="padding: 4px; line-height: 1; min-width: auto; background: var(--primary); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                <i class="fas fa-plus-circle" style="font-size: 14px;"></i>
+            </button>
         </div>
     </div>
 </div>
@@ -54,7 +56,8 @@
 <script>
 document.querySelector('input[name="blocks"]').addEventListener('input', function(e) {
     const blocks = parseInt(e.target.value) || 0;
-    document.getElementById('tokenTotal').textContent = (blocks * 20000).toLocaleString();
+    const totalEl = document.getElementById('tokenTotal');
+    if (totalEl) totalEl.textContent = (blocks * 20000).toLocaleString();
 });
 </script>
 
