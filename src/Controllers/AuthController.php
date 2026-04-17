@@ -75,12 +75,22 @@ class AuthController
                 $_SESSION['name']      = $user['display_name'];
                 $_SESSION['timezone']  = $user['timezone'] ?? null;
 
+                // Log Successful Login
+                $this->logAction($request, 'login', 'users', $user['id'], [
+                    'email' => $email,
+                    'role' => $user['role']
+                ], $user['id'], $_SESSION['tenant_id']);
+
                 $redirect = $user['role'] === 'admin' ? $this->basePath . '/admin' : $this->basePath . '/dashboard';
                 return $response->withHeader('Location', $redirect)->withStatus(302);
             }
 
+            // Log Failed Login Attempt
+            $this->logAction($request, 'login_failed', 'users', null, ['email' => $email]);
+
             return $response->withHeader('Location', $this->basePath . '/login?error=Invalid+credentials')->withStatus(302);
         } catch (\Exception $e) {
+            $this->logAction($request, 'login_failed', 'users', null, ['email' => $email, 'error' => $e->getMessage()]);
             return $response->withHeader('Location', $this->basePath . '/login?error=' . urlencode($e->getMessage()))->withStatus(302);
         }
     }
@@ -90,6 +100,14 @@ class AuthController
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
         }
+
+        $userId = $_SESSION['user_id'] ?? null;
+        $tenantId = $_SESSION['tenant_id'] ?? null;
+
+        if ($userId) {
+            $this->logAction($request, 'logout', 'users', $userId, [], $userId, $tenantId);
+        }
+
         session_destroy();
         return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
     }
@@ -118,5 +136,29 @@ class AuthController
         }
 
         return $response->withHeader('Location', $request->getHeaderLine('Referer'))->withStatus(302);
+    }
+
+    private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = [], ?string $specificUserId = null, ?string $specificTenantId = null): void
+    {
+        $userId = $specificUserId ?? ($_SESSION['user_id'] ?? null);
+        $tenantId = $specificTenantId ?? ($_SESSION['tenant_id'] ?? null);
+        $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        $ua = $request->getServerParams()['HTTP_USER_AGENT'] ?? null;
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO audit_log (user_id, tenant_id, action, resource_type, resource_id, details, ip_address, user_agent)
+            VALUES (:uid, :tid, :act, :rt, :rid, :details, :ip, :ua)
+        ");
+        
+        $stmt->execute([
+            'uid' => $userId,
+            'tid' => $tenantId,
+            'act' => $action,
+            'rt' => $resourceType,
+            'rid' => $resourceId,
+            'details' => json_encode($details),
+            'ip' => $ip,
+            'ua' => $ua
+        ]);
     }
 }

@@ -240,6 +240,18 @@ class TenantController
                 'hash' => hash_file('sha256', $uploadPath),
                 'path' => $uploadPath
             ]);
+            
+            // Fetch project name for better logging
+            $stmt = $this->pdo->prepare("SELECT name FROM projects WHERE id = :pid");
+            $stmt->execute(['pid' => $id]);
+            $projectName = $stmt->fetchColumn() ?: 'Unknown';
+
+            // Logging
+            $this->logAction($request, 'file_uploaded', 'debug_files', $fileId, [
+                'filename' => $filename,
+                'project_name' => $projectName,
+                'size' => $file->getSize()
+            ]);
 
             // 3. Process/Extract
             $this->fileService->processFile($fileId, $uploadPath);
@@ -341,6 +353,18 @@ class TenantController
             $model = ($level === 'level1') ? $settings['level1_model'] : $settings['level2_model'];
 
             $jobId = $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
+
+            // Fetch project name for logging
+            $stmt = $this->pdo->prepare("SELECT name FROM projects WHERE id = :pid");
+            $stmt->execute(['pid' => $id]);
+            $projectName = $stmt->fetchColumn() ?: 'Unknown';
+
+            $this->logAction($request, 'scan_queued', 'scan_jobs', $jobId, [
+                'project_name' => $projectName,
+                'scan_level' => $level,
+                'file_ids' => $fileIds,
+                'ai_model' => $model
+            ]);
 
             
             if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
@@ -581,6 +605,12 @@ class TenantController
         $stmt->execute(['id' => $id]);
 
         $response->getBody()->write(json_encode(['success' => true, 'message' => 'Diagnostic log deleted successfully.']));
+
+        // Logging
+        $this->logAction($request, 'file_deleted', 'debug_files', $id, [
+            'storage_path' => $file['storage_path']
+        ]);
+
         return $response->withHeader('Content-Type', 'application/json');
     }
 
@@ -722,6 +752,165 @@ class TenantController
         }
 
         return $response->withHeader('Location', $this->basePath . '/dashboard')->withStatus(302);
+    }
+
+    public function audit(Request $request, Response $response): Response
+    {
+        $tenantId = $request->getAttribute('tenant_id');
+        $queryParams = $request->getQueryParams();
+        
+        // Defaults
+        $dateFrom = !empty($queryParams['from']) ? $queryParams['from'] : date('Y-m-d', strtotime('-30 days'));
+        $dateTo = !empty($queryParams['to']) ? $queryParams['to'] : date('Y-m-d');
+        $category = !empty($queryParams['category']) ? $queryParams['category'] : 'all';
+
+        // Fetch Tenant Info (Self)
+        $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :id");
+        $stmt->execute(['id' => $tenantId]);
+        $tokensAvailable = $stmt->fetchColumn() ?: 0;
+
+        // Build log query
+        $sql = "
+            SELECT a.*, u.display_name as performer_name
+            FROM audit_log a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.tenant_id = :tid 
+            AND a.created_at >= :from 
+            AND a.created_at <= :to
+        ";
+        $params = ['tid' => $tenantId, 'from' => $dateFrom . ' 00:00:00', 'to' => $dateTo . ' 23:59:59'];
+
+        if ($category === 'financial') {
+            $sql .= " AND a.action IN ('tokens_requested', 'tokens_redeemed', 'tokens_allocated', 'tokens_deducted')";
+        } elseif ($category === 'scans') {
+            $sql .= " AND a.action IN ('scan_queued', 'scan_started', 'scan_completed', 'scan_failed', 'tokens_deducted')";
+        } elseif ($category === 'sessions') {
+            $sql .= " AND a.action IN ('login', 'logout', 'login_failed')";
+        } elseif ($category === 'files') {
+            $sql .= " AND a.action IN ('file_uploaded', 'file_deleted')";
+        }
+
+        $sql .= " ORDER BY a.created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $logs = $stmt->fetchAll();
+
+        $body = $this->view->render('tenant/audit.twig', [
+            'logs' => $logs,
+            'tokens_available' => $tokensAvailable,
+            'filters' => [
+                'from' => $dateFrom,
+                'to' => $dateTo,
+                'category' => $category
+            ],
+            'active_page' => 'audit'
+        ]);
+        
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function exportAudit(Request $request, Response $response): Response
+    {
+        $tenantId = $request->getAttribute('tenant_id');
+        $queryParams = $request->getQueryParams();
+        
+        $dateFrom = !empty($queryParams['from']) ? $queryParams['from'] : date('Y-m-d', strtotime('-365 days'));
+        $dateTo = !empty($queryParams['to']) ? $queryParams['to'] : date('Y-m-d');
+
+        $stmt = $this->pdo->prepare("
+            SELECT a.*, u.display_name as performer_name
+            FROM audit_log a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.tenant_id = :tid 
+            AND a.created_at >= :from 
+            AND a.created_at <= :to
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->execute([
+            'tid' => $tenantId, 
+            'from' => $dateFrom . ' 00:00:00', 
+            'to' => $dateTo . ' 23:59:59'
+        ]);
+        $logs = $stmt->fetchAll();
+
+        $stream = fopen('php://memory', 'w+');
+        // UTF-8 BOM for Excel
+        fprintf($stream, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        fputcsv($stream, [
+            'Timestamp (UTC)', 
+            'Action', 
+            'Performer', 
+            'Project/Resource', 
+            'Level', 
+            'Tokens Change', 
+            'Before Balance', 
+            'After Balance', 
+            'IP Address', 
+            'Details'
+        ]);
+
+        foreach ($logs as $log) {
+            $details = json_decode($log['details'], true) ?: [];
+            
+            // Extract tokens change
+            $tokenChange = $details['amount'] ?? ($details['used'] ?? '0');
+            if (in_array($log['action'], ['tokens_deducted', 'scan_completed'])) {
+                $tokenChange = '-' . $tokenChange;
+            } elseif (in_array($log['action'], ['tokens_allocated', 'tokens_redeemed'])) {
+                $tokenChange = '+' . $tokenChange;
+            }
+
+            fputcsv($stream, [
+                $log['created_at'],
+                strtoupper(str_replace('_', ' ', $log['action'])),
+                $log['performer_name'] ?? 'System',
+                $details['project_name'] ?? ($log['resource_type'] ? $log['resource_type'] . ': ' . $log['resource_id'] : 'N/A'),
+                $details['scan_level'] ?? 'N/A',
+                $tokenChange,
+                $details['before'] ?? 'N/A',
+                $details['after'] ?? 'N/A',
+                $log['ip_address'],
+                $log['details']
+            ]);
+        }
+
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+
+        $filename = "ForensicAudit_" . date('Ymd') . ".csv";
+
+        $response->getBody()->write($csv);
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->withHeader('Content-Disposition', "attachment; filename=\"$filename\"");
+    }
+
+    private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = []): void
+    {
+        $userId = $request->getAttribute('user_id') ?? ($_SESSION['user_id'] ?? null);
+        $tenantId = $request->getAttribute('tenant_id') ?? ($_SESSION['tenant_id'] ?? null);
+        $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        $ua = $request->getServerParams()['HTTP_USER_AGENT'] ?? null;
+
+        $stmt = $this->pdo->prepare("
+            INSERT INTO audit_log (user_id, tenant_id, action, resource_type, resource_id, details, ip_address, user_agent)
+            VALUES (:uid, :tid, :act, :rt, :rid, :details, :ip, :ua)
+        ");
+        
+        $stmt->execute([
+            'uid' => $userId,
+            'tid' => $tenantId,
+            'act' => $action,
+            'rt' => $resourceType,
+            'rid' => $resourceId,
+            'details' => json_encode($details),
+            'ip' => $ip,
+            'ua' => $ua
+        ]);
     }
 }
 

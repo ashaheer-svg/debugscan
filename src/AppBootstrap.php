@@ -195,6 +195,8 @@ class AppBootstrap
             
             // Token Management
             $group->get('tokens/transactions', [TenantController::class, 'transactions']);
+            $group->get('audit', [TenantController::class, 'audit']);
+            $group->get('audit/export', [TenantController::class, 'exportAudit']);
             $group->post('tokens/purchase', [TenantController::class, 'requestTokens']);
             
             // Profile Routes
@@ -214,6 +216,8 @@ class AppBootstrap
             $group->post('admin/tenants/toggle-status', [AdminController::class, 'toggleTenantStatus']);
             $group->post('admin/tenants/delete', [AdminController::class, 'deleteTenant']);
             $group->post('admin/tenants/allocate', [AdminController::class, 'allocateTokens']);
+            $group->get('admin/tenants/audit/{id}', [AdminController::class, 'tenantAudit']);
+            $group->get('admin/tenants/audit/{id}/export', [AdminController::class, 'exportTenantAudit']);
             $group->get('admin/logs', [AdminController::class, 'logs']);
             $group->get('admin/settings', [AdminController::class, 'settings']);
             $group->post('admin/settings/update', [AdminController::class, 'updateSettings']);

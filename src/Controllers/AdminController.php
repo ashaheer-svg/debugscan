@@ -193,7 +193,7 @@ class AdminController
                 'email' => $email,
                 'display_name' => $orgName,
                 'tokens' => $tokens
-            ]);
+            ], $tenantId);
 
             $_SESSION['success'] = "Tenant '{$orgName}' has been provisioned successfully.";
         } catch (\PDOException $e) {
@@ -237,7 +237,7 @@ class AdminController
                 'email' => $email,
                 'display_name' => $orgName,
                 'password_changed' => !empty($password)
-            ]);
+            ], $id);
 
             $_SESSION['success'] = "Tenant '{$orgName}' updated successfully.";
         } catch (\PDOException $e) {
@@ -265,7 +265,7 @@ class AdminController
         $stmt = $this->pdo->prepare("UPDATE users SET status = :status, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
         $stmt->execute(['status' => $status, 'id' => $id]);
 
-        $this->logAction($request, $status === 'active' ? 'user_updated' : 'user_deactivated', 'users', $id, ['new_status' => $status]);
+        $this->logAction($request, $status === 'active' ? 'user_updated' : 'user_deactivated', 'users', $id, ['new_status' => $status], $id);
 
         $_SESSION['success'] = "Tenant status changed to " . ucfirst($status) . ".";
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
@@ -284,7 +284,7 @@ class AdminController
         $stmt = $this->pdo->prepare("DELETE FROM users WHERE id = :id AND role = 'tenant'");
         $stmt->execute(['id' => $id]);
 
-        $this->logAction($request, 'user_deleted', 'users', $id);
+        $this->logAction($request, 'user_deleted', 'users', $id, [], $id);
 
         $_SESSION['success'] = "Tenant permanently deleted.";
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
@@ -313,25 +313,27 @@ class AdminController
             'amount' => $amount,
             'before' => $before,
             'after' => $after
-        ]);
+        ], $id);
 
         $_SESSION['success'] = "Allocated {$amount} tokens successfully.";
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
-    private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = []): void
+    private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = [], ?string $tenantId = null): void
     {
         $userId = $_SESSION['user_id'] ?? null;
+        $targetTenantId = $tenantId ?? ($_SESSION['tenant_id'] ?? null);
         $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
         $ua = $request->getServerParams()['HTTP_USER_AGENT'] ?? null;
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO audit_log (user_id, action, resource_type, resource_id, details, ip_address, user_agent)
-            VALUES (:uid, :act, :rt, :rid, :details, :ip, :ua)
+            INSERT INTO audit_log (user_id, tenant_id, action, resource_type, resource_id, details, ip_address, user_agent)
+            VALUES (:uid, :tid, :act, :rt, :rid, :details, :ip, :ua)
         ");
         
         $stmt->execute([
             'uid' => $userId,
+            'tid' => $targetTenantId,
             'act' => $action,
             'rt' => $resourceType,
             'rid' => $resourceId,
@@ -749,7 +751,148 @@ class AdminController
             }
             $response->getBody()->write("<h2>Redemption Failed</h2><p>" . $e->getMessage() . "</p>");
             return $response->withStatus(500);
+    public function tenantAudit(Request $request, Response $response, array $args): Response
+    {
+        $tenantId = $args['id'];
+        $queryParams = $request->getQueryParams();
+        
+        // Defaults
+        $dateFrom = !empty($queryParams['from']) ? $queryParams['from'] : date('Y-m-d', strtotime('-30 days'));
+        $dateTo = !empty($queryParams['to']) ? $queryParams['to'] : date('Y-m-d');
+        $category = !empty($queryParams['category']) ? $queryParams['category'] : 'all';
+
+        // Fetch Tenant Info
+        $stmt = $this->pdo->prepare("SELECT id, display_name, email, tokens_available, status FROM users WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['id' => $tenantId]);
+        $tenant = $stmt->fetch();
+
+        if (!$tenant) {
+            $_SESSION['error'] = 'Tenant not found.';
+            return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
         }
+
+        // Build log query
+        $sql = "
+            SELECT a.*, u.display_name as performer_name
+            FROM audit_log a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.tenant_id = :tid 
+            AND a.created_at >= :from 
+            AND a.created_at <= :to
+        ";
+        $params = ['tid' => $tenantId, 'from' => $dateFrom . ' 00:00:00', 'to' => $dateTo . ' 23:59:59'];
+
+        if ($category === 'financial') {
+            $sql .= " AND a.action IN ('tokens_requested', 'tokens_redeemed', 'tokens_allocated', 'tokens_deducted')";
+        } elseif ($category === 'scans') {
+            $sql .= " AND a.action IN ('scan_queued', 'scan_started', 'scan_completed', 'scan_failed', 'tokens_deducted')";
+        } elseif ($category === 'sessions') {
+            $sql .= " AND a.action IN ('login', 'logout', 'login_failed')";
+        } elseif ($category === 'files') {
+            $sql .= " AND a.action IN ('file_uploaded', 'file_deleted')";
+        }
+
+        $sql .= " ORDER BY a.created_at DESC";
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
+        $logs = $stmt->fetchAll();
+
+        $body = $this->view->render('admin/tenant_audit.twig', [
+            'tenant' => $tenant,
+            'logs' => $logs,
+            'filters' => [
+                'from' => $dateFrom,
+                'to' => $dateTo,
+                'category' => $category
+            ],
+            'active_page' => 'admin_tenants'
+        ]);
+        
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function exportTenantAudit(Request $request, Response $response, array $args): Response
+    {
+        $tenantId = $args['id'];
+        $queryParams = $request->getQueryParams();
+        
+        $dateFrom = !empty($queryParams['from']) ? $queryParams['from'] : date('Y-m-d', strtotime('-365 days'));
+        $dateTo = !empty($queryParams['to']) ? $queryParams['to'] : date('Y-m-d');
+
+        $stmt = $this->pdo->prepare("SELECT display_name FROM users WHERE id = :id");
+        $stmt->execute(['id' => $tenantId]);
+        $tenantName = $stmt->fetchColumn() ?: 'Tenant';
+
+        $stmt = $this->pdo->prepare("
+            SELECT a.*, u.display_name as performer_name
+            FROM audit_log a
+            LEFT JOIN users u ON a.user_id = u.id
+            WHERE a.tenant_id = :tid 
+            AND a.created_at >= :from 
+            AND a.created_at <= :to
+            ORDER BY a.created_at DESC
+        ");
+        $stmt->execute([
+            'tid' => $tenantId, 
+            'from' => $dateFrom . ' 00:00:00', 
+            'to' => $dateTo . ' 23:59:59'
+        ]);
+        $logs = $stmt->fetchAll();
+
+        $stream = fopen('php://memory', 'w+');
+        // UTF-8 BOM for Excel
+        fprintf($stream, chr(0xEF).chr(0xBB).chr(0xBF));
+        
+        fputcsv($stream, [
+            'Timestamp (UTC)', 
+            'Action', 
+            'Performer', 
+            'Project/Resource', 
+            'Level', 
+            'Tokens Change', 
+            'Before Balance', 
+            'After Balance', 
+            'IP Address', 
+            'Details'
+        ]);
+
+        foreach ($logs as $log) {
+            $details = json_decode($log['details'], true) ?: [];
+            
+            // Extract tokens change
+            $tokenChange = $details['amount'] ?? ($details['used'] ?? '0');
+            if (in_array($log['action'], ['tokens_deducted', 'scan_completed'])) {
+                $tokenChange = '-' . $tokenChange;
+            } elseif (in_array($log['action'], ['tokens_allocated', 'tokens_redeemed'])) {
+                $tokenChange = '+' . $tokenChange;
+            }
+
+            fputcsv($stream, [
+                $log['created_at'],
+                strtoupper(str_replace('_', ' ', $log['action'])),
+                $log['performer_name'] ?? 'System',
+                $details['project_name'] ?? ($log['resource_type'] ? $log['resource_type'] . ': ' . $log['resource_id'] : 'N/A'),
+                $details['scan_level'] ?? 'N/A',
+                $tokenChange,
+                $details['before'] ?? 'N/A',
+                $details['after'] ?? 'N/A',
+                $log['ip_address'],
+                $log['details']
+            ]);
+        }
+
+        rewind($stream);
+        $csv = stream_get_contents($stream);
+        fclose($stream);
+
+        $filename = "AuditLog_" . str_replace(' ', '_', $tenantName) . "_" . date('Ymd') . ".csv";
+
+        $response->getBody()->write($csv);
+        return $response
+            ->withHeader('Content-Type', 'text/csv; charset=UTF-8')
+            ->withHeader('Content-Disposition', "attachment; filename=\"$filename\"");
     }
 }
 
