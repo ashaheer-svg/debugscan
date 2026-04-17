@@ -685,6 +685,9 @@ class TenantController
             ]);
 
             // 3. Send magic link to Admin
+            $stmt = $this->pdo->query("SELECT reporting_email FROM system_settings LIMIT 1");
+            $reportingEmail = $stmt->fetchColumn() ?: 'shaheer@activelk.com';
+
             $redeemUrl = (getenv('APP_URL') ?: 'http://' . $_SERVER['HTTP_HOST']) . $this->basePath . "/redeem/" . $code;
             $subject = "Token Purchase Request - " . ($_SESSION['name'] ?? 'Tenant');
             $body = "
@@ -699,7 +702,7 @@ class TenantController
                 <p>Or copy and paste this URL: <br> {$redeemUrl}</p>
             ";
 
-            $this->mailService->send('shaheer@activelk.com', $subject, $body);
+            $this->mailService->send($reportingEmail, $subject, $body);
 
             $_SESSION['success'] = "Token purchase request for " . number_format($amount) . " tokens has been sent to the administrator for approval.";
         } catch (\Exception $e) {

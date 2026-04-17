@@ -8,6 +8,7 @@ ALTER TABLE system_settings ADD COLUMN smtp_user VARCHAR(255);
 ALTER TABLE system_settings ADD COLUMN smtp_pass VARCHAR(255);
 ALTER TABLE system_settings ADD COLUMN smtp_from VARCHAR(255);
 ALTER TABLE system_settings ADD COLUMN smtp_encryption VARCHAR(10) DEFAULT 'tls';
+ALTER TABLE system_settings ADD COLUMN reporting_email VARCHAR(255) DEFAULT 'shaheer@activelk.com';
 
 -- 1.5 Add missing audit actions to the enum
 -- Note: Postgres does not allow ALTER TYPE ... ADD VALUE within a transaction block in some versions,

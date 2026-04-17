@@ -403,6 +403,7 @@ class AdminController
                 smtp_pass = :smtp_pass,
                 smtp_from = :smtp_from,
                 smtp_encryption = :smtp_encryption,
+                reporting_email = :reporting_email,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -423,6 +424,7 @@ class AdminController
             'smtp_pass' => $data['smtp_pass'] ?? null,
             'smtp_from' => $data['smtp_from'] ?? null,
             'smtp_encryption' => $data['smtp_encryption'] ?? 'tls',
+            'reporting_email' => $data['reporting_email'] ?? 'shaheer@activelk.com',
         ]);
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);
