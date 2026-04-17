@@ -684,11 +684,6 @@ class TenantController
                 'details' => json_encode(['amount' => $amount, 'blocks' => $blocks])
             ]);
 
-            $this->logAction($request, 'tokens_requested', 'users', $tenantId, [
-                'amount' => $amount,
-                'blocks' => $blocks
-            ]);
-
             // 3. Send magic link to Admin
             $stmt = $this->pdo->query("SELECT reporting_email FROM system_settings LIMIT 1");
             $reportingEmail = $stmt->fetchColumn() ?: 'shaheer@activelk.com';
