@@ -27,26 +27,6 @@
         <section class="card">
             <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">AI Engine Configuration</h3>
             
-            <div class="form-group">
-                <label for="level1_model" class="form-label">Level 1 Scan Model (Standard)</label>
-                <select id="level1_model" name="level1_model" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
-                    {% for model in models %}
-                    <option value="{{ model.id }}" {% if settings.level1_model == model.id %}selected{% endif %}>{{ model.id }}</option>
-                    {% endfor %}
-                </select>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Optimized for rapid hardware identity discovery and extraction.</p>
-            </div>
-
-            <div class="form-group" style="margin-top: 24px;">
-                <label for="level2_model" class="form-label">Level 2 Scan Model (Deep Forensic)</label>
-                <select id="level2_model" name="level2_model" class="form-control" style="background: var(--bg-light); border-color: var(--border);">
-                    {% for model in models %}
-                    <option value="{{ model.id }}" {% if settings.level2_model == model.id %}selected{% endif %}>{{ model.id }}</option>
-                    {% endfor %}
-                </select>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Optimized for high-context archival log cross-referencing.</p>
-            </div>
-
             <div class="form-group" style="margin-top: 24px;">
                 <label for="max_prompt_chars" class="form-label">AI Character Limit (Per File)</label>
                 <input type="number" id="max_prompt_chars" name="max_prompt_chars" class="form-control" value="{{ settings.max_prompt_chars|default(50000) }}" min="1000" max="500000" step="5000" style="background: var(--bg-light); border-color: var(--border);">

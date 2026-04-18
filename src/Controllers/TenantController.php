@@ -168,22 +168,25 @@ class TenantController
         $stmt->execute(['pid' => $id]);
         $scans = $stmt->fetchAll();
 
-        // Build mapping of file_id => latest report_id per level
+        // Build mapping of file_id => array of completed scans
         $fileReports = [];
         foreach ($scans as $scan) {
             if ($scan['status'] !== 'completed') continue;
             
             // Parse Postgres array string like "{uuid1,uuid2}"
             $fids = explode(',', trim($scan['debug_file_ids'], '{}'));
-            $level = $scan['scan_level']; // e.g., 'level1' or 'level2'
             
             foreach ($fids as $fid) {
-                if (!isset($fileReports[$fid][$level])) {
-                    $fileReports[$fid][$level] = [
-                        'id' => $scan['id'],
-                        'truncated' => (bool)($scan['is_truncated'] ?? false)
-                    ];
+                if (!isset($fileReports[$fid])) {
+                    $fileReports[$fid] = [];
                 }
+                
+                $fileReports[$fid][] = [
+                    'id'           => $scan['id'],
+                    'package_name' => $scan['package_name'] ?? $scan['scan_level'],
+                    'truncated'    => (bool)($scan['is_truncated'] ?? false),
+                    'completed_at' => $scan['completed_at']
+                ];
             }
         }
 
@@ -880,7 +883,7 @@ class TenantController
                 strtoupper(str_replace('_', ' ', $log['action'])),
                 $log['performer_name'] ?? 'System',
                 $details['project_name'] ?? ($log['resource_type'] ? $log['resource_type'] . ': ' . $log['resource_id'] : 'N/A'),
-                $details['scan_level'] ?? 'N/A',
+                $details['package_name'] ?? ($details['scan_level'] ?? 'N/A'),
                 $tokenChange,
                 $details['before'] ?? 'N/A',
                 $details['after'] ?? 'N/A',

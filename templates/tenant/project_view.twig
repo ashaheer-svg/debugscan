@@ -51,7 +51,41 @@
 
         .fi-empty { text-align: center; padding: 60px 40px; color: #4b5563; }
         .fi-identity-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+
+        /* Report Dropdown */
+        .report-dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; right: 0; background-color: var(--white);
+            min-width: 180px; box-shadow: var(--shadow-lg); z-index: 100; border-radius: var(--radius);
+            border: 1px solid var(--border); overflow: hidden; margin-top: 8px;
+        }
+        .dropdown-content a {
+            color: var(--text-primary); padding: 12px 16px; text-decoration: none;
+            display: block; font-size: 13px; border-bottom: 1px solid var(--bg-light);
+            transition: all 0.2s; text-align: left;
+        }
+        .dropdown-content a:last-child { border-bottom: none; }
+        .dropdown-content a:hover { background-color: var(--bg-light); }
+        .dropdown-content.show { display: block; animation: slideDown 0.2s ease-out; }
+        @keyframes slideDown { 
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
+    <script>
+        // Close dropdowns when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.closest('.report-dropdown')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
 {% endblock %}
 
 {% block dashboard_content %}
@@ -181,9 +215,18 @@
                             </td>
                             <td>
                                 <div class="forensic-status-{{ file.id }}" style="display: flex; flex-direction: column; gap: 4px;">
-                                    <div style="display: flex; gap: 4px;">
-                                        <span id="l1-badge-{{ file.id }}" class="badge" title="Level 1" style="background: {% if file_reports[file.id].level1 %}var(--success-light){% else %}var(--bg-light){% endif %}; color: {% if file_reports[file.id].level1 %}var(--success){% else %}var(--text-muted){% endif %};">L1</span>
-                                        <span id="l2-badge-{{ file.id }}" class="badge" title="Level 2" style="background: {% if file_reports[file.id].level2 %}var(--warning-light){% else %}var(--bg-light){% endif %}; color: {% if file_reports[file.id].level2 %}var(--warning){% else %}var(--text-muted){% endif %};">L2</span>
+                                    <div style="display: flex; align-items: center; gap: 6px;">
+                                        {% if file_reports[file.id]|length > 0 %}
+                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--success-light); color: var(--success); border-radius: 6px; font-size: 10px; font-weight: 800;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                {{ file_reports[file.id]|length }} REPORTS
+                                            </div>
+                                        {% else %}
+                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg-light); color: var(--text-muted); border-radius: 6px; font-size: 10px; font-weight: 700;">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                                NO AUDIT
+                                            </div>
+                                        {% endif %}
                                     </div>
                                     <div id="progress-container-{{ file.id }}" style="display: none;">
                                         <div style="height: 4px; background: var(--bg-light); border-radius: 2px; overflow: hidden; width: 80px;">
@@ -194,16 +237,34 @@
                                 </div>
                             </td>
                             <td style="padding-right: 24px; text-align: right;">
-                                <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                                    {% set level1 = file_reports[file.id].level1 %}
-                                    {% set level2 = file_reports[file.id].level2 %}
-                                    {% set is_truncated = (level1 and level1.truncated) or (level2 and level2.truncated) %}
+                                <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
+                                    {% set reports = file_reports[file.id]|default([]) %}
+                                    {% set is_truncated = false %}
+                                    {% for r in reports %}{% if r.truncated %}{% set is_truncated = true %}{% endif %}{% endfor %}
+                                    
                                     <button type="button" onclick="openPromptModal('{{ file.id }}')" 
                                             class="btn-action {% if is_truncated %}btn-warning-alt{% endif %}" 
                                             data-tooltip="View Forensic AI Prompt{% if is_truncated %} (Truncated){% endif %}" 
                                             aria-label="View Forensic AI Prompt">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
                                     </button>
+
+                                    {% if reports|length > 0 %}
+                                    <div class="report-dropdown" style="position: relative; display: inline-block;">
+                                        <button type="button" class="btn-action btn-success-alt" onclick="this.nextElementSibling.classList.toggle('show')" data-tooltip="View Analysis Reports" style="display: flex;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
+                                        </button>
+                                        <div class="dropdown-content">
+                                            {% for r in reports %}
+                                            <a href="/scans/report/{{ r.id }}">
+                                                <div style="font-weight: 700; color: var(--text-primary);">{{ r.package_name|upper }}</div>
+                                                <div style="font-size: 9px; color: var(--text-muted); margin-top: 2px;">{{ r.completed_at|date('M d, H:i') }}</div>
+                                            </a>
+                                            {% endfor %}
+                                        </div>
+                                    </div>
+                                    {% endif %}
+
                                     <a href="/files/report/{{ file.id }}" 
                                        data-tooltip="View Full Hardware Digest Report" 
                                        aria-label="Hardware Digest"
@@ -212,13 +273,6 @@
                                        onmouseout="this.style.background='rgba(99,102,241,0.1)';this.style.borderColor='rgba(99,102,241,0.3)';">
                                         <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
                                         HW Digest
-                                    </a>
-                                    
-                                    <a href="{% if file_reports[file.id].level1 %}/scans/report/{{ file_reports[file.id].level1.id }}{% else %}#{% endif %}" id="l1-btn-{{ file.id }}" class="btn-action btn-success-alt" data-tooltip="View Level 1 Report" aria-label="Level 1" style="display: {% if file_reports[file.id].level1 %}flex{% else %}none{% endif %};">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/><path d="M11 8a3 3 0 0 0-3 3"/></svg>
-                                    </a>
-                                    <a href="{% if file_reports[file.id].level2 %}/scans/report/{{ file_reports[file.id].level2.id }}{% else %}#{% endif %}" id="l2-btn-{{ file.id }}" class="btn-action btn-warning-alt" data-tooltip="View Level 2 Report" aria-label="Level 2" style="display: {% if file_reports[file.id].level2 %}flex{% else %}none{% endif %};">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </a>
 
                                     <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn-action btn-danger-alt" data-tooltip="Delete Log File" aria-label="Delete Log File">
@@ -270,7 +324,7 @@
                 <thead>
                     <tr>
                         <th style="padding-left: 24px;">Job ID</th>
-                        <th>Level</th>
+                        <th>Package</th>
                         <th>Status</th>
                         <th>Health Score</th>
                         <th style="padding-right: 24px; text-align: right;">Action</th>
@@ -281,8 +335,8 @@
                     <tr>
                         <td style="padding-left: 24px; font-family: monospace; font-size: 11px; color: var(--text-secondary);">#{{ scan.id|slice(0, 8) }}</td>
                         <td>
-                            <span class="badge" style="background: var(--bg-light); color: var(--text-primary);">
-                                {{ scan.scan_level|upper }}
+                            <span class="hd-badge hd-badge-muted">
+                                {{ (scan.package_name ?? scan.scan_level)|upper }}
                             </span>
                         </td>
                         <td>
@@ -487,27 +541,9 @@
     {% for scan in scans %}
         {% if scan.status in ['queued', 'running'] %}
             activeScans.set('{{ scan.id }}', {
-                level: '{{ scan.scan_level }}',
+                package: '{{ scan.package_name }}',
                 files: {{ scan.debug_file_ids|json_encode|raw }}
             });
-        {% elseif scan.status == 'completed' %}
-            {# Immediately show buttons for completed historic scans #}
-            {% for fid in scan.debug_file_ids %}
-                (function() {
-                    const fid = '{{ fid }}';
-                    const level = '{{ scan.scan_level }}';
-                    const btn = document.getElementById(level + '-btn-' + fid);
-                    const badge = document.getElementById(level + '-badge-' + fid);
-                    if (btn) {
-                        btn.style.display = 'inline-block';
-                        btn.href = '/scans/report/{{ scan.id }}';
-                    }
-                    if (badge) {
-                        badge.style.background = level === 'level1' ? 'var(--success-light)' : 'var(--warning-light)';
-                        badge.style.color = level === 'level1' ? 'var(--success)' : 'var(--warning)';
-                    }
-                })();
-            {% endfor %}
         {% endif %}
     {% endfor %}
 
@@ -531,43 +567,27 @@
                         const bar = document.getElementById('progress-bar-' + fid);
                         const stage = document.getElementById('progress-stage-' + fid);
 
-                    const l1Btn = document.getElementById('l1-btn-' + fid);
-                    const l2Btn = document.getElementById('l2-btn-' + fid);
-                    const badge = document.getElementById(job.scan_level + '-badge-' + fid);
-
-                    if (job.status === 'running' || job.status === 'queued') {
-                        container.style.display = 'block';
-                        
-                        // Stepped Progress Mapping
-                        const stages = ['Initializing', 'Extracting', 'Database Parsing', 'AI Analysis', 'Finalizing'];
-                        const currentStageIdx = stages.indexOf(job.progress_stage);
-                        const progress = currentStageIdx >= 0 ? ((currentStageIdx + 1) / stages.length) * 100 : (job.progress_percent || 0);
-                        
-                        bar.style.width = progress + '%';
-                        stage.innerHTML = `
-                            <div style="display: flex; gap: 4px; margin-top: 4px;">
-                                ${stages.map((s, i) => `
-                                    <div style="flex: 1; height: 3px; border-radius: 1px; background: ${i <= currentStageIdx ? 'var(--primary)' : 'var(--bg-light)'};"></div>
-                                `).join('')}
-                            </div>
-                            <div style="margin-top: 4px;">${job.progress_stage || 'Queued...'}</div>
-                        `;
-                    } else if (isFinished) {
-
-                        container.style.display = 'none';
-                        if (job.status === 'completed') {
-                            const btn = job.scan_level === 'level1' ? l1Btn : l2Btn;
-                            if (btn) {
-                                btn.style.display = 'flex'; // Use flex for perfect centering
-                                btn.href = '/scans/report/' + job.id;
-                            }
-                            if (badge) {
-                                badge.style.background = job.scan_level === 'level1' ? 'var(--success-light)' : 'var(--warning-light)';
-                                badge.style.color = job.scan_level === 'level1' ? 'var(--success)' : 'var(--warning)';
-                            }
+                        if (job.status === 'running' || job.status === 'queued') {
+                            container.style.display = 'block';
+                            
+                            // Stepped Progress Mapping
+                            const stages = ['Initializing', 'Extracting', 'Database Parsing', 'AI Analysis', 'Finalizing'];
+                            const currentStageIdx = stages.indexOf(job.progress_stage);
+                            const progress = currentStageIdx >= 0 ? ((currentStageIdx + 1) / stages.length) * 100 : (job.progress_percent || 0);
+                            
+                            bar.style.width = progress + '%';
+                            stage.innerHTML = `
+                                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                                    ${stages.map((s, i) => `
+                                        <div style="flex: 1; height: 3px; border-radius: 1px; background: ${i <= currentStageIdx ? 'var(--primary)' : 'var(--bg-light)'};"></div>
+                                    `).join('')}
+                                </div>
+                                <div style="margin-top: 4px;">${job.progress_stage || 'Queued...'}</div>
+                            `;
+                        } else if (isFinished) {
+                            container.style.display = 'none';
                         }
-                    }
-                });
+                    });
             }
 
 

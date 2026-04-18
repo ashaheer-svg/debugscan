@@ -61,7 +61,7 @@ echo "Startup: Rescued any leftover zombie jobs.\n";
 while (true) {
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
-        SELECT id, tenant_id, project_id, report_plan_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
+        SELECT id, tenant_id, project_id, report_plan_id, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
         FROM scan_jobs
         WHERE status = 'queued'
         ORDER BY priority DESC, queued_at ASC
@@ -87,13 +87,11 @@ while (true) {
 
     // 1.5 Load Report Plan
     $planId = $job['report_plan_id'];
-    // Fallback for legacy jobs
+    
     if (!$planId) {
-        if ($job['scan_level'] === 'level2') {
-            $planId = '22222222-2222-4222-a222-222222222222';
-        } else {
-            $planId = '11111111-1111-4111-a111-111111111111';
-        }
+         $pdo->prepare("UPDATE scan_jobs SET status = 'failed', error_message = 'Legacy Error: Job missing Report Plan ID', completed_at = NOW() WHERE id = :id")->execute(['id' => $job['id']]);
+         $pdo->commit();
+         continue;
     }
     
     $plan = $reportPlanService->getPlan($planId);

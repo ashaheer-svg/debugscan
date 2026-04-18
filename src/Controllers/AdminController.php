@@ -413,8 +413,6 @@ class AdminController
         
         $stmt = $this->pdo->prepare("
             UPDATE system_settings 
-            SET level1_model = :l1, 
-                level2_model = :l2, 
                 retention_days = :retention,
                 max_concurrent_scans = :max_scans,
                 stuck_alert_mins = :alert_mins,
@@ -434,8 +432,6 @@ class AdminController
         ");
         
         $stmt->execute([
-            'l1' => $data['level1_model'],
-            'l2' => $data['level2_model'],
             'retention' => (int)$data['retention_days'],
             'max_scans' => (int)$data['max_concurrent_scans'],
             'alert_mins' => (int)$data['stuck_alert_mins'],
