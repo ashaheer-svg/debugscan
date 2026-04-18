@@ -22,6 +22,7 @@
 
 <div style="max-width: 600px;">
     <form action="/profile/update" method="POST" class="card" style="padding: 32px;">
+        {{ csrf.inputs | raw }}
         <h3 style="font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 24px;">Forensic Identity</h3>
         
         <div class="form-group" style="margin-bottom: 24px;">

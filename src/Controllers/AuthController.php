@@ -72,6 +72,8 @@ class AuthController
                 if (session_status() === PHP_SESSION_NONE) {
                     session_start();
                 }
+                session_regenerate_id(true);
+
                 $_SESSION['user_id']   = $user['id'];
                 $_SESSION['tenant_id'] = $user['tenant_id'] ?: ($user['role'] === 'tenant' ? $user['id'] : null);
                 $_SESSION['role']      = $user['role'];

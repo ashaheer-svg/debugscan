@@ -71,7 +71,12 @@ class ScanService
             RETURNING id
         ");
 
-        // Convert array to Postgres array format
+        // Convert array to Postgres array format with UUID validation
+        foreach ($fileIds as $fid) {
+            if (!\Ramsey\Uuid\Uuid::isValid($fid)) {
+                throw new RuntimeException("Invalid File ID format: " . $fid);
+            }
+        }
         $pgArray = '{' . implode(',', $fileIds) . '}';
 
         $stmt->execute([

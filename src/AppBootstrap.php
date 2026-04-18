@@ -26,7 +26,9 @@ use App\Controllers\ExtractionConfigController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
+use App\Middleware\SecurityHeadersMiddleware;
 use App\Services\ReportPlanService;
+use Slim\Csrf\Guard;
 
 class AppBootstrap
 {
@@ -125,6 +127,19 @@ class AppBootstrap
                     $container->get(ReportPlanService::class)
                 );
             },
+            Guard::class => function ($container) {
+                $responseFactory = $container->get(App::class)->getResponseFactory();
+                $guard = new Guard($responseFactory);
+                $guard->setFailureHandler(function ($request, $handler) {
+                    $response = new \Slim\Psr7\Response();
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'Security Error: CSRF token validation failed. Please refresh and try again.'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(403);
+                });
+                return $guard;
+            },
         ]);
 
         $container = $containerBuilder->build();
@@ -175,6 +190,11 @@ class AppBootstrap
 
         $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
+        
+        // Security Middlewares
+        $app->add(SecurityHeadersMiddleware::class);
+        $app->add(Guard::class);
+
         $app->addErrorMiddleware($isDebugMode, true, true);
 
         // Ensure storage directories exist
@@ -256,6 +276,24 @@ class AppBootstrap
             $group->get('admin/report-plans', [AdminController::class, 'reportPlans']);
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
+        })->add(function($request, $handler) use ($container) {
+            // Register CSRF tags in Twig
+            $csrf = $container->get(Guard::class);
+            $twig = $container->get(Environment::class);
+            
+            $nameKey = $csrf->getTokenNameKey();
+            $valueKey = $csrf->getTokenValueKey();
+            $name = $csrf->getTokenName();
+            $value = $csrf->getTokenValue();
+
+            $twig->addGlobal('csrf', [
+                'keys' => [ 'name' => $nameKey, 'value' => $valueKey ],
+                'name' => $name,
+                'value' => $value,
+                'inputs' => sprintf('<input type="hidden" name="%s" value="%s"><input type="hidden" name="%s" value="%s">', $nameKey, $name, $valueKey, $value)
+            ]);
+
+            return $handler->handle($request);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
 
