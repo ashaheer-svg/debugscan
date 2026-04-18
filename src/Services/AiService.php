@@ -63,7 +63,7 @@ class AiService
     public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000, string $jobId = 'unknown', ?string $customPrompt = null): array
     {
         $baseRules = $this->getForensicRules();
-        $systemPrompt = ($customPrompt ?? $this->getDefaultHeader()) . "\n\n" . $baseRules;
+        $systemPrompt = (!empty($customPrompt) ? $customPrompt : $this->getDefaultHeader()) . "\n\n" . $baseRules;
         $isTruncated = false;
         
         // Assemble User Prompt (Hybrid Mode: JSON + Markdown Tables)

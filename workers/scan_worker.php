@@ -248,8 +248,9 @@ while (true) {
                  'discovery' => 'Hardware components mapped successfully',
                  'capacity' => !empty($hw) ? 'Hardware metadata identified' : 'No hardware metadata found',
                  'data_link' => "/files/report/$fileId",
-                 'serial' => $hw['serial'] ?? 'unknown',
-                 'dsm_version' => $ver['product'] ?? 'unknown'
+                 'serial' => (string)($hw['serial'] ?? 'unknown'),
+                 'dsm_version' => (string)($ver['product'] ?? 'unknown'),
+                 'model' => (string)($hw['model'] ?? 'Unknown Synology')
              ]);
 
              // 3. Package raw forensic data if available (all levels)
@@ -348,7 +349,7 @@ while (true) {
                 $stmt->execute([
                     'job_id' => $job['id'],
                     'tenant_id' => $job['tenant_id'],
-                    'category' => $finding['category'] ?? 'General',
+                    'category' => (string)($finding['category'] ?? 'General'),
                     'severity' => $finding['severity'] ?? 'info',
                     'title' => $finding['title'] ?? 'N/A',
                     'description' => $finding['description'] ?? 'N/A',
