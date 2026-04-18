@@ -242,14 +242,6 @@
                                     {% set is_truncated = false %}
                                     {% for r in reports %}{% if r.truncated %}{% set is_truncated = true %}{% endif %}{% endfor %}
                                     
-                                    <button type="button" onclick="openPromptModal('{{ file.id }}')" 
-                                            class="btn-action {% if is_truncated %}btn-warning-alt{% endif %}" 
-                                            data-tooltip="View Forensic AI Prompt{% if is_truncated %} (Truncated){% endif %}" 
-                                            aria-label="View Forensic AI Prompt">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                                    </button>
-
-                                    {% if reports|length > 0 %}
                                     <div class="report-dropdown" style="position: relative; display: inline-block;">
                                         <button type="button" class="btn-action btn-success-alt" onclick="this.nextElementSibling.classList.toggle('show')" data-tooltip="View Analysis Reports" style="display: flex;">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
@@ -355,17 +347,10 @@
                         </td>
                         <td style="padding-right: 24px; text-align: right;">
                             <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                                <button onclick="openCheckpointModal('{{ scan.id }}')" class="btn-action" data-tooltip="Inspect Workflow Pipeline" aria-label="Inspect Workflow Pipeline">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                                </button>
-                                
                                 {% if scan.status == 'completed' %}
                                 <a href="/scans/report/{{ scan.id }}" class="btn-action btn-success-alt" data-tooltip="View Final Analysis Report" aria-label="View Analysis Report">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
                                 </a>
-                                <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action btn-info-alt" data-tooltip="Inspect Full AI Context Trace" aria-label="AI Prompt Trace">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg>
-                                </button>
                                 {% else %}
                                 <div class="btn-action" data-tooltip="Processing..." style="opacity: 0.5; cursor: wait;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
@@ -653,62 +638,6 @@
             alert('An error occurred while deleting the file');
         });
     }
-    function openCheckpointModal(scanId) {
-        const modal = document.getElementById('checkpointModal');
-        const content = document.getElementById('checkpointContent');
-        modal.style.display = 'flex';
-        content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Loading checkpoints...</div>';
-
-        fetch(`/scans/status/${scanId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(data => {
-            const cps = typeof data.checkpoints === 'string' ? JSON.parse(data.checkpoints) : data.checkpoints;
-            
-            if (!cps || cps.length === 0) {
-                content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">No checkpoints logged yet.</div>';
-                return;
-            }
-
-            let html = '<div style="display: flex; flex-direction: column; gap: 16px;">';
-            cps.forEach((cp, idx) => {
-                const isLast = idx === cps.length - 1;
-                const color = cp.status === 'success' ? '#10b981' : '#ef4444';
-                
-                html += `
-                    <div style="display: flex; gap: 16px;">
-                        <div style="display: flex; flex-direction: column; align-items: center; width: 24px;">
-                            <div style="width: 12px; height: 12px; border-radius: 50%; background: ${color}; border: 3px solid #fff; box-shadow: 0 0 0 1px ${color}; z-index: 1;"></div>
-                            ${!isLast ? `<div style="width: 2px; flex-grow: 1; background: #e5e7eb; margin: 4px 0;"></div>` : ''}
-                        </div>
-                        <div style="flex-grow: 1; padding-bottom: ${!isLast ? '16px' : '0'};">
-                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px;">
-                                <h4 style="margin: 0; font-size: 13px; font-weight: 700; color: var(--text-primary);">${cp.stage}</h4>
-                                <span style="font-size: 11px; color: var(--text-muted);">${cp.ts.split(' ')[1]}</span>
-                            </div>
-                            <div style="font-size: 12px; color: var(--text-secondary); background: #f8fafc; padding: 8px 12px; border-radius: 6px; border: 1px solid #edf2f7;">
-                                <div style="font-weight: 700; font-size: 10px; color: ${color}; text-transform: uppercase; margin-bottom: 4px;">${cp.status}</div>
-                                ${cp.meta.capacity ? `<div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #e2e8f0;"><strong style="color: var(--text-primary);">Handover Capacity:</strong> <span style="color: var(--primary); font-weight: 700;">${cp.meta.capacity}</span></div>` : ''}
-                                ${Object.entries(cp.meta).filter(([k]) => !['capacity', 'data_link'].includes(k)).map(([k, v]) => `<div><strong>${k}:</strong> ${typeof v === 'object' ? JSON.stringify(v) : v}</div>`).join('') || (!cp.meta.capacity ? 'Process completed successfully.' : '')}
-                                ${cp.meta.data_link && (currentUserRole === 'admin' || currentUserRole === 'system_admin') ? `
-                                    <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #e2e8f0;">
-                                        <a href="${cp.meta.data_link}" target="_blank" class="btn" style="height: 28px; font-size: 11px; font-weight: 700; background: var(--bg-light); border: 1px solid var(--border); color: var(--primary); width: 100%;">INSPECT HANDOVER DATA</a>
-                                    </div>
-                                ` : ''}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            content.innerHTML = html;
-        })
-        .catch(err => {
-            content.innerHTML = `<div style="text-align: center; padding: 40px; color: var(--error);">Error loading checkpoints: ${err.message}</div>`;
-        });
-    }
-
     function closeCheckpointModal() {
         document.getElementById('checkpointModal').style.display = 'none';
     }
@@ -785,191 +714,6 @@
             if (data.success) location.reload();
             else alert(data.message);
         });
-    }
-
-    function openPromptModal(fileId) {
-        const modal = document.getElementById('promptModal');
-        const content = document.getElementById('promptModalContent');
-        
-        modal.style.display = 'flex';
-        content.innerHTML = '<div class="fi-empty">Fetching forensic payload...</div>';
-        
-        fetch(`/files/prompt/${fileId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.success) {
-                renderForensicInspector(resp.data, resp.title, resp.type.toUpperCase());
-            } else {
-                content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load diagnostic data.'}</div>`;
-            }
-        });
-    }
-
-    function openScanPromptModal(jobId) {
-        const modal = document.getElementById('promptModal');
-        const content = document.getElementById('promptModalContent');
-        
-        modal.style.display = 'flex';
-        content.innerHTML = '<div class="fi-empty">Fetching full AI context trace...</div>';
-        
-        fetch(`/scans/prompt/${jobId}`, {
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        })
-        .then(r => r.json())
-        .then(resp => {
-            if (resp.success) {
-                renderForensicInspector(resp.data, resp.title, 'AI TRACE');
-            } else {
-                content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load AI trace.'}</div>`;
-            }
-        });
-    }
-
-    function renderForensicInspector(rawData, title, badgeText) {
-        const modalTitle = document.getElementById('promptModalTitle');
-        const typeBadge = document.getElementById('promptTypeBadge');
-        const content = document.getElementById('promptModalContent');
-        
-        modalTitle.innerText = title;
-        typeBadge.innerText = badgeText;
-        typeBadge.style.background = badgeText === 'AI TRACE' ? 'var(--primary)' : 'var(--info-light)';
-        
-        const parsed = parseForensicPrompt(rawData);
-        
-        let sidebarHtml = '';
-        let mainHtml = '<div id="fi-payload-view" class="fi-tab-content">';
-        
-        // 1. Data Sets
-        parsed.data_sets.forEach((set, idx) => {
-            const setId = `dataset-${idx}`;
-            sidebarHtml += `<div class="fi-nav-item" onclick="scrollToFiSection('${setId}')">Data Set ${idx + 1}</div>`;
-            
-            mainHtml += `<div id="${setId}" class="fi-section">
-                <div class="fi-section-header">
-                    <span style="font-size: 20px;">📦</span>
-                    <span class="fi-section-title">Data Set ${idx + 1}: Diagnostic Payload</span>
-                </div>`;
-            
-            if (set.identity) {
-                mainHtml += `<div class="fi-card fi-identity-grid">
-                    <div><div class="fi-card-label">Forensic Identity</div><div class="fi-card-value">${set.identity}</div></div>
-                </div>`;
-            }
-            
-            set.sections.forEach((sec, sidx) => {
-                const secId = `${setId}-sec-${sidx}`;
-                sidebarHtml += `<div class="fi-nav-item" style="padding-left: 40px; font-weight: 500; font-size: 10px;" onclick="scrollToFiSection('${secId}')">${sec.title}</div>`;
-                
-                mainHtml += `<div id="${secId}" style="margin-top: 24px;">
-                    <div style="font-size: 11px; font-weight: 800; color: #3b82f6; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
-                        <span>${sec.is_json ? '📊' : '📄'}</span> ${sec.title}
-                    </div>
-                    <pre class="fi-pre">${sec.content.trim()}</pre>
-                </div>`;
-            });
-            
-            mainHtml += `</div>`;
-        });
-        
-        mainHtml += '</div>';
-        
-        // 2. System Prompt View (hidden by default)
-        mainHtml += `<div id="fi-system-view" class="fi-tab-content" style="display: none;">
-            <div class="fi-section">
-                <div class="fi-section-header">
-                    <span style="font-size: 20px;">⚙️</span>
-                    <span class="fi-section-title">System Context & Forensic Rules</span>
-                </div>
-                <pre class="fi-pre" style="color: #9cdcfe;">${parsed.system_prompt || 'No system instructions provided.'}</pre>
-            </div>
-        </div>`;
-
-        // Assemble Final UI
-        content.innerHTML = `
-            <div class="fi-container">
-                <div class="fi-sidebar">
-                    <div style="padding: 16px 24px; font-size: 10px; font-weight: 800; color: #4b5563; text-transform: uppercase;">Navigation</div>
-                    ${sidebarHtml}
-                </div>
-                <div class="fi-main">
-                    ${mainHtml}
-                </div>
-            </div>
-        `;
-
-        // Add Tab Switcher to header (if not already there)
-        const header = modalTitle.parentElement.parentElement;
-        if (!header.querySelector('.fi-tabs')) {
-            const tabs = document.createElement('div');
-            tabs.className = 'fi-tabs';
-            tabs.innerHTML = `
-                <div class="fi-tab active" onclick="switchFiTab('payload', this)">Payload Explorer</div>
-                <div class="fi-tab" onclick="switchFiTab('system', this)">System Prompt</div>
-            `;
-            modalTitle.parentElement.after(tabs);
-        }
-    }
-
-    function parseForensicPrompt(data) {
-        const result = { system_prompt: '', data_sets: [] };
-        if (typeof data !== 'string') return result;
-
-        // Split System/User
-        const promptParts = data.split('USER PROMPT:');
-        result.system_prompt = promptParts[0].replace('SYSTEM PROMPT:', '').trim();
-        
-        const userContent = promptParts[1] || '';
-        if (!userContent) return result;
-
-        // Split into Data Sets
-        const sets = userContent.split('### DATA SET').filter(s => s.trim());
-        
-        sets.forEach(setStr => {
-            const lines = setStr.split("\n");
-            const setObj = { identity: '', sections: [] };
-            
-            let currentSection = null;
-            
-            lines.forEach(line => {
-                if (line.startsWith('- Device Identity:')) {
-                    setObj.identity = line.replace('- Device Identity:', '').trim();
-                } else if (line.startsWith('####')) {
-                    if (currentSection) setObj.sections.push(currentSection);
-                    currentSection = { title: line.replace('####', '').trim(), content: '', is_json: false };
-                } else if (currentSection) {
-                    currentSection.content += line + "\n";
-                    if (line.startsWith('{') || line.startsWith('[')) currentSection.is_json = true;
-                }
-            });
-            if (currentSection) setObj.sections.push(currentSection);
-            result.data_sets.push(setObj);
-        });
-
-        return result;
-    }
-
-    function switchFiTab(type, el) {
-        document.querySelectorAll('.fi-tab').forEach(t => t.classList.remove('active'));
-        el.classList.add('active');
-        
-        if (type === 'payload') {
-            document.getElementById('fi-payload-view').style.display = 'block';
-            document.getElementById('fi-system-view').style.display = 'none';
-        } else {
-            document.getElementById('fi-payload-view').style.display = 'none';
-            document.getElementById('fi-system-view').style.display = 'block';
-        }
-    }
-
-    function scrollToFiSection(id) {
-        const el = document.getElementById(id);
-        if (el) {
-            el.scrollIntoView({ behavior: 'smooth' });
-            document.querySelectorAll('.fi-nav-item').forEach(i => i.classList.remove('active'));
-            event.target.classList.add('active');
-        }
     }
 
     function closePromptModal() {

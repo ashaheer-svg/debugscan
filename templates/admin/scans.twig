@@ -75,6 +75,12 @@
                             <span style="font-size: 10px; font-weight: 700;">{{ scan.formatted_report_size }}</span>
                         </a>
 
+                        {% if scan.status in ['queued', 'running'] %}
+                        <button onclick="abortJob('{{ scan.id }}')" class="btn-action btn-danger-alt" data-tooltip="Abort stuck job" aria-label="Abort">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                        {% endif %}
+
                         <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn-action btn-success-alt" data-tooltip="Launch Professional Dashboard" aria-label="View Dashboard">
                             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </a>
@@ -109,26 +115,49 @@
 </section>
 
 <!-- Styled Prompt Modal (Reused from Tenant for consistancy) -->
-<div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(8px);">
-    <div style="background: #1a1b1e; width: 90%; max-width: 900px; height: 80vh; border-radius: 16px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
+<div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(12px);">
+    <div style="background: #1a1b1e; width: 95%; max-width: 1200px; height: 85vh; border-radius: 20px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; border: 1px solid rgba(255,255,255,0.1);">
         <div style="padding: 24px 32px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; background: #232429;">
-            <div style="display: flex; align-items: center; gap: 16px;">
-                <h3 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Global AI Trace</h3>
-                <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px;">AI TRACE</span>
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <h3 id="promptModalTitle" style="margin: 0; font-size: 16px; font-weight: 700; color: #fff; letter-spacing: -0.01em;">Global AI Trace</h3>
+                    <span id="promptTypeBadge" class="badge" style="font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 4px;">AI TRACE</span>
+                </div>
             </div>
             <button onclick="closePromptModal()" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #9ca3af; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)';this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='#9ca3af';">&times;</button>
         </div>
         
-        <div id="promptModalContent" style="flex-grow: 1; padding: 32px; overflow-y: auto; background: #0f1012;">
-            <!-- Content will be injected here -->
+        <div id="promptModalContent" style="flex-grow: 1; overflow: hidden; background: #0f1012; position: relative;">
+            <!-- Content will be injected here via renderForensicInspector -->
+            <div id="fi-loader" style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6b7280; font-family: monospace;">
+                FETCHING FORENSIC DATA...
+            </div>
         </div>
         
-        <div style="padding: 16px 32px; border-top: 1px solid rgba(255,255,255,0.05); background: #232429; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 12px; color: #6b7280; font-family: monospace;">Secured Forensic Trace | Administrator Only</span>
-            <button onclick="closePromptModal()" class="btn" style="width: auto; padding: 10px 24px; background: var(--primary); color: #fff; border: none; font-weight: 700; border-radius: 8px;">Close Trace</button>
+        <div style="padding: 12px 32px; border-top: 1px solid rgba(255,255,255,0.05); background: #232429; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; color: #6b7280; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.05em;">SECURED FORENSIC AUDIT CHANNEL | ADMIN ACCESS ONLY</span>
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closePromptModal()" class="btn" style="width: auto; height: 32px; padding: 0 20px; background: transparent; color: #9ca3af; border: 1px solid rgba(255,255,255,0.1); font-weight: 700; border-radius: 6px; font-size: 12px;">Dismiss</button>
+            </div>
         </div>
     </div>
 </div>
+
+<style>
+    .fi-container { display: flex; height: 100%; background: #0f1012; }
+    .fi-sidebar { width: 280px; background: #15161a; border-right: 1px solid rgba(255,255,255,0.05); overflow-y: auto; padding-bottom: 40px; }
+    .fi-main { flex-grow: 1; overflow-y: auto; padding: 40px; scroll-behavior: smooth; font-family: 'JetBrains Mono', 'Source Code Pro', monospace; }
+    .fi-section { margin-bottom: 60px; }
+    .fi-section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .fi-section-title { font-size: 14px; font-weight: 800; color: #f8fafc; text-transform: uppercase; letter-spacing: 0.05em; }
+    .fi-nav-item { padding: 12px 24px; font-size: 12px; color: #94a3b8; cursor: pointer; transition: all 0.2s; border-left: 2px solid transparent; }
+    .fi-nav-item:hover { background: rgba(255,255,255,0.02); color: #fff; }
+    .fi-nav-item.active { background: rgba(59, 130, 246, 0.1); color: #3b82f6; border-left-color: #3b82f6; font-weight: 700; }
+    .fi-pre { background: #1a1b1e; padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); color: #e2e8f0; font-size: 13px; line-height: 1.6; overflow-x: auto; white-space: pre-wrap; margin: 0; }
+    .fi-tabs { display: flex; background: rgba(255,255,255,0.03); padding: 4px; border-radius: 8px; margin-top: 4px; }
+    .fi-tab { padding: 6px 16px; font-size: 11px; font-weight: 800; color: #64748b; cursor: pointer; border-radius: 6px; text-transform: uppercase; transition: all 0.2s; }
+    .fi-tab.active { background: #3b82f6; color: #fff; }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -214,11 +243,10 @@ function renderLogs(scanId, job) {
 
 function openScanPromptModal(jobId) {
     const modal = document.getElementById('promptModal');
-    const title = document.getElementById('promptModalTitle');
     const content = document.getElementById('promptModalContent');
     
     modal.style.display = 'flex';
-    content.innerHTML = '<div style="text-align: center; padding: 40px; color: var(--text-muted);">Fetching global AI context trace...</div>';
+    content.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6b7280; font-family: monospace;">FETCHING GLOBAL AI CONTEXT TRACE...</div>';
     
     fetch(`/admin/scans/prompt/${jobId}`, {
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -226,35 +254,187 @@ function openScanPromptModal(jobId) {
     .then(r => r.json())
     .then(resp => {
         if (resp.success) {
-            title.innerText = resp.title;
-            
-            let data = resp.data;
-            if (typeof data === 'string' && data.includes('USER PROMPT:')) {
-                const parts = data.split('USER PROMPT:');
-                data = `<div style="margin-bottom: 24px;">
-                            <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">System Context & Forensic Rules</div>
-                            <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #9cdcfe; font-size: 12px;">${parts[0].replace('SYSTEM PROMPT:', '').trim()}</pre>
-                        </div>
-                        <div>
-                            <div style="font-size: 11px; font-weight: 800; color: var(--primary); margin-bottom: 8px; text-transform: uppercase;">User Data & Telemetry Payload</div>
-                            <pre style="background: rgba(255,255,255,0.03); padding: 16px; border-radius: 8px; white-space: pre-wrap; color: #ce9178; font-size: 12px;">${parts[1].trim()}</pre>
-                        </div>`;
-            } else {
-                data = `<pre style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #e5e7eb; white-space: pre-wrap;">${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}</pre>`;
-            }
-            
-            content.innerHTML = data;
+            renderForensicInspector(resp.data, resp.title, 'AI TRACE');
         } else {
-            content.innerHTML = `<div style="color: var(--error); padding: 20px;">${resp.message || 'Failed to load AI trace.'}</div>`;
+            content.innerHTML = `<div style="color: var(--error); padding: 40px; text-align: center;">${resp.message || 'Failed to load AI trace.'}</div>`;
         }
     })
     .catch(err => {
-        content.innerHTML = `<div style="color: var(--error); padding: 20px;">Network Error: ${err.message}</div>`;
+        content.innerHTML = `<div style="color: var(--error); padding: 40px; text-align: center;">Network Error: ${err.message}</div>`;
     });
+}
+
+function renderForensicInspector(rawData, title, badgeText) {
+    const modalTitle = document.getElementById('promptModalTitle');
+    const typeBadge = document.getElementById('promptTypeBadge');
+    const content = document.getElementById('promptModalContent');
+    
+    modalTitle.innerText = title;
+    typeBadge.innerText = badgeText;
+    typeBadge.style.background = badgeText === 'AI TRACE' ? '#3b82f6' : '#10b981';
+    
+    const parsed = parseForensicPrompt(rawData);
+    
+    let sidebarHtml = '';
+    let mainHtml = '<div id="fi-payload-view" class="fi-tab-content">';
+    
+    // 1. Data Sets
+    if (parsed.data_sets.length > 0) {
+        parsed.data_sets.forEach((set, idx) => {
+            const setId = `dataset-${idx}`;
+            sidebarHtml += `<div class="fi-nav-item" onclick="scrollToFiSection('${setId}', this)">Data Set ${idx + 1}</div>`;
+            
+            mainHtml += `<div id="${setId}" class="fi-section">
+                <div class="fi-section-header">
+                    <span style="font-size: 20px;">📦</span>
+                    <span class="fi-section-title">Data Set ${idx + 1}: Diagnostic Payload</span>
+                </div>`;
+            
+            if (set.identity) {
+                mainHtml += `<div style="background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05); margin-bottom: 20px;">
+                    <div style="font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Forensic Identity</div>
+                    <div style="font-size: 13px; color: #fff; font-weight: 600;">${set.identity}</div>
+                </div>`;
+            }
+            
+            set.sections.forEach((sec, sidx) => {
+                const secId = `${setId}-sec-${sidx}`;
+                sidebarHtml += `<div class="fi-nav-item" style="padding-left: 40px; font-weight: 500; font-size: 10px;" onclick="scrollToFiSection('${secId}', this)">${sec.title}</div>`;
+                
+                mainHtml += `<div id="${secId}" style="margin-top: 24px;">
+                    <div style="font-size: 11px; font-weight: 800; color: #3b82f6; margin-bottom: 8px; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>${sec.is_json ? '📊' : '📄'}</span> ${sec.title}
+                    </div>
+                    <pre class="fi-pre">${sec.content.trim()}</pre>
+                </div>`;
+            });
+            
+            mainHtml += `</div>`;
+        });
+    } else {
+        mainHtml += `<div style="padding: 40px; text-align: center; color: #64748b;">No structured data sets identified in this trace.</div>
+                    <pre class="fi-pre">${typeof rawData === 'string' ? rawData : JSON.stringify(rawData, null, 2)}</pre>`;
+    }
+    
+    mainHtml += '</div>';
+    
+    // 2. System Prompt View (hidden by default)
+    mainHtml += `<div id="fi-system-view" class="fi-tab-content" style="display: none;">
+        <div class="fi-section">
+            <div class="fi-section-header">
+                <span style="font-size: 20px;">⚙️</span>
+                <span class="fi-section-title">System Context & Forensic Rules</span>
+            </div>
+            <pre class="fi-pre" style="color: #9cdcfe;">${parsed.system_prompt || 'No system instructions provided.'}</pre>
+        </div>
+    </div>`;
+
+    // Assemble Final UI
+    content.innerHTML = `
+        <div class="fi-container">
+            <div class="fi-sidebar">
+                <div style="padding: 16px 24px; font-size: 10px; font-weight: 800; color: #4b5563; text-transform: uppercase; letter-spacing: 0.1em;">Navigator</div>
+                ${sidebarHtml}
+            </div>
+            <div class="fi-main">
+                ${mainHtml}
+            </div>
+        </div>
+    `;
+
+    // Add Tab Switcher to header
+    const header = modalTitle.parentElement;
+    if (!header.parentElement.querySelector('.fi-tabs')) {
+        const tabs = document.createElement('div');
+        tabs.className = 'fi-tabs';
+        tabs.innerHTML = `
+            <div class="fi-tab active" onclick="switchFiTab('payload', this)">Payload Explorer</div>
+            <div class="fi-tab" onclick="switchFiTab('system', this)">System Prompt</div>
+        `;
+        header.after(tabs);
+    }
+}
+
+function parseForensicPrompt(data) {
+    const result = { system_prompt: '', data_sets: [] };
+    if (typeof data !== 'string') return result;
+
+    // Split System/User
+    const promptParts = data.split('USER PROMPT:');
+    result.system_prompt = promptParts[0].replace('SYSTEM PROMPT:', '').trim();
+    
+    const userContent = promptParts[1] || '';
+    if (!userContent) return result;
+
+    // Split into Data Sets
+    const sets = userContent.split('### DATA SET').filter(s => s.trim());
+    
+    sets.forEach(setStr => {
+        const lines = setStr.split("\n");
+        const setObj = { identity: '', sections: [] };
+        
+        let currentSection = null;
+        
+        lines.forEach(line => {
+            if (line.startsWith('- Device Identity:')) {
+                setObj.identity = line.replace('- Device Identity:', '').trim();
+            } else if (line.startsWith('####')) {
+                if (currentSection) setObj.sections.push(currentSection);
+                currentSection = { title: line.replace('####', '').trim(), content: '', is_json: false };
+            } else if (currentSection) {
+                currentSection.content += line + "\n";
+                if (line.trim().startsWith('{') || line.trim().startsWith('[')) currentSection.is_json = true;
+            }
+        });
+        if (currentSection) setObj.sections.push(currentSection);
+        result.data_sets.push(setObj);
+    });
+
+    return result;
+}
+
+function switchFiTab(type, el) {
+    document.querySelectorAll('.fi-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    
+    if (type === 'payload') {
+        document.getElementById('fi-payload-view').style.display = 'block';
+        document.getElementById('fi-system-view').style.display = 'none';
+        document.querySelector('.fi-sidebar').style.display = 'block';
+    } else {
+        document.getElementById('fi-payload-view').style.display = 'none';
+        document.getElementById('fi-system-view').style.display = 'block';
+        document.querySelector('.fi-sidebar').style.display = 'none';
+    }
+}
+
+function scrollToFiSection(id, el) {
+    const target = document.getElementById(id);
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.querySelectorAll('.fi-nav-item').forEach(item => item.classList.remove('active'));
+        el.classList.add('active');
+    }
+}
+
+function abortJob(scanId) {
+    if (!confirm('Are you sure you want to abort this forensic analysis?')) return;
+    
+    fetch(`/admin/scans/abort/${scanId}`, { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to abort job: ' + (data.message || 'Unknown error'));
+            }
+        });
 }
 
 function closePromptModal() {
     document.getElementById('promptModal').style.display = 'none';
+    const tabSwitcher = document.querySelector('.fi-tabs');
+    if (tabSwitcher) tabSwitcher.remove();
 }
 </script>
 {% endblock %}

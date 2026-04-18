@@ -203,7 +203,6 @@ class AppBootstrap
             $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
             $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);
             $group->get('scans/status/{id}', [TenantController::class, 'getScanStatus']);
-            $group->get('scans/prompt/{id}', [TenantController::class, 'getScanPromptData']);
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
@@ -218,7 +217,6 @@ class AppBootstrap
             $group->post('profile/update', [AuthController::class, 'updateProfile']);
             
             // Log File Analysis Routes
-            $group->get('files/prompt/{id}', [TenantController::class, 'getPromptData']);
             $group->get('files/report/{id}', [TenantController::class, 'viewHardwareReport']);
             $group->post('files/delete/{id}', [TenantController::class, 'deleteLogFile']);
             
@@ -240,6 +238,7 @@ class AppBootstrap
             $group->get('admin/scans', [AdminController::class, 'scans']);
             $group->get('admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
             $group->get('admin/scans/prompt/{id}', [AdminController::class, 'getScanPromptData']);
+            $group->get('admin/files/prompt/{id}', [AdminController::class, 'getPromptData']);
             $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);

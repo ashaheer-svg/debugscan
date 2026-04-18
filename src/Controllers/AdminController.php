@@ -528,30 +528,94 @@ class AdminController
 
     public function getScanPromptData(Request $request, Response $response, array $args): Response
     {
-        $id = $args['id'];
-        $stmt = $this->pdo->prepare("
-            SELECT result_input_payload, scan_level
-            FROM scan_jobs 
-            WHERE id = :id
-        ");
-        $stmt->execute(['id' => $id]);
-        $scan = $stmt->fetch();
+        try {
+            $id = $args['id'];
+            $stmt = $this->pdo->prepare("
+                SELECT result_input_payload, scan_level
+                FROM scan_jobs 
+                WHERE id = :id
+            ");
+            $stmt->execute(['id' => $id]);
+            $scan = $stmt->fetch();
 
-        if (!$scan || empty($scan['result_input_payload'])) {
-            $response->getBody()->write(json_encode(['success' => false, 'message' => 'AI Context Payload not found.']));
-            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+            if (!$scan || empty($scan['result_input_payload'])) {
+                $response->getBody()->write(json_encode(['success' => false, 'message' => 'AI Context Payload not found.']));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+            }
+
+            $payloadData = json_decode($scan['result_input_payload'], true);
+            $displayData = is_array($payloadData) && isset($payloadData['raw']) ? $payloadData['raw'] : $scan['result_input_payload'];
+
+            // Harden response - handles binary/non-UTF8 data gracefully
+            $jsonData = json_encode([
+                'success' => true,
+                'title' => 'Admin Technical Trace (' . strtoupper($scan['scan_level'] ?? 'L0') . ')',
+                'data' => $displayData,
+                'type' => 'prompt'
+            ], JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_UNICODE);
+
+            if ($jsonData === false) {
+                throw new \Exception("JSON Encoding failed: " . json_last_error_msg());
+            }
+
+            $response->getBody()->write($jsonData);
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode([
+                'success' => false,
+                'message' => 'Technical Error: ' . $e->getMessage()
+            ]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
         }
+    }
 
-        $payloadData = json_decode($scan['result_input_payload'], true);
-        $displayData = is_array($payloadData) && isset($payloadData['raw']) ? $payloadData['raw'] : $scan['result_input_payload'];
+    public function getPromptData(Request $request, Response $response, array $args): Response
+    {
+        try {
+            $fileId = $args['id'];
 
-        $response->getBody()->write(json_encode([
-            'success' => true,
-            'title' => 'Admin Technical Trace (' . strtoupper($scan['scan_level']) . ')',
-            'data' => $displayData,
-            'type' => 'prompt'
-        ]));
+            // Find the latest successful scan job that included this file
+            $stmt = $this->pdo->prepare("
+                SELECT result_input_payload, scan_level, id
+                FROM scan_jobs 
+                WHERE :fid = ANY(debug_file_ids) 
+                  AND status = 'completed'
+                ORDER BY created_at DESC 
+                LIMIT 1
+            ");
+            $stmt->execute(['fid' => $fileId]);
+            $scan = $stmt->fetch();
+
+            if ($scan && !empty($scan['result_input_payload'])) {
+                $payloadData = json_decode($scan['result_input_payload'], true);
+                $displayData = is_array($payloadData) && isset($payloadData['raw']) ? $payloadData['raw'] : $scan['result_input_payload'];
+
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'title' => 'Admin Forensic Inspector (' . strtoupper($scan['scan_level'] ?? 'L0') . ')',
+                    'data' => $displayData,
+                    'type' => 'prompt'
+                ], JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_UNICODE));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'No analysis prompt history found for this file.']));
+            return $response->withHeader('Content-Type', 'application/json');
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+        }
+    }
+
+    public function abortScan(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("UPDATE scan_jobs SET status = 'aborted', progress_stage = 'Aborted by Admin', updated_at = NOW() WHERE id = :id AND status IN ('queued', 'running')");
+        $stmt->execute(['id' => $id]);
         
+        $this->logAction($request, 'scan_aborted', 'scan_jobs', $id, ['aborted_by' => 'admin']);
+        
+        $response->getBody()->write(json_encode(['success' => true]));
         return $response->withHeader('Content-Type', 'application/json');
     }
 
