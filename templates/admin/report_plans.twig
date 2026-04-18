@@ -68,6 +68,9 @@
                         <button class="btn btn-secondary btn-sm" onclick="openPlanModal({{ plan|json_encode|e('html_attr') }})">
                             <i class="fas fa-edit"></i>
                         </button>
+                        <button class="btn btn-danger btn-sm" onclick="confirmDelete('{{ plan.id }}', '{{ plan.name|e('js') }}')" title="Delete Package">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
                     </div>
                 </td>
             </tr>
@@ -174,6 +177,14 @@ function closePlanModal() {
     document.getElementById('planModal').style.display = 'none';
 }
 
+function confirmDelete(id, name) {
+    if (confirm(`Are you sure you want to delete the forensic package "${name}"?\n\nThis will remove all associated extraction rules and authorized mapping for tenants.`)) {
+        const form = document.getElementById('deleteForm');
+        document.getElementById('delete_plan_id').value = id;
+        form.submit();
+    }
+}
+
 // Close modal on outside click
 window.onclick = function(event) {
     const modal = document.getElementById('planModal');
@@ -182,4 +193,8 @@ window.onclick = function(event) {
     }
 }
 </script>
+
+<form id="deleteForm" action="/admin/report-plans/delete" method="POST" style="display: none;">
+    <input type="hidden" name="id" id="delete_plan_id">
+</form>
 {% endblock %}
