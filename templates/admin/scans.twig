@@ -89,14 +89,53 @@
             </tr>
             <tr id="audit-{{ scan.id }}" style="display: none; background: var(--bg-off-white);">
                 <td colspan="6" style="padding: 24px;">
-                    <div style="font-size: 11px; border-left: 3px solid var(--primary); padding-left: 20px;">
-                        <h4 style="margin: 0 0 16px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; letter-spacing: 0.1em;">
-                            <span>Forensic Technical Log Stream</span>
-                            <span id="log-status-{{ scan.id }}" style="color: var(--primary);"></span>
-                        </h4>
-                        
-                        <div id="log-console-{{ scan.id }}" style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 6px; font-family: 'Cascadia Code', 'Source Code Pro', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6; box-shadow: var(--shadow-2);">
-                            <div style="color: #6a9955; font-style: italic;">// Initializing technical audit stream...</div>
+                    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 32px;">
+                        <!-- Left: Live technical logs -->
+                        <div style="font-size: 11px; border-left: 3px solid var(--primary); padding-left: 20px;">
+                            <h4 style="margin: 0 0 16px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); display: flex; justify-content: space-between; letter-spacing: 0.1em;">
+                                <span>Forensic Technical Log Stream</span>
+                                <span id="log-status-{{ scan.id }}" style="color: var(--primary);"></span>
+                            </h4>
+                            
+                            <div id="log-console-{{ scan.id }}" style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 6px; font-family: 'Cascadia Code', 'Source Code Pro', monospace; font-size: 12px; max-height: 400px; overflow-y: auto; line-height: 1.6; box-shadow: var(--shadow-2);">
+                                <div style="color: #6a9955; font-style: italic;">// Initializing technical audit stream...</div>
+                            </div>
+                        </div>
+
+                        <!-- Right: Forensic File Inspector -->
+                        <div style="background: #fff; border-radius: 12px; border: 1px solid var(--border); padding: 20px; box-shadow: var(--shadow-1);">
+                            <h4 style="margin: 0 0 16px 0; font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px;">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                                Forensic File Vault
+                            </h4>
+                            
+                            <div style="display: flex; flex-direction: column; gap: 12px;">
+                                {% for file in scan.scan_files %}
+                                <div style="padding: 12px; background: var(--bg-light); border-radius: 8px; border: 1px solid var(--border); transition: transform 0.2s;">
+                                    <div style="font-weight: 700; font-size: 12px; color: var(--text-primary); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ file.name }}">
+                                        {{ file.name }}
+                                    </div>
+                                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; margin-bottom: 10px;">
+                                        Diagnostic Source | {{ (file.size / 1024)|number_format(1) }} KB
+                                    </div>
+                                    <div style="display: flex; gap: 8px;">
+                                        <button onclick="openFilePromptModal('{{ file.id }}')" style="flex: 1; height: 28px; background: var(--primary); color: #fff; border: none; border-radius: 4px; font-size: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                            View Prompt
+                                        </button>
+                                        <a href="/admin/files/download/{{ file.id }}" class="btn-action" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); width: 28px; height: 28px; padding: 0;" data-tooltip="Download Raw LOG">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                                
+                                {% if not scan.scan_files %}
+                                <div style="text-align: center; padding: 20px; color: var(--text-muted); font-size: 11px; font-style: italic;">
+                                    No direct file associations found for this trace.
+                                </div>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                 </td>
@@ -257,6 +296,29 @@ function openScanPromptModal(jobId) {
             renderForensicInspector(resp.data, resp.title, 'AI TRACE');
         } else {
             content.innerHTML = `<div style="color: var(--error); padding: 40px; text-align: center;">${resp.message || 'Failed to load AI trace.'}</div>`;
+        }
+    })
+    .catch(err => {
+        content.innerHTML = `<div style="color: var(--error); padding: 40px; text-align: center;">Network Error: ${err.message}</div>`;
+    });
+}
+
+function openFilePromptModal(fileId) {
+    const modal = document.getElementById('promptModal');
+    const content = document.getElementById('promptModalContent');
+    
+    modal.style.display = 'flex';
+    content.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #6b7280; font-family: monospace;">FETCHING FILE-LEVEL FORENSIC PROMPT...</div>';
+    
+    fetch(`/admin/files/prompt/${fileId}`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(resp => {
+        if (resp.success) {
+            renderForensicInspector(resp.data, resp.title, 'FILE PROMPT');
+        } else {
+            content.innerHTML = `<div style="color: var(--error); padding: 40px; text-align: center;">${resp.message || 'No forensic history found for this file.'}</div>`;
         }
     })
     .catch(err => {

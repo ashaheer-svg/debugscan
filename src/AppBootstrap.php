@@ -239,6 +239,7 @@ class AppBootstrap
             $group->get('admin/scans/status/{id}', [AdminController::class, 'getScanStatus']);
             $group->get('admin/scans/prompt/{id}', [AdminController::class, 'getScanPromptData']);
             $group->get('admin/files/prompt/{id}', [AdminController::class, 'getPromptData']);
+            $group->get('admin/files/download/{id}', [AdminController::class, 'downloadFile']);
             $group->post('admin/scans/abort/{id}', [AdminController::class, 'abortScan']);
             $group->get('admin/scans/raw/{id}', [AdminController::class, 'downloadRawData']);
             $group->get('admin/scans/report/{id}', [AdminController::class, 'downloadReport']);

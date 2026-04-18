@@ -489,7 +489,16 @@ class AdminController
         $stmt = $this->pdo->query("
             SELECT s.*, u.display_name as tenant_name, p.name as project_name,
                    COALESCE(OCTET_LENGTH(CAST(s.result_input_payload AS TEXT)), 0) as payload_size,
-                   COALESCE(OCTET_LENGTH(CAST(s.result_raw_response AS TEXT)), 0) as report_size
+                   COALESCE(OCTET_LENGTH(CAST(s.result_raw_response AS TEXT)), 0) as report_size,
+                   (
+                       SELECT JSONB_AGG(JSONB_BUILD_OBJECT(
+                           'id', df.id, 
+                           'name', df.original_filename, 
+                           'size', df.file_size_bytes
+                       ))
+                       FROM debug_files df 
+                       WHERE df.id = ANY(s.debug_file_ids)
+                   ) as scan_files
             FROM scan_jobs s
             JOIN users u ON s.tenant_id = u.id
             JOIN projects p ON s.project_id = p.id
@@ -502,6 +511,11 @@ class AdminController
             $rBytes = isset($s['report_size']) ? (int)$s['report_size'] : 0;
             $s['formatted_payload_size'] = ($pBytes > 0) ? $this->formatBytes($pBytes) : '0 B';
             $s['formatted_report_size'] = ($rBytes > 0) ? $this->formatBytes($rBytes) : '0 B';
+            
+            if (isset($s['scan_files']) && is_string($s['scan_files'])) {
+                $s['scan_files'] = json_decode($s['scan_files'], true);
+            }
+            
             return $s;
         }, $scansData);
 
@@ -617,6 +631,36 @@ class AdminController
         
         $response->getBody()->write(json_encode(['success' => true]));
         return $response->withHeader('Content-Type', 'application/json');
+    }
+    public function downloadFile(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $stmt = $this->pdo->prepare("SELECT original_filename, storage_path FROM debug_files WHERE id = :id");
+        $stmt->execute(['id' => $id]);
+        $file = $stmt->fetch();
+
+        if (!$file) {
+            $response->getBody()->write("File record not found.");
+            return $response->withStatus(404);
+        }
+
+        $fullPath = __DIR__ . '/../../' . $file['storage_path'];
+        if (!file_exists($fullPath)) {
+            $response->getBody()->write("Physical file missing on VPS: " . $file['storage_path']);
+            return $response->withStatus(404);
+        }
+
+        $stream = new \Slim\Psr7\Stream(fopen($fullPath, 'rb'));
+        
+        $mimeType = 'application/octet-stream';
+        $ext = strtolower(pathinfo($file['original_filename'], PATHINFO_EXTENSION));
+        if ($ext === 'log' || $ext === 'txt') $mimeType = 'text/plain';
+        if ($ext === 'json') $mimeType = 'application/json';
+
+        return $response
+            ->withHeader('Content-Type', $mimeType)
+            ->withHeader('Content-Disposition', 'attachment; filename="' . $file['original_filename'] . '"')
+            ->withBody($stream);
     }
 
 
