@@ -69,7 +69,8 @@ class AppBootstrap
                 return new AuthController(
                     $container->get(Environment::class),
                     $container->get(AuthService::class),
-                    $container->get('base_path')
+                    $container->get('base_path'),
+                    $container->get(PDO::class)
                 );
             },
             TenantController::class => function ($container) {

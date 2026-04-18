@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\AuthService;
+use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -14,12 +15,14 @@ class AuthController
     private Environment $view;
     private AuthService $authService;
     private string $basePath;
+    private PDO $pdo;
 
-    public function __construct(Environment $view, AuthService $authService, string $basePath)
+    public function __construct(Environment $view, AuthService $authService, string $basePath, PDO $pdo)
     {
         $this->view = $view;
         $this->authService = $authService;
         $this->basePath = $basePath;
+        $this->pdo = $pdo;
     }
 
     public function showProfile(Request $request, Response $response): Response
