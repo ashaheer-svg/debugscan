@@ -14,10 +14,36 @@
     <table class="data-table">
         <thead>
             <tr>
-                <th style="padding-left: 24px;">ID / Date</th>
-                <th>Tenant / Project</th>
-                <th>Level</th>
-                <th>Progress / Status</th>
+                <th style="padding-left: 24px;">
+                    <a href="?sort=date&order={{ sort == 'date' and order == 'asc' ? 'desc' : 'asc' }}" class="sort-header {{ sort == 'date' ? 'active' : '' }}">
+                        ID / Date
+                        {% if sort == 'date' %}<span class="sort-icon">{{ order == 'asc' ? '↑' : '↓' }}</span>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?sort=tenant&order={{ sort == 'tenant' and order == 'asc' ? 'desc' : 'asc' }}" class="sort-header {{ sort == 'tenant' ? 'active' : '' }}">
+                        Tenant / Project
+                        {% if sort == 'tenant' %}<span class="sort-icon">{{ order == 'asc' ? '↑' : '↓' }}</span>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?sort=type&order={{ sort == 'type' and order == 'asc' ? 'desc' : 'asc' }}" class="sort-header {{ sort == 'type' ? 'active' : '' }}">
+                        Level
+                        {% if sort == 'type' %}<span class="sort-icon">{{ order == 'asc' ? '↑' : '↓' }}</span>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?sort=model&order={{ sort == 'model' and order == 'asc' ? 'desc' : 'asc' }}" class="sort-header {{ sort == 'model' ? 'active' : '' }}">
+                        AI Model
+                        {% if sort == 'model' %}<span class="sort-icon">{{ order == 'asc' ? '↑' : '↓' }}</span>{% endif %}
+                    </a>
+                </th>
+                <th>
+                    <a href="?sort=status&order={{ sort == 'status' and order == 'asc' ? 'desc' : 'asc' }}" class="sort-header {{ sort == 'status' ? 'active' : '' }}">
+                        Progress / Status
+                        {% if sort == 'status' %}<span class="sort-icon">{{ order == 'asc' ? '↑' : '↓' }}</span>{% endif %}
+                    </a>
+                </th>
                 <th>AI Usage</th>
                 <th style="padding-right: 24px; text-align: right;">Audit Toolbox</th>
             </tr>
@@ -37,6 +63,10 @@
                     <span class="badge" style="background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
                         {{ scan.scan_level|upper }}
                     </span>
+                </td>
+                <td>
+                    <div style="font-weight: 600; font-size: 12px; color: var(--text-primary);">{{ scan.ai_model|default('Standard Audit') }}</div>
+                    <div style="font-size: 10px; color: var(--text-muted);">{{ scan.ai_prompt_version|default('v3.1') }}</div>
                 </td>
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 4px; width: 140px;">
@@ -151,7 +181,71 @@
             {% endif %}
         </tbody>
     </table>
+
+    <!-- Pagination Footer -->
+    {% if pagination.total_pages > 1 %}
+    <div style="padding: 20px 24px; border-top: 1px solid var(--border); background: var(--bg-light); display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 13px; color: var(--text-muted); font-weight: 500;">
+            Showing <span style="color: var(--text-primary); font-weight: 700;">{{ pagination.start_item }}</span> to <span style="color: var(--text-primary); font-weight: 700;">{{ pagination.end_item }}</span> of <span style="color: var(--text-primary); font-weight: 700;">{{ pagination.total_items }}</span> jobs
+        </div>
+        
+        <div style="display: flex; gap: 8px;">
+            {% if pagination.current_page > 1 %}
+            <a href="?page={{ pagination.current_page - 1 }}&sort={{ sort }}&order={{ order }}" class="pagination-btn">Previous</a>
+            {% endif %}
+            
+            {% for p in 1..pagination.total_pages %}
+                {% if p == 1 or p == pagination.total_pages or (p >= pagination.current_page - 2 and p <= pagination.current_page + 2) %}
+                    <a href="?page={{ p }}&sort={{ sort }}&order={{ order }}" class="pagination-btn {{ p == pagination.current_page ? 'active' : '' }}">{{ p }}</a>
+                {% elseif (p == 2 and pagination.current_page > 4) or (p == pagination.total_pages - 1 and pagination.current_page < pagination.total_pages - 3) %}
+                    <span style="padding: 0 8px; color: var(--text-muted);">...</span>
+                {% endif %}
+            {% endfor %}
+            
+            {% if pagination.current_page < pagination.total_pages %}
+            <a href="?page={{ pagination.current_page + 1 }}&sort={{ sort }}&order={{ order }}" class="pagination-btn">Next</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
 </section>
+
+<style>
+    .sort-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 11px;
+        transition: color 0.2s;
+    }
+    .sort-header:hover { color: var(--primary); }
+    .sort-header.active { color: var(--text-primary); }
+    .sort-icon { font-size: 14px; color: var(--primary); }
+
+    .pagination-btn {
+        height: 32px;
+        min-width: 32px;
+        padding: 0 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .pagination-btn:hover { background: var(--bg-light); border-color: var(--primary-light); color: var(--primary); }
+    .pagination-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; pointer-events: none; }
+</style>
 
 <!-- Styled Prompt Modal (Reused from Tenant for consistancy) -->
 <div id="promptModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,10,0.85); z-index: 10005; align-items: center; justify-content: center; backdrop-filter: blur(12px);">

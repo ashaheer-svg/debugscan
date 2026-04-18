@@ -486,7 +486,34 @@ class AdminController
 
     public function scans(Request $request, Response $response): Response
     {
-        $stmt = $this->pdo->query("
+        $queryParams = $request->getQueryParams();
+        
+        // 1. Pagination Params
+        $page = max(1, (int)($queryParams['page'] ?? 1));
+        $pageSize = 20;
+        $offset = ($page - 1) * $pageSize;
+
+        // 2. Sorting Params
+        $sort = $queryParams['sort'] ?? 'date';
+        $order = strtoupper($queryParams['order'] ?? 'DESC');
+        if (!in_array($order, ['ASC', 'DESC'])) $order = 'DESC';
+
+        $allowedSortColumns = [
+            'date' => 's.created_at',
+            'tenant' => 'u.display_name',
+            'type' => 's.scan_level',
+            'model' => 's.ai_model',
+            'status' => 's.status'
+        ];
+        $orderBy = $allowedSortColumns[$sort] ?? 's.created_at';
+
+        // 3. Count Total for Pagination
+        $countStmt = $this->pdo->query("SELECT COUNT(*) FROM scan_jobs");
+        $totalItems = (int)$countStmt->fetchColumn();
+        $totalPages = ceil($totalItems / $pageSize);
+
+        // 4. Main Query with Sorting and Pagination
+        $stmt = $this->pdo->prepare("
             SELECT s.*, u.display_name as tenant_name, p.name as project_name,
                    COALESCE(OCTET_LENGTH(CAST(s.result_input_payload AS TEXT)), 0) as payload_size,
                    COALESCE(OCTET_LENGTH(CAST(s.result_raw_response AS TEXT)), 0) as report_size,
@@ -502,8 +529,13 @@ class AdminController
             FROM scan_jobs s
             JOIN users u ON s.tenant_id = u.id
             JOIN projects p ON s.project_id = p.id
-            ORDER BY s.created_at DESC
+            ORDER BY $orderBy $order
+            LIMIT :limit OFFSET :offset
         ");
+        
+        $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         $scansData = $stmt->fetchAll();
 
         $scans = array_map(function($s) {
@@ -521,6 +553,16 @@ class AdminController
 
         $body = $this->view->render('admin/scans.twig', [
             'scans' => $scans,
+            'pagination' => [
+                'current_page' => $page,
+                'total_pages' => $totalPages,
+                'total_items' => $totalItems,
+                'page_size' => $pageSize,
+                'start_item' => $offset + 1,
+                'end_item' => min($offset + $pageSize, $totalItems)
+            ],
+            'sort' => $sort,
+            'order' => strtolower($order),
             'active_page' => 'admin_scans'
         ]);
         $response->getBody()->write($body);
