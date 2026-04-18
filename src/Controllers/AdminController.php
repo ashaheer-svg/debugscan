@@ -488,12 +488,17 @@ class AdminController
     {
         $queryParams = $request->getQueryParams();
         
-        // 1. Pagination Params
+        // 1. Filter Parameters
+        $tenantId = $queryParams['tenant_id'] ?? null;
+        $startDate = $queryParams['start_date'] ?? null;
+        $endDate = $queryParams['end_date'] ?? null;
+
+        // 2. Pagination Params
         $page = max(1, (int)($queryParams['page'] ?? 1));
-        $pageSize = 20;
+        $pageSize = 25; // Slightly more for high density
         $offset = ($page - 1) * $pageSize;
 
-        // 2. Sorting Params
+        // 3. Sorting Params
         $sort = $queryParams['sort'] ?? 'date';
         $order = strtoupper($queryParams['order'] ?? 'DESC');
         if (!in_array($order, ['ASC', 'DESC'])) $order = 'DESC';
@@ -507,12 +512,45 @@ class AdminController
         ];
         $orderBy = $allowedSortColumns[$sort] ?? 's.created_at';
 
-        // 3. Count Total for Pagination
-        $countStmt = $this->pdo->query("SELECT COUNT(*) FROM scan_jobs");
+        // 4. Build Conditional WHERE
+        $whereClauses = ["1=1"];
+        $params = [];
+        if ($tenantId) {
+            $whereClauses[] = "s.tenant_id = :tid";
+            $params['tid'] = $tenantId;
+        }
+        if ($startDate) {
+            $whereClauses[] = "s.created_at >= :start";
+            $params['start'] = $startDate . ' 00:00:00';
+        }
+        if ($endDate) {
+            $whereClauses[] = "s.created_at <= :end";
+            $params['end'] = $endDate . ' 23:59:59';
+        }
+        $whereSql = implode(" AND ", $whereClauses);
+
+        // 5. Count Total for Pagination
+        $countStmt = $this->pdo->prepare("SELECT COUNT(*) FROM scan_jobs s WHERE $whereSql");
+        $countStmt->execute($params);
         $totalItems = (int)$countStmt->fetchColumn();
         $totalPages = ceil($totalItems / $pageSize);
 
-        // 4. Main Query with Sorting and Pagination
+        // 6. Audit Summaries (Tokens per Model)
+        $summaryStmt = $this->pdo->prepare("
+            SELECT ai_model, SUM(ai_input_tokens_used + ai_output_tokens_used) as total_tokens
+            FROM scan_jobs s
+            WHERE $whereSql
+            GROUP BY ai_model
+            ORDER BY total_tokens DESC
+        ");
+        $summaryStmt->execute($params);
+        $modelBreakdown = $summaryStmt->fetchAll();
+        $totalFilteredTokens = array_sum(array_column($modelBreakdown, 'total_tokens'));
+
+        // 7. Tenant List for Filters
+        $tenantsList = $this->pdo->query("SELECT id, display_name FROM users WHERE role = 'tenant' ORDER BY display_name")->fetchAll();
+
+        // 8. Main Query
         $stmt = $this->pdo->prepare("
             SELECT s.*, u.display_name as tenant_name, p.name as project_name,
                    COALESCE(OCTET_LENGTH(CAST(s.result_input_payload AS TEXT)), 0) as payload_size,
@@ -529,10 +567,12 @@ class AdminController
             FROM scan_jobs s
             JOIN users u ON s.tenant_id = u.id
             JOIN projects p ON s.project_id = p.id
+            WHERE $whereSql
             ORDER BY $orderBy $order
             LIMIT :limit OFFSET :offset
         ");
         
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
         $stmt->bindValue(':limit', $pageSize, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
@@ -553,6 +593,16 @@ class AdminController
 
         $body = $this->view->render('admin/scans.twig', [
             'scans' => $scans,
+            'tenantsList' => $tenantsList,
+            'summary' => [
+                'total_tokens' => $totalFilteredTokens,
+                'breakdown' => $modelBreakdown
+            ],
+            'filters' => [
+                'tenant_id' => $tenantId,
+                'start_date' => $startDate,
+                'end_date' => $endDate
+            ],
             'pagination' => [
                 'current_page' => $page,
                 'total_pages' => $totalPages,

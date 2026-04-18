@@ -3,10 +3,77 @@
 {% block title %}Analysis Jobs - System Admin{% endblock %}
 
 {% block admin_content %}
-<header style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 32px;">
-    <div>
-        <h1 class="admin-title" style="margin-bottom: 4px;">Analysis Jobs</h1>
-        <p style="color: var(--text-muted); font-size: 14px;">Monitor platform-wide forensic audits and AI token consumption.</p>
+<header style="margin-bottom: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px;">
+        <div>
+            <h1 class="admin-title" style="margin-bottom: 4px;">Analysis Jobs</h1>
+            <p style="color: var(--text-muted); font-size: 13px;">Platform-wide audit tracking & AI consumption control.</p>
+        </div>
+    </div>
+
+    <!-- Audit Summary Dashboard -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px;">
+        <div class="card" style="padding: 16px; border-left: 4px solid var(--primary); display: flex; flex-direction: column; justify-content: center;">
+            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;">Total Token Consumption</div>
+            <div style="font-size: 24px; font-weight: 800; color: var(--text-primary);">
+                {{ summary.total_tokens|number_format }} 
+                <span style="font-size: 14px; font-weight: 600; color: var(--text-muted);">Filtered</span>
+            </div>
+        </div>
+        
+        <div class="card" style="padding: 16px; border-left: 4px solid #10b981; overflow: hidden;">
+            <div style="font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px;">Model Utilization Breakdown</div>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                {% for model in summary.breakdown %}
+                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); padding: 4px 10px; border-radius: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 11px; font-weight: 700; color: #10b981;">{{ model.ai_model|default('Standard') }}</span>
+                    <span style="width: 1px; height: 10px; background: rgba(16, 185, 129, 0.3);"></span>
+                    <span style="font-size: 10px; font-weight: 800; color: var(--text-muted);">{{ model.total_tokens|number_format }} TKN</span>
+                </div>
+                {% endfor %}
+                {% if not summary.breakdown %}
+                <div style="font-size: 12px; color: var(--text-muted); font-style: italic;">No usage data for selected filters.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Forensic Filter Bar -->
+    <div class="card" style="padding: 12px 20px; background: #fff; margin-bottom: 16px; display: flex; flex-wrap: wrap; align-items: center; gap: 20px;">
+        <form method="GET" style="display: flex; align-items: center; gap: 16px; flex: 1;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Tenant Filter</label>
+                <select name="tenant_id" style="height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; min-width: 180px; background: var(--bg-light);">
+                    <option value="">All Organizations</option>
+                    {% for t in tenantsList %}
+                    <option value="{{ t.id }}" {{ filters.tenant_id == t.id ? 'selected' : '' }}>{{ t.display_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">Date Range (Start)</label>
+                <input type="date" name="start_date" value="{{ filters.start_date }}" style="height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--bg-light);">
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+                <label style="font-size: 9px; font-weight: 800; color: var(--text-muted); text-transform: uppercase;">End</label>
+                <input type="date" name="end_date" value="{{ filters.end_date }}" style="height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; font-weight: 600; background: var(--bg-light);">
+            </div>
+
+            <div style="display: flex; align-items: flex-end; margin-top: 14px;">
+                <button type="submit" style="height: 32px; padding: 0 16px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                    Apply Filters
+                </button>
+            </div>
+            
+            {% if filters.tenant_id or filters.start_date or filters.end_date %}
+            <div style="display: flex; align-items: flex-end; margin-top: 14px;">
+                <a href="/admin/scans" style="font-size: 11px; font-weight: 700; color: var(--danger); text-decoration: none;">Clear Results</a>
+            </div>
+            {% endif %}
+        </form>
     </div>
 </header>
 
@@ -50,69 +117,66 @@
         </thead>
         <tbody>
             {% for scan in scans %}
-            <tr>
+            <tr class="high-density-row">
                 <td style="padding-left: 24px;">
-                    <div style="font-family: monospace; font-weight: 700; font-size: 11px; color: var(--text-primary);">#{{ scan.id|slice(0, 8) }}</div>
-                    <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">{{ scan.created_at|date('M d, H:i') }}</div>
+                    <div style="font-weight: 800; font-size: 12px; color: var(--text-primary);">{{ scan.created_at|date('d M Y') }}</div>
+                    <div style="font-family: monospace; font-weight: 600; font-size: 9px; color: var(--text-muted);">{{ scan.id|slice(0, 8)|upper }} • {{ scan.created_at|date('H:i') }}</div>
                 </td>
                 <td>
-                    <div style="font-weight: 700; color: var(--text-primary); font-size: 13px;">{{ scan.tenant_name }}</div>
-                    <div style="font-size: 11px; color: var(--primary); font-weight: 600;">{{ scan.project_name }}</div>
+                    <div style="font-weight: 700; color: var(--text-primary); font-size: 12px; line-height: 1.2;">{{ scan.tenant_name }}</div>
+                    <div style="font-size: 10px; color: var(--primary); font-weight: 700;">{{ scan.project_name }}</div>
                 </td>
                 <td>
-                    <span class="badge" style="background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border);">
+                    <span style="display: inline-block; padding: 2px 6px; font-size: 9px; font-weight: 800; background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--border); border-radius: 4px;">
                         {{ scan.scan_level|upper }}
                     </span>
                 </td>
                 <td>
-                    <div style="font-weight: 600; font-size: 12px; color: var(--text-primary);">{{ scan.ai_model|default('Standard Audit') }}</div>
-                    <div style="font-size: 10px; color: var(--text-muted);">{{ scan.ai_prompt_version|default('v3.1') }}</div>
+                    <div style="font-weight: 700; font-size: 11px; color: var(--text-primary);">{{ scan.ai_model|default('Audit') }}</div>
+                    <div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">{{ scan.ai_prompt_version|default('v3') }}</div>
                 </td>
                 <td>
-                    <div style="display: flex; flex-direction: column; gap: 4px; width: 140px;">
-                        <span style="font-size: 10px; font-weight: 800; color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--danger){% else %}var(--primary){% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
+                    <div style="display: flex; flex-direction: column; gap: 2px; width: 120px;">
+                        <span style="font-size: 9px; font-weight: 800; color: {% if scan.status == 'completed' %}var(--success){% elseif scan.status == 'failed' or scan.status == 'error' %}var(--danger){% else %}var(--primary){% endif %}; text-transform: uppercase;">
                             {{ scan.status }}
                         </span>
                         {% if scan.status in ['queued', 'running'] %}
-                        <div style="height: 4px; background: var(--bg-light); border-radius: 2px; overflow: hidden;">
+                        <div style="height: 3px; background: var(--bg-light); border-radius: 2px; overflow: hidden;">
                             <div class="shimmer" style="width: {{ scan.progress_percent }}%; height: 100%; background: var(--primary);"></div>
                         </div>
-                        <div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">{{ scan.progress_stage }}</div>
                         {% endif %}
                     </div>
                 </td>
                 <td>
-                    <div style="font-weight: 700; font-size: 13px; color: var(--text-primary);">{{ (scan.ai_input_tokens_used + scan.ai_output_tokens_used)|number_format }} <span style="font-size: 10px; color: var(--text-muted);">TKN</span></div>
-                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">Charged: {{ scan.tokens_charged|number_format }}</div>
+                    <div style="font-weight: 800; font-size: 12px; color: var(--text-primary);">{{ (scan.ai_input_tokens_used + scan.ai_output_tokens_used)|number_format }}</div>
+                    <div style="font-size: 9px; color: var(--text-muted); font-weight: 600;">Charged: {{ scan.tokens_charged|number_format }}</div>
                 </td>
                 <td style="padding-right: 24px; text-align: right;">
-                    <div style="display: flex; gap: 8px; justify-content: flex-end; align-items: center;">
-                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn-action" data-tooltip="View Live Technical Logs" aria-label="Logs">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                    <div style="display: flex; gap: 4px; justify-content: flex-end; align-items: center;">
+                        <button onclick="toggleAudit('{{ scan.id }}')" class="btn-compact" data-tooltip="Logs">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
                         </button>
 
-                        <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2);" data-tooltip="Inspect Full AI Context Trace" aria-label="Inspect AI">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-compact" style="color: #10b981;" data-tooltip="AI Trace">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg>
                         </button>
                         
-                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn-action" data-tooltip="Download Raw Data JSON" aria-label="Raw Data" style="width: auto; padding: 0 10px; gap: 6px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
-                            <span style="font-size: 10px; font-weight: 700;">{{ scan.formatted_payload_size }}</span>
+                        <a href="/admin/scans/raw/{{ scan.id }}" class="btn-compact" data-tooltip="Download Raw Data">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
                         </a>
 
-                        <a href="/admin/scans/report/{{ scan.id }}" class="btn-action" data-tooltip="Download Final AI Report" aria-label="Report" style="width: auto; padding: 0 10px; gap: 6px;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                            <span style="font-size: 10px; font-weight: 700;">{{ scan.formatted_report_size }}</span>
+                        <a href="/admin/scans/report/{{ scan.id }}" class="btn-compact" data-tooltip="Download Report">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                         </a>
 
                         {% if scan.status in ['queued', 'running'] %}
-                        <button onclick="abortJob('{{ scan.id }}')" class="btn-action btn-danger-alt" data-tooltip="Abort stuck job" aria-label="Abort">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        <button onclick="abortJob('{{ scan.id }}')" class="btn-compact" style="color: var(--danger);" data-tooltip="Abort">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                         </button>
                         {% endif %}
 
-                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn-action btn-success-alt" data-tooltip="Launch Professional Dashboard" aria-label="View Dashboard">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                        <a href="/scans/report/{{ scan.id }}" target="_blank" class="btn-compact" style="color: #6366f1;" data-tooltip="Launch Dashboard">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
                         </a>
                     </div>
                 </td>
@@ -226,6 +290,40 @@
     .sort-header:hover { color: var(--primary); }
     .sort-header.active { color: var(--text-primary); }
     .sort-icon { font-size: 14px; color: var(--primary); }
+
+    .high-density-row {
+        height: 48px;
+        transition: background 0.2s;
+    }
+    .high-density-row:hover {
+        background: rgba(var(--primary-rgb), 0.02) !important;
+    }
+    .high-density-row td {
+        padding-top: 8px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 1px solid var(--border-light);
+    }
+
+    .btn-compact {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+    }
+    .btn-compact:hover {
+        background: #fff;
+        border-color: var(--primary);
+        color: var(--primary);
+        box-shadow: var(--shadow-1);
+    }
 
     .pagination-btn {
         height: 32px;
