@@ -79,6 +79,7 @@ ALTER TABLE extraction_config ADD PRIMARY KEY (section_key, report_plan_id);
 
 -- 6. Update Scan Jobs to support Plan IDs
 ALTER TABLE scan_jobs ADD COLUMN IF NOT EXISTS report_plan_id UUID REFERENCES report_plans(id);
+ALTER TABLE scan_jobs ALTER COLUMN scan_level DROP NOT NULL;
 
 -- Link existing jobs to the seeded plans based on their level string
 UPDATE scan_jobs SET report_plan_id = '11111111-1111-4111-a111-111111111111' WHERE scan_level = 'level1';
