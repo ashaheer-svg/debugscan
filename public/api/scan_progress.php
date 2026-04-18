@@ -6,6 +6,7 @@ require __DIR__ . '/../../vendor/autoload.php';
 
 use App\Database;
 use App\Services\ScanService;
+use App\Services\ReportPlanService;
 
 header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
@@ -19,7 +20,8 @@ if (!$jobId) {
 }
 
 $pdo = Database::getConnection();
-$scanService = new ScanService($pdo);
+$reportPlanService = new ReportPlanService($pdo);
+$scanService = new ScanService($pdo, $reportPlanService);
 
 // Start SSE Loop
 while (true) {
