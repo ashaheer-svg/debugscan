@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Services\ExtractionConfigService;
+use App\Services\ReportPlanService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
@@ -14,57 +15,66 @@ class ExtractionConfigController
     private Environment $view;
     private ExtractionConfigService $configService;
     private string $basePath;
+    private ReportPlanService $reportPlanService;
 
-    public function __construct(Environment $view, ExtractionConfigService $configService, string $basePath)
-    {
+    public function __construct(
+        Environment $view, 
+        ExtractionConfigService $configService, 
+        string $basePath,
+        ReportPlanService $reportPlanService
+    ) {
         $this->view = $view;
         $this->configService = $configService;
         $this->basePath = $basePath;
+        $this->reportPlanService = $reportPlanService;
     }
 
-    public function showPage(Request $request, Response $response): Response
+    public function showPage(Request $request, Response $response, array $args): Response
     {
-        $allConfig = $this->configService->getConfig(); // ['level1' => [...], 'level2' => [...]]
+        $planId = $args['id'];
+        
+        // Fetch Plan Info
+        $plan = $this->reportPlanService->getPlan($planId);
+        $planName = $plan ? $plan['name'] : 'Unknown Plan';
 
-        // Group by section group name, with both level configs side by side
+        $allConfig = $this->configService->getConfig($planId); 
+
+        // Group by section group name
         $groups = [];
-        foreach ($allConfig['level1'] as $key => $section) {
-            $groups[$section['group']][$key] = [
-                'meta'   => $section, // base metadata
-                'level1' => $section,
-                'level2' => $allConfig['level2'][$key],
-            ];
+        foreach ($allConfig as $key => $section) {
+            $groups[$section['group']][$key] = $section;
         }
 
-        // Per-level active counts for summary bar
-        $l1Active = count(array_filter($allConfig['level1'], fn($s) => $s['is_enabled']));
-        $l2Active = count(array_filter($allConfig['level2'], fn($s) => $s['is_enabled']));
-        $total    = count($allConfig['level1']);
+        // Active counts
+        $activeCount = count(array_filter($allConfig, fn($s) => $s['is_enabled']));
+        $total       = count($allConfig);
 
         $body = $this->view->render('admin/extraction_config.twig', [
+            'plan_id'    => $planId,
+            'plan_name'  => $planName,
             'groups'     => $groups,
-            'l1_active'  => $l1Active,
-            'l2_active'  => $l2Active,
+            'active_count' => $activeCount,
             'total'      => $total,
             'status'     => $request->getQueryParams()['status'] ?? null,
-            'active_page'=> 'admin_extraction',
+            'active_page'=> 'admin_plans',
         ]);
         $response->getBody()->write($body);
         return $response;
     }
 
-    public function saveConfig(Request $request, Response $response): Response
+    public function saveConfig(Request $request, Response $response, array $args): Response
     {
+        $planId = $args['id'];
         $data = $request->getParsedBody();
         $sections = $data['sections'] ?? [];
 
         try {
-            $this->configService->saveAll($sections);
-            $_SESSION['success'] = 'Extraction configuration saved successfully.';
+            $this->configService->saveAll($planId, $sections);
+            $_SESSION['success'] = 'Extraction configuration for "' . $planId . '" saved successfully.';
         } catch (\Exception $e) {
             $_SESSION['error'] = 'Failed to save configuration: ' . $e->getMessage();
         }
 
-        return $response->withHeader('Location', $this->basePath . '/admin/extraction-config?status=saved')->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . "/admin/extraction-config/{$planId}?status=saved")->withStatus(302);
     }
 }

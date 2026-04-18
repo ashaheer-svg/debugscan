@@ -23,6 +23,7 @@ class TenantController
     private ParseService $parseService;
     private string $basePath;
     private MailService $mailService;
+    private \App\Services\ReportPlanService $reportPlanService;
 
     public function __construct(
         Environment $view, 
@@ -31,7 +32,8 @@ class TenantController
         ScanService $scanService, 
         ParseService $parseService, 
         string $basePath,
-        MailService $mailService
+        MailService $mailService,
+        \App\Services\ReportPlanService $reportPlanService
     ) {
         $this->view = $view;
         $this->pdo = $pdo;
@@ -40,6 +42,7 @@ class TenantController
         $this->parseService = $parseService;
         $this->basePath = $basePath;
         $this->mailService = $mailService;
+        $this->reportPlanService = $reportPlanService;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -178,10 +181,14 @@ class TenantController
             }
         }
 
+        // Fetch authorized plans for this tenant
+        $authorizedPlans = $this->reportPlanService->getPlansForTenant($tenantId);
+
         $body = $this->view->render('tenant/project_view.twig', [
             'project' => $project,
             'files' => $files,
             'scans' => $scans,
+            'plans' => $authorizedPlans,
             'file_reports' => $fileReports,
             'active_page' => 'projects',
             'success' => $_SESSION['success'] ?? null,
@@ -330,40 +337,37 @@ class TenantController
 
     public function startScan(Request $request, Response $response, array $args): Response
     {
-        $id = $args['id'];
+        $id = $args['id']; // Project ID
         $tenantId = $request->getAttribute('tenant_id');
         $data = $request->getParsedBody();
-        $level = $data['level'] ?? 'level1';
+        $reportPlanId = $data['report_plan_id'] ?? null;
         $fileIds = $data['file_ids'] ?? [];
 
         if (empty($fileIds)) {
-            $_SESSION['error'] = 'Please select at least one log file to scan.';
+            $_SESSION['error'] = 'Please select at least one forensic log file to scan.';
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
+        }
+
+        if (!$reportPlanId) {
+            $_SESSION['error'] = 'No forensic package selected.';
             return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 
         try {
-            // Multi-file scans are automatically classified as Level 2
-            if (count($fileIds) > 1) {
-                $level = 'level2';
-            }
+            $jobId = $this->scanService->queueScan($tenantId, $id, $fileIds, $reportPlanId);
 
-            // Get system model setting
-            $stmt = $this->pdo->query("SELECT level1_model, level2_model FROM system_settings LIMIT 1");
-            $settings = $stmt->fetch();
-            $model = ($level === 'level1') ? $settings['level1_model'] : $settings['level2_model'];
-
-            $jobId = $this->scanService->queueScan($tenantId, $id, $fileIds, $level, $model);
-
-            // Fetch project name for logging
+            // Fetch details for logging
             $stmt = $this->pdo->prepare("SELECT name FROM projects WHERE id = :pid");
             $stmt->execute(['pid' => $id]);
             $projectName = $stmt->fetchColumn() ?: 'Unknown';
 
+            $plan = $this->reportPlanService->getPlan($reportPlanId);
+
             $this->logAction($request, 'scan_queued', 'scan_jobs', $jobId, [
                 'project_name' => $projectName,
-                'scan_level' => $level,
-                'file_ids' => $fileIds,
-                'ai_model' => $model
+                'package'      => $plan['name'] ?? 'Custom',
+                'file_ids'     => $fileIds,
+                'ai_model'     => $plan['ai_model'] ?? 'Unknown'
             ]);
 
             

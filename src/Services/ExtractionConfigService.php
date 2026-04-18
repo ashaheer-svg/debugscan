@@ -197,45 +197,41 @@ class ExtractionConfigService
     }
 
     /**
-     * Load all extraction config rows from DB and merge with metadata.
+     * Load all extraction config rows from DB for a specific plan and merge with metadata.
      * Returns a keyed array: section_key => [metadata + db values]
      */
-    /**
-     * Load all extraction config rows from DB and merge with metadata.
-     * Returns: ['level1' => [key => section], 'level2' => [key => section]]
-     */
-    public function getConfig(): array
+    public function getConfig(string $planId): array
     {
-        $stmt = $this->pdo->query("SELECT section_key, scan_level, is_enabled, max_rows, updated_at FROM extraction_config ORDER BY section_key, scan_level");
+        $stmt = $this->pdo->prepare("SELECT section_key, is_enabled, max_rows, updated_at FROM extraction_config WHERE report_plan_id = :pid ORDER BY section_key");
+        $stmt->execute(['pid' => $planId]);
+        
         $dbRows = [];
         foreach ($stmt->fetchAll() as $row) {
-            $dbRows[$row['scan_level']][$row['section_key']] = $row;
+            $dbRows[$row['section_key']] = $row;
         }
 
-        $result = ['level1' => [], 'level2' => []];
-        foreach (['level1', 'level2'] as $level) {
-            foreach (self::SECTION_METADATA as $key => $meta) {
-                $db = $dbRows[$level][$key] ?? [];
-                $result[$level][$key] = array_merge($meta, [
-                    'section_key' => $key,
-                    'scan_level'  => $level,
-                    'is_enabled'  => isset($db['is_enabled']) ? (bool)$db['is_enabled'] : true,
-                    'max_rows'    => $db['max_rows'] ?? null,
-                    'updated_at'  => $db['updated_at'] ?? null,
-                ]);
-            }
+        $result = [];
+        foreach (self::SECTION_METADATA as $key => $meta) {
+            $db = $dbRows[$key] ?? [];
+            $result[$key] = array_merge($meta, [
+                'section_key'    => $key,
+                'report_plan_id' => $planId,
+                'is_enabled'     => isset($db['is_enabled']) ? (bool)$db['is_enabled'] : true,
+                'max_rows'       => $db['max_rows'] ?? null,
+                'updated_at'     => $db['updated_at'] ?? null,
+            ]);
         }
         return $result;
     }
 
     /**
      * Returns only the runtime config (key => [is_enabled, max_rows]) for the scanner.
-     * @param string $level 'level1' or 'level2'
+     * @param string $planId The UUID of the report plan
      */
-    public function getRuntimeConfig(string $level = 'level1'): array
+    public function getRuntimeConfig(string $planId): array
     {
-        $stmt = $this->pdo->prepare("SELECT section_key, is_enabled, max_rows FROM extraction_config WHERE scan_level = :level");
-        $stmt->execute(['level' => $level]);
+        $stmt = $this->pdo->prepare("SELECT section_key, is_enabled, max_rows FROM extraction_config WHERE report_plan_id = :pid");
+        $stmt->execute(['pid' => $planId]);
         $config = [];
         foreach ($stmt->fetchAll() as $row) {
             $config[$row['section_key']] = [
@@ -247,44 +243,41 @@ class ExtractionConfigService
     }
 
     /**
-     * Save a single section's settings for a specific scan level.
+     * Save a single section's settings for a specific report plan.
      */
-    public function saveSection(string $key, string $level, bool $enabled, ?int $maxRows): void
+    public function saveSection(string $key, string $planId, bool $enabled, ?int $maxRows): void
     {
         $stmt = $this->pdo->prepare("
-            INSERT INTO extraction_config (section_key, scan_level, is_enabled, max_rows, updated_at)
-            VALUES (:key, :level, :enabled, :max_rows, NOW())
-            ON CONFLICT (section_key, scan_level) DO UPDATE
+            INSERT INTO extraction_config (section_key, report_plan_id, is_enabled, max_rows, updated_at)
+            VALUES (:key, :pid, :enabled, :max_rows, NOW())
+            ON CONFLICT (section_key, report_plan_id) DO UPDATE
                 SET is_enabled = EXCLUDED.is_enabled,
                     max_rows   = EXCLUDED.max_rows,
                     updated_at = NOW()
         ");
         $stmt->execute([
             'key'      => $key,
-            'level'    => $level,
+            'pid'      => $planId,
             'enabled'  => $enabled ? 1 : 0,
             'max_rows' => $maxRows,
         ]);
     }
 
     /**
-     * Save all sections from a bulk POST payload for both scan levels.
-     * $data: ['level1' => [section_key => ['enabled' => '1', 'max_rows' => '75']], 'level2' => [...]]
+     * Save all sections from a bulk POST payload for a specific plan.
+     * $data: [section_key => ['enabled' => '1', 'max_rows' => '75']]
      */
-    public function saveAll(array $data): void
+    public function saveAll(string $planId, array $data): void
     {
-        foreach (['level1', 'level2'] as $level) {
-            $levelData = $data[$level] ?? [];
-            foreach (self::SECTION_METADATA as $key => $meta) {
-                if ($meta['always_on']) continue; // Never override always-on sections
+        foreach (self::SECTION_METADATA as $key => $meta) {
+            if ($meta['always_on']) continue;
 
-                $enabled = isset($levelData[$key]['enabled']) && $levelData[$key]['enabled'] === '1';
-                $maxRows = null;
-                if ($meta['has_limit'] && isset($levelData[$key]['max_rows']) && is_numeric($levelData[$key]['max_rows'])) {
-                    $maxRows = max(1, (int)$levelData[$key]['max_rows']);
-                }
-                $this->saveSection($key, $level, $enabled, $maxRows);
+            $enabled = isset($data[$key]['enabled']) && $data[$key]['enabled'] === '1';
+            $maxRows = null;
+            if ($meta['has_limit'] && isset($data[$key]['max_rows']) && is_numeric($data[$key]['max_rows'])) {
+                $maxRows = max(1, (int)$data[$key]['max_rows']);
             }
+            $this->saveSection($key, $planId, $enabled, $maxRows);
         }
     }
 }

@@ -25,6 +25,7 @@ use App\Services\FileService;
 use App\Services\ParseService;
 use App\Services\PackagingService;
 use App\Services\ExtractionConfigService;
+use App\Services\ReportPlanService;
 use App\Parsers\DatabaseParser;
 
 $pdo = Database::getConnection();
@@ -34,6 +35,7 @@ $parseService     = new ParseService();
 $packagingService = new PackagingService();
 $fileService      = new FileService($pdo, __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted');
 $extractionConfig = new ExtractionConfigService($pdo);
+$reportPlanService = new ReportPlanService($pdo);
 
 // Get AI credentials from environment
 $aiApiKey = getenv('GROQ_API_KEY') ?: ($_ENV['GROQ_API_KEY'] ?? '');
@@ -59,7 +61,7 @@ echo "Startup: Rescued any leftover zombie jobs.\n";
 while (true) {
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
-        SELECT id, tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
+        SELECT id, tenant_id, project_id, report_plan_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
         FROM scan_jobs
         WHERE status = 'queued'
         ORDER BY priority DESC, queued_at ASC
@@ -83,6 +85,24 @@ while (true) {
         continue;
     }
 
+    // 1.5 Load Report Plan
+    $planId = $job['report_plan_id'];
+    // Fallback for legacy jobs
+    if (!$planId) {
+        if ($job['scan_level'] === 'level2') {
+            $planId = '22222222-2222-4222-a222-222222222222';
+        } else {
+            $planId = '11111111-1111-4111-a111-111111111111';
+        }
+    }
+    
+    $plan = $reportPlanService->getPlan($planId);
+    if (!$plan) {
+         $pdo->prepare("UPDATE scan_jobs SET status = 'failed', error_message = 'Report Plan not found', completed_at = NOW() WHERE id = :id")->execute(['id' => $job['id']]);
+         $pdo->commit();
+         continue;
+    }
+
     // 1.5 Concurrency Check
     $stmtSettings = $pdo->query("SELECT max_concurrent_scans FROM system_settings LIMIT 1");
     $maxConcurrency = (int)($stmtSettings->fetchColumn() ?: 2);
@@ -98,11 +118,11 @@ while (true) {
     }
 
     // 2. Mark as running
-    $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'running', progress_stage = 'Initializing', progress_percent = 5, started_at = NOW() WHERE id = :id");
-    $stmt->execute(['id' => $job['id']]);
+    $stmt = $pdo->prepare("UPDATE scan_jobs SET status = 'running', progress_stage = 'Initializing', progress_percent = 5, started_at = NOW(), report_plan_id = :pid WHERE id = :id");
+    $stmt->execute(['id' => $job['id'], 'pid' => $planId]);
     $pdo->commit();
 
-    echo "Processing Job: {$job['id']} (Project: {$job['project_id']})\n";
+    echo "Processing Job: {$job['id']} (Plan: {$plan['name']})\n";
 
     try {
         // Safe initialization: try to recover existing checkpoints or start fresh
@@ -126,11 +146,10 @@ while (true) {
             $stmt->execute(['cp' => json_encode($checkpoints, JSON_INVALID_UTF8_SUBSTITUTE), 'stage' => $stage, 'id' => $job['id']]);
         };
 
-        $addCheckpoint('system', 'Worker Active', 'success', ['pid' => getmypid()]);
+        $addCheckpoint('system', 'Worker Active', 'success', ['pid' => getmypid(), 'plan' => $plan['name']]);
 
         // Load extraction config for this scan's level (L1 and L2 both have configurable sections now)
-        $scanLevel = $job['scan_level'] ?? 'level1';
-        $l1Config  = $extractionConfig->getRuntimeConfig($scanLevel);
+        $activeConfig  = $extractionConfig->getRuntimeConfig($planId);
 
         // Update function for progress percent + Technical Heartbeat
         $updateProgress = function($stage, $percent = null) use ($pdo, $job) {
@@ -178,9 +197,8 @@ while (true) {
                     }
                  }
 
-                 if (is_dir($destPath)) {
-                     // $l1Config already loaded once for this job (above)
-                     $dbParser  = new DatabaseParser($destPath, $updateProgress, $l1Config);
+                     // Use active config for this plan
+                     $dbParser  = new DatabaseParser($destPath, $updateProgress, $activeConfig);
                      $dbResults = $dbParser->parseAll();
                     
                     $rowCount = 0;
@@ -197,10 +215,9 @@ while (true) {
                         'tables' => array_keys(array_filter($dbResults, fn($k) => $k !== 'stats', ARRAY_FILTER_USE_KEY))
                     ]);
                  }
-             }
 
-             // Base diagnostic data (pass config for L1 only; already loaded above)
-             $data = $parseService->parseAll($destPath, $l1Config ?? []);
+             // Base diagnostic data (pass active config)
+             $data = $parseService->parseAll($destPath, $activeConfig ?? []);
 
              // 3. Propagate hardware metadata to projects table if missing
              $hw = $data['hardware'] ?? [];
@@ -246,7 +263,7 @@ while (true) {
         }
 
         // 4. Perform AI Analysis
-        $updateProgress("AI Forensic Analysis (" . ucfirst($job['scan_level']) . ")", 70);
+        $updateProgress("AI Forensic Analysis (" . $plan['name'] . ")", 70);
         
         $stmtSettings = $pdo->query("SELECT max_prompt_chars FROM system_settings LIMIT 1");
         $maxChars = (int)($stmtSettings->fetchColumn() ?: 50000);
@@ -255,7 +272,7 @@ while (true) {
 
         $addCheckpoint('ai', 'AI Analysis Started', 'success', [
             'data_set_count' => count($allDiagnosticData),
-            'model' => $job['ai_model'],
+            'model' => $job['ai_model'] ?? $plan['ai_model'],
             'capacity' => number_format($totalInputChars) . ' characters in raw payload',
             'data_link' => "/admin/scans/raw/{$job['id']}",
             'char_limit' => $maxChars
@@ -263,10 +280,11 @@ while (true) {
 
         $analysis = $aiService->analyze(
             $allDiagnosticData, 
-            $job['ai_model'], 
-            (int)$job['max_output_tokens'],
+            $job['ai_model'] ?? $plan['ai_model'], 
+            (int)($job['max_output_tokens'] ?? $plan['max_output_tokens']),
             $maxChars,
-            (string)$job['id']
+            (string)$job['id'],
+            $plan['prompt_header']
         );
 
         $findings = $analysis['findings'] ?? [];
@@ -346,7 +364,10 @@ while (true) {
         $inTokens = (int)($usage['prompt_tokens'] ?? 0);
         $outTokens = (int)($usage['completion_tokens'] ?? 0);
         $totalTokens = $inTokens + $outTokens;
-        $lvl = $job['scan_level'] ?? 'level1';
+        
+        // Final token cost can be base plan cost OR actual usage
+        // For now, let's stick to actual tokens as requested previously, but use the plan ID for counters
+        $isL2 = ($planId === '22222222-2222-4222-a222-222222222222');
         
         // Fetch balance before
         $stmt = $pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
@@ -365,8 +386,8 @@ while (true) {
         $stmt->execute([
             'after' => $afterBalance,
             'used' => $totalTokens,
-            'l1_inc' => ($lvl === 'level1') ? 1 : 0,
-            'l2_inc' => ($lvl === 'level2') ? 1 : 0,
+            'l1_inc' => $isL2 ? 0 : 1,
+            'l2_inc' => $isL2 ? 1 : 0,
             'tenant_id' => $job['tenant_id']
         ]);
 
@@ -387,7 +408,7 @@ while (true) {
                 'used' => $totalTokens,
                 'before' => $beforeBalance,
                 'after' => $afterBalance,
-                'scan_level' => $lvl
+                'scan_plan' => $plan['name']
             ])
         ]);
 

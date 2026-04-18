@@ -10,18 +10,30 @@ use RuntimeException;
 class ScanService
 {
     private PDO $pdo;
+    private ReportPlanService $reportPlanService;
 
-    public function __construct(PDO $pdo)
+    public function __construct(PDO $pdo, ReportPlanService $reportPlanService)
     {
         $this->pdo = $pdo;
+        $this->reportPlanService = $reportPlanService;
     }
 
     /**
      * Queue a new scan job.
      */
-    public function queueScan(string $tenantId, string $projectId, array $fileIds, string $level, string $model): string
+    public function queueScan(string $tenantId, string $projectId, array $fileIds, string $reportPlanId): string
     {
-        // 0. Pre-flight check
+        // 0. Fetch Plan & Check Authorization
+        $plan = $this->reportPlanService->getPlan($reportPlanId);
+        if (!$plan) {
+            throw new RuntimeException("Report plan not found: $reportPlanId");
+        }
+
+        if (!$this->reportPlanService->isPlanAuthorized($tenantId, $reportPlanId)) {
+            throw new RuntimeException("FORBIDDEN: Tenant is not authorized for package: " . $plan['name']);
+        }
+
+        // 1. Check Token Credits
         $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
         $stmt->execute(['tid' => $tenantId]);
         $user = $stmt->fetch();
@@ -30,31 +42,32 @@ class ScanService
             throw new RuntimeException("Tenant user not found: $tenantId");
         }
 
-        // Conservative estimates for total tokens (input + output)
-        $estimatedRequired = ($level === 'level1') ? 12000 : 40000;
-        if ($user['tokens_available'] < $estimatedRequired) {
-            throw new RuntimeException("INSUFFICIENT_TOKENS:" . $user['tokens_available'] . ":" . $estimatedRequired);
+        $requiredTokens = (int)$plan['token_charge'];
+        if ($user['tokens_available'] < $requiredTokens) {
+            throw new RuntimeException("INSUFFICIENT_TOKENS:" . $user['tokens_available'] . ":" . $requiredTokens);
         }
-
-        // 1. Get default token limits for the level
-        $stmt = $this->pdo->query("SELECT level1_max_input_tokens, level1_max_output_tokens, level2_max_input_tokens, level2_max_output_tokens FROM system_settings LIMIT 1");
-        $settings = $stmt->fetch();
-
-        $maxInput = ($level === 'level1') ? $settings['level1_max_input_tokens'] : $settings['level2_max_input_tokens'];
-        $maxOutput = ($level === 'level1') ? $settings['level1_max_output_tokens'] : $settings['level2_max_output_tokens'];
 
         // 2. Insert the job with initial "Confirmed" checkpoint
         $initialCP = json_encode([[
             'level' => 'system',
             'stage' => 'Job Confirmed',
             'status' => 'success',
-            'meta' => ['confirmed_at' => date('Y-m-d H:i:s')],
+            'meta' => [
+                'confirmed_at' => date('Y-m-d H:i:s'),
+                'package' => $plan['name']
+            ],
             'ts' => date('Y-m-d H:i:s')
         ]]);
 
         $stmt = $this->pdo->prepare("
-            INSERT INTO scan_jobs (tenant_id, project_id, scan_level, debug_file_ids, ai_model, max_input_tokens, max_output_tokens, status, checkpoints)
-            VALUES (:tenant_id, :project_id, :scan_level, :debug_file_ids, :ai_model, :max_input, :max_output, 'queued', :cp)
+            INSERT INTO scan_jobs (
+                tenant_id, project_id, report_plan_id, debug_file_ids, 
+                ai_model, max_input_tokens, max_output_tokens, status, checkpoints
+            )
+            VALUES (
+                :tenant_id, :project_id, :report_plan_id, :debug_file_ids, 
+                :ai_model, :max_input, :max_output, 'queued', :cp
+            )
             RETURNING id
         ");
 
@@ -64,11 +77,11 @@ class ScanService
         $stmt->execute([
             'tenant_id' => $tenantId,
             'project_id' => $projectId,
-            'scan_level' => $level,
+            'report_plan_id' => $plan['id'],
             'debug_file_ids' => $pgArray,
-            'ai_model' => $model,
-            'max_input' => $maxInput,
-            'max_output' => $maxOutput,
+            'ai_model' => $plan['ai_model'],
+            'max_input' => $plan['max_input_tokens'],
+            'max_output' => $plan['max_output_tokens'],
             'cp' => $initialCP
         ]);
 

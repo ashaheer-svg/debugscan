@@ -1,12 +1,12 @@
 {% extends "layout/admin.twig" %}
 
-{% block title %}Extraction Configuration - AI DebugScan v3{% endblock %}
+{% block title %}Extraction Configuration - {{ plan_name }} - AI DebugScan v3{% endblock %}
 
 {% block head %}
     {{ parent() }}
     <style>
         /* ============================================================
-           ADVANCED EXTRACTION CONFIGURATION PAGE — DUAL LEVEL LAYOUT
+           PLAN-SPECIFIC EXTRACTION CONFIGURATION PAGE
         ============================================================ */
         .ec-page-header { margin-bottom: 28px; }
 
@@ -33,9 +33,8 @@
         .ec-summary-segment:last-child { border-right: none; flex: 0 0 auto; }
         .ec-level-dot {
             width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+            background: #667eea;
         }
-        .ec-level-dot.l1 { background: #667eea; }
-        .ec-level-dot.l2 { background: #10b981; }
         .ec-summary-text { display: flex; flex-direction: column; gap: 1px; }
         .ec-summary-count { font-size: 20px; font-weight: 800; color: var(--text-primary); }
         .ec-summary-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); }
@@ -68,7 +67,7 @@
         /* Column Header Row */
         .ec-col-headers {
             display: grid;
-            grid-template-columns: 1fr 220px 220px;
+            grid-template-columns: 1fr 280px;
             gap: 0;
             padding: 8px 24px 8px;
             margin-top: 12px;
@@ -82,19 +81,17 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.07em;
+            color: #667eea;
         }
-        .ec-col-header.l1 { color: #667eea; }
-        .ec-col-header.l2 { color: #10b981; }
         .ec-col-header-dot {
-            width: 8px; height: 8px; border-radius: 50;
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #667eea;
         }
-        .ec-col-header.l1 .ec-col-header-dot { background: #667eea; border-radius: 50%; }
-        .ec-col-header.l2 .ec-col-header-dot { background: #10b981; border-radius: 50%; }
 
-        /* Section Cards — main 3-column grid */
+        /* Section Cards */
         .ec-card {
             display: grid;
-            grid-template-columns: 1fr 220px 220px;
+            grid-template-columns: 1fr 280px;
             background: var(--white);
             border: 1px solid var(--border);
             border-radius: var(--radius);
@@ -138,17 +135,15 @@
         .ec-impact.LOW    { background: #f0fdf4; color: #16a34a; border: 1px solid #86efac; }
         .ec-always-label  { font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.04em; }
 
-        /* Level control columns */
+        /* Control column */
         .ec-level-col {
             padding: 18px 20px;
             display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-            border-right: 1px solid var(--border);
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
         }
-        .ec-level-col:last-child { border-right: none; }
-        .ec-level-col.l2 { background: #fafffe; }
         .ec-level-col.disabled-col { opacity: 0.55; }
 
         /* Toggle Switch */
@@ -169,7 +164,6 @@
         }
         .toggle-switch input:checked + .toggle-slider { background: #667eea; }
         .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
-        .toggle-switch.l2 input:checked + .toggle-slider { background: #10b981; }
         .toggle-switch input:disabled + .toggle-slider { cursor: not-allowed; opacity: 0.7; }
 
         /* Limit Input */
@@ -212,39 +206,34 @@
 
 {% block admin_content %}
 <header class="ec-page-header">
-    <h1 style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">Advanced Extraction Configuration</h1>
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+        <a href="/admin/report-plans" class="btn btn-secondary btn-sm" style="padding: 4px 12px;">← Back to Plans</a>
+        <h1 style="font-size: 22px; font-weight: 800; color: var(--text-primary); margin: 0;">Extraction Config: {{ plan_name }}</h1>
+    </div>
     <p style="color: var(--text-muted); font-size: 13px; font-weight: 500;">
-        Configure exactly which data is extracted and sent to the AI for each scan level.
-        Toggle sections on/off and set row limits to control token usage.
+        Configure exactly which forensic data is extracted and sent to the AI for this specific package.
     </p>
 </header>
 
 {% if status == 'saved' %}
-<div class="flash-success">✓ Extraction configuration saved. New settings apply to subsequent scans.</div>
+<div class="flash-success">✓ Extraction configuration saved for "{{ plan_name }}".</div>
 {% endif %}
 
 {# Summary Bar #}
 <div class="ec-summary-bar">
     <div class="ec-summary-segment">
-        <div class="ec-level-dot l1"></div>
+        <div class="ec-level-dot"></div>
         <div class="ec-summary-text">
-            <span class="ec-summary-count">{{ l1_active }}/{{ total }}</span>
-            <span class="ec-summary-label">L1 Sections Active</span>
-        </div>
-    </div>
-    <div class="ec-summary-segment">
-        <div class="ec-level-dot l2"></div>
-        <div class="ec-summary-text">
-            <span class="ec-summary-count">{{ l2_active }}/{{ total }}</span>
-            <span class="ec-summary-label">L2 Sections Active</span>
+            <span class="ec-summary-count">{{ active_count }}/{{ total }}</span>
+            <span class="ec-summary-label">Sections Active in this Package</span>
         </div>
     </div>
     <div class="ec-summary-segment" style="flex: 0 0 auto; border-right: none;">
-        <span class="ec-badge-note">⚡ Applies to All Scan Levels</span>
+        <span class="ec-badge-note">⚡ AI Diagnostic Rules</span>
     </div>
 </div>
 
-<form id="ecForm" action="/admin/extraction-config/save" method="POST">
+<form id="ecForm" action="/admin/extraction-config/save/{{ plan_id }}" method="POST">
     {% for group_name, sections in groups %}
     <div class="ec-group">
 
@@ -260,45 +249,37 @@
             <div class="ec-group-line"></div>
         </div>
 
-        {# Column headers (only render once, before first group's cards) #}
+        {# Column headers #}
         <div class="ec-col-headers">
             <div></div>
-            <div class="ec-col-header l1">
+            <div class="ec-col-header">
                 <span class="ec-col-header-dot"></span>
-                ⚡ L1 Scan
-            </div>
-            <div class="ec-col-header l2">
-                <span class="ec-col-header-dot"></span>
-                🔬 L2 Deep Forensic
+                Plan Settings
             </div>
         </div>
 
-        {% for key, row in sections %}
-        {% set meta = row.meta %}
-        {% set l1   = row.level1 %}
-        {% set l2   = row.level2 %}
-
-        <div class="ec-card {% if meta.always_on %}always-on{% endif %}" id="card-{{ key }}">
+        {% for key, section in sections %}
+        <div class="ec-card {% if section.always_on %}always-on{% endif %}" id="card-{{ key }}">
 
             {# Left: Info #}
             <div class="ec-card-info">
                 <div class="ec-card-title-row">
-                    <span class="ec-card-title">{{ meta.label }}</span>
-                    <span class="ec-card-parser">{{ meta.parser }}</span>
-                    <span class="ec-impact {{ meta.impact }}">
-                        {% if meta.impact == 'HIGH' %}🔴{% elseif meta.impact == 'MEDIUM' %}🟡{% else %}🟢{% endif %}
-                        {{ meta.impact }}
+                    <span class="ec-card-title">{{ section.label }}</span>
+                    <span class="ec-card-parser">{{ section.parser }}</span>
+                    <span class="ec-impact {{ section.impact }}">
+                        {% if section.impact == 'HIGH' %}🔴{% elseif section.impact == 'MEDIUM' %}🟡{% else %}🟢{% endif %}
+                        {{ section.impact }}
                     </span>
-                    {% if meta.always_on %}
+                    {% if section.always_on %}
                         <span class="ec-always-label">🔒 Always On</span>
                     {% endif %}
                 </div>
-                <p class="ec-description">{{ meta.description }}</p>
+                <p class="ec-description">{{ section.description }}</p>
             </div>
 
-            {# L1 Controls #}
-            <div class="ec-level-col {% if not l1.is_enabled %}disabled-col{% endif %}" id="col-l1-{{ key }}">
-                {% if meta.always_on %}
+            {# Controls #}
+            <div class="ec-level-col {% if not section.is_enabled %}disabled-col{% endif %}" id="col-{{ key }}">
+                {% if section.always_on %}
                     <div class="ec-toggle-row">
                         <span class="ec-toggle-label" style="color:#10b981;">Always On</span>
                         <label class="toggle-switch">
@@ -306,65 +287,28 @@
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
-                    <input type="hidden" name="sections[level1][{{ key }}][enabled]" value="1">
+                    <input type="hidden" name="sections[{{ key }}][enabled]" value="1">
                 {% else %}
                     <div class="ec-toggle-row">
-                        <span class="ec-toggle-label" id="lbl-l1-{{ key }}">{{ l1.is_enabled ? 'Enabled' : 'Disabled' }}</span>
+                        <span class="ec-toggle-label" id="lbl-{{ key }}">{{ section.is_enabled ? 'Enabled' : 'Disabled' }}</span>
                         <label class="toggle-switch">
                             <input type="checkbox"
-                                   name="sections[level1][{{ key }}][enabled]"
+                                   name="sections[{{ key }}][enabled]"
                                    value="1"
-                                   {% if l1.is_enabled %}checked{% endif %}
-                                   onchange="handleToggle('l1', '{{ key }}', this.checked)">
+                                   {% if section.is_enabled %}checked{% endif %}
+                                   onchange="handleToggle('{{ key }}', this.checked)">
                             <span class="toggle-slider"></span>
                         </label>
                     </div>
                 {% endif %}
 
-                {% if meta.has_limit %}
-                <div class="ec-limit-row {% if not l1.is_enabled and not meta.always_on %}hidden{% endif %}" id="limit-l1-{{ key }}">
-                    <span class="ec-limit-label">{{ meta.limit_label }}</span>
+                {% if section.has_limit %}
+                <div class="ec-limit-row {% if not section.is_enabled and not section.always_on %}hidden{% endif %}" id="limit-{{ key }}">
+                    <span class="ec-limit-label">{{ section.limit_label }}</span>
                     <input type="number"
                            class="ec-limit-input"
-                           name="sections[level1][{{ key }}][max_rows]"
-                           value="{{ l1.max_rows ?? '' }}"
-                           min="1" max="10000" placeholder="∞">
-                </div>
-                {% endif %}
-            </div>
-
-            {# L2 Controls #}
-            <div class="ec-level-col l2 {% if not l2.is_enabled %}disabled-col{% endif %}" id="col-l2-{{ key }}">
-                {% if meta.always_on %}
-                    <div class="ec-toggle-row">
-                        <span class="ec-toggle-label" style="color:#10b981;">Always On</span>
-                        <label class="toggle-switch l2">
-                            <input type="checkbox" checked disabled>
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                    <input type="hidden" name="sections[level2][{{ key }}][enabled]" value="1">
-                {% else %}
-                    <div class="ec-toggle-row">
-                        <span class="ec-toggle-label" id="lbl-l2-{{ key }}">{{ l2.is_enabled ? 'Enabled' : 'Disabled' }}</span>
-                        <label class="toggle-switch l2">
-                            <input type="checkbox"
-                                   name="sections[level2][{{ key }}][enabled]"
-                                   value="1"
-                                   {% if l2.is_enabled %}checked{% endif %}
-                                   onchange="handleToggle('l2', '{{ key }}', this.checked)">
-                            <span class="toggle-slider"></span>
-                        </label>
-                    </div>
-                {% endif %}
-
-                {% if meta.has_limit %}
-                <div class="ec-limit-row {% if not l2.is_enabled and not meta.always_on %}hidden{% endif %}" id="limit-l2-{{ key }}">
-                    <span class="ec-limit-label">{{ meta.limit_label }}</span>
-                    <input type="number"
-                           class="ec-limit-input"
-                           name="sections[level2][{{ key }}][max_rows]"
-                           value="{{ l2.max_rows ?? '' }}"
+                           name="sections[{{ key }}][max_rows]"
+                           value="{{ section.max_rows ?? '' }}"
                            min="1" max="10000" placeholder="∞">
                 </div>
                 {% endif %}
@@ -379,19 +323,19 @@
     <div class="ec-save-bar">
         <span class="ec-save-note {% if status == 'saved' %}saved{% endif %}">
             {% if status == 'saved' %}✓ Configuration saved successfully
-            {% else %}Changes will apply to subsequent scans{% endif %}
+            {% else %}Changes will apply to future scans with this package{% endif %}
         </span>
         <button type="submit" class="btn btn-primary" style="padding: 10px 40px; font-weight: 700;">
-            Save All Extraction Settings
+            Save Package Extraction Settings
         </button>
     </div>
 </form>
 
 <script>
-function handleToggle(level, key, enabled) {
-    const col      = document.getElementById('col-' + level + '-' + key);
-    const label    = document.getElementById('lbl-' + level + '-' + key);
-    const limitRow = document.getElementById('limit-' + level + '-' + key);
+function handleToggle(key, enabled) {
+    const col      = document.getElementById('col-' + key);
+    const label    = document.getElementById('lbl-' + key);
+    const limitRow = document.getElementById('limit-' + key);
 
     if (enabled) {
         col.classList.remove('disabled-col');

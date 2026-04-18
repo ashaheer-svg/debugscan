@@ -240,13 +240,21 @@
                 {% else %}
                 <div style="padding: 24px; background: var(--bg-light); border-top: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center;">
                     <div style="display: flex; gap: 16px; align-items: center; white-space: nowrap;">
-                        <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; flex-shrink: 0;">AI Audit Level:</label>
-                        <select id="scanLevel" name="level" style="padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; background: var(--white); cursor: pointer; font-weight: 600;">
-                            <option value="level1">Level 1 (Standard Forensic Audit)</option>
-                            <option value="level2">Level 2 (Deep Hardware Discovery)</option>
+                        <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; flex-shrink: 0;">Forensic Package:</label>
+                        <select id="reportPlanId" name="report_plan_id" style="padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; background: var(--white); cursor: pointer; font-weight: 600;">
+                            {% for plan in plans %}
+                            <option value="{{ plan.id }}" data-tokens="{{ plan.token_charge }}" data-model="{{ plan.ai_model }}">
+                                {{ plan.name }} ({{ plan.ai_model }})
+                            </option>
+                            {% endfor %}
+                            {% if not plans %}
+                            <option value="" disabled>No authorized plans. Contact admin.</option>
+                            {% endif %}
                         </select>
                     </div>
-                    <button type="button" onclick="showTokenApproval()" class="btn btn-primary" style="width: auto; padding: 10px 32px; font-weight: 700;">Queue &nbsp; &#9656;</button>
+                    <button type="button" onclick="showTokenApproval()" class="btn btn-primary" style="width: auto; padding: 10px 32px; font-weight: 700;" {% if not plans %}disabled{% endif %}>
+                        Run AI Diagnostic &nbsp; &#9656;
+                    </button>
                 </div>
                 {% endif %}
             </form>
@@ -691,20 +699,27 @@
     function showTokenApproval() {
         const fileIds = Array.from(document.querySelectorAll('.file-check:checked')).map(cb => cb.value);
         if (fileIds.length === 0) {
-            alert('Please select at least one log file to scan.');
+            alert('Please select at least one forensic log file for analysis.');
             return;
         }
 
-        const level = document.getElementById('scanLevel').value;
+        const planSelect = document.getElementById('reportPlanId');
+        if (!planSelect.value) {
+            alert('No authorized forensic package selected.');
+            return;
+        }
+
+        const selectedOption = planSelect.options[planSelect.selectedIndex];
+        const planName = selectedOption.text.split('(')[0].trim();
+        const modelName = selectedOption.dataset.model;
+        const tokenCharge = parseInt(selectedOption.dataset.tokens) || 0;
+
         const modal = document.getElementById('tokenModal');
         const tokenLabel = document.getElementById('tokenAllocation');
         const levelLabel = document.getElementById('modalScanLevel');
         
-        // Final sanity check for auto-L2
-        const effectiveLevel = fileIds.length > 1 ? 'level2' : level;
-        
-        levelLabel.innerText = effectiveLevel === 'level1' ? 'LEVEL 1 (Standard Forensic Audit)' : 'LEVEL 2 (Deep Hardware / Multi-File Audit)';
-        tokenLabel.innerText = effectiveLevel === 'level1' ? '12,000 Tokens' : '40,000 Tokens'; // Estimates or limits
+        levelLabel.innerText = `${planName} (${modelName})`;
+        tokenLabel.innerText = `${fileIds.length} File(s) | Est. Charge: ${tokenCharge.toLocaleString()} Tokens`;
         
         modal.style.display = 'flex';
     }

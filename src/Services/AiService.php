@@ -55,9 +55,15 @@ class AiService
      * Send diagnostic data to Groq for analysis.
      * Returns findings, the full prompt used, and truncation status.
      */
-    public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000, string $jobId = 'unknown'): array
+    /**
+     * Send diagnostic data to Groq for analysis.
+     * Returns findings, the full prompt used, and truncation status.
+     * @param string|null $customPrompt Optional system prompt header from the report plan.
+     */
+    public function analyze(array $diagnosticData, string $model, int $maxTokens, int $maxChars = 50000, string $jobId = 'unknown', ?string $customPrompt = null): array
     {
-        $systemPrompt = $this->getSystemPrompt();
+        $baseRules = $this->getForensicRules();
+        $systemPrompt = ($customPrompt ?? $this->getDefaultHeader()) . "\n\n" . $baseRules;
         $isTruncated = false;
         
         // Assemble User Prompt (Hybrid Mode: JSON + Markdown Tables)
@@ -176,13 +182,16 @@ class AiService
         return $md;
     }
 
-    private function getSystemPrompt(): string
+    private function getDefaultHeader(): string
     {
         return "You are the Lead Forensic Support Engineer for Synology.
         Your task is to analyze diagnostic 'File Sets' and provide a definitive health audit.
-        You are receiving FULL-SPECTRUM raw diagnostic telemetry, including standard text logs and deep SQLite forensic extractions (located in the 'forensic_extractions' key).
+        You are receiving FULL-SPECTRUM raw diagnostic telemetry, including standard text logs and deep SQLite forensic extractions (located in the 'forensic_extractions' key).";
+    }
 
-        STRICT RULES:
+    private function getForensicRules(): string
+    {
+        return "STRICT RULES:
         1. PRECISION: Analyze raw forensic telemetry from SQLite extractions (e.g. SYNOSYSDB, SYNODISKHEALTHDB) as the ground truth for system health.
         2. EVIDENCE REQUIREMENT: Every finding MUST cite identifying logs, telemetry keys, or hardware identifiers found in the raw JSON payload.
         3. FORENSIC CORRELATION: Correlate error codes across different blocks (e.g., match a 'Disk I/O' block error with a 'Volume Degraded' signal in the forensic events).

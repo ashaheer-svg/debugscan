@@ -94,7 +94,13 @@
                         </a>
 
                         <!-- Edit Tenant -->
-                        <button class="btn-action btn-edit" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" data-email="{{ tenant.email }}" data-tooltip="Edit Profile" aria-label="Edit Profile">
+                        <button class="btn-action btn-edit" 
+                            data-id="{{ tenant.id }}" 
+                            data-name="{{ tenant.display_name }}" 
+                            data-email="{{ tenant.email }}"
+                            data-plans='{{ tenant.assigned_plan_ids|json_encode|raw }}'
+                            data-tooltip="Edit Profile" 
+                            aria-label="Edit Profile">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
                         
@@ -138,6 +144,21 @@
                 <label for="edit_password" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">New Password (Optional)</label>
                 <input type="password" id="edit_password" name="password" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
             </div>
+        </div>
+        <div class="form-group" style="margin-top: 8px;">
+            <label class="form-label" style="display: block; margin-bottom: 12px; font-weight: 600; font-size: 13px; color: var(--text-primary);">Authorized Report Plans</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-light); padding: 16px; border-radius: 6px; border: 1px solid var(--row-border);">
+                {% for plan in all_plans %}
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; color: var(--text-secondary);">
+                    <input type="checkbox" name="plan_ids[]" value="{{ plan.id }}" class="edit-plan-checkbox" data-id="{{ plan.id }}" style="width: 16px; height: 16px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: var(--text-primary);">{{ plan.name }}</div>
+                        <div style="font-size: 10px; opacity: 0.7;">{{ plan.ai_model }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic;">Tenants can only run authorized report plans.</p>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
             <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
@@ -206,6 +227,23 @@
             <label for="tokens" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Initial Tokens</label>
             <input type="number" id="tokens" name="tokens" required value="500000" min="0" step="1" class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;">
         </div>
+        <!-- Plan Selection Grid -->
+        <div class="form-group">
+            <label class="form-label" style="display: block; margin-bottom: 12px; font-weight: 600; font-size: 13px; color: var(--text-primary);">Assign Report Plans</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: var(--bg-light); padding: 16px; border-radius: 6px; border: 1px solid var(--row-border);">
+                {% for plan in all_plans %}
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; color: var(--text-secondary);">
+                    <input type="checkbox" name="plan_ids[]" value="{{ plan.id }}" checked style="width: 16px; height: 16px;">
+                    <div style="flex: 1;">
+                        <div style="font-weight: 700; color: var(--text-primary);">{{ plan.name }}</div>
+                        <div style="font-size: 10px; opacity: 0.7;">{{ plan.ai_model }}</div>
+                    </div>
+                </label>
+                {% endfor %}
+            </div>
+            <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Selected plans will be available to the tenant immediately.</p>
+        </div>
+
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
             <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
             <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Provision Tenant</button>
@@ -224,10 +262,23 @@
 
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
-            document.getElementById('edit_id').value = btn.dataset.id;
+            const tenantId = btn.dataset.id;
+            document.getElementById('edit_id').value = tenantId;
             document.getElementById('edit_org_name').value = btn.dataset.name;
             document.getElementById('edit_email').value = btn.dataset.email;
             document.getElementById('editTenantTitle').textContent = btn.dataset.name;
+            
+            // Get preset plan IDs from parent TR
+            const tr = btn.closest('tr');
+            // We'll use a hack to pass JSON if needed, but for now let's find the record in the 'tenants' array
+            // Actually, we passed assigned_plan_ids to the template, but we need it in JS.
+            // Let's add it via data attribute in the loop.
+            
+            const assignedIds = JSON.parse(btn.dataset.plans || '[]');
+            document.querySelectorAll('.edit-plan-checkbox').forEach(cb => {
+                cb.checked = assignedIds.includes(cb.dataset.id);
+            });
+
             editModal.showModal();
         });
     });

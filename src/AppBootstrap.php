@@ -26,6 +26,7 @@ use App\Controllers\ExtractionConfigController;
 use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
+use App\Services\ReportPlanService;
 
 class AppBootstrap
 {
@@ -76,11 +77,21 @@ class AppBootstrap
                     $container->get(Environment::class),
                     $container->get(PDO::class),
                     new FileService($container->get(PDO::class), __DIR__ . '/../storage/uploads', __DIR__ . '/../storage/extracted'),
-                    new ScanService($container->get(PDO::class)),
+                    $container->get(ScanService::class),
                     new ParseService(),
                     $container->get('base_path'),
-                    $container->get(MailService::class)
+                    $container->get(MailService::class),
+                    $container->get(ReportPlanService::class)
                 );
+            },
+            ScanService::class => function ($container) {
+                return new ScanService(
+                    $container->get(PDO::class),
+                    $container->get(ReportPlanService::class)
+                );
+            },
+            ReportPlanService::class => function ($container) {
+                return new ReportPlanService($container->get(PDO::class));
             },
             MailService::class => function ($container) {
                 return new MailService($container->get(PDO::class));
@@ -92,7 +103,8 @@ class AppBootstrap
                     $container->get(PDO::class),
                     new AiService($apiKey === false ? null : $apiKey),
                     $container->get('base_path'),
-                    $container->get(MailService::class)
+                    $container->get(MailService::class),
+                    $container->get(ReportPlanService::class)
                 );
             },
             ViewDataMiddleware::class => function ($container) {
@@ -108,7 +120,8 @@ class AppBootstrap
                 return new ExtractionConfigController(
                     $container->get(Environment::class),
                     $container->get(ExtractionConfigService::class),
-                    $container->get('base_path')
+                    $container->get('base_path'),
+                    $container->get(ReportPlanService::class)
                 );
             },
         ]);
@@ -236,8 +249,12 @@ class AppBootstrap
             $group->get('admin/explorer/download', [ExplorerController::class, 'download']);
             $group->post('admin/explorer/delete', [ExplorerController::class, 'delete']);
 
-            $group->get('admin/extraction-config', [ExtractionConfigController::class, 'showPage']);
-            $group->post('admin/extraction-config/save', [ExtractionConfigController::class, 'saveConfig']);
+            $group->get('admin/extraction-config/{id}', [ExtractionConfigController::class, 'showPage']);
+            $group->post('admin/extraction-config/save/{id}', [ExtractionConfigController::class, 'saveConfig']);
+
+            $group->get('admin/report-plans', [AdminController::class, 'reportPlans']);
+            $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
+            $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
 

@@ -10,6 +10,7 @@ use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
+use App\Services\ReportPlanService;
 
 class AdminController
 {
@@ -17,15 +18,17 @@ class AdminController
     private PDO $pdo;
     private AiService $aiService;
     private MailService $mailService;
+    private ReportPlanService $reportPlanService;
     private string $basePath;
 
-    public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath, MailService $mailService)
+    public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath, MailService $mailService, ReportPlanService $reportPlanService)
     {
         $this->view = $view;
         $this->pdo = $pdo;
         $this->aiService = $aiService;
         $this->basePath = $basePath;
         $this->mailService = $mailService;
+        $this->reportPlanService = $reportPlanService;
     }
 
     public function dashboard(Request $request, Response $response): Response
@@ -106,6 +109,7 @@ class AdminController
             ORDER BY u.created_at DESC
         ");
         $tenantsData = $stmt->fetchAll();
+        $allPlans = $this->reportPlanService->getAllPlans(true);
 
         // Format storage strings and add breakdown
         $tenants = array_map(function($t) {
@@ -139,12 +143,16 @@ class AdminController
             $t['db_storage'] = $this->formatBytes($dbEstimateBytes);
             $t['total_formatted'] = $this->formatBytes($rawBytes + $extractBytes + $dbEstimateBytes);
             
+            // Fetch assigned plan IDs
+            $t['assigned_plan_ids'] = array_column($this->reportPlanService->getPlansForTenant($tid), 'id');
+
             return $t;
         }, $tenantsData);
 
 
         $body = $this->view->render('admin/tenants.twig', [
             'tenants' => $tenants,
+            'all_plans' => $allPlans,
             'active_page' => 'admin_tenants',
             'error' => $_SESSION['error'] ?? null,
             'success' => $_SESSION['success'] ?? null
@@ -189,10 +197,17 @@ class AdminController
             ]);
             $tenantId = $stmt->fetchColumn();
             
+            // Assign Report Plans
+            $planIds = $data['plan_ids'] ?? [];
+            if (!empty($planIds)) {
+                $this->reportPlanService->assignPlansToTenant((string)$tenantId, $planIds);
+            }
+
             $this->logAction($request, 'user_created', 'users', $tenantId, [
                 'email' => $email,
                 'display_name' => $orgName,
-                'tokens' => $tokens
+                'tokens' => $tokens,
+                'assigned_plans' => count($planIds)
             ], $tenantId);
 
             $_SESSION['success'] = "Tenant '{$orgName}' has been provisioned successfully.";
@@ -233,10 +248,15 @@ class AdminController
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
 
+            // Update Report Plan assignments
+            $planIds = $data['plan_ids'] ?? [];
+            $this->reportPlanService->assignPlansToTenant((string)$id, $planIds);
+
             $this->logAction($request, 'user_updated', 'users', $id, [
                 'email' => $email,
                 'display_name' => $orgName,
-                'password_changed' => !empty($password)
+                'password_changed' => !empty($password),
+                'assigned_plans' => count($planIds)
             ], $id);
 
             $_SESSION['success'] = "Tenant '{$orgName}' updated successfully.";
@@ -896,6 +916,61 @@ class AdminController
         return $response
             ->withHeader('Content-Type', 'text/csv; charset=UTF-8')
             ->withHeader('Content-Disposition', "attachment; filename=\"$filename\"");
+    }
+
+    public function reportPlans(Request $request, Response $response): Response
+    {
+        $plans = $this->reportPlanService->getAllPlans();
+        
+        $body = $this->view->render('admin/report_plans.twig', [
+            'plans' => $plans,
+            'active_page' => 'admin_plans',
+            'success' => $_SESSION['success'] ?? null,
+            'error' => $_SESSION['error'] ?? null,
+        ]);
+        
+        unset($_SESSION['success'], $_SESSION['error']);
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    public function saveReportPlan(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        try {
+            $planId = $this->reportPlanService->savePlan($data);
+            
+            $this->logAction($request, 'report_plan_saved', 'report_plans', $planId, [
+                'name' => $data['name'] ?? 'Unknown',
+                'ai_model' => $data['ai_model'] ?? 'N/A'
+            ]);
+
+            $_SESSION['success'] = 'Report plan saved successfully.';
+        } catch (\Exception $e) {
+            $_SESSION['error'] = 'Failed to save plan: ' . $e->getMessage();
+        }
+        
+        return $response->withHeader('Location', $this->basePath . '/admin/report-plans')->withStatus(302);
+    }
+
+    public function deleteReportPlan(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $id = $data['id'] ?? null;
+        if ($id) {
+            try {
+                $this->reportPlanService->deletePlan($id);
+                
+                $this->logAction($request, 'report_plan_deleted', 'report_plans', $id, [
+                    'id' => $id
+                ]);
+
+                $_SESSION['success'] = 'Report plan deleted.';
+            } catch (\Exception $e) {
+                $_SESSION['error'] = 'Failed to delete plan: ' . $e->getMessage();
+            }
+        }
+        return $response->withHeader('Location', $this->basePath . '/admin/report-plans')->withStatus(302);
     }
 }
 
