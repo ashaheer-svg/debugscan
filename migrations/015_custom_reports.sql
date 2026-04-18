@@ -4,6 +4,10 @@
 -- Ensure UUID extension is available
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+-- 0. Extend Audit Log Actions (Safe if already exists)
+ALTER TYPE audit_action ADD VALUE IF NOT EXISTS 'report_plan_saved';
+ALTER TYPE audit_action ADD VALUE IF NOT EXISTS 'report_plan_deleted';
+
 -- 1. Create Report Plans Table
 CREATE TABLE IF NOT EXISTS report_plans (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
