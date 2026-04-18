@@ -80,4 +80,4 @@ ALTER TABLE scan_jobs ADD COLUMN IF NOT EXISTS report_plan_id UUID REFERENCES re
 UPDATE scan_jobs SET report_plan_id = '11111111-1111-4111-a111-111111111111' WHERE scan_level = 'level1';
 UPDATE scan_jobs SET report_plan_id = '22222222-2222-4222-a222-222222222222' WHERE scan_level = 'level2';
 
-COMMENT ON COLUMN report_plans.system_prompt IS 'Customizable AI instruction header for this specific report package.';
+COMMENT ON COLUMN report_plans.prompt_header IS 'Customizable AI instruction header for this specific report package.';
