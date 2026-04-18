@@ -362,37 +362,38 @@ while (true) {
         // 7. Update User tokens and counters
         $inTokens = (int)($usage['prompt_tokens'] ?? 0);
         $outTokens = (int)($usage['completion_tokens'] ?? 0);
-        $totalTokens = $inTokens + $outTokens;
+        $totalTokensUsed = $inTokens + $outTokens;
         
-        // Final token cost can be base plan cost OR actual usage
-        // For now, let's stick to actual tokens as requested previously, but use the plan ID for counters
+        // Final token charge is DEFINED by the plan, not the actual AI consumption
+        $chargeAmount = (int)($plan['token_charge'] ?? 100000);
+        
         $isL2 = ($planId === '22222222-2222-4222-a222-222222222222');
         
         // Fetch balance before
         $stmt = $pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
         $stmt->execute(['tid' => $job['tenant_id']]);
         $beforeBalance = (int)($stmt->fetchColumn() ?: 0);
-        $afterBalance = max(0, $beforeBalance - $totalTokens);
+        $afterBalance = max(0, $beforeBalance - $chargeAmount);
 
         $stmt = $pdo->prepare("
             UPDATE users 
             SET tokens_available = :after,
-                tokens_used = tokens_used + :used,
+                tokens_used = tokens_used + :charge,
                 scans_level1_count = scans_level1_count + :l1_inc,
                 scans_level2_count = scans_level2_count + :l2_inc
             WHERE id = :tenant_id
         ");
         $stmt->execute([
             'after' => $afterBalance,
-            'used' => $totalTokens,
+            'charge' => $chargeAmount,
             'l1_inc' => $isL2 ? 0 : 1,
             'l2_inc' => $isL2 ? 1 : 0,
             'tenant_id' => $job['tenant_id']
         ]);
 
-        // Update Job with tokens charged
-        $stmt = $pdo->prepare("UPDATE scan_jobs SET tokens_charged = :used WHERE id = :id");
-        $stmt->execute(['used' => $totalTokens, 'id' => $job['id']]);
+        // Update Job with tokens charged (plan amount) and used (AI actual)
+        $stmt = $pdo->prepare("UPDATE scan_jobs SET tokens_charged = :charge WHERE id = :id");
+        $stmt->execute(['charge' => $chargeAmount, 'id' => $job['id']]);
 
         // 8. Audit log entry for token usage
         $stmt = $pdo->prepare("
@@ -403,15 +404,15 @@ while (true) {
             'tenant_id' => $job['tenant_id'],
             'details' => json_encode([
                 'job_id' => $job['id'],
-                'amount' => $totalTokens,
-                'used' => $totalTokens,
+                'amount_deducted' => $chargeAmount,
+                'ai_actual_usage' => $totalTokensUsed,
                 'before' => $beforeBalance,
                 'after' => $afterBalance,
                 'scan_plan' => $plan['name']
             ])
         ]);
 
-        echo "Job Completed: {$job['id']} | Tokens Used: $totalTokens\n";
+        echo "Job Completed: {$job['id']} | Charged: $chargeAmount | AI Used: $totalTokensUsed\n";
 
     } catch (\Throwable $e) {
         $addCheckpoint('system', 'Fatal Error', 'failed', [
