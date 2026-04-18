@@ -222,10 +222,29 @@ class TenantController
             return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 
-        // Validate extension
+        // 1. Security Check: File Size Limit (500MB)
+        $maxSize = 500 * 1024 * 1024;
+        if ($file->getSize() > $maxSize) {
+            $_SESSION['error'] = 'File too large. Maximum allowed size is 500MB.';
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
+        }
+
+        // 2. Extension Validation (Initial filter)
         $filename = $file->getClientFilename();
-        if (!str_ends_with(strtolower($filename), '.dat') && !str_ends_with(strtolower($filename), '.zip')) {
+        $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        if ($ext !== 'dat' && $ext !== 'zip') {
             $_SESSION['error'] = 'Invalid file format. Please upload a .dat or .zip file.';
+            return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
+        }
+
+        // 3. MIME Validation (Magic Bytes)
+        $finfo = finfo_open(FILEINFO_MIME_TYPE);
+        $mime = finfo_file($finfo, $file->getFilePath());
+        finfo_close($finfo);
+
+        $allowedMimes = ['application/zip', 'application/x-zip-compressed', 'application/octet-stream'];
+        if (!in_array($mime, $allowedMimes)) {
+            $_SESSION['error'] = 'Security Error: File content does not match allowed types.';
             return $response->withHeader('Location', $this->basePath . "/projects/view/{$id}")->withStatus(302);
         }
 

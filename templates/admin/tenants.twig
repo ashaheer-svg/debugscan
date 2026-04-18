@@ -72,6 +72,7 @@
                         <!-- Toggle Status -->
                         {% if tenant.status == 'active' %}
                         <form action="/admin/tenants/toggle-status" method="POST" style="display: inline;">
+                            {{ csrf.inputs | raw }}
                             <input type="hidden" name="id" value="{{ tenant.id }}">
                             <input type="hidden" name="status" value="inactive">
                             <button type="submit" class="btn-action btn-warning-alt" data-tooltip="Deactivate Tenant" aria-label="Deactivate Tenant">
@@ -80,6 +81,7 @@
                         </form>
                         {% else %}
                         <form action="/admin/tenants/toggle-status" method="POST" style="display: inline;">
+                            {{ csrf.inputs | raw }}
                             <input type="hidden" name="id" value="{{ tenant.id }}">
                             <input type="hidden" name="status" value="active">
                             <button type="submit" class="btn-action btn-success-alt" data-tooltip="Activate Tenant" aria-label="Activate Tenant">
@@ -130,6 +132,7 @@
         <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
     <form action="/admin/tenants/update" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        {{ csrf.inputs | raw }}
         <input type="hidden" id="edit_id" name="id">
         <div class="form-group">
             <label for="edit_org_name" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Organization Name</label>
@@ -174,6 +177,7 @@
         <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
     <form action="/admin/tenants/allocate" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        {{ csrf.inputs | raw }}
         <input type="hidden" id="allocate_id" name="id">
         <p style="font-size: 13px; color: var(--text-secondary); margin: 0;">Allocating tokens to <strong id="allocateTenantName"></strong></p>
         <div class="form-group">
@@ -195,6 +199,7 @@
             This will permanently delete <strong id="deleteTenantName"></strong> and all associated forensic data. This action cannot be undone.
         </p>
         <form action="/admin/tenants/delete" method="POST" style="display: flex; justify-content: center; gap: 12px; margin-top: 12px;">
+            {{ csrf.inputs | raw }}
             <input type="hidden" id="delete_id" name="id">
             <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); border: 1px solid var(--row-border); padding: 10px 20px; border-radius: 4px; font-weight: 500;">Cancel</button>
             <button type="submit" class="btn btn-primary" style="background: var(--error); color: white; border: none; padding: 10px 20px; border-radius: 4px; font-weight: 500;">Delete Permanently</button>
@@ -209,6 +214,7 @@
         <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
     </div>
     <form action="/admin/tenants/create" method="POST" style="padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+        {{ csrf.inputs | raw }}
         <div class="form-group">
             <label for="org_name" class="form-label" style="display: block; margin-bottom: 6px; font-weight: 500; font-size: 13px;">Organization Name</label>
             <input type="text" id="org_name" name="org_name" required class="form-control" style="width: 100%; padding: 10px 12px; border: 1px solid var(--row-border); border-radius: 4px;" placeholder="e.g. Acme Corp Forensic Team">

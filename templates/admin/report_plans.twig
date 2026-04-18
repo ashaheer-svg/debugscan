@@ -94,6 +94,7 @@
             <button onclick="closePlanModal()" style="background: none; border: none; font-size: 24px; color: var(--text-muted); cursor: pointer; transition: color 0.2s;">&times;</button>
         </header>
         <form action="/admin/report-plans/save" method="POST" style="padding: 24px;">
+            {{ csrf.inputs | raw }}
             <input type="hidden" name="id" id="plan_id">
             
             <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 24px; margin-bottom: 24px;">
@@ -194,6 +195,7 @@ window.onclick = function(event) {
 </script>
 
 <form id="deleteForm" action="/admin/report-plans/delete" method="POST" style="display: none;">
+    {{ csrf.inputs | raw }}
     <input type="hidden" name="id" id="delete_plan_id">
 </form>
 {% endblock %}

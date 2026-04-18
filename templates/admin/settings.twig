@@ -21,6 +21,7 @@
 {% endif %}
 
 <form action="/admin/settings/update" method="POST">
+    {{ csrf.inputs | raw }}
     <div class="responsive-grid" style="align-items: start;">
         
         <!-- AI Model Selection -->
@@ -150,7 +151,9 @@
     </div>
 </form>
 
-<form id="testEmailForm" action="/admin/settings/test-email" method="POST" style="display: none;"></form>
+<form id="testEmailForm" action="/admin/settings/test-email" method="POST" style="display: none;">
+    {{ csrf.inputs | raw }}
+</form>
 
 <!-- Danger Zone -->
 <section class="card" style="margin-top: 64px; border: 1px solid var(--danger); background: var(--danger-light); padding: 32px;">
@@ -164,6 +167,7 @@
             User account registry and AI settings will be preserved. This operation is IRREVERSIBLE.
         </p>
         <form action="/admin/settings/reset" method="POST" id="resetForm">
+            {{ csrf.inputs | raw }}
             <button type="button" class="btn btn-danger" onclick="confirmReset()" style="width: auto; padding: 12px 32px; font-weight: 700;">
                 Factory Reset All History
             </button>

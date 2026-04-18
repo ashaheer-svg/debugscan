@@ -234,7 +234,8 @@
 </div>
 
 <form id="ecForm" action="/admin/extraction-config/save/{{ plan_id }}" method="POST">
-    {% for group_name, sections in groups %}
+    {{ csrf.inputs | raw }}
+{% for group_name, sections in groups %}
     <div class="ec-group">
 
         {# Group Header #}

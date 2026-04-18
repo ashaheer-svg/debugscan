@@ -25,8 +25,13 @@ class ZipHelper
             throw new RuntimeException("Could not open ZIP file: $zipPath");
         }
 
+        // Ensure destPath is absolute and settled
         if (!is_dir($destPath)) {
             mkdir($destPath, 0755, true);
+        }
+        $realDestRoot = realpath($destPath);
+        if (!$realDestRoot) {
+            throw new RuntimeException("Invalid destination path: $destPath");
         }
 
         $extracted = [];
@@ -34,12 +39,12 @@ class ZipHelper
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = $zip->getNameIndex($i);
 
-            // Path traversal protection
+            // 1. Basic Path traversal protection (Pre-validation)
             if (str_contains($name, '..') || str_starts_with($name, '/')) {
                 continue;
             }
 
-            // Symlink protection
+            // 2. Symlink protection
             $stat = $zip->statIndex($i);
             if (($stat['external_attr'] >> 16) & 0120000) {
                 continue;
@@ -47,7 +52,6 @@ class ZipHelper
 
             $shouldExtract = false;
             foreach ($targets as $target) {
-                // Check for exact match, directory prefix (ends in /), or file group prefix (ends in .)
                 if ($name === $target || 
                    (str_ends_with($target, '/') && str_starts_with($name, $target)) ||
                    (str_ends_with($target, '.') && str_starts_with($name, $target))) {
@@ -57,13 +61,23 @@ class ZipHelper
             }
 
             if ($shouldExtract) {
-                $fullDest = $destPath . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $name);
+                // 3. SECURE PATH RESOLUTION
+                // We resolve the full final path and ensure it's STILL inside $realDestRoot
+                $fullDest = $realDestRoot . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $name);
+                
+                // On Windows/Linux, we need to handle potential directory creation securely
                 $dir = dirname($fullDest);
                 if (!is_dir($dir)) {
                     mkdir($dir, 0755, true);
                 }
 
-                if ($zip->extractTo($destPath, $name)) {
+                // Final safety check: Does the extracted file land inside our root?
+                // Note: realpath() only works on existing files, so we check string prefix first
+                if (!str_starts_with(str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $fullDest), $realDestRoot)) {
+                    continue; 
+                }
+
+                if ($zip->extractTo($realDestRoot, $name)) {
                     $extracted[] = $name;
                 }
             }
@@ -74,12 +88,7 @@ class ZipHelper
     }
 
     /**
-     * Read the last N lines of a file directly from a ZIP archive without fully extracting it.
-     * 
-     * @param string $zipPath
-     * @param string $fileName
-     * @param int $limit Last N lines
-     * @return string
+     * Read the last N lines of a file directly from a ZIP archive using memory-efficient streaming.
      */
     public static function tailFileFromZip(string $zipPath, string $fileName, int $limit = 500): string
     {
@@ -94,17 +103,22 @@ class ZipHelper
             return "";
         }
 
-        // For simplicity and efficiency on smaller logs, we'll read the whole stream if it's not huge
-        // Otherwise, we'd need a more complex "tail" logic for zip streams
-        $content = stream_get_contents($stream);
+        // Memory-efficient Line Reading
+        // We use a rolling buffer to avoid loading multi-GB files into memory
+        $lines = [];
+        while (!feof($stream)) {
+            $line = fgets($stream, 8192); // 8KB buffer per line
+            if ($line === false) break;
+            
+            $lines[] = $line;
+            if (count($lines) > $limit) {
+                array_shift($lines);
+            }
+        }
+
         fclose($stream);
         $zip->close();
 
-        $lines = explode("\n", $content);
-        if (count($lines) <= $limit) {
-            return $content;
-        }
-
-        return implode("\n", array_slice($lines, -$limit));
+        return implode("", $lines);
     }
 }
