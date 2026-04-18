@@ -158,7 +158,13 @@ class TenantController
         $files = $stmt->fetchAll();
 
         // Fetch Scans
-        $stmt = $this->pdo->prepare("SELECT * FROM scan_jobs WHERE project_id = :pid ORDER BY created_at DESC");
+        $stmt = $this->pdo->prepare("
+            SELECT s.*, p.name as package_name 
+            FROM scan_jobs s
+            LEFT JOIN report_plans p ON s.report_plan_id = p.id
+            WHERE s.project_id = :pid 
+            ORDER BY s.created_at DESC
+        ");
         $stmt->execute(['pid' => $id]);
         $scans = $stmt->fetchAll();
 
@@ -508,7 +514,7 @@ class TenantController
 
         $response->getBody()->write(json_encode([
             'success' => true,
-            'title' => 'Full AI Context Trace (' . strtoupper($scan['scan_level']) . ')',
+            'title' => 'Full AI Context Trace (' . strtoupper($scan['package_name'] ?? $scan['scan_level']) . ')',
             'data' => $scan['result_input_payload'],
             'type' => 'prompt'
         ]));
@@ -544,11 +550,13 @@ class TenantController
         $offset = ($page - 1) * $limit;
 
         $stmt = $this->pdo->prepare("
-            SELECT * FROM scan_jobs 
-            WHERE :fid = ANY(debug_file_ids) 
-            AND tenant_id = :tid 
-            AND completed_at > NOW() - INTERVAL '1 year'
-            ORDER BY completed_at DESC 
+            SELECT s.*, p.name as package_name 
+            FROM scan_jobs s
+            LEFT JOIN report_plans p ON s.report_plan_id = p.id
+            WHERE :fid = ANY(s.debug_file_ids) 
+            AND s.tenant_id = :tid 
+            AND s.completed_at > NOW() - INTERVAL '1 year'
+            ORDER BY s.completed_at DESC 
             LIMIT :limit OFFSET :offset
         ");
         $stmt->bindValue(':fid', $fileId);

@@ -243,8 +243,8 @@
                         <label style="font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--text-secondary); letter-spacing: 0.05em; flex-shrink: 0;">Forensic Package:</label>
                         <select id="reportPlanId" name="report_plan_id" style="padding: 10px 16px; border-radius: var(--radius-sm); border: 1px solid var(--border); font-size: 13px; background: var(--white); cursor: pointer; font-weight: 600;">
                             {% for plan in plans %}
-                            <option value="{{ plan.id }}" data-tokens="{{ plan.token_charge }}" data-model="{{ plan.ai_model }}">
-                                {{ plan.name }} ({{ plan.ai_model }})
+                            <option value="{{ plan.id }}" data-tokens="{{ plan.token_charge }}">
+                                {{ plan.name }}
                             </option>
                             {% endfor %}
                             {% if not plans %}
