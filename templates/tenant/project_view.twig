@@ -266,13 +266,10 @@
                                     {% endif %}
 
                                     <a href="/files/report/{{ file.id }}" 
+                                       class="btn-action btn-info-alt"
                                        data-tooltip="View Full Hardware Digest Report" 
-                                       aria-label="Hardware Digest"
-                                       style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; text-decoration: none; transition: all 0.15s; background: rgba(99,102,241,0.1); color: #6366f1; border: 1px solid rgba(99,102,241,0.3);"
-                                       onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='rgba(99,102,241,0.6)';"
-                                       onmouseout="this.style.background='rgba(99,102,241,0.1)';this.style.borderColor='rgba(99,102,241,0.3)';">
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
-                                        HW Digest
+                                       aria-label="Hardware Digest">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg>
                                     </a>
 
                                     <button type="button" onclick="deleteFile('{{ file.id }}')" class="btn-action btn-danger-alt" data-tooltip="Delete Log File" aria-label="Delete Log File">
@@ -366,7 +363,7 @@
                                 <a href="/scans/report/{{ scan.id }}" class="btn-action btn-success-alt" data-tooltip="View Final Analysis Report" aria-label="View Analysis Report">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
                                 </a>
-                                <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action" style="background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2);" data-tooltip="Inspect Full AI Context Trace" aria-label="AI Prompt Trace">
+                                <button onclick="openScanPromptModal('{{ scan.id }}')" class="btn-action btn-info-alt" data-tooltip="Inspect Full AI Context Trace" aria-label="AI Prompt Trace">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </button>
                                 {% else %}
