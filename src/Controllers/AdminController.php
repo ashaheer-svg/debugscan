@@ -922,8 +922,21 @@ class AdminController
     {
         $plans = $this->reportPlanService->getAllPlans();
         
+        $availableModels = [];
+        try {
+            $availableModels = $this->aiService->getAvailableModels();
+        } catch (\Exception $e) {
+            // Fallback if API fails
+            $availableModels = [
+                ['id' => 'llama-3.3-70b-versatile', 'name' => 'Llama 3.3 70B (Fallback)'],
+                ['id' => 'llama-3.1-8b-instant', 'name' => 'Llama 3.1 8B (Fallback)'],
+                ['id' => 'mixtral-8x7b-32768', 'name' => 'Mixtral 8x7B (Fallback)']
+            ];
+        }
+        
         $body = $this->view->render('admin/report_plans.twig', [
             'plans' => $plans,
+            'available_models' => $availableModels,
             'active_page' => 'admin_plans',
             'success' => $_SESSION['success'] ?? null,
             'error' => $_SESSION['error'] ?? null,
