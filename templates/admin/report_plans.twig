@@ -114,8 +114,12 @@
                 <!-- Model Insights Box -->
                 <div id="model_insights" style="grid-column: span 3; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius); padding: 12px 16px; margin-top: -8px; display: none; align-items: center; gap: 20px;">
                     <div style="flex: 1;">
-                        <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Max Input Tokens (Context)</span>
-                        <span id="insight_window" style="font-size: 16px; font-weight: 800; color: var(--primary);">0</span>
+                        <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Max Input (Context)</span>
+                        <span id="insight_window" style="font-size: 15px; font-weight: 800; color: var(--primary);">0</span>
+                    </div>
+                    <div style="flex: 1; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                        <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Max Output</span>
+                        <span id="insight_output" style="font-size: 15px; font-weight: 800; color: #ef4444;">0</span>
                     </div>
                     <div style="flex: 1; border-left: 1px solid #e2e8f0; padding-left: 20px;">
                         <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Provider</span>
@@ -194,6 +198,7 @@ function updateModelInfo() {
     const select = document.getElementById('plan_ai_model');
     const container = document.getElementById('model_insights');
     const windowEl = document.getElementById('insight_window');
+    const outputEl = document.getElementById('insight_output');
     const providerEl = document.getElementById('insight_provider');
     const noteEl = document.getElementById('insight_note');
 
@@ -203,7 +208,9 @@ function updateModelInfo() {
     if (model) {
         container.style.display = 'flex';
         const windowVal = model.context_window;
+        const outputVal = model.max_output_tokens;
         windowEl.innerText = windowVal ? windowVal.toLocaleString() : 'Unknown';
+        outputEl.innerText = outputVal ? outputVal.toLocaleString() : 'Unknown';
         providerEl.innerText = model.owned_by || 'Unknown';
 
         // Custom notes based on window size

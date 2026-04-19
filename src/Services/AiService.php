@@ -43,6 +43,7 @@ class AiService
                         'name' => $model['id'],
                         'owned_by' => $model['owned_by'] ?? 'unknown',
                         'context_window' => $model['context_window'] ?? null,
+                        'max_output_tokens' => 32768, // Standard Groq limit for current models
                         'public_apps' => $model['public_apps'] ?? null
                     ];
                 }
