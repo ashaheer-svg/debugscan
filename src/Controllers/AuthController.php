@@ -126,7 +126,7 @@ class AuthController
 
         if (empty($displayName)) {
             $_SESSION['error'] = "Display Name cannot be empty.";
-            return $response->withHeader('Location', $request->getHeaderLine('Referer'))->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/profile')->withStatus(302);
         }
 
         try {
@@ -140,7 +140,7 @@ class AuthController
             $_SESSION['error'] = "Failed to update profile: " . $e->getMessage();
         }
 
-        return $response->withHeader('Location', $request->getHeaderLine('Referer'))->withStatus(302);
+        return $response->withHeader('Location', $this->basePath . '/profile')->withStatus(302);
     }
 
     private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = [], ?string $specificUserId = null, ?string $specificTenantId = null): void

@@ -97,14 +97,22 @@ class ScanService
     /**
      * Get the current status and progress of a scan job.
      */
-    public function getJobStatus(string $jobId): array
+    public function getJobStatus(string $jobId, ?string $tenantId = null): array
     {
-        $stmt = $this->pdo->prepare("SELECT id, status, health_score, findings_count, error_message, progress_percent, progress_stage FROM scan_jobs WHERE id = :id");
-        $stmt->execute(['id' => $jobId]);
+        $sql = "SELECT id, status, health_score, findings_count, error_message, progress_percent, progress_stage FROM scan_jobs WHERE id = :id";
+        $params = ['id' => $jobId];
+
+        if ($tenantId) {
+            $sql .= " AND tenant_id = :tid";
+            $params['tid'] = $tenantId;
+        }
+
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute($params);
         $job = $stmt->fetch();
         
         if (!$job) {
-            throw new RuntimeException("Scan job not found: $jobId");
+            throw new RuntimeException("Scan job not found or access denied: $jobId");
         }
 
         return $job;

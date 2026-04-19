@@ -27,6 +27,7 @@ use App\Helpers\DatabaseSessionHandler;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\ViewDataMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
+use App\Middleware\RateLimitMiddleware;
 use App\Services\ReportPlanService;
 use Slim\Csrf\Guard;
 use Psr\Http\Message\ResponseFactoryInterface;
@@ -159,6 +160,10 @@ class AppBootstrap
             },
             ResponseFactoryInterface::class => function () {
                 return new ResponseFactory();
+            },
+            \Predis\Client::class => function () {
+                $redisUrl = getenv('REDIS_URL') ?: 'tcp://127.0.0.1:6379';
+                return new \Predis\Client($redisUrl);
             },
             Guard::class => function (ContainerInterface $container) {
                 $responseFactory = $container->get(ResponseFactoryInterface::class);
@@ -329,6 +334,7 @@ class AppBootstrap
 
             return $handler->handle($request);
         })->add($container->get(ViewDataMiddleware::class))
-          ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
+          ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')))
+          ->add(new RateLimitMiddleware($container->get(\Predis\Client::class), 120, 60));
     }
 }

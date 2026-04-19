@@ -43,14 +43,33 @@ class AuthMiddleware implements MiddlewareInterface
             return $response->withHeader('Location', $this->basePath . '/login')->withStatus(302);
         }
 
-        // Set RLS Context
+        // 1. Authenticity Check & Context Verification
         $userId   = $_SESSION['user_id'];
         $tenantId = $_SESSION['tenant_id'] ?? null;
         $role     = $_SESSION['role'] ?? 'tenant';
 
-        Database::setTenantContext($this->pdo, $tenantId, $role);
+        // Verify user still exists and is active in DB
+        $stmt = $this->pdo->prepare("SELECT status, tenant_id FROM users WHERE id = :id");
+        $stmt->execute(['id' => $userId]);
+        $user = $stmt->fetch();
 
-        // Add user info to request
+        if (!$user || $user['status'] !== 'active') {
+            session_destroy();
+            $response = new \Slim\Psr7\Response();
+            return $response->withHeader('Location', $this->basePath . '/login?error=Session+expired+or+account+deactivated')->withStatus(302);
+        }
+
+        // Verify tenant mapping hasn't changed (unless admin)
+        if ($role !== 'admin' && $user['tenant_id'] !== $tenantId) {
+            session_destroy();
+            $response = new \Slim\Psr7\Response();
+            return $response->withHeader('Location', $this->basePath . '/login?error=Security+Conflict:+Tenant+mapping+mismatch')->withStatus(302);
+        }
+
+        // 2. Set Database RLS Context
+        \App\Database::setTenantContext($this->pdo, $tenantId, $role);
+
+        // 3. Populate Request Attributes
         $request = $request->withAttribute('user_id', $userId)
                           ->withAttribute('tenant_id', $tenantId)
                           ->withAttribute('role', $role);

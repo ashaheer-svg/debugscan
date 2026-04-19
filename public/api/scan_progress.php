@@ -13,11 +13,17 @@ header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no'); // Disable buffering for Nginx
 
-$jobId = $_GET['id'] ?? null;
-if (!$jobId) {
-    echo "event: error\ndata: No job ID provided\n\n";
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+if (!isset($_SESSION['user_id'])) {
+    echo "event: error\ndata: Unauthorized access\n\n";
     exit;
 }
+
+$tenantId = $_SESSION['tenant_id'] ?? null;
+$role = $_SESSION['role'] ?? 'tenant';
 
 $pdo = Database::getConnection();
 $reportPlanService = new ReportPlanService($pdo);
@@ -26,7 +32,8 @@ $scanService = new ScanService($pdo, $reportPlanService);
 // Start SSE Loop
 while (true) {
     try {
-        $status = $scanService->getJobStatus($jobId);
+        // Admins can see any job, tenants only their own
+        $status = $scanService->getJobStatus((string)$jobId, $role === 'admin' ? null : (string)$tenantId);
         
         echo "event: status\ndata: " . json_encode($status) . "\n\n";
         

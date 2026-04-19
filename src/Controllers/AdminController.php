@@ -459,8 +459,9 @@ class AdminController
         $data = $request->getParsedBody();
         
         $stmt = $this->pdo->prepare("
-            UPDATE system_settings 
-                retention_days = :retention,
+            UPDATE system_settings SET
+                log_retention_days = :log_retention,
+                analysis_retention_days = :analysis_retention,
                 max_concurrent_scans = :max_scans,
                 stuck_alert_mins = :alert_mins,
                 auto_cancel_mins = :cancel_mins,
@@ -479,7 +480,8 @@ class AdminController
         ");
         
         $stmt->execute([
-            'retention' => (int)$data['retention_days'],
+            'log_retention' => (int)$data['log_retention_days'],
+            'analysis_retention' => (int)$data['analysis_retention_days'],
             'max_scans' => (int)$data['max_concurrent_scans'],
             'alert_mins' => (int)$data['stuck_alert_mins'],
             'cancel_mins' => (int)$data['auto_cancel_mins'],

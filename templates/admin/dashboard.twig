@@ -9,6 +9,18 @@
 </header>
 
 <div class="kpi-grid">
+    {# Default Credential Warning #}
+    {% if session.user_id == '00000000-0000-4000-a000-000000000001' %}
+        <div class="card" style="grid-column: span 5; background: #fffcf0; border: 1px solid #ffecb5; display: flex; align-items: center; gap: 16px; padding: 16px 24px; margin-bottom: 32px;">
+            <div style="font-size: 24px;">⚠️</div>
+            <div>
+                <h4 style="margin: 0; color: #856404; font-size: 14px; font-weight: 800;">Security Alert: Default Administrator Account Active</h4>
+                <p style="margin: 4px 0 0 0; font-size: 13px; color: #856404; font-weight: 500;">Please change the password for <strong>admin@debugscan.ia</strong> and update your primary email in Settings to secure the platform.</p>
+            </div>
+            <a href="/profile" class="btn" style="margin-left: auto; width: auto; padding: 8px 20px; font-size: 12px; font-weight: 700; background: #856404; color: white; border: none;">Update Profile</a>
+        </div>
+    {% endif %}
+
     <div class="kpi-card">
         <h2 class="kpi-value">{{ tenant_count }}</h2>
         <p class="kpi-label">Active Tenants</p>

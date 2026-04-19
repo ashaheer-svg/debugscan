@@ -13,6 +13,7 @@
         "monolog/monolog": "^3.5",
         "php-di/php-di": "^7.0",
         "phpmailer/phpmailer": "^7.0",
+        "predis/predis": "^3.4",
         "ramsey/uuid": "^4.7",
         "respect/validation": "^2.3",
         "slim/csrf": "^1.5",
