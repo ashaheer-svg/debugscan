@@ -19,11 +19,21 @@ class LogParser implements ParserInterface
         ];
 
         foreach ($logFiles as $file) {
-            if (file_exists($file)) {
-                $content = file_get_contents($file);
-                $lines = explode("\n", $content);
-                // Get the last 1000 lines and filter for keywords
-                foreach (array_slice($lines, -1000) as $line) {
+            if (file_exists($file) && is_readable($file)) {
+                $fileSize = filesize($file);
+                $handle = fopen($file, 'r');
+                
+                // If file is large (> 2MB), start reading from near the end
+                if ($fileSize > 2097152) {
+                    fseek($handle, -2097152, SEEK_END);
+                }
+
+                $linesSeen = 0;
+                while (!feof($handle) && $linesSeen < 5000) {
+                    $line = fgets($handle);
+                    if ($line === false) break;
+                    $linesSeen++;
+
                     $lowerLine = strtolower($line);
                     foreach ($this->keywords as $keyword) {
                         if (str_contains($lowerLine, $keyword)) {
@@ -35,6 +45,7 @@ class LogParser implements ParserInterface
                         }
                     }
                 }
+                fclose($handle);
             }
         }
 

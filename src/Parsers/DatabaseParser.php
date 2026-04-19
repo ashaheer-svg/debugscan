@@ -253,14 +253,12 @@ class DatabaseParser
 
             if ($this->isRelevant($row['msg'], $row['level'])) {
                 $selected[] = $row;
+                if ($limit !== null && count($selected) >= $limit) {
+                    break;
+                }
             }
         }
 
-        // Apply admin-configured row limit
-        if ($limit !== null && count($selected) > $limit) {
-            $selected = array_slice($selected, -$limit);
-        }
-        
         return [
             'data'  => ['summary' => ['total' => $total, 'selected' => count($selected)], 'rows' => $selected],
             'stats' => ['found' => $total, 'selected' => count($selected), 'cutoff_ts' => $this->cutoffUnix]
@@ -300,10 +298,9 @@ class DatabaseParser
                 $onProgress("Technical Audit: Analyzing Connection Logs (" . number_format($scanned) . " lines processed)");
             }
             $critical[] = $row;
-        }
-
-        if ($limit !== null && count($critical) > $limit) {
-            $critical = array_slice($critical, -$limit);
+            if ($limit !== null && count($critical) >= $limit) {
+                break;
+            }
         }
 
         $stmt = $pdo->prepare("SELECT ip, username, COUNT(*) as attempts, MIN(time) as first_seen, MAX(time) as last_seen FROM logs WHERE time >= :cutoff AND level = 'warning' AND msg LIKE '%failed%' GROUP BY ip, username HAVING attempts >= 3 ORDER BY attempts DESC");
@@ -339,13 +336,12 @@ class DatabaseParser
 
             if ($this->isRelevant($row['msg'] ?? '', $row['level'] ?? '')) {
                 $selected[] = $row;
+                if ($limit !== null && count($selected) >= $limit) {
+                    break;
+                }
             }
         }
 
-        if ($limit !== null && count($selected) > $limit) {
-            $selected = array_slice($selected, -$limit);
-        }
-        
         return [
             'data'  => ['drive_summary' => $summary, 'events' => $selected],
             'stats' => ['found' => $total, 'selected' => count($selected)]

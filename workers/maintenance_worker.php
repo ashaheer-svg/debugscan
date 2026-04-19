@@ -22,6 +22,17 @@ Database::setTenantContext($pdo, null, 'admin'); // Bypass RLS for maintenance
 echo "AI DebugScan v3 - Maintenance Worker (Data Lifecycle Management) Started\n";
 echo "======================================================================\n";
 
+function recursiveRmdir(string $dir): void
+{
+    if (!is_dir($dir)) return;
+    $files = array_diff(scandir($dir), ['.', '..']);
+    foreach ($files as $file) {
+        $path = $dir . DIRECTORY_SEPARATOR . $file;
+        (is_dir($path)) ? recursiveRmdir($path) : @unlink($path);
+    }
+    @rmdir($dir);
+}
+
 while (true) {
     echo "[" . date('Y-m-d H:i:s') . "] Starting maintenance cycle...\n";
 
@@ -73,12 +84,16 @@ while (true) {
         $analysisCount = $stmt->fetchColumn();
 
         if ($analysisCount > 0) {
-            // Delete old jobs (cascades or manual depending on schema, usually we need to delete scan_findings too)
-            // Assuming scan_findings has a foreign key to scan_jobs with ON DELETE CASCADE
+            // Delete old jobs (scan_findings will cascade delete if ON DELETE CASCADE is set)
             $stmt = $pdo->prepare("DELETE FROM scan_jobs WHERE created_at < :cutoff");
             $stmt->execute(['cutoff' => $analysisCutoff]);
             echo "✔ Purged {$analysisCount} legacy analysis reports older than {$analysisRetention} days.\n";
         }
+
+        // 3.5. Audit Log Cleanup
+        $stmt = $pdo->prepare("DELETE FROM audit_log WHERE created_at < :cutoff");
+        $stmt->execute(['cutoff' => $analysisCutoff]);
+        echo "✔ Purged audit log entries older than {$analysisRetention} days.\n";
 
         // 4. Physical Extracted Workspace Cleanup
         // Folders in storage/extracted/ that don't have a corresponding debug_file or are older than 7 days
@@ -93,8 +108,8 @@ while (true) {
                 $stmt = $pdo->prepare("SELECT id FROM debug_files WHERE id = :id AND created_at >= :cutoff");
                 $stmt->execute(['id' => $fid, 'cutoff' => $logCutoff]);
                 if (!$stmt->fetch()) {
-                    // Recursive delete of extracted folder
-                    exec("rm -rf " . escapeshellarg($folderPath)); // standard on linux VPS
+                    // Recursive delete of extracted folder using native PHP
+                    recursiveRmdir($folderPath);
                     echo "✔ Purged extracted workspace: {$fid}\n";
                 }
             }

@@ -93,7 +93,7 @@ class AuthController
             // Log Failed Login Attempt
             $this->logAction($request, 'login_failed', 'users', null, ['email' => $email]);
 
-            return $response->withHeader('Location', $this->basePath . '/login?error=Invalid+credentials')->withStatus(302);
+            return $response->withHeader('Location', $this->basePath . '/login?error=' . urlencode('Invalid credentials or account is locked'))->withStatus(302);
         } catch (\Exception $e) {
             $this->logAction($request, 'login_failed', 'users', null, ['email' => $email, 'error' => $e->getMessage()]);
             return $response->withHeader('Location', $this->basePath . '/login?error=' . urlencode($e->getMessage()))->withStatus(302);

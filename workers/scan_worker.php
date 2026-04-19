@@ -61,12 +61,14 @@ echo "Startup: Rescued any leftover zombie jobs.\n";
 while (true) {
     $pdo->beginTransaction();
     $stmt = $pdo->prepare("
-        SELECT id, tenant_id, project_id, report_plan_id, debug_file_ids, ai_model, max_input_tokens, max_output_tokens
-        FROM scan_jobs
-        WHERE status = 'queued'
-        ORDER BY priority DESC, queued_at ASC
+        WITH settings AS (SELECT max_concurrent_scans FROM system_settings LIMIT 1),
+             running AS (SELECT count(*) as cnt FROM scan_jobs WHERE status = 'running')
+        SELECT j.id, j.tenant_id, j.project_id, j.report_plan_id, j.debug_file_ids, j.ai_model, j.max_input_tokens, j.max_output_tokens
+        FROM scan_jobs j, settings s, running r
+        WHERE j.status = 'queued' AND r.cnt < s.max_concurrent_scans
+        ORDER BY j.priority DESC, j.queued_at ASC
         LIMIT 1
-        FOR UPDATE SKIP LOCKED
+        FOR UPDATE OF j SKIP LOCKED
     ");
     $stmt->execute();
     $job = $stmt->fetch();
@@ -81,7 +83,7 @@ while (true) {
         
         $pdo->rollBack();
         if (isset($argv[1]) && $argv[1] === 'once') break;
-        sleep(2);
+        sleep(5); // Sleep longer if no capacity or no jobs
         continue;
     }
 
@@ -99,20 +101,6 @@ while (true) {
          $pdo->prepare("UPDATE scan_jobs SET status = 'failed', error_message = 'Report Plan not found', completed_at = NOW() WHERE id = :id")->execute(['id' => $job['id']]);
          $pdo->commit();
          continue;
-    }
-
-    // 1.5 Concurrency Check
-    $stmtSettings = $pdo->query("SELECT max_concurrent_scans FROM system_settings LIMIT 1");
-    $maxConcurrency = (int)($stmtSettings->fetchColumn() ?: 2);
-    
-    $stmtRunning = $pdo->query("SELECT COUNT(*) FROM scan_jobs WHERE status = 'running'");
-    $runningCount = (int)$stmtRunning->fetchColumn();
-    
-    if ($runningCount >= $maxConcurrency) {
-        $pdo->rollBack();
-        echo "Concurrency limit reached ($runningCount/$maxConcurrency). Waiting...\n";
-        sleep(5);
-        continue;
     }
 
     // 2. Mark as running
