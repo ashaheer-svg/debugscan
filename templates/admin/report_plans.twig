@@ -103,13 +103,27 @@
                     <input type="text" name="name" id="plan_name" required placeholder="e.g. Deep Storage Audit"
                            style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; font-size: 14px;">
                 </div>
-                <div class="form-group">
+                <div class="form-group" style="grid-column: span 1;">
                     <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em;">AI Model</label>
-                    <select name="ai_model" id="plan_ai_model" required style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; background: var(--bg-light); font-size: 14px;">
+                    <select name="ai_model" id="plan_ai_model" required onchange="updateModelInfo()" style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-weight: 600; background: var(--bg-light); font-size: 14px;">
                         {% for model in available_models %}
                             <option value="{{ model.id }}">{{ model.name }}</option>
                         {% endfor %}
                     </select>
+                </div>
+                <!-- Model Insights Box -->
+                <div id="model_insights" style="grid-column: span 3; background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: var(--radius); padding: 12px 16px; margin-top: -8px; display: none; align-items: center; gap: 20px;">
+                    <div style="flex: 1;">
+                        <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Max Input Tokens (Context)</span>
+                        <span id="insight_window" style="font-size: 16px; font-weight: 800; color: var(--primary);">0</span>
+                    </div>
+                    <div style="flex: 1; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                        <span style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase;">Provider</span>
+                        <span id="insight_provider" style="font-size: 14px; font-weight: 700; color: var(--text-secondary); text-transform: capitalize;">-</span>
+                    </div>
+                    <div style="flex: 2; border-left: 1px solid #e2e8f0; padding-left: 20px;">
+                        <p id="insight_note" style="margin: 0; font-size: 12px; color: #475569; line-height: 1.4;"></p>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em;">Token Charge</label>
@@ -171,6 +185,38 @@ function openPlanModal(plan = null) {
     }
 
     modal.style.display = 'flex';
+    updateModelInfo();
+}
+
+const modelMetadata = {{ models_json|raw }};
+
+function updateModelInfo() {
+    const select = document.getElementById('plan_ai_model');
+    const container = document.getElementById('model_insights');
+    const windowEl = document.getElementById('insight_window');
+    const providerEl = document.getElementById('insight_provider');
+    const noteEl = document.getElementById('insight_note');
+
+    const modelId = select.value;
+    const model = modelMetadata.find(m => m.id === modelId);
+
+    if (model) {
+        container.style.display = 'flex';
+        const windowVal = model.context_window;
+        windowEl.innerText = windowVal ? windowVal.toLocaleString() : 'Unknown';
+        providerEl.innerText = model.owned_by || 'Unknown';
+
+        // Custom notes based on window size
+        if (windowVal >= 100000) {
+            noteEl.innerText = "High-capacity model. Suitable for massive forensic archives and multiple device correlation.";
+        } else if (windowVal >= 30000) {
+            noteEl.innerText = "Standard capacity. Ideal for single-device diagnostic audits.";
+        } else {
+            noteEl.innerText = "Limited window. Best for targeted log analysis or small snippets.";
+        }
+    } else {
+        container.style.display = 'none';
+    }
 }
 
 function closePlanModal() {
