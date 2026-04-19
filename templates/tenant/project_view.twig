@@ -382,6 +382,37 @@
     </div>
 </div>
 
+<!-- Diagnostic Upload Progress Modal -->
+<div id="uploadModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10002; align-items: center; justify-content: center;">
+    <div style="background: var(--white); width: 100%; max-width: 440px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-4); border: 1px solid var(--border);">
+        <div style="padding: 40px 32px; text-align: center;">
+            <div id="modalIcon" style="margin-bottom: 24px; color: var(--primary); display: flex; justify-content: center;">
+                <!-- Icon will be injected by JS -->
+            </div>
+            <h3 id="modalTitle" style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; letter-spacing: -0.02em;">Starting Upload</h3>
+            <p id="modalStatus" style="font-size: 13px; color: var(--text-secondary); margin-bottom: 32px; line-height: 1.5;">Preparing forensic transmission channel...</p>
+            
+            <div style="margin-bottom: 32px;">
+                <div style="height: 8px; background: var(--bg-light); border-radius: 4px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border);">
+                    <div id="progressBar" style="width: 0%; height: 100%; background: var(--primary); transition: width 0.3s ease;"></div>
+                </div>
+                <div id="progressText" style="font-size: 11px; font-weight: 800; color: var(--primary); letter-spacing: 0.1em;">0%</div>
+            </div>
+
+            <div id="processingSteps" style="display: none; text-align: left; background: var(--bg-light); padding: 20px; border-radius: 12px; border: 1px solid var(--border);">
+                <div id="step-extract" style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; opacity: 0.4; transition: opacity 0.3s;">
+                    <div class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);"></div>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Structure Extraction</span>
+                </div>
+                <div id="step-parse" style="display: flex; align-items: center; gap: 12px; opacity: 0.4; transition: opacity 0.3s;">
+                    <div class="step-dot" style="width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);"></div>
+                    <span style="font-size: 12px; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.05em;">Metadata Mapping</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Serial Mismatch Modal -->
 <div id="mismatchModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); z-index: 10002; align-items: center; justify-content: center;">
     <div style="background: var(--white); width: 100%; max-width: 500px; border-radius: 16px; overflow: hidden; box-shadow: var(--shadow-3); border: 1px solid var(--border);">
