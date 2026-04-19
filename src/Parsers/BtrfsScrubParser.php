@@ -124,9 +124,18 @@ class BtrfsScrubParser implements ParserInterface
         }
 
         return [
-            'scrub_history' => $scrub_history,
-            'summary' => $this->generateSummary($scrub_history),
-            '_tag' => '[BTRFS_HEALTH]'
+            'data' => [
+                'scrub_history' => $scrub_history,
+                'summary' => $this->generateSummary($scrub_history),
+                '_tag' => '[BTRFS_HEALTH]'
+            ],
+            'citations' => [
+                [
+                    'file' => str_replace($extractedPath . '/', '', $file),
+                    'lines' => '1-' . count($lines),
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                ]
+            ]
         ];
     }
 

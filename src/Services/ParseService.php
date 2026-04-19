@@ -43,6 +43,9 @@ class ParseService
             'disk_io' => new DiskstatsParser(),
             'system_load' => new TopResultParser(),
             'memory_util' => new VmstatParser(),
+            'audit_db' => new \App\Parsers\DatabaseParser(),
+            'auth_timeline' => new \App\Parsers\AuthTimelineParser(),
+            'smb_xfer' => new \App\Parsers\SmbXferParser(),
         ];
     }
 

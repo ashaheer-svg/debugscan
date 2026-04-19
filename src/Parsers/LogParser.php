@@ -54,6 +54,17 @@ class LogParser implements ParserInterface
              $logs['critical_events'] = array_slice($logs['critical_events'], -$maxEvents);
         }
 
-        return $logs;
+        $citations = [];
+        foreach ($logFiles as $file) {
+            if (file_exists($file)) {
+                $citations[] = [
+                    'file' => str_replace($extractedPath . '/', '', $file),
+                    'lines' => 'tail-5000',
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                ];
+            }
+        }
+
+        return ['data' => $logs, 'citations' => $citations];
     }
 }

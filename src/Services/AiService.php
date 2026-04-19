@@ -90,6 +90,12 @@ class AiService
             if (isset($fileData['disks'])) {
                 $fileData['disks'] = $this->flattenDisksToMarkdown($fileData['disks']);
             }
+            if (isset($fileData['auth_timeline']['events'])) {
+                $fileData['auth_timeline']['events'] = $this->flattenAuthTimelineToMarkdown($fileData['auth_timeline']['events']);
+            }
+            if (isset($fileData['smb_xfer']['recent_transfers'])) {
+                $fileData['smb_xfer']['recent_transfers'] = $this->flattenSmbXferToMarkdown($fileData['smb_xfer']['recent_transfers']);
+            }
             if (isset($fileData['packaged_logs'])) {
                 foreach ($fileData['packaged_logs'] as $logType => $content) {
                     // Packaged logs are already string-based, no changes needed
@@ -185,6 +191,39 @@ class AiService
         return $md;
     }
 
+    private function flattenAuthTimelineToMarkdown(array $events): string
+    {
+        if (empty($events)) return "No significant authentication events found.";
+        $md = "| Timestamp | User | IP | Protocol | Status | Message |\n";
+        $md .= "| :--- | :--- | :--- | :--- | :--- | :--- |\n";
+        foreach (array_slice($events, 0, 50) as $e) {
+            $ts = date('Y-m-d H:i:s', (int)($e['time'] ?? 0));
+            $user = $e['username'] ?? 'unknown';
+            $ip = $e['ip'] ?? 'unknown';
+            $proto = strtoupper($e['protocol'] ?? '???');
+            $status = ($e['is_failed'] ?? false) ? 'FAILED' : 'SUCCESS';
+            $msg = str_replace("|", "\\|", $e['msg'] ?? '');
+            $md .= "| {$ts} | {$user} | {$ip} | {$proto} | {$status} | {$msg} |\n";
+        }
+        return $md;
+    }
+
+    private function flattenSmbXferToMarkdown(array $transfers): string
+    {
+        if (empty($transfers)) return "No SMB transfer audits detected.";
+        $md = "| Timestamp | User | IP | Op | Path |\n";
+        $md .= "| :--- | :--- | :--- | :--- | :--- |\n";
+        foreach (array_slice($transfers, 0, 50) as $t) {
+            $ts = date('Y-m-d H:i:s', (int)($t['time'] ?? 0));
+            $user = $t['username'] ?? 'unknown';
+            $ip = $t['ip'] ?? 'unknown';
+            $op = strtoupper($t['op'] ?? 'unknown');
+            $path = str_replace("|", "\\|", $t['path'] ?? '');
+            $md .= "| {$ts} | {$user} | {$ip} | {$op} | {$path} |\n";
+        }
+        return $md;
+    }
+
     private function getDefaultHeader(): string
     {
         return "You are the Lead Forensic Support Engineer for Synology.
@@ -195,10 +234,10 @@ class AiService
     private function getForensicRules(): string
     {
         return "STRICT RULES:
-        1. PRECISION: Analyze raw forensic telemetry from SQLite extractions (e.g. SYNOSYSDB, SYNODISKHEALTHDB) as the ground truth for system health.
+        1. PRECISION: Analyze raw forensic telemetry from SQLite extractions (e.g. .SYNOSYSDB, .SYNODISKHEALTHDB, .SYNOCONNDB, .SMBXFERDB) as the absolute ground truth.
         2. EVIDENCE REQUIREMENT: Every finding MUST cite identifying logs, telemetry keys, or hardware identifiers found in the raw JSON payload.
-        3. FORENSIC CORRELATION: Correlate error codes across different blocks (e.g., match a 'Disk I/O' block error with a 'Volume Degraded' signal in the forensic events).
-        4. REDUNDANCY CHECK: Distinguish between intermittent infrastructure issues and physical media failure using the lifetime counters in the forensic disk health telemetry.
+        3. ACCESS AUDIT: Use the 'auth_timeline' block to identify brute-force patterns, unauthorized geographical logins (if IP looks suspicious), or excessive failures.
+        4. DATA EXFILTRATION: Use 'smb_xfer' to detect suspicious file-level activity (e.g., massive deletes or rapid encryption/writes characteristic of ransomware).
         5. ACCURACY: If the data shows no critical issues, provide an 'A' grade and explain the healthy indicators.
 
         OUTPUT FORMAT (Strict JSON):

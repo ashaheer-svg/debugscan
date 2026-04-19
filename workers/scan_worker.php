@@ -171,41 +171,21 @@ while (true) {
                  $dbResults = json_decode($fileRecord['extended_data'], true);
              }
 
-             // 2. Perform forensic extraction if cache missing
-             if (!$dbResults) {
-                 $updateProgress("Forensic Extraction (" . ($index + 1) . "/$fileCount)", 30 + (int)(($index / $fileCount) * 20));
-                 
-                 // Fallback: Check if we need to re-extract files
-                 if (!is_dir($destPath)) {
-                    $zipPath = $fileRecord['storage_path'] ?? '';
-                    if ($zipPath && file_exists($zipPath)) {
-                        $fileService->processFile($fileId, $zipPath);
-                    }
+             // 2. Ensure extraction directory exists
+             if (!is_dir($destPath)) {
+                 $zipPath = $fileRecord['storage_path'] ?? '';
+                 if ($zipPath && file_exists($zipPath)) {
+                     $fileService->processFile($fileId, $zipPath);
                  }
+             }
 
-                     // Use active config for this plan
-                     $dbParser  = new DatabaseParser($destPath, $updateProgress, $activeConfig);
-                     $dbResults = $dbParser->parseAll();
-                    
-                    $rowCount = 0;
-                    if (isset($dbResults['stats'])) {
-                        foreach ($dbResults['stats'] as $table => $count) {
-                            $rowCount += (int)$count;
-                        }
-                    }
-
-                    $addCheckpoint('forensic', 'Cache Population', 'success', [
-                        'file_id' => $fileId, 
-                        'capacity' => "$rowCount forensic records extracted",
-                        'stats' => $dbResults['stats'] ?? [],
-                        'tables' => array_keys(array_filter($dbResults, fn($k) => $k !== 'stats', ARRAY_FILTER_USE_KEY))
-                    ]);
-                 }
-
-             // Base diagnostic data (pass active config)
+             // 3. Perform Unified Diagnostic & Forensic Parsing
+             $updateProgress("Parsing Forensic Data (" . ($index + 1) . "/$fileCount)", 40 + (int)(($index / $fileCount) * 10));
+             
+             // Use active config for this plan (contains sections to skip/include)
              $data = $parseService->parseAll($destPath, $activeConfig ?? []);
 
-             // 3. Propagate hardware metadata to projects table if missing
+             // 4. Propagate hardware metadata to projects table if missing
              $hw = $data['hardware'] ?? [];
              $ver = $data['version'] ?? [];
              if (!empty($hw)) {
@@ -240,11 +220,6 @@ while (true) {
                  'dsm_version' => (string)($ver['product'] ?? 'unknown'),
                  'model' => (string)($hw['model'] ?? 'Unknown Synology')
              ]);
-
-             // 3. Package raw forensic data if available (all levels)
-             if ($dbResults) {
-                 $data['forensic_extractions'] = $dbResults;
-             }
 
              $allDiagnosticData[] = $data;
         }
@@ -316,7 +291,10 @@ while (true) {
         $stmt->execute([
             'health' => $findings['health_score'] ?? 'N/A',
             'summary' => json_encode($findings['summary'] ?? '', JSON_INVALID_UTF8_SUBSTITUTE),
-            'payload' => json_encode(['raw' => $actualPrompt], JSON_INVALID_UTF8_SUBSTITUTE) ?? json_encode($allDiagnosticData),
+            'payload' => json_encode([
+                'raw' => $actualPrompt,
+                'structured' => $allDiagnosticData
+            ], JSON_INVALID_UTF8_SUBSTITUTE),
             'truncated' => $isTruncated ? 1 : 0,
             'count' => count($findings['findings'] ?? []),
             'in_tokens' => (int)($usage['prompt_tokens'] ?? 0),

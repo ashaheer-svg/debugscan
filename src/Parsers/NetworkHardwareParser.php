@@ -48,7 +48,44 @@ class NetworkHardwareParser implements ParserInterface
         // 5. Calculate overall health
         $network['health_assessment'] = $this->assessNetworkHealth($network);
 
-        return $network;
+        $citations = [];
+        $netstatFile = $extractedPath . '/dsm/result/netstat.result';
+        if (file_exists($netstatFile)) {
+            $citations[] = [
+                'file' => 'dsm/result/netstat.result',
+                'lines' => '1-1000',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($netstatFile))
+            ];
+        }
+
+        // Add citation for the messages log if used for flapping detection
+        $messagesFile = $extractedPath . '/dsm/var/log/messages';
+        if (file_exists($messagesFile)) {
+            $citations[] = [
+                'file' => 'dsm/var/log/messages',
+                'lines' => 'tail-5000',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($messagesFile))
+            ];
+        }
+
+        // Collect ethtool citations
+        $resultDir = $extractedPath . '/dsm/result';
+        if (is_dir($resultDir)) {
+             foreach (scandir($resultDir) as $file) {
+                 if (preg_match('/^ethtool\..*\.result$/', $file) || preg_match('/^ethtool_stats\..*\.result$/', $file)) {
+                     $citations[] = [
+                         'file' => 'dsm/result/' . $file,
+                         'lines' => '1',
+                         'timestamp' => date('Y-m-d H:i:s', filemtime($resultDir . '/' . $file))
+                     ];
+                 }
+             }
+        }
+
+        return [
+            'data' => $network,
+            'citations' => array_unique($citations, SORT_REGULAR)
+        ];
     }
 
     /**

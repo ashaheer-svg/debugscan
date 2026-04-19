@@ -65,9 +65,18 @@ class DfResultParser implements ParserInterface
         }
 
         return [
-            'filesystems' => $filesystems,
-            'summary' => $this->generateSummary($filesystems),
-            '_tag' => '[DISK_SPACE_USAGE]'
+            'data' => [
+                'filesystems' => $filesystems,
+                'summary' => $this->generateSummary($filesystems),
+                '_tag' => '[DISK_SPACE_USAGE]'
+            ],
+            'citations' => [
+                [
+                    'file' => str_replace($extractedPath . '/', '', $file),
+                    'lines' => '1-' . count($lines),
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                ]
+            ]
         ];
     }
 

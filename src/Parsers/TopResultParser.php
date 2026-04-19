@@ -116,7 +116,16 @@ class TopResultParser implements ParserInterface
             $result['processes']['zombie_warning'] = "Zombie processes detected. Parent process may not be cleaning up children (software bug).";
         }
 
-        return $result;
+        return [
+            'data' => $result,
+            'citations' => [
+                [
+                    'file' => 'dsm/result/top.result',
+                    'lines' => '1-100',
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                ]
+            ]
+        ];
     }
 
     private function getIowaitSeverity(float $iowait): string

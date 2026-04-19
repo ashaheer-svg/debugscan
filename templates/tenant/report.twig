@@ -191,6 +191,140 @@
 </div>
 {% endif %}
 
+<!-- ═══════════════════════════════════════════ TECHNICAL AUDIT ═══ -->
+{% set payload = job.result_input_payload|json_decode %}
+{% if payload and payload.structured %}
+<div style="margin: 48px 0 20px 0;">
+    <h3 style="font-size: 20px; font-weight: 700; color: var(--text-primary); margin: 0;">Infrastructure Audit Logs</h3>
+    <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">Raw forensic telemetry extracted from system audit databases.</p>
+</div>
+
+<div class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--row-border); margin-bottom: 48px;">
+    <!-- Tabs Header -->
+    <div style="display: flex; background: var(--bg-off-white); border-bottom: 1px solid var(--row-border); overflow-x: auto;">
+        <button onclick="setAuditTab('auth')" id="tab-auth" style="padding: 14px 24px; border: none; background: transparent; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; white-space: nowrap;">Authentication Events</button>
+        <button onclick="setAuditTab('smb')" id="tab-smb" style="padding: 14px 24px; border: none; background: transparent; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; white-space: nowrap;">SMB Transfers</button>
+        <button onclick="setAuditTab('manifest')" id="tab-manifest" style="padding: 14px 24px; border: none; background: transparent; font-size: 12px; font-weight: 700; color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; text-transform: uppercase; white-space: nowrap;">Evidence Manifest</button>
+    </div>
+
+    <!-- Auth Timeline -->
+    <div id="audit-auth" class="audit-panel" style="display: none; max-height: 500px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead style="position: sticky; top: 0; background: var(--bg-light);">
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Timestamp</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">User</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">IP Address</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Status</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Message</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set foundAuth = false %}
+                {% for filePkg in payload.structured %}
+                    {% if filePkg.auth_timeline and filePkg.auth_timeline.events %}
+                        {% set foundAuth = true %}
+                        {% for event in filePkg.auth_timeline.events %}
+                            <tr style="border-bottom: 1px solid var(--row-border);">
+                                <td style="padding: 8px 16px; color: var(--text-muted);">{{ event.time|date('Y-m-d H:i:s') }}</td>
+                                <td style="padding: 8px 16px; font-weight: 600;">{{ event.username }}</td>
+                                <td style="padding: 8px 16px; font-family: monospace;">{{ event.ip }}</td>
+                                <td style="padding: 8px 16px;">
+                                    {% if event.is_failed %}
+                                        <span style="color: var(--danger); font-weight: 800; font-size: 10px;">FAILED</span>
+                                    {% else %}
+                                        <span style="color: var(--success); font-weight: 800; font-size: 10px;">SUCCESS</span>
+                                    {% endif %}
+                                </td>
+                                <td style="padding: 8px 16px; color: var(--text-muted); font-size: 11px;">{{ event.msg }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                {% if not foundAuth %}
+                <tr><td colspan="5" style="padding: 32px; text-align: center; color: var(--text-muted);">No authentication records found in this set.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SMB Transfer Audit -->
+    <div id="audit-smb" class="audit-panel" style="display: none; max-height: 500px; overflow-y: auto;">
+        <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+            <thead style="position: sticky; top: 0; background: var(--bg-light);">
+                <tr style="border-bottom: 1px solid var(--border);">
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Timestamp</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">User</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Op</th>
+                    <th style="padding: 10px 16px; text-align: left; color: var(--text-muted);">Path</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% set foundSmb = false %}
+                {% for filePkg in payload.structured %}
+                    {% if filePkg.smb_xfer and filePkg.smb_xfer.recent_transfers %}
+                        {% set foundSmb = true %}
+                        {% for transfer in filePkg.smb_xfer.recent_transfers %}
+                            <tr style="border-bottom: 1px solid var(--row-border);">
+                                <td style="padding: 8px 16px; color: var(--text-muted);">{{ transfer.time|date('Y-m-d H:i:s') }}</td>
+                                <td style="padding: 8px 16px; font-weight: 600;">{{ transfer.username }}</td>
+                                <td style="padding: 8px 16px;"><span style="font-weight: 800; color: var(--primary); font-size: 10px;">{{ transfer.op|upper }}</span></td>
+                                <td style="padding: 8px 16px; font-family: monospace; color: var(--text-muted); font-size: 11px;">{{ transfer.path }}</td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+                {% if not foundSmb %}
+                <tr><td colspan="4" style="padding: 32px; text-align: center; color: var(--text-muted);">No SMB transfer records found in this set.</td></tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Evidence Manifest -->
+    <div id="audit-manifest" class="audit-panel" style="display: none; padding: 24px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+            {% for filePkg in payload.structured %}
+                {% if filePkg._citations %}
+                    {% for key, cites in filePkg._citations %}
+                        {% for cite in cites %}
+                        <div style="background: var(--bg-light); border: 1px solid var(--border); border-radius: 4px; padding: 12px;">
+                            <div style="font-size: 10px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">Audited Section: {{ key|replace({'_':' '})|title }}</div>
+                            <div style="font-family: monospace; font-size: 12px; color: var(--primary); font-weight: 600; word-break: break-all;">{{ cite.file }}</div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--text-muted);">
+                                <span>Capture: {{ cite.lines }}</span>
+                                <span>Ver: {{ cite.timestamp }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    function setAuditTab(tab) {
+        document.querySelectorAll('.audit-panel').forEach(p => p.style.display = 'none');
+        document.querySelectorAll('[id^="tab-"]').forEach(t => {
+            t.style.borderBottomColor = 'transparent';
+            t.style.color = 'var(--text-muted)';
+        });
+        
+        const target = document.getElementById('audit-' + tab);
+        const btn = document.getElementById('tab-' + tab);
+        if (target && btn) {
+            target.style.display = 'block';
+            btn.style.borderBottomColor = 'var(--primary)';
+            btn.style.color = 'var(--primary)';
+        }
+    }
+    // Set default
+    document.addEventListener('DOMContentLoaded', () => setAuditTab('auth'));
+</script>
+{% endif %}
+
 <style>
 #view-toggle-cards.active-view, #view-toggle-table.active-view {
     background: var(--primary) !important;

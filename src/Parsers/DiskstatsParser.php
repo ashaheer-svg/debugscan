@@ -84,10 +84,22 @@ class DiskstatsParser implements ParserInterface
             ];
         }
 
+        $citations = [];
+        if (file_exists($file)) {
+            $citations[] = [
+                'file' => 'dsm/proc/diskstats',
+                'lines' => '1-' . count($lines),
+                'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+            ];
+        }
+
         return [
-            'diskstats' => $diskstats,
-            'summary' => $this->generateSummary($diskstats),
-            '_tag' => '[DISK_IO_PERFORMANCE]'
+            'data' => [
+                'diskstats' => $diskstats,
+                'summary' => $this->generateSummary($diskstats),
+                '_tag' => '[DISK_IO_PERFORMANCE]'
+            ],
+            'citations' => $citations
         ];
     }
 

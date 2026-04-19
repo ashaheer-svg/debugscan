@@ -35,7 +35,23 @@ class VmstatParser implements ParserInterface
             $result['oom_risk'] = $this->assessOomRisk($result['meminfo'], $result['vmstat']);
         }
 
-        return $result;
+        $citations = [];
+        if (file_exists($meminfoFile)) {
+            $citations[] = [
+                'file' => 'dsm/proc/meminfo',
+                'lines' => '1',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($meminfoFile))
+            ];
+        }
+        if (file_exists($vmstatFile)) {
+            $citations[] = [
+                'file' => 'dsm/proc/vmstat',
+                'lines' => '1',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($vmstatFile))
+            ];
+        }
+
+        return ['data' => $result, 'citations' => $citations];
     }
 
     private function parseMeminfo(string $file): array

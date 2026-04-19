@@ -32,7 +32,23 @@ class NetworkParser implements ParserInterface
             }
         }
 
-        return $network;
+        $citations = [];
+        if (file_exists($ifFile)) {
+            $citations[] = [
+                'file' => 'dsm/result/ifconfig.result',
+                'lines' => '1-500',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($ifFile))
+            ];
+        }
+        if (file_exists($routeFile)) {
+            $citations[] = [
+                'file' => 'dsm/result/route.result',
+                'lines' => '1-50',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($routeFile))
+            ];
+        }
+
+        return ['data' => $network, 'citations' => array_unique($citations, SORT_REGULAR)];
     }
 
     /**
