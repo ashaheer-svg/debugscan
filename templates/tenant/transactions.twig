@@ -55,7 +55,7 @@
                 </td>
                 <td style="padding-right: 24px; font-weight: 600; text-align: right;">
                     {% if log.action == 'tokens_deducted' %}
-                        <span style="color: var(--error);">-{{ details.used|number_format }}</span>
+                        <span style="color: var(--error);">-{{ (details.amount_deducted ?: (details.used ?: 0))|number_format }}</span>
                     {% elseif log.action == 'tokens_allocated' or log.action == 'tokens_redeemed' %}
                         <span style="color: var(--success);">+{{ details.amount|number_format }}</span>
                     {% else %}
