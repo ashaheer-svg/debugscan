@@ -209,7 +209,7 @@
                             </td>
                             <td style="color: var(--text-secondary); font-size: 13px;">{{ (file.file_size_bytes / 1024 / 1024)|number_format(1) }} MB</td>
                             <td>
-                                <span id="extraction-status-{{ file.id }}" style="font-size: 10px; font-weight: 800; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
+                                <span id="extraction-status-{{ file.id }}" style="font-size: 11px; font-weight: 800; color: {% if file.extraction_status == 'completed' %}var(--success){% else %}var(--primary){% endif %}; text-transform: uppercase; letter-spacing: 0.05em;">
                                     {{ file.extraction_status }}
                                 </span>
                             </td>
@@ -217,12 +217,12 @@
                                 <div class="forensic-status-{{ file.id }}" style="display: flex; flex-direction: column; gap: 4px;">
                                     <div style="display: flex; align-items: center; gap: 6px;">
                                         {% if file_reports[file.id]|length > 0 %}
-                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--success-light); color: var(--success); border-radius: 6px; font-size: 10px; font-weight: 800;">
+                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--success-light); color: var(--success); border-radius: 6px; font-size: 11px; font-weight: 800;">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                                 {{ file_reports[file.id]|length }} REPORTS
                                             </div>
                                         {% else %}
-                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg-light); color: var(--text-muted); border-radius: 6px; font-size: 10px; font-weight: 700;">
+                                            <div style="display: flex; align-items: center; gap: 4px; padding: 4px 8px; background: var(--bg-light); color: var(--text-muted); border-radius: 6px; font-size: 11px; font-weight: 700;">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.5;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                                                 NO AUDIT
                                             </div>
@@ -325,7 +325,7 @@
                     <tr>
                         <td style="padding-left: 24px; font-family: monospace; font-size: 11px; color: var(--text-secondary);">#{{ scan.id|slice(0, 8) }}</td>
                         <td>
-                            <span class="hd-badge hd-badge-muted">
+                            <span class="badge" style="background: var(--bg-light); color: var(--text-muted); border: 1px solid var(--border); font-size: 11px;">
                                 {{ (scan.package_name ?? scan.scan_level)|upper }}
                             </span>
                         </td>
