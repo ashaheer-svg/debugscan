@@ -226,6 +226,7 @@ class AppBootstrap
             $group->post('projects/create', [TenantController::class, 'createProject']);
             $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
             $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
+            $group->post('projects/resolve-mismatch', [TenantController::class, 'resolveSerialMismatch']);
             $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);
             $group->get('scans/status/{id}', [TenantController::class, 'getScanStatus']);
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);

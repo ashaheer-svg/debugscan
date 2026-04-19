@@ -338,6 +338,33 @@ class TenantController
                 'pid' => $id
             ]);
 
+            // --- EXTRACTED SERIAL VALIDATION ---
+            $extractedSerial = $hw['serial'] ?? null;
+            
+            $stmt = $this->pdo->prepare("SELECT serial_number FROM projects WHERE id = :id");
+            $stmt->execute(['id' => $id]);
+            $currentSerial = $stmt->fetchColumn();
+
+            if ($extractedSerial && $currentSerial && $extractedSerial !== $currentSerial) {
+                // Search for existing matching project for this tenant
+                $stmt = $this->pdo->prepare("SELECT id, name FROM projects WHERE tenant_id = :tid AND serial_number = :sn AND id != :cid LIMIT 1");
+                $stmt->execute(['tid' => $tenantId, 'sn' => $extractedSerial, 'cid' => $id]);
+                $matchingProject = $stmt->fetch();
+
+                if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                    $response->getBody()->write(json_encode([
+                        'status' => 'mismatch',
+                        'extracted_serial' => $extractedSerial,
+                        'current_serial' => $currentSerial,
+                        'matching_project' => $matchingProject,
+                        'file_id' => $fileId,
+                        'original_filename' => $filename
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(409);
+                }
+            }
+            // ------------------------------------
+
             // If AJAX, return JSON
             if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
                 $response->getBody()->write(json_encode([
@@ -981,6 +1008,63 @@ class TenantController
             'ip' => $ip,
             'ua' => $ua
         ]);
+    }
+
+    public function resolveSerialMismatch(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $tenantId = $request->getAttribute('tenant_id');
+        $fileId = $data['file_id'] ?? null;
+        $action = $data['action'] ?? null;
+        $extractedSerial = $data['extracted_serial'] ?? null;
+
+        if (!$fileId) {
+            return $response->withStatus(400);
+        }
+
+        // Fetch temp file info from debug_files (it's already there but linked to old project)
+        $stmt = $this->pdo->prepare("SELECT * FROM debug_files WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $fileId, 'tid' => $tenantId]);
+        $fileRecord = $stmt->fetch();
+
+        if (!$fileRecord) {
+            return $response->withStatus(404);
+        }
+
+        $targetProjectId = null;
+
+        if ($action === 'create_new') {
+            // Create New Project
+            $stmt = $this->pdo->prepare("INSERT INTO projects (tenant_id, name, serial_number) VALUES (:tid, :name, :sn) RETURNING id");
+            $stmt->execute([
+                'tid' => $tenantId,
+                'name' => "Project " . ($extractedSerial ?: date('Ymd-His')),
+                'sn' => $extractedSerial
+            ]);
+            $targetProjectId = $stmt->fetchColumn();
+        } elseif ($action === 'move_to_existing') {
+            $targetProjectId = $data['target_project_id'] ?? null;
+        } elseif ($action === 'ignore') {
+            // Just keep current link (nothing to change in debug_files)
+            $targetProjectId = $fileRecord['project_id'];
+        } else { // cancel
+            $this->fileService->deleteProjectFile($fileId, $fileRecord['storage_path']);
+            $stmt = $this->pdo->prepare("DELETE FROM debug_files WHERE id = :id");
+            $stmt->execute(['id' => $fileId]);
+            
+            return $response->withHeader('Content-Type', 'application/json');
+        }
+
+        if ($targetProjectId && $targetProjectId !== $fileRecord['project_id']) {
+            $stmt = $this->pdo->prepare("UPDATE debug_files SET project_id = :pid WHERE id = :id");
+            $stmt->execute(['pid' => $targetProjectId, 'id' => $fileId]);
+        }
+
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'redirect' => $this->basePath . '/projects/view/' . $targetProjectId
+        ]));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
 
