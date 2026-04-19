@@ -472,6 +472,8 @@
     function uploadFile(file) {
         const formData = new FormData();
         formData.append('debug_log', file);
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
 
         const xhr = new XMLHttpRequest();
         uploadModal.style.display = 'flex';
@@ -599,7 +601,9 @@
                 file_id: pendingMismatchData.file_id,
                 action: action,
                 extracted_serial: pendingMismatchData.extracted_serial,
-                target_project_id: targetProjectId
+                target_project_id: targetProjectId,
+                ['{{ csrf.keys.name }}']: '{{ csrf.name }}',
+                ['{{ csrf.keys.value }}']: '{{ csrf.value }}'
             })
         })
         .then(r => r.json())
@@ -671,7 +675,7 @@
                             container.style.display = 'none';
                         }
                     });
-            }
+                }
 
 
                 if (isFinished) {
@@ -690,9 +694,11 @@
     }
 
     // Update startScan to handle AJAX and start polling
-    document.getElementById('analysisForm').addEventListener('submit', function(e) {
+    document.getElementById('scanForm').addEventListener('submit', function(e) {
         e.preventDefault();
         const formData = new FormData(this);
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
         
         fetch(this.action, {
             method: 'POST',
@@ -775,6 +781,8 @@
         document.getElementById('tokenModal').style.display = 'none';
         const form = document.getElementById('scanForm');
         const formData = new FormData(form);
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
         
         fetch(form.action, {
             method: 'POST',
