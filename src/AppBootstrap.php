@@ -179,6 +179,11 @@ class AppBootstrap
                 });
                 return $guard;
             },
+            RateLimitMiddleware::class => function (ContainerInterface $container) {
+                $redis = $container->get(\Predis\Client::class);
+                // 120 requests per 60 seconds (1 minute)
+                return new RateLimitMiddleware($redis, 120, 60);
+            },
         ];
     }
 
@@ -256,6 +261,29 @@ class AppBootstrap
 
         $app->add(Guard::class);
         $app->addBodyParsingMiddleware();
+        
+        // Rate Limiting (Global - Covers Login/Auth)
+        $app->add(RateLimitMiddleware::class);
+
+        // Standard Error Handling
+        $errorMiddleware = $app->addErrorMiddleware($isDebugMode, true, true);
+        if (!$isDebugMode) {
+            $errorMiddleware->setDefaultErrorHandler(function ($request, $exception, $displayErrorDetails) use ($app) {
+                $response = $app->getResponseFactory()->createResponse();
+                $isApi = str_contains($request->getUri()->getPath(), '/api/');
+                
+                if ($isApi) {
+                    $response->getBody()->write(json_encode([
+                        'success' => false,
+                        'message' => 'An internal server error occurred. Please contact technical support.'
+                    ]));
+                    return $response->withHeader('Content-Type', 'application/json')->withStatus(500);
+                }
+
+                $response->getBody()->write('<h2>Internal Server Error</h2><p>Our engineering team has been notified. Please try again later.</p>');
+                return $response->withStatus(500);
+            });
+        }
     }
 
     private static function ensureStorageExists(): void
@@ -336,7 +364,6 @@ class AppBootstrap
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
         })->add($container->get(ViewDataMiddleware::class))
-          ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')))
-          ->add(new RateLimitMiddleware($container->get(\Predis\Client::class), 120, 60));
+          ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
     }
 }

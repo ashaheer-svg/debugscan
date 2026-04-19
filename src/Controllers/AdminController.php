@@ -475,6 +475,7 @@ class AdminController
                 smtp_from = :smtp_from,
                 smtp_encryption = :smtp_encryption,
                 reporting_email = :reporting_email,
+                max_extraction_size_gb = :max_extraction_size_gb,
                 updated_at = NOW()
             WHERE id = 1
         ");
@@ -495,6 +496,7 @@ class AdminController
             'smtp_from' => $data['smtp_from'] ?? null,
             'smtp_encryption' => $data['smtp_encryption'] ?? 'tls',
             'reporting_email' => $data['reporting_email'] ?? 'shaheer@activelk.com',
+            'max_extraction_size_gb' => (int)($data['max_extraction_size_gb'] ?? 2),
         ]);
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings?status=saved')->withStatus(302);

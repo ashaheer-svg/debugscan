@@ -29,6 +29,11 @@ class RateLimitMiddleware implements MiddlewareInterface
         $ip = $request->getServerParams()['REMOTE_ADDR'] ?? 'unknown';
         $key = "ratelimit:" . md5($ip);
 
+        // Administrator Bypass
+        if (session_status() === PHP_SESSION_ACTIVE && ($_SESSION['role'] ?? '') === 'admin') {
+            return $handler->handle($request);
+        }
+
         try {
             $current = $this->redis->get($key);
 

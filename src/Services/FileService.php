@@ -102,7 +102,10 @@ class FileService
     {
         $destPath = $this->extractedDir . DIRECTORY_SEPARATOR . $fileId;
         
-        $extractedFiles = ZipHelper::extractSelected($zipPath, self::EXTRACTION_TARGETS, $destPath);
+        $maxGb = (int)($this->pdo->query("SELECT max_extraction_size_gb FROM system_settings LIMIT 1")->fetchColumn() ?: 2);
+        $maxBytes = $maxGb * 1024 * 1024 * 1024;
+
+        $extractedFiles = ZipHelper::extractSelected($zipPath, self::EXTRACTION_TARGETS, $destPath, $maxBytes);
         
         // Mark extraction as completed if we found at least the minimum data set
         $minimumSet = ['dsm/etc/VERSION', 'dsm/proc/partitions', 'dsm/proc/mdstat', 'dsm/proc/meminfo'];

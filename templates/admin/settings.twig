@@ -31,7 +31,7 @@
             <div class="form-group" style="margin-top: 24px;">
                 <label for="max_prompt_chars" class="form-label">AI Character Limit (Per File)</label>
                 <input type="number" id="max_prompt_chars" name="max_prompt_chars" class="form-control" value="{{ settings.max_prompt_chars|default(50000) }}" min="1000" max="500000" step="5000" style="background: var(--bg-light); border-color: var(--border);">
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Safety limit for forensic data density. Recommended: 50,000 - 150,000.</p>
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Sets the maximum volume of raw forensic data sent to the AI model per log file. Increasing this improves detail but consumes more tokens.</p>
             </div>
         </section>
 
@@ -90,11 +90,19 @@
                 <div class="form-group">
                     <label for="stuck_alert_mins" class="form-label">Heartbeat Alert (m)</label>
                     <input type="number" id="stuck_alert_mins" name="stuck_alert_mins" class="form-control" value="{{ settings.stuck_alert_mins|default(5) }}" min="1" max="60" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Alert admin if a worker hasn't reported progress within this window.</p>
                 </div>
                 <div class="form-group">
                     <label for="auto_cancel_mins" class="form-label">Auto-Cancel (m)</label>
                     <input type="number" id="auto_cancel_mins" name="auto_cancel_mins" class="form-control" value="{{ settings.auto_cancel_mins|default(30) }}" min="5" max="240" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Forcefully terminate zombie jobs after this duration to free resources.</p>
                 </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 24px;">
+                <label for="max_extraction_size_gb" class="form-label">Zip Bomb Safeguard (GB)</label>
+                <input type="number" id="max_extraction_size_gb" name="max_extraction_size_gb" class="form-control" value="{{ settings.max_extraction_size_gb|default(2) }}" min="1" max="50" style="background: var(--bg-light); border-color: var(--border);">
+                <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Maximum cumulative size of uncompressed files allowed during debug file extraction. Prevents storage exhaustion attacks.</p>
             </div>
         </section>
 
@@ -116,10 +124,12 @@
                 <div class="form-group">
                     <label for="smtp_host" class="form-label">SMTP Host</label>
                     <input type="text" id="smtp_host" name="smtp_host" class="form-control" value="{{ settings.smtp_host }}" placeholder="smtp.gmail.com" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Hostname of your email delivery service.</p>
                 </div>
                 <div class="form-group">
                     <label for="smtp_port" class="form-label">SMTP Port</label>
                     <input type="number" id="smtp_port" name="smtp_port" class="form-control" value="{{ settings.smtp_port|default(587) }}" placeholder="587" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Connection port (usually 587 or 465).</p>
                 </div>
                 <div class="form-group">
                     <label for="smtp_encryption" class="form-label">Encryption</label>
@@ -127,6 +137,7 @@
                         <option value="tls" {% if settings.smtp_encryption == 'tls' %}selected{% endif %}>STARTTLS (587)</option>
                         <option value="ssl" {% if settings.smtp_encryption == 'ssl' %}selected{% endif %}>SSL/TLS (465)</option>
                     </select>
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Security protocol for the mail stream.</p>
                 </div>
             </div>
 
@@ -134,14 +145,17 @@
                 <div class="form-group">
                     <label for="smtp_user" class="form-label">SMTP Username</label>
                     <input type="text" id="smtp_user" name="smtp_user" class="form-control" value="{{ settings.smtp_user }}" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Account username for authentication.</p>
                 </div>
                 <div class="form-group">
                     <label for="smtp_pass" class="form-label">SMTP Password</label>
                     <input type="password" id="smtp_pass" name="smtp_pass" class="form-control" value="{{ settings.smtp_pass }}" placeholder="••••••••" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">Password or App-specific token.</p>
                 </div>
                 <div class="form-group">
                     <label for="smtp_from" class="form-label">Sender Email (From)</label>
                     <input type="email" id="smtp_from" name="smtp_from" class="form-control" value="{{ settings.smtp_from }}" placeholder="no-reply@activelk.com" style="background: var(--bg-light); border-color: var(--border);">
+                    <p style="font-size: 11px; color: var(--text-muted); margin-top: 6px; font-weight: 500;">The address users see as the sender.</p>
                 </div>
             </div>
         </section>

@@ -29,6 +29,12 @@ $pdo = Database::getConnection();
 $reportPlanService = new ReportPlanService($pdo);
 $scanService = new ScanService($pdo, $reportPlanService);
 
+$jobId = $_GET['id'] ?? null;
+if (!$jobId) {
+    echo "event: error\ndata: Missing job ID\n\n";
+    exit;
+}
+
 // Start SSE Loop
 while (true) {
     try {

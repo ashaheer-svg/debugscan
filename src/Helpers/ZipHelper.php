@@ -16,9 +16,10 @@ class ZipHelper
      * @param string $zipPath Path to the zip file
      * @param array $targets List of files or directory prefixes to extract
      * @param string $destPath Destination directory
+     * @param int $maxAbsoluteBytes Maximum allowed cumulative uncompressed size
      * @return array List of extracted files (relative to destPath)
      */
-    public static function extractSelected(string $zipPath, array $targets, string $destPath): array
+    public static function extractSelected(string $zipPath, array $targets, string $destPath, int $maxAbsoluteBytes = 2147483648): array
     {
         $zip = new ZipArchive();
         if ($zip->open($zipPath) !== true) {
@@ -35,6 +36,7 @@ class ZipHelper
         }
 
         $extracted = [];
+        $totalBytes = 0;
 
         for ($i = 0; $i < $zip->numFiles; $i++) {
             $name = $zip->getNameIndex($i);
@@ -61,7 +63,14 @@ class ZipHelper
             }
 
             if ($shouldExtract) {
-                // 3. SECURE PATH RESOLUTION
+                // 3. ZIP BOMB PROTECTION
+                $totalBytes += $stat['size'];
+                if ($totalBytes > $maxAbsoluteBytes) {
+                    $zip->close();
+                    throw new RuntimeException("Security Error: Extraction limit exceeded ({$totalBytes} bytes). Archive may be a Zip Bomb.");
+                }
+
+                // 4. SECURE PATH RESOLUTION
                 // We resolve the full final path and ensure it's STILL inside $realDestRoot
                 $fullDest = $realDestRoot . DIRECTORY_SEPARATOR . str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $name);
                 
