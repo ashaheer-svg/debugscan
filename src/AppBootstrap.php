@@ -168,6 +168,7 @@ class AppBootstrap
             Guard::class => function (ContainerInterface $container) {
                 $responseFactory = $container->get(ResponseFactoryInterface::class);
                 $guard = new Guard($responseFactory);
+                $guard->setPersistentTokenMode(true);
                 $guard->setFailureHandler(function ($request, $handler) {
                     $response = new \Slim\Psr7\Response();
                     $response->getBody()->write(json_encode([
@@ -229,12 +230,12 @@ class AppBootstrap
             $app->setBasePath($basePath);
         }
 
-        $app->addBodyParsingMiddleware();
         $app->addRoutingMiddleware();
         
         // Security Middlewares
         $app->add(SecurityHeadersMiddleware::class);
         $app->add(Guard::class);
+        $app->addBodyParsingMiddleware();
 
         $app->addErrorMiddleware($isDebugMode, true, true);
     }

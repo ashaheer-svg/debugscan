@@ -591,20 +591,20 @@
         modal.style.opacity = '0.7';
         modal.style.pointerEvents = 'none';
 
+        const formData = new FormData();
+        formData.append('file_id', pendingMismatchData.file_id);
+        formData.append('action', action);
+        formData.append('extracted_serial', pendingMismatchData.extracted_serial);
+        if (targetProjectId) formData.append('target_project_id', targetProjectId);
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
         fetch('/projects/resolve-mismatch', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest'
             },
-            body: JSON.stringify({
-                file_id: pendingMismatchData.file_id,
-                action: action,
-                extracted_serial: pendingMismatchData.extracted_serial,
-                target_project_id: targetProjectId,
-                ['{{ csrf.keys.name }}']: '{{ csrf.name }}',
-                ['{{ csrf.keys.value }}']: '{{ csrf.value }}'
-            })
+            body: formData
         })
         .then(r => r.json())
         .then(resp => {
