@@ -309,6 +309,7 @@ class AppBootstrap
             $group->get('projects', [TenantController::class, 'projects']);
             $group->post('projects/create', [TenantController::class, 'createProject']);
             $group->get('projects/view/{id}', [TenantController::class, 'viewProject']);
+            $group->post('projects/delete/{id}', [TenantController::class, 'deleteProject']);
             $group->post('projects/upload/{id}', [TenantController::class, 'uploadLog']);
             $group->post('projects/resolve-mismatch', [TenantController::class, 'resolveSerialMismatch']);
             $group->post('projects/scan/{id}', [TenantController::class, 'startScan']);

@@ -138,6 +138,41 @@ class TenantController
         return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
     }
 
+    public function deleteProject(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        // 1. Verify existence and ownership
+        $stmt = $this->pdo->prepare("SELECT id FROM projects WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+        $project = $stmt->fetch();
+
+        if (!$project) {
+            $_SESSION['error'] = "Project not found.";
+            return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
+        }
+
+        // 2. Fetch all debug files for physical cleanup
+        $stmt = $this->pdo->prepare("SELECT id, storage_path FROM debug_files WHERE project_id = :pid AND tenant_id = :tid");
+        $stmt->execute(['pid' => $id, 'tid' => $tenantId]);
+        $files = $stmt->fetchAll();
+
+        foreach ($files as $file) {
+            // deleteProjectFile handles both raw archive and extracted folder
+            $this->fileService->deleteProjectFile($file['id'], $file['storage_path']);
+        }
+
+        // 3. Database Deletion (Cascades handle scans, findings, extraction errors)
+        $stmt = $this->pdo->prepare("DELETE FROM projects WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+
+        $this->logAction($request, 'project_deleted', 'projects', $id, ['id' => $id]);
+        $_SESSION['success'] = "Forensic project and all associated logs/scans have been permanently deleted.";
+
+        return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
+    }
+
     public function viewProject(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];

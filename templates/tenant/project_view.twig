@@ -89,18 +89,23 @@
 {% endblock %}
 
 {% block dashboard_content %}
-<header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
     <div>
         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <a href="/projects" style="font-size: 13px; color: var(--text-muted); font-weight: 500;">Projects</a>
-            <span style="color: var(--text-muted); font-size: 13px;">/</span>
-            <span style="color: var(--text-primary); font-size: 13px; font-weight: 600;">{{ project.name }}</span>
+            <a href="{{ base_path }}/projects" style="font-size: 12px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">Forensic Projects</a>
+            <span style="color: var(--text-muted); opacity: 0.5;">/</span>
+            <span style="color: var(--text-primary); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">{{ project.name }}</span>
         </div>
-        <h1 class="page-title">{{ project.name }}</h1>
-        <p class="page-subtitle">{{ project.notes|default('No description provided for this case.') }}</p>
+        <h1 class="page-title" style="margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.02em;">{{ project.name }}</h1>
     </div>
-    <div style="display: flex; gap: 12px;">
-        <button type="button" class="btn btn-outline" style="width: auto;">Edit Project</button>
+    <div style="display: flex; gap: 12px; align-items: center;">
+        <form action="{{ base_path }}/projects/delete/{{ project.id }}" method="POST" onsubmit="return confirm('WARNING: Are you absolutely sure you want to delete this project? This will permanently remove all diagnostic files, AI scan reports, and extraction data.');">
+            {{ csrf.inputs | raw }}
+            <button type="submit" class="btn btn-outline" style="color: var(--danger); border-color: rgba(220, 53, 69, 0.4); background: rgba(220, 53, 69, 0.05); padding: 8px 16px; font-size: 13px; font-weight: 700;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px; vertical-align: middle;"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                Delete Project
+            </button>
+        </form>
     </div>
 </header>
 
