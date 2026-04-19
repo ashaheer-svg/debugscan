@@ -73,9 +73,23 @@ class ParseService
             }
 
             try {
-                $results[$key] = $parser->parse($extractedPath, $context);
+                $response = $parser->parse($extractedPath, $context);
+                
+                // --- NEW: PHASE 1 INFRASTRUCTURE ---
+                // Handle new citation-aware return structure: ['data' => ..., 'citations' => ...]
+                if (isset($response['data'])) {
+                    $results[$key] = $response['data'];
+                    // We can aggregate citations into a separate key or keep them available
+                    if (!isset($results['_citations'])) $results['_citations'] = [];
+                    $results['_citations'][$key] = $response['citations'] ?? [];
+                } else {
+                    // Fallback for non-refactored parsers (deprecated style)
+                    $results[$key] = $response;
+                }
+                // ------------------------------------
+
                 // Update context for subsequent parsers
-                if ($key === 'version') $context = array_merge($context, $results[$key]);
+                if ($key === 'version') $context = array_merge($context, is_array($results[$key]) ? $results[$key] : []);
             } catch (\Exception $e) {
                 $results[$key] = ['error' => $e->getMessage()];
             }

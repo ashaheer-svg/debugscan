@@ -30,14 +30,23 @@ class VersionParser implements ParserInterface
                 $context['buildnumber'] = $versionData['buildnumber'] ?? '';
 
                 return [
-                    'major' => $context['majorversion'],
-                    'product' => $context['productversion'],
-                    'build' => $context['buildnumber'],
-                    'build_date' => $versionData['builddate'] ?? ''
+                    'data' => [
+                        'major' => $context['majorversion'],
+                        'product' => $context['productversion'],
+                        'build' => $context['buildnumber'],
+                        'build_date' => $versionData['builddate'] ?? ''
+                    ],
+                    'citations' => [
+                        [
+                            'file' => str_replace($extractedPath . '/', '', $file),
+                            'lines' => '1-' . count($lines),
+                            'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                        ]
+                    ]
                 ];
             }
         }
 
-        return [];
+        return ['data' => [], 'citations' => []];
     }
 }

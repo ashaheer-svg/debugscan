@@ -11,7 +11,7 @@ interface ParserInterface
      * 
      * @param string $extractedPath Absolute path to the folder containing extracted files.
      * @param array $context Current session or shared state (e.g. DSM version).
-     * @return array
+     * @return array Structure: ['data' => mixed, 'citations' => array]
      */
     public function parse(string $extractedPath, array &$context): array;
 }

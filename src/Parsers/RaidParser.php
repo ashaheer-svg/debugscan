@@ -50,7 +50,16 @@ class RaidParser implements ParserInterface
             }
         }
 
-        return $raids;
+        return [
+            'data' => $raids,
+            'citations' => [
+                [
+                    'file' => 'dsm/proc/mdstat',
+                    'lines' => '1-' . count($lines),
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+                ]
+            ]
+        ];
     }
 
     private function parseDisks(string $diskString): array

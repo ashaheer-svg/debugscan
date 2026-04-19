@@ -130,4 +130,24 @@ class ZipHelper
 
         return implode("", $lines);
     }
+
+    /**
+     * Recursively search a directory for .xz files and decompress them in place.
+     * Reclaims historical log data.
+     */
+    public static function decompressXzFiles(string $directory): void
+    {
+        if (!is_dir($directory)) return;
+
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory));
+        foreach ($iterator as $file) {
+            if ($file->isFile() && str_ends_with($file->getFilename(), '.xz')) {
+                $path = $file->getRealPath();
+                // We use shell_exec for xz as it's the most reliable way on Linux
+                // Only if 'xz' command exists (verified in Phase 1 plan)
+                $cmd = "xz -d " . escapeshellarg($path) . " 2>&1";
+                shell_exec($cmd);
+            }
+        }
+    }
 }

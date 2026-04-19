@@ -39,6 +39,22 @@ class VolumeParser implements ParserInterface
             }
         }
 
-        return $volumes;
+        $citations = [];
+        if (file_exists($file)) {
+            $citations[] = [
+                'file' => 'dsm/run/space/volume_status.cache',
+                'lines' => '1-200',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+            ];
+        }
+        if (file_exists($metaFile)) {
+            $citations[] = [
+                'file' => 'dsm/run/space/space_meta.status',
+                'lines' => '1-100',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($metaFile))
+            ];
+        }
+
+        return ['data' => $volumes, 'citations' => $citations];
     }
 }

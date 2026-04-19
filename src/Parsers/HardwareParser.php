@@ -8,20 +8,35 @@ class HardwareParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array
     {
+        $citations = [];
         $major = $context['majorversion'] ?? 7;
-        $synoInfo = $this->parseSynoInfo($extractedPath);
+        $synoInfoMeta = $this->parseSynoInfo($extractedPath);
+        $synoInfo = $synoInfoMeta['data'];
+        if (!empty($synoInfoMeta['file'])) {
+            $citations[] = [
+                'file' => $synoInfoMeta['file'],
+                'lines' => '1-' . $synoInfoMeta['lines'],
+                'timestamp' => $synoInfoMeta['timestamp']
+            ];
+        }
+
         $hardware = [];
 
-        // 1. NAS Serial from /proc/sys/kernel/syno_serial OR synoinfo.conf (Hardwarev2.md Section 2.1.1 & 3.1.1)
-        // Primary source: /proc/sys/kernel/syno_serial; Fallback: synoinfo.conf 'serialno'
-        $hardware['serial'] = $this->getSerialFromProc($extractedPath) ?: ($synoInfo['serialno'] ?? null);
-
-        // 2. Model extraction (Hardwarev2.md Section 2.1.1 & 3.1.1)
-        if (file_exists($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version')) {
-            // DSM 7.x: dedicated proc file
-            $hardware['model'] = trim(file_get_contents($extractedPath . '/dsm/proc/sys/kernel/syno_hw_version'));
+        // 1. NAS Serial
+        $serialProc = $this->getSerialFromProc($extractedPath);
+        if ($serialProc) {
+            $hardware['serial'] = $serialProc['value'];
+            $citations[] = ['file' => $serialProc['file'], 'lines' => '1', 'timestamp' => $serialProc['timestamp']];
         } else {
-            // DSM 6.x: extract from synoinfo.conf "unique" field (format: synology_<cpu>_<model>)
+            $hardware['serial'] = $synoInfo['serialno'] ?? null;
+        }
+
+        // 2. Model extraction
+        $modelFile = $extractedPath . '/dsm/proc/sys/kernel/syno_hw_version';
+        if (file_exists($modelFile)) {
+            $hardware['model'] = trim(file_get_contents($modelFile));
+            $citations[] = ['file' => 'dsm/proc/sys/kernel/syno_hw_version', 'lines' => '1', 'timestamp' => date('Y-m-d H:i:s', filemtime($modelFile))];
+        } else {
             $unique = $synoInfo['unique'] ?? '';
             if (!empty($unique)) {
                 $parts = explode('_', $unique);
@@ -31,38 +46,49 @@ class HardwareParser implements ParserInterface
             }
         }
 
-        // 3. Extract Location from SNMP (Hardwarev2.md Section 3.7)
-        $hardware['location'] = $this->parseLocation($extractedPath);
+        // 3. Location
+        $loc = $this->parseLocation($extractedPath);
+        if ($loc) {
+            $hardware['location'] = $loc['value'];
+            $citations[] = ['file' => $loc['file'], 'lines' => '1', 'timestamp' => $loc['timestamp']];
+        }
 
-        // 4. CPU Info (Hardwarev2.md Section 2.1.4 & 3.1.4)
-        if (file_exists($extractedPath . '/dsm/proc/cpuinfo')) {
-            $cpuContent = file_get_contents($extractedPath . '/dsm/proc/cpuinfo');
+        // 4. CPU Info
+        $cpuFile = $extractedPath . '/dsm/proc/cpuinfo';
+        if (file_exists($cpuFile)) {
+            $cpuContent = file_get_contents($cpuFile);
+            $lines = explode("\n", $cpuContent);
             if (preg_match('/model name\s+: (.*)/', $cpuContent, $matches)) {
                 $hardware['cpu_model'] = trim($matches[1]);
             }
             $hardware['cpu_cores'] = substr_count($cpuContent, 'processor');
+            $citations[] = ['file' => 'dsm/proc/cpuinfo', 'lines' => '1-' . count($lines), 'timestamp' => date('Y-m-d H:i:s', filemtime($cpuFile))];
         }
 
-        // 5. RAM (Hardwarev2.md Section 2.1.3 & 3.1.3)
-        if (file_exists($extractedPath . '/dsm/proc/meminfo')) {
-            $memContent = file_get_contents($extractedPath . '/dsm/proc/meminfo');
+        // 5. RAM
+        $memFile = $extractedPath . '/dsm/proc/meminfo';
+        if (file_exists($memFile)) {
+            $memContent = file_get_contents($memFile);
             if (preg_match('/MemTotal:\s+(\d+)/', $memContent, $matches)) {
                 $hardware['ram_gb'] = round((int)$matches[1] / 1024 / 1024, 1);
             }
             if (preg_match('/MemAvailable:\s+(\d+)/', $memContent, $matches)) {
                 $hardware['ram_available_gb'] = round((int)$matches[1] / 1024 / 1024, 1);
             }
+            $citations[] = ['file' => 'dsm/proc/meminfo', 'lines' => '1-50', 'timestamp' => date('Y-m-d H:i:s', filemtime($memFile))];
         }
 
         // 6. Uptime
-        if (file_exists($extractedPath . '/dsm/proc/uptime')) {
-            $uptimeContent = trim(file_get_contents($extractedPath . '/dsm/proc/uptime'));
+        $upFile = $extractedPath . '/dsm/proc/uptime';
+        if (file_exists($upFile)) {
+            $uptimeContent = trim(file_get_contents($upFile));
             $parts = explode(' ', $uptimeContent);
             $seconds = (float)$parts[0];
             $hardware['uptime_days'] = round($seconds / 86400, 2);
+            $citations[] = ['file' => 'dsm/proc/uptime', 'lines' => '1', 'timestamp' => date('Y-m-d H:i:s', filemtime($upFile))];
         }
 
-        return $hardware;
+        return ['data' => $hardware, 'citations' => $citations];
     }
 
     /**
@@ -70,33 +96,49 @@ class HardwareParser implements ParserInterface
      * Replaces incorrect logic that looked for non-existent synoinfo.conf keys
      * @return string|null Serial number or null if not found
      */
-    private function getSerialFromProc(string $path): ?string
+    private function getSerialFromProc(string $path): ?array
     {
         $serFile = $path . '/dsm/proc/sys/kernel/syno_serial';
         if (file_exists($serFile)) {
             $serial = trim(file_get_contents($serFile));
-            return !empty($serial) ? $serial : null;
+            return !empty($serial) ? [
+                'value' => $serial,
+                'file' => 'dsm/proc/sys/kernel/syno_serial',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($serFile))
+            ] : null;
         }
 
         // Fallback to custom serial if standard one missing (rare)
         $customFile = $path . '/dsm/proc/sys/kernel/syno_custom_serial';
         if (file_exists($customFile)) {
             $serial = trim(file_get_contents($customFile));
-            return !empty($serial) ? $serial : null;
+            return !empty($serial) ? [
+                'value' => $serial,
+                'file' => 'dsm/proc/sys/kernel/syno_custom_serial',
+                'timestamp' => date('Y-m-d H:i:s', filemtime($customFile))
+            ] : null;
         }
 
         return null;
     }
 
-    private function parseLocation(string $path): ?string
+    private function parseLocation(string $path): ?array
     {
         $file = $path . '/dsm/etc/snmp/snmpd.conf';
-        if (!file_exists($file)) $file = $path . '/dsm/etc.defaults/snmp/snmpd.conf';
+        $relFile = 'dsm/etc/snmp/snmpd.conf';
+        if (!file_exists($file)) {
+            $file = $path . '/dsm/etc.defaults/snmp/snmpd.conf';
+            $relFile = 'dsm/etc.defaults/snmp/snmpd.conf';
+        }
         if (!file_exists($file)) return null;
 
         $content = file_get_contents($file);
         if (preg_match('/^sysLocation\s+"?([^"\n]+)"?/m', $content, $matches)) {
-            return trim($matches[1]);
+            return [
+                'value' => trim($matches[1]),
+                'file' => $relFile,
+                'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+            ];
         }
 
         return null;
@@ -105,9 +147,13 @@ class HardwareParser implements ParserInterface
     private function parseSynoInfo(string $path): array
     {
         $file = $path . '/dsm/etc/synoinfo.conf';
-        if (!file_exists($file)) $file = $path . '/dsm/etc.defaults/synoinfo.conf';
+        $relFile = 'dsm/etc/synoinfo.conf';
+        if (!file_exists($file)) {
+            $file = $path . '/dsm/etc.defaults/synoinfo.conf';
+            $relFile = 'dsm/etc.defaults/synoinfo.conf';
+        }
 
-        if (!file_exists($file)) return [];
+        if (!file_exists($file)) return ['data' => [], 'file' => '', 'lines' => 0, 'timestamp' => ''];
 
         $content = file_get_contents($file);
         $lines = explode("\n", $content);
@@ -118,7 +164,12 @@ class HardwareParser implements ParserInterface
                 $data[trim($key)] = trim($value, '" ');
             }
         }
-        return $data;
+        return [
+            'data' => $data,
+            'file' => $relFile,
+            'lines' => count($lines),
+            'timestamp' => date('Y-m-d H:i:s', filemtime($file))
+        ];
     }
 
     private function getLoadInfo(string $path): ?array

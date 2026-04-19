@@ -75,8 +75,14 @@ class FileService
         'dsm/var/log/synolog/.SYNODISKHEALTHDB',
         'dsm/var/log/synolog/.SYNOCONNDB',
         'dsm/var/log/synolog/.SYNOCONNDB-wal',
-        'dsm/var/log/synolog/.SYNOCONNDB-shm',
+        'dsm/var/log/synolog/.SYNODISKHEALTHDB',
         'dsm/var/log/synolog/.SYNODISKDB',
+        'dsm/var/log/synolog/SYNOCONNDB',
+        'dsm/var/log/synolog/SYNOSYSDB',
+        'dsm/var/log/synolog/SYNOACCOUNTDB',
+        'dsm/var/log/synolog/SMBXFERDB',
+        'dsm/var/log/synolog/SYNOISCSIDB',
+        'dsm/var/log/synolog/SYNONETBKPDB',
         'dsm/var/log/lastimproper.log',
         'dsm/var/log/rsync_signal.error',
         'dsm/var/log/bash_err.log',
@@ -86,6 +92,8 @@ class FileService
         'ActiveInsight/usr/local/packages/@appdata/ActiveInsight/pkg_status.json',
         'dsm/run/synostorage/raid_superblock_cache/',
         'dsm/etc.defaults/disk_adv_status.conf',
+        // Common Log directories for historic .xz recovery
+        'dsm/var/log/',
     ];
 
     public function __construct(PDO $pdo, string $uploadDir, string $extractedDir)
@@ -107,6 +115,11 @@ class FileService
 
         $extractedFiles = ZipHelper::extractSelected($zipPath, self::EXTRACTION_TARGETS, $destPath, $maxBytes);
         
+        // --- NEW: PHASE 1 INFRASTRUCTURE ---
+        // Recursively decompress any .xz archives found in the extracted set (historical logs)
+        ZipHelper::decompressXzFiles($destPath);
+        // ------------------------------------
+
         // Mark extraction as completed if we found at least the minimum data set
         $minimumSet = ['dsm/etc/VERSION', 'dsm/proc/partitions', 'dsm/proc/mdstat', 'dsm/proc/meminfo'];
         $foundMin = 0;
