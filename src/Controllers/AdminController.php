@@ -1128,7 +1128,7 @@ class AdminController
             $details = json_decode($log['details'], true) ?: [];
             
             // Extract tokens change
-            $tokenChange = $details['amount_deducted'] ?? ($details['amount'] ?? ($details['used'] ?? '0'));
+            $tokenChange = $details['amount_deducted'] ?? ($details['amount'] ?? ($details['used'] ?? 0));
             if (in_array($log['action'], ['tokens_deducted', 'scan_completed'])) {
                 $tokenChange = '-' . $tokenChange;
             } elseif (in_array($log['action'], ['tokens_allocated', 'tokens_redeemed'])) {

@@ -953,7 +953,7 @@ class TenantController
             $details = json_decode($log['details'], true) ?: [];
             
             // Extract tokens change
-            $tokenChange = $details['amount_deducted'] ?? ($details['amount'] ?? ($details['used'] ?? '0'));
+            $tokenChange = $details['amount_deducted'] ?? ($details['amount'] ?? ($details['used'] ?? 0));
             if (in_array($log['action'], ['tokens_deducted', 'scan_completed'])) {
                 $tokenChange = '-' . $tokenChange;
             } elseif (in_array($log['action'], ['tokens_allocated', 'tokens_redeemed'])) {
@@ -1034,12 +1034,28 @@ class TenantController
         $targetProjectId = null;
 
         if ($action === 'create_new') {
-            // Create New Project
-            $stmt = $this->pdo->prepare("INSERT INTO projects (tenant_id, name, serial_number) VALUES (:tid, :name, :sn) RETURNING id");
+            // Extract metadata from file record
+            $parsedData = json_decode($fileRecord['extraction_data'] ?: '{}', true);
+            $hw = $parsedData['hardware'] ?? [];
+            $ver = $parsedData['version'] ?? [];
+            
+            // Create New Project with full extracted metadata
+            $stmt = $this->pdo->prepare("
+                INSERT INTO projects (
+                    tenant_id, name, serial_number, model, dsm_version, ram_gb, cpu_model, physical_location
+                ) VALUES (
+                    :tid, :name, :sn, :model, :dsm, :ram, :cpu, :loc
+                ) RETURNING id
+            ");
             $stmt->execute([
                 'tid' => $tenantId,
                 'name' => "Project " . ($extractedSerial ?: date('Ymd-His')),
-                'sn' => $extractedSerial
+                'sn' => $extractedSerial,
+                'model' => $hw['model'] ?? null,
+                'dsm' => $ver['product'] ?? null,
+                'ram' => $hw['ram_gb'] ?? null,
+                'cpu' => $hw['cpu_model'] ?? null,
+                'loc' => $hw['location'] ?? null
             ]);
             $targetProjectId = $stmt->fetchColumn();
         } elseif ($action === 'move_to_existing') {
