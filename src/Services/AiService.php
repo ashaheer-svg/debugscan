@@ -122,7 +122,7 @@ class AiService
                         ['role' => 'system', 'content' => $systemPrompt],
                         ['role' => 'user', 'content' => $userPrompt],
                     ],
-                    'max_completion_tokens' => $maxTokens,
+                    'max_completion_tokens' => min($maxTokens, 32768),
                     'response_format' => ['type' => 'json_object'],
                     'temperature' => 0.1,
                 ],
