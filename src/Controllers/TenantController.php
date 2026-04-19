@@ -793,7 +793,20 @@ class TenantController
         $tenantId = $request->getAttribute('tenant_id');
         $queryParams = $request->getQueryParams();
         
-        // Defaults
+        // Pagination
+        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        // Search
+        $search = !empty($queryParams['q']) ? $queryParams['q'] : null;
+
+        // Sorting
+        $allowedSorts = ['created_at', 'action', 'performer_name'];
+        $sort = in_array($queryParams['sort'] ?? '', $allowedSorts) ? $queryParams['sort'] : 'created_at';
+        $order = (strtoupper($queryParams['order'] ?? '') === 'ASC') ? 'ASC' : 'DESC';
+
+        // Defaults for date/category
         $dateFrom = !empty($queryParams['from']) ? $queryParams['from'] : date('Y-m-d', strtotime('-30 days'));
         $dateTo = !empty($queryParams['to']) ? $queryParams['to'] : date('Y-m-d');
         $category = !empty($queryParams['category']) ? $queryParams['category'] : 'all';
@@ -804,35 +817,58 @@ class TenantController
         $tokensAvailable = $stmt->fetchColumn() ?: 0;
 
         // Build log query
+        $whereSql = "WHERE a.tenant_id = :tid AND a.created_at >= :from AND a.created_at <= :to";
+        $params = ['tid' => $tenantId, 'from' => $dateFrom . ' 00:00:00', 'to' => $dateTo . ' 23:59:59'];
+
+        if ($category === 'financial') {
+            $whereSql .= " AND a.action IN ('tokens_requested', 'tokens_redeemed', 'tokens_allocated', 'tokens_deducted')";
+        } elseif ($category === 'scans') {
+            $whereSql .= " AND a.action IN ('scan_queued', 'scan_started', 'scan_completed', 'scan_failed', 'tokens_deducted')";
+        } elseif ($category === 'sessions') {
+            $whereSql .= " AND a.action IN ('login', 'logout', 'login_failed')";
+        } elseif ($category === 'files') {
+            $whereSql .= " AND a.action IN ('file_uploaded', 'file_deleted')";
+        }
+
+        if ($search) {
+            $whereSql .= " AND (a.action ILIKE :q OR a.details ILIKE :q OR u.display_name ILIKE :q)";
+            $params['q'] = "%$search%";
+        }
+
+        // 1. Get Total Count
+        $countSql = "SELECT COUNT(*) FROM audit_log a LEFT JOIN users u ON a.user_id = u.id $whereSql";
+        $stmt = $this->pdo->prepare($countSql);
+        $stmt->execute($params);
+        $totalLogs = $stmt->fetchColumn();
+        $totalPages = ceil($totalLogs / $limit);
+
+        // 2. Fetch Records
+        $orderBy = $sort === 'performer_name' ? 'u.display_name' : "a.$sort";
+        
         $sql = "
             SELECT a.*, u.display_name as performer_name
             FROM audit_log a
             LEFT JOIN users u ON a.user_id = u.id
-            WHERE a.tenant_id = :tid 
-            AND a.created_at >= :from 
-            AND a.created_at <= :to
+            $whereSql
+            ORDER BY $orderBy $order 
+            LIMIT :limit OFFSET :offset
         ";
-        $params = ['tid' => $tenantId, 'from' => $dateFrom . ' 00:00:00', 'to' => $dateTo . ' 23:59:59'];
-
-        if ($category === 'financial') {
-            $sql .= " AND a.action IN ('tokens_requested', 'tokens_redeemed', 'tokens_allocated', 'tokens_deducted')";
-        } elseif ($category === 'scans') {
-            $sql .= " AND a.action IN ('scan_queued', 'scan_started', 'scan_completed', 'scan_failed', 'tokens_deducted')";
-        } elseif ($category === 'sessions') {
-            $sql .= " AND a.action IN ('login', 'logout', 'login_failed')";
-        } elseif ($category === 'files') {
-            $sql .= " AND a.action IN ('file_uploaded', 'file_deleted')";
-        }
-
-        $sql .= " ORDER BY a.created_at DESC";
 
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute($params);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         $logs = $stmt->fetchAll();
 
         $body = $this->view->render('tenant/audit.twig', [
             'logs' => $logs,
             'tokens_available' => $tokensAvailable,
+            'totalPages' => $totalPages,
+            'currentPage' => $page,
+            'search' => $search,
+            'sort' => $sort,
+            'order' => $order,
             'filters' => [
                 'from' => $dateFrom,
                 'to' => $dateTo,

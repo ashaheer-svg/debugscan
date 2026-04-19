@@ -18,10 +18,14 @@
 <section class="dashboard-card" style="margin-bottom: 24px; background: var(--bg-light); border-color: var(--border);">
     <form method="GET" style="display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;">
         <div style="flex: 1; min-width: 150px;">
+            <label class="form-label" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; display: block;">SEARCH</label>
+            <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Keywords..." style="background: var(--white); border-color: var(--border);">
+        </div>
+        <div style="flex: 0 0 160px;">
             <label class="form-label" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; display: block;">DATE FROM</label>
             <input type="date" name="from" value="{{ filters.from }}" class="form-control" style="background: var(--white); border-color: var(--border);">
         </div>
-        <div style="flex: 1; min-width: 150px;">
+        <div style="flex: 0 0 160px;">
             <label class="form-label" style="font-size: 11px; font-weight: 700; color: var(--text-secondary); margin-bottom: 4px; display: block;">DATE TO</label>
             <input type="date" name="to" value="{{ filters.to }}" class="form-control" style="background: var(--white); border-color: var(--border);">
         </div>
@@ -37,11 +41,11 @@
         </div>
         <div style="display: flex; gap: 8px;">
             <button type="submit" class="btn btn-primary" style="padding: 10px 20px;">
-                Update View
+                Filter
             </button>
-            <a href="/audit/export?from={{ filters.from }}&to={{ filters.to }}" class="btn btn-secondary" style="background: var(--white); color: var(--text-primary); border: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm);">
+            <a href="/audit/export?from={{ filters.from }}&to={{ filters.to }}&q={{ search }}&category={{ filters.category }}" class="btn btn-secondary" style="background: var(--white); color: var(--text-primary); border: 1px solid var(--border); padding: 10px 20px; display: flex; align-items: center; gap: 8px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: var(--radius-sm);">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export CSV
+                Export
             </a>
         </div>
     </form>
@@ -52,10 +56,26 @@
     <table class="data-table" style="width: 100%; border-collapse: collapse;">
         <thead>
             <tr style="background: var(--bg-light); border-bottom: 1px solid var(--border);">
-                <th style="padding: 12px 24px; text-align: left; width: 180px; font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Timestamp (UTC)</th>
-                <th style="padding: 12px; text-align: left; width: 150px; font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Action</th>
-                <th style="padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted);">Activity Details</th>
-                <th style="padding: 12px 24px; text-align: right; width: 140px; font-size: 11px; text-transform: uppercase; color: var(--text-muted);">IP Address</th>
+                <th style="padding: 12px 24px; text-align: left; width: 180px;">
+                    <a href="?from={{ filters.from }}&to={{ filters.to }}&category={{ filters.category }}&q={{ search }}&sort=created_at&order={{ (sort == 'created_at' and order == 'DESC') ? 'ASC' : 'DESC' }}" 
+                       style="text-decoration: none; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        Timestamp (UTC)
+                        {% if sort == 'created_at' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 12px; text-align: left; width: 150px;">
+                    <a href="?from={{ filters.from }}&to={{ filters.to }}&category={{ filters.category }}&q={{ search }}&sort=action&order={{ (sort == 'action' and order == 'ASC') ? 'DESC' : 'ASC' }}" 
+                       style="text-decoration: none; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                        Action
+                        {% if sort == 'action' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 12px; text-align: left; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">Activity Details</th>
+                <th style="padding: 12px 24px; text-align: right; width: 140px; font-size: 11px; text-transform: uppercase; color: var(--text-muted); font-weight: 700;">IP Address</th>
             </tr>
         </thead>
         <tbody>
@@ -123,10 +143,38 @@
     {% if not logs %}
     <div style="padding: 80px; text-align: center; color: var(--text-muted);">
         <div style="font-size: 40px; margin-bottom: 16px; opacity: 0.3;">📋</div>
-        <div style="font-weight: 600; color: var(--text-primary);">No activity logs found for this period</div>
-        <p style="font-size: 13px; margin-top: 8px;">Try adjusting your date filters or activity type selection.</p>
+        <div style="font-weight: 600; color: var(--text-primary);">No activity logs found for this search</div>
+        <p style="font-size: 13px; margin-top: 8px;">Try adjusting your search keywords or range filters.</p>
     </div>
     {% endif %}
+
+    {# Pagination Footer #}
+    {% if totalPages > 1 %}
+    <footer style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--white);">
+        <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+            Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
+        </div>
+        <div style="display: flex; gap: 6px;">
+            {% if currentPage > 1 %}
+                <a href="?page={{ currentPage - 1 }}&from={{ filters.from }}&to={{ filters.to }}&category={{ filters.category }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--text-primary); font-size: 12px; font-weight: 600; background: white;">Previous</a>
+            {% endif %}
+            
+            {% for i in max(1, currentPage - 2)..min(totalPages, currentPage + 2) %}
+                <a href="?page={{ i }}&from={{ filters.from }}&to={{ filters.to }}&category={{ filters.category }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 700; 
+                          {% if i == currentPage %}background: var(--primary); color: white; border-color: var(--primary);{% else %}background: white; color: var(--text-primary);{% endif %}">{{ i }}</a>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <a href="?page={{ currentPage + 1 }}&from={{ filters.from }}&to={{ filters.to }}&category={{ filters.category }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--text-primary); font-size: 12px; font-weight: 600; background: white;">Next</a>
+            {% endif %}
+        </div>
+    </footer>
+    {% endif %}
 </section>
+
+{% endblock %}
 
 {% endblock %}

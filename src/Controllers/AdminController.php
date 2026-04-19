@@ -365,17 +365,64 @@ class AdminController
 
     public function logs(Request $request, Response $response): Response
     {
-        $stmt = $this->pdo->query("
+        $queryParams = $request->getQueryParams();
+        
+        // Pagination
+        $page = isset($queryParams['page']) ? (int)$queryParams['page'] : 1;
+        $limit = 20;
+        $offset = ($page - 1) * $limit;
+
+        // Search
+        $search = !empty($queryParams['q']) ? $queryParams['q'] : null;
+        
+        // Sorting
+        $allowedSorts = ['created_at', 'action', 'user_name', 'ip_address'];
+        $sort = in_array($queryParams['sort'] ?? '', $allowedSorts) ? $queryParams['sort'] : 'created_at';
+        $order = (strtoupper($queryParams['order'] ?? '') === 'ASC') ? 'ASC' : 'DESC';
+
+        // 1. Build Query Parts
+        $whereSql = "";
+        $params = [];
+        
+        if ($search) {
+            $whereSql = "WHERE (a.action ILIKE :q OR a.details ILIKE :q OR u.display_name ILIKE :q OR a.ip_address ILIKE :q)";
+            $params['q'] = "%$search%";
+        }
+
+        // 2. Get Total Count for Pagination
+        $countQuery = "SELECT COUNT(*) FROM audit_log a LEFT JOIN users u ON a.user_id = u.id $whereSql";
+        $stmt = $this->pdo->prepare($countQuery);
+        $stmt->execute($params);
+        $totalLogs = $stmt->fetchColumn();
+        $totalPages = ceil($totalLogs / $limit);
+
+        // 3. Fetch Records
+        // Note: For sorting by user_name (which is from joined table), we use the alias
+        $orderBy = $sort === 'user_name' ? 'u.display_name' : "a.$sort";
+        
+        $sql = "
             SELECT a.*, u.display_name as user_name 
             FROM audit_log a 
             LEFT JOIN users u ON a.user_id = u.id 
-            ORDER BY a.created_at DESC 
-            LIMIT 100
-        ");
+            $whereSql
+            ORDER BY $orderBy $order 
+            LIMIT :limit OFFSET :offset
+        ";
+        
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+        $stmt->bindValue('limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue('offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
         $logs = $stmt->fetchAll();
 
         $body = $this->view->render('admin/logs.twig', [
             'logs' => $logs,
+            'totalPages' => $totalPages,
+            'currentPage' => $page,
+            'search' => $search,
+            'sort' => $sort,
+            'order' => $order,
             'active_page' => 'admin_logs'
         ]);
         $response->getBody()->write($body);

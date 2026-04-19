@@ -3,43 +3,102 @@
 {% block title %}System Audit Logs - AI DebugScan v3{% endblock %}
 
 {% block admin_content %}
-<header class="page-header">
-    <h1 class="admin-title">System Audit & Error Logs</h1>
-    <p class="page-subtitle">Historical record of all system events, authentication attempts, and scan failures.</p>
+<header class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px;">
+    <div>
+        <h1 class="admin-title" style="margin-bottom: 8px;">System Audit & Error Logs</h1>
+        <p class="page-subtitle">Historical record of all system events, authentication attempts, and scan failures.</p>
+    </div>
+    
+    <div class="search-box" style="position: relative; width: 320px;">
+        <form action="/admin/logs" method="GET" style="margin: 0;">
+            <input type="text" name="q" value="{{ search }}" placeholder="Search actions, users, or details..." 
+                   style="width: 100%; padding: 10px 16px 10px 40px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-weight: 500; outline: none; transition: border-color 0.2s;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" 
+                 style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                <circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            {% if search %}
+                <a href="/admin/logs" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); text-decoration: none; font-size: 18px;">&times;</a>
+            {% endif %}
+        </form>
+    </div>
 </header>
 
-<section class="card" style="padding: 0; overflow: hidden;">
-    <table class="data-table">
+<section class="card" style="padding: 0; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow-1);">
+    <table class="data-table" style="width: 100%; border-collapse: collapse;">
         <thead>
-            <tr>
-                <th style="padding-left: 24px;">Timestamp</th>
-                <th>Context</th>
-                <th>Action</th>
-                <th>Source</th>
-                <th style="padding-right: 24px;">Details</th>
+            <tr style="background: var(--bg-light); border-bottom: 1px solid var(--border);">
+                <th style="padding: 14px 24px; text-align: left;">
+                    <a href="/admin/logs?sort=created_at&order={{ (sort == 'created_at' and order == 'DESC') ? 'ASC' : 'DESC' }}&q={{ search }}" 
+                       style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px;">
+                        Timestamp
+                        {% if sort == 'created_at' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% else %}
+                            <i class="fas fa-sort" style="font-size: 10px; opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 14px 24px; text-align: left;">
+                    <a href="/admin/logs?sort=user_name&order={{ (sort == 'user_name' and order == 'ASC') ? 'DESC' : 'ASC' }}&q={{ search }}" 
+                       style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px;">
+                        Context
+                        {% if sort == 'user_name' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% else %}
+                            <i class="fas fa-sort" style="font-size: 10px; opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 14px 24px; text-align: left;">
+                    <a href="/admin/logs?sort=action&order={{ (sort == 'action' and order == 'ASC') ? 'DESC' : 'ASC' }}&q={{ search }}" 
+                       style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px;">
+                        Action
+                        {% if sort == 'action' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% else %}
+                            <i class="fas fa-sort" style="font-size: 10px; opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 14px 24px; text-align: left;">
+                    <a href="/admin/logs?sort=ip_address&order={{ (sort == 'ip_address' and order == 'ASC') ? 'DESC' : 'ASC' }}&q={{ search }}" 
+                       style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 6px;">
+                        Source
+                        {% if sort == 'ip_address' %}
+                            <i class="fas fa-sort-{{ order == 'DESC' ? 'down' : 'up' }}" style="font-size: 10px; color: var(--primary);"></i>
+                        {% else %}
+                            <i class="fas fa-sort" style="font-size: 10px; opacity: 0.3;"></i>
+                        {% endif %}
+                    </a>
+                </th>
+                <th style="padding: 14px 24px; text-align: left;">Details</th>
             </tr>
         </thead>
         <tbody>
             {% for log in logs %}
-            <tr>
-                <td style="padding-left: 24px; color: var(--text-secondary); white-space: nowrap; font-size: 11px; font-weight: 500;">
+            <tr style="border-bottom: 1px solid var(--border); transition: background 0.2s;">
+                <td style="padding: 14px 24px; color: var(--text-secondary); white-space: nowrap; font-size: 11px; font-weight: 600; font-family: monospace;">
                     {{ log.created_at|date('Y-m-d H:i:s') }}
                 </td>
-                <td>
+                <td style="padding: 14px 24px;">
                     <div style="font-weight: 700; color: var(--text-primary); font-size: 13px;">{{ log.user_name|default('System') }}</div>
-                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600;">ID: {{ log.user_id|slice(0,8) }}</div>
+                    {% if log.user_id %}
+                    <div style="font-size: 10px; color: var(--text-muted); font-weight: 600; font-family: monospace;">ID: {{ log.user_id|slice(0,8) }}...</div>
+                    {% endif %}
                 </td>
-                <td>
-                    <span class="badge" style="
-                        background: {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}var(--danger-light){% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper %}var(--success-light){% else %}var(--bg-light){% endif %};
-                        color: {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}var(--danger){% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper %}var(--success){% else %}var(--text-primary){% endif %};
-                        border: 1px solid {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}var(--danger){% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper %}var(--success){% else %}var(--border){% endif %};
+                <td style="padding: 14px 24px;">
+                    <span style="
+                        display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; letter-spacing: 0.05em;
+                        background: {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}#fef2f2{% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper or 'UPLOAD' in log.action|upper %}#f0fdf4{% else %}#f8fafc{% endif %};
+                        color: {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}#dc2626{% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper or 'UPLOAD' in log.action|upper %}#16a34a{% else %}#475569{% endif %};
+                        border: 1px solid {% if 'FAILED' in log.action|upper or 'ERROR' in log.action|upper %}#fee2e2{% elseif 'CREATE' in log.action|upper or 'SUCCESS' in log.action|upper or 'UPLOAD' in log.action|upper %}#dcfce7{% else %}#e2e8f0{% endif %};
                         ">
                         {{ log.action|upper }}
                     </span>
                 </td>
-                <td style="font-family: monospace; font-size: 11px; color: var(--text-muted); font-weight: 600;">{{ log.ip_address|default('::1') }}</td>
-                <td style="padding-right: 24px; color: var(--text-secondary); max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500;" title="{{ log.details }}">
+                <td style="padding: 14px 24px; font-family: monospace; font-size: 11px; color: var(--text-muted); font-weight: 600;">{{ log.ip_address|default('::1') }}</td>
+                <td style="padding: 14px 24px; color: var(--text-secondary); max-width: 400px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; font-size: 12px;" title="{{ log.details }}">
                     {{ log.details }}
                 </td>
             </tr>
@@ -49,9 +108,36 @@
     
     {% if not logs %}
     <div style="padding: 80px; text-align: center; color: var(--text-muted);">
-        <div style="font-size: 40px; margin-bottom: 16px; opacity: 0.3;">📜</div>
-        <div style="font-weight: 600; color: var(--text-primary);">No audit trails discovered</div>
+        <div style="font-size: 48px; margin-bottom: 20px; opacity: 0.2;">📜</div>
+        <div style="font-weight: 700; color: var(--text-primary); font-size: 15px;">No audit trails match your selection</div>
+        <p style="font-size: 13px; margin-top: 8px;">Try adjusting your search query or sorting parameters.</p>
     </div>
+    {% endif %}
+
+    {# Pagination Footer #}
+    {% if totalPages > 1 %}
+    <footer style="padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background: var(--bg-off-white);">
+        <div style="font-size: 12px; color: var(--text-muted); font-weight: 600;">
+            Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
+        </div>
+        <div style="display: flex; gap: 6px;">
+            {% if currentPage > 1 %}
+                <a href="/admin/logs?page={{ currentPage - 1 }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--text-primary); font-size: 12px; font-weight: 600; background: white;">Previous</a>
+            {% endif %}
+            
+            {% for i in max(1, currentPage - 2)..min(totalPages, currentPage + 2) %}
+                <a href="/admin/logs?page={{ i }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; font-size: 12px; font-weight: 700; 
+                          {% if i == currentPage %}background: var(--primary); color: white; border-color: var(--primary);{% else %}background: white; color: var(--text-primary);{% endif %}">{{ i }}</a>
+            {% endfor %}
+
+            {% if currentPage < totalPages %}
+                <a href="/admin/logs?page={{ currentPage + 1 }}&q={{ search }}&sort={{ sort }}&order={{ order }}" 
+                   style="padding: 6px 12px; border: 1px solid var(--border); border-radius: 4px; text-decoration: none; color: var(--text-primary); font-size: 12px; font-weight: 600; background: white;">Next</a>
+            {% endif %}
+        </div>
+    </footer>
     {% endif %}
 </section>
 {% endblock %}
