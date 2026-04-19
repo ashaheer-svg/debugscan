@@ -29,6 +29,8 @@ use App\Middleware\ViewDataMiddleware;
 use App\Middleware\SecurityHeadersMiddleware;
 use App\Services\ReportPlanService;
 use Slim\Csrf\Guard;
+use Psr\Http\Message\ResponseFactoryInterface;
+use Slim\Psr7\Factory\ResponseFactory;
 
 class AppBootstrap
 {
@@ -127,8 +129,11 @@ class AppBootstrap
                     $container->get(ReportPlanService::class)
                 );
             },
+            ResponseFactoryInterface::class => function () {
+                return new ResponseFactory();
+            },
             Guard::class => function ($container) {
-                $responseFactory = $container->get(App::class)->getResponseFactory();
+                $responseFactory = $container->get(ResponseFactoryInterface::class);
                 $guard = new Guard($responseFactory);
                 $guard->setFailureHandler(function ($request, $handler) {
                     $response = new \Slim\Psr7\Response();
