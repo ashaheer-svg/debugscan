@@ -40,8 +40,10 @@ class AiService
                 if ($model['active'] ?? true) {
                     $models[] = [
                         'id' => $model['id'],
-                        'name' => $model['id'], // Groq doesn't provide a "friendly" name in /models
+                        'name' => $model['id'],
                         'owned_by' => $model['owned_by'] ?? 'unknown',
+                        'context_window' => $model['context_window'] ?? null,
+                        'public_apps' => $model['public_apps'] ?? null
                     ];
                 }
             }
