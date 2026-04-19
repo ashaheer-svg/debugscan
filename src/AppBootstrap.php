@@ -325,6 +325,7 @@ class AppBootstrap
             $group->post('profile/update', [AuthController::class, 'updateProfile']);
             
             $group->get('files/report/{id}', [TenantController::class, 'viewHardwareReport']);
+            $group->get('files/raw/{id}', [TenantController::class, 'downloadRawData']);
             $group->post('files/delete/{id}', [TenantController::class, 'deleteLogFile']);
             
             // Admin Routes

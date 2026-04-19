@@ -643,6 +643,30 @@ class TenantController
         return $response;
     }
 
+    public function downloadRawData(Request $request, Response $response, array $args): Response
+    {
+        $id = $args['id'];
+        $tenantId = $request->getAttribute('tenant_id');
+
+        // Fetch extracted data and original filename
+        $stmt = $this->pdo->prepare("SELECT extraction_data, original_filename FROM debug_files WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $id, 'tid' => $tenantId]);
+        $file = $stmt->fetch();
+
+        if (!$file) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Data not found or access denied.']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $data = $file['extraction_data'] ?: '{}';
+        $filename = 'raw_extraction_' . pathinfo($file['original_filename'], PATHINFO_FILENAME) . '.json';
+
+        $response->getBody()->write($data);
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withHeader('Content-Disposition', 'inline; filename="' . $filename . '"');
+    }
+
     public function deleteLogFile(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
