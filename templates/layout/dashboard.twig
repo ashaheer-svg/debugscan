@@ -303,6 +303,7 @@
             <div class="modal-content">
                 <h3 style="margin-bottom: 24px; font-weight: 700;">Edit My Profile</h3>
                 <form action="{{ base_path }}/profile/update" method="POST">
+                    {{ csrf.inputs | raw }}
                     <div class="form-group">
                         <label class="form-label">Display Name</label>
                         <input type="text" name="display_name" class="form-control" value="{{ user_name }}" required>

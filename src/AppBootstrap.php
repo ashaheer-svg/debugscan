@@ -234,10 +234,28 @@ class AppBootstrap
         
         // Security Middlewares
         $app->add(SecurityHeadersMiddleware::class);
+        // Global CSRF Token Injection for Twig (Runs AFTER Guard is handled)
+        $app->add(function($request, $handler) use ($container) {
+            $csrf = $container->get(Guard::class);
+            $twig = $container->get(Environment::class);
+            
+            $nameKey = $csrf->getTokenNameKey();
+            $valueKey = $csrf->getTokenValueKey();
+            $name = $csrf->getTokenName();
+            $value = $csrf->getTokenValue();
+
+            $twig->addGlobal('csrf', [
+                'keys' => [ 'name' => $nameKey, 'value' => $valueKey ],
+                'name' => $name,
+                'value' => $value,
+                'inputs' => sprintf('<input type="hidden" name="%s" value="%s"><input type="hidden" name="%s" value="%s">', $nameKey, $name, $valueKey, $value)
+            ]);
+
+            return $handler->handle($request);
+        });
+
         $app->add(Guard::class);
         $app->addBodyParsingMiddleware();
-
-        $app->addErrorMiddleware($isDebugMode, true, true);
     }
 
     private static function ensureStorageExists(): void
@@ -317,23 +335,6 @@ class AppBootstrap
             $group->get('admin/report-plans', [AdminController::class, 'reportPlans']);
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
-        })->add(function($request, $handler) use ($container) {
-            $csrf = $container->get(Guard::class);
-            $twig = $container->get(Environment::class);
-            
-            $nameKey = $csrf->getTokenNameKey();
-            $valueKey = $csrf->getTokenValueKey();
-            $name = $csrf->getTokenName();
-            $value = $csrf->getTokenValue();
-
-            $twig->addGlobal('csrf', [
-                'keys' => [ 'name' => $nameKey, 'value' => $valueKey ],
-                'name' => $name,
-                'value' => $value,
-                'inputs' => sprintf('<input type="hidden" name="%s" value="%s"><input type="hidden" name="%s" value="%s">', $nameKey, $name, $valueKey, $value)
-            ]);
-
-            return $handler->handle($request);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')))
           ->add(new RateLimitMiddleware($container->get(\Predis\Client::class), 120, 60));

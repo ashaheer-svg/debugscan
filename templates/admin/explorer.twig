@@ -153,10 +153,16 @@ async function deleteItem(path, isDir) {
     if (!confirm(`Are you sure you want to permanently delete this ${isDir ? 'FOLDER and ALL its contents' : 'file'}?\n\nPath: ${path}`)) return;
     
     try {
+        const formData = new FormData();
+        formData.append('path', path);
+        formData.append('allowDelete', true);
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
         const response = await fetch('/admin/explorer/delete', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-            body: JSON.stringify({ path: path, allowDelete: true })
+            body: formData,
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
         });
         
         const result = await response.json();

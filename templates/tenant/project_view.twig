@@ -184,6 +184,7 @@
             </div>
             
             <form id="scanForm" action="/projects/scan/{{ project.id }}" method="POST">
+                {{ csrf.inputs | raw }}
                 <table class="data-table" style="table-layout: fixed; width: 100%;">
                     <thead>
                         <tr>
@@ -726,11 +727,16 @@
             return;
         }
 
+        const formData = new FormData();
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
         fetch(`/files/delete/${id}`, {
             method: 'POST',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
-            }
+            },
+            body: formData
         })
         .then(response => response.json())
         .then(data => {
@@ -814,9 +820,14 @@
 
     function deleteScan(id) {
         if (!confirm('Permanently delete this analysis record and its findings?')) return;
+        const formData = new FormData();
+        formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+        formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
         fetch(`/scans/delete/${id}`, {
             method: 'POST',
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'X-Requested-With': 'XMLHttpRequest' },
+            body: formData
         })
         .then(r => r.json())
         .then(data => {

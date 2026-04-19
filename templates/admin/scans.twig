@@ -674,12 +674,13 @@ function scrollToFiSection(id, el) {
 function abortJob(scanId) {
     if (!confirm('Are you sure you want to abort this forensic analysis?')) return;
     
+    const formData = new FormData();
+    formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+    formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
     fetch(`/admin/scans/abort/${scanId}`, { 
         method: 'POST',
-        headers: {
-            '{{ csrf.keys.name }}': '{{ csrf.name }}',
-            '{{ csrf.keys.value }}': '{{ csrf.value }}'
-        }
+        body: formData
     })
         .then(r => r.json())
         .then(data => {

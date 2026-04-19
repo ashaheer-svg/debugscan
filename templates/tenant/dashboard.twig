@@ -37,6 +37,7 @@
         <p style="font-size: 14px; color: var(--text-secondary);">Tokens are requested in blocks of 20,000. An administrator will review your request and grant the tokens via a magic link.</p>
         
         <form action="/tokens/purchase" method="POST">
+            {{ csrf.inputs | raw }}
             <div style="margin-bottom: 20px;">
                 <label style="display: block; margin-bottom: 8px; font-weight: 600;">Number of Blocks</label>
                 <div style="display: flex; align-items: center; gap: 12px;">
