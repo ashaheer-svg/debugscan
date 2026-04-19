@@ -31,22 +31,50 @@ use App\Services\ReportPlanService;
 use Slim\Csrf\Guard;
 use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Psr7\Factory\ResponseFactory;
+use Psr\Container\ContainerInterface;
 
 class AppBootstrap
 {
     public static function create(): App
     {
         // Load environment variables
+        self::loadEnv();
+
+        // Initialize Container
+        $containerBuilder = new ContainerBuilder();
+        $containerBuilder->addDefinitions(self::getDefinitions());
+        $container = $containerBuilder->build();
+
+        // Initialize Slim App
+        AppFactory::setContainer($container);
+        $app = AppFactory::create();
+
+        // Setup System Environment
+        $isDebugMode = self::setupSystem($container);
+
+        // Configure Middleware
+        self::setupMiddleware($app, $container, $isDebugMode);
+
+        // Ensure storage directories exist
+        self::ensureStorageExists();
+
+        // Register Routes
+        self::registerRoutes($app, $container);
+
+        return $app;
+    }
+
+    private static function loadEnv(): void
+    {
         if (file_exists(__DIR__ . '/../.env')) {
             $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
             $dotenv->load();
         }
+    }
 
-        // Initialize Container
-        $containerBuilder = new ContainerBuilder();
-
-        // Add application dependencies to container
-        $containerBuilder->addDefinitions([
+    private static function getDefinitions(): array
+    {
+        return [
             'base_path' => '',
             PDO::class => function () {
                 return Database::getConnection();
@@ -66,10 +94,10 @@ class AppBootstrap
 
                 return $twig;
             },
-            AuthService::class => function ($container) {
+            AuthService::class => function (ContainerInterface $container) {
                 return new AuthService($container->get(PDO::class));
             },
-            AuthController::class => function ($container) {
+            AuthController::class => function (ContainerInterface $container) {
                 return new AuthController(
                     $container->get(Environment::class),
                     $container->get(AuthService::class),
@@ -77,7 +105,7 @@ class AppBootstrap
                     $container->get(PDO::class)
                 );
             },
-            TenantController::class => function ($container) {
+            TenantController::class => function (ContainerInterface $container) {
                 return new TenantController(
                     $container->get(Environment::class),
                     $container->get(PDO::class),
@@ -89,19 +117,19 @@ class AppBootstrap
                     $container->get(ReportPlanService::class)
                 );
             },
-            ScanService::class => function ($container) {
+            ScanService::class => function (ContainerInterface $container) {
                 return new ScanService(
                     $container->get(PDO::class),
                     $container->get(ReportPlanService::class)
                 );
             },
-            ReportPlanService::class => function ($container) {
+            ReportPlanService::class => function (ContainerInterface $container) {
                 return new ReportPlanService($container->get(PDO::class));
             },
-            MailService::class => function ($container) {
+            MailService::class => function (ContainerInterface $container) {
                 return new MailService($container->get(PDO::class));
             },
-            AdminController::class => function ($container) {
+            AdminController::class => function (ContainerInterface $container) {
                 $apiKey = getenv('GROQ_API_KEY');
                 return new AdminController(
                     $container->get(Environment::class),
@@ -112,16 +140,16 @@ class AppBootstrap
                     $container->get(ReportPlanService::class)
                 );
             },
-            ViewDataMiddleware::class => function ($container) {
+            ViewDataMiddleware::class => function (ContainerInterface $container) {
                 return new ViewDataMiddleware(
                     $container->get(Environment::class),
                     $container->get(PDO::class)
                 );
             },
-            ExtractionConfigService::class => function ($container) {
+            ExtractionConfigService::class => function (ContainerInterface $container) {
                 return new ExtractionConfigService($container->get(PDO::class));
             },
-            ExtractionConfigController::class => function ($container) {
+            ExtractionConfigController::class => function (ContainerInterface $container) {
                 return new ExtractionConfigController(
                     $container->get(Environment::class),
                     $container->get(ExtractionConfigService::class),
@@ -132,7 +160,7 @@ class AppBootstrap
             ResponseFactoryInterface::class => function () {
                 return new ResponseFactory();
             },
-            Guard::class => function ($container) {
+            Guard::class => function (ContainerInterface $container) {
                 $responseFactory = $container->get(ResponseFactoryInterface::class);
                 $guard = new Guard($responseFactory);
                 $guard->setFailureHandler(function ($request, $handler) {
@@ -145,9 +173,11 @@ class AppBootstrap
                 });
                 return $guard;
             },
-        ]);
+        ];
+    }
 
-        $container = $containerBuilder->build();
+    private static function setupSystem(ContainerInterface $container): bool
+    {
         $isDebugMode = (getenv('APP_DEBUG') ?: 'false') === 'true';
 
         // Global Timezone Synchronization
@@ -184,10 +214,11 @@ class AppBootstrap
             error_log("Bootstrap Session Failure: " . $e->getMessage());
         }
 
-        // Initialize Slim App
-        AppFactory::setContainer($container);
-        $app = AppFactory::create();
+        return $isDebugMode;
+    }
 
+    private static function setupMiddleware(App $app, ContainerInterface $container, bool $isDebugMode): void
+    {
         $basePath = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? ''));
         if (strlen($basePath) > 1) {
             $app->setBasePath($basePath);
@@ -201,23 +232,24 @@ class AppBootstrap
         $app->add(Guard::class);
 
         $app->addErrorMiddleware($isDebugMode, true, true);
+    }
 
-        // Ensure storage directories exist
+    private static function ensureStorageExists(): void
+    {
         $storageRoot = __DIR__ . '/../storage';
         foreach (['uploads', 'extracted', 'logs', 'reports'] as $dir) {
             $path = $storageRoot . '/' . $dir;
             if (!is_dir($path)) @mkdir($path, 0755, true);
         }
+    }
 
-        // Routes
+    private static function registerRoutes(App $app, ContainerInterface $container): void
+    {
         $app->get('/login', [AuthController::class, 'showLogin']);
         $app->post('/auth/login', [AuthController::class, 'login']);
         $app->get('/auth/logout', [AuthController::class, 'logout']);
-
-        // Public Magic Link
         $app->get('/redeem/{code}', [AdminController::class, 'redeemTokens']);
 
-        // Authenticated Routes
         $app->group('/', function ($group) {
             $group->get('', [TenantController::class, 'dashboard']);
             $group->get('dashboard', [TenantController::class, 'dashboard']);
@@ -232,17 +264,14 @@ class AppBootstrap
             $group->get('scans/report/{id}', [TenantController::class, 'viewReport']);
             $group->post('scans/delete/{id}', [TenantController::class, 'deleteScan']);
             
-            // Token Management
             $group->get('tokens/transactions', [TenantController::class, 'transactions']);
             $group->get('audit', [TenantController::class, 'audit']);
             $group->get('audit/export', [TenantController::class, 'exportAudit']);
             $group->post('tokens/purchase', [TenantController::class, 'requestTokens']);
             
-            // Profile Routes
             $group->get('profile', [AuthController::class, 'showProfile']);
             $group->post('profile/update', [AuthController::class, 'updateProfile']);
             
-            // Log File Analysis Routes
             $group->get('files/report/{id}', [TenantController::class, 'viewHardwareReport']);
             $group->post('files/delete/{id}', [TenantController::class, 'deleteLogFile']);
             
@@ -283,7 +312,6 @@ class AppBootstrap
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
         })->add(function($request, $handler) use ($container) {
-            // Register CSRF tags in Twig
             $csrf = $container->get(Guard::class);
             $twig = $container->get(Environment::class);
             
@@ -302,7 +330,5 @@ class AppBootstrap
             return $handler->handle($request);
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
-
-        return $app;
     }
 }
