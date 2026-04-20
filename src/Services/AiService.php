@@ -124,9 +124,9 @@ class AiService
         }
 
         try {
-            // Normalize max_completion_tokens for model-specific limits (8B vs 70B+)
-            // Conservative clamp: although 32768 is documented, 32000 is safer for API gateway stability.
-            $outputLimit = strpos($model, '8b') !== false ? 8192 : 32000;
+            // Standardizing on 'max_tokens' for better Groq compatibility across models.
+            // 4096 is more than enough for our structured JSON health reports.
+            $outputLimit = strpos($model, '8b') !== false ? 4096 : 4096;
             $calculatedMaxTokens = min($maxTokens, $outputLimit);
 
             $response = $this->client->post('chat/completions', [
@@ -136,7 +136,7 @@ class AiService
                         ['role' => 'system', 'content' => $systemPrompt],
                         ['role' => 'user', 'content' => $userPrompt],
                     ],
-                    'max_completion_tokens' => $calculatedMaxTokens,
+                    'max_tokens' => $calculatedMaxTokens,
                     'response_format' => ['type' => 'json_object'],
                     'temperature' => 0.1,
                 ],
