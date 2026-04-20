@@ -134,6 +134,15 @@
                     <input type="number" name="token_charge" id="plan_token_charge" required value="100000"
                            style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-weight: 700; color: var(--primary); font-size: 14px;">
                 </div>
+                <div class="form-group">
+                    <label style="display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.05em;">
+                        Master Lookback Days
+                        <i class="fas fa-info-circle" style="margin-left: 4px;" title="Override: Only logs/events within this many days will be sent for AI analysis and displayed. Set to 0 for unlimited."></i>
+                    </label>
+                    <input type="number" name="master_lookback_days" id="plan_master_lookback_days" required value="0" min="0"
+                           style="width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius); font-weight: 700; color: #4f46e5; font-size: 14px;">
+                    <p style="font-size: 10px; color: var(--text-muted); margin-top: 4px;">0 = No limit (Full diagnostic history)</p>
+                </div>
             </div>
 
             <div class="form-group" style="margin-bottom: 24px;">
@@ -169,6 +178,7 @@ function openPlanModal(plan = null) {
     const modelSelect = document.getElementById('plan_ai_model');
     const headerInput = document.getElementById('plan_prompt_header');
     const activeCheck = document.getElementById('plan_is_active');
+    const lookbackInput = document.getElementById('plan_master_lookback_days');
 
     if (plan) {
         title.innerText = 'Edit Forensic Package';
@@ -178,6 +188,7 @@ function openPlanModal(plan = null) {
         modelSelect.value = plan.ai_model;
         headerInput.value = plan.prompt_header || '';
         activeCheck.checked = !!plan.is_active;
+        lookbackInput.value = plan.master_lookback_days || 0;
     } else {
         title.innerText = 'Create Forensic Package';
         idInput.value = '';
@@ -186,6 +197,7 @@ function openPlanModal(plan = null) {
         modelSelect.value = 'llama-3.3-70b-versatile';
         headerInput.value = '';
         activeCheck.checked = true;
+        lookbackInput.value = 0;
     }
 
     modal.style.display = 'flex';

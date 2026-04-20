@@ -1203,7 +1203,8 @@ class AdminController
             
             $this->logAction($request, 'report_plan_saved', 'report_plans', $planId, [
                 'name' => $data['name'] ?? 'Unknown',
-                'ai_model' => $data['ai_model'] ?? 'N/A'
+                'ai_model' => $data['ai_model'] ?? 'N/A',
+                'master_lookback_days' => $data['master_lookback_days'] ?? 0
             ]);
 
             $_SESSION['success'] = 'Report plan saved successfully.';

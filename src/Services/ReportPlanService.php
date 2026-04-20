@@ -81,17 +81,18 @@ class ReportPlanService
             $this->pdo->beginTransaction();
 
             $stmt = $this->pdo->prepare("
-                INSERT INTO report_plans (name, prompt_header, ai_model, token_charge, is_active)
-                VALUES (:name, :header, :model, :charge, :active)
+                INSERT INTO report_plans (name, prompt_header, ai_model, token_charge, is_active, master_lookback_days)
+                VALUES (:name, :header, :model, :charge, :active, :lookback)
                 RETURNING id
             ");
             
             $stmt->execute([
-                'name'    => $data['name'],
-                'header'  => $data['prompt_header'] ?? null,
-                'model'   => $data['ai_model'] ?? 'llama-3.3-70b-versatile',
-                'charge'  => $data['token_charge'] ?? 100000,
-                'active'  => isset($data['is_active']) ? (bool)$data['is_active'] : true
+                'name'     => $data['name'],
+                'header'   => $data['prompt_header'] ?? null,
+                'model'    => $data['ai_model'] ?? 'llama-3.3-70b-versatile',
+                'charge'   => $data['token_charge'] ?? 100000,
+                'active'   => isset($data['is_active']) ? (bool)$data['is_active'] : true,
+                'lookback' => (int)($data['master_lookback_days'] ?? 0)
             ]);
 
             $planId = $stmt->fetchColumn();
@@ -126,17 +127,19 @@ class ReportPlanService
                 ai_model = :model, 
                 token_charge = :charge, 
                 is_active = :active,
+                master_lookback_days = :lookback,
                 updated_at = NOW()
             WHERE id = :id
         ");
         
         $stmt->execute([
-            'id'      => $id,
-            'name'    => $data['name'],
-            'header'  => $data['prompt_header'] ?? null,
-            'model'   => $data['ai_model'] ?? 'llama-3.3-70b-versatile',
-            'charge'  => $data['token_charge'] ?? 100000,
-            'active'  => isset($data['is_active']) ? (bool)$data['is_active'] : true
+            'id'       => $id,
+            'name'     => $data['name'],
+            'header'   => $data['prompt_header'] ?? null,
+            'model'    => $data['ai_model'] ?? 'llama-3.3-70b-versatile',
+            'charge'   => $data['token_charge'] ?? 100000,
+            'active'   => isset($data['is_active']) ? (bool)$data['is_active'] : true,
+            'lookback' => (int)($data['master_lookback_days'] ?? 0)
         ]);
     }
 

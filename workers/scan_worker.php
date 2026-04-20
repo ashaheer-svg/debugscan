@@ -227,6 +227,39 @@ while (true) {
         // 4. Perform AI Analysis
         $updateProgress("AI Forensic Analysis (" . $plan['name'] . ")", 70);
         
+        $lookbackDays = (int)($plan['master_lookback_days'] ?? 0);
+        if ($lookbackDays > 0) {
+            $cutoff = time() - ($lookbackDays * 86400);
+            foreach ($allDiagnosticData as &$fileData) {
+                // Filter Auth Timeline
+                if (isset($fileData['auth_timeline']['events'])) {
+                    $fileData['auth_timeline']['events'] = array_filter($fileData['auth_timeline']['events'], function($e) use ($cutoff) {
+                        return (isset($e['time']) && $e['time'] >= $cutoff);
+                    });
+                    // Re-index
+                    $fileData['auth_timeline']['events'] = array_values($fileData['auth_timeline']['events']);
+                }
+
+                // Filter SMB Transfers
+                if (isset($fileData['smb_xfer']['recent_transfers'])) {
+                    $fileData['smb_xfer']['recent_transfers'] = array_filter($fileData['smb_xfer']['recent_transfers'], function($e) use ($cutoff) {
+                        return (isset($e['time']) && $e['time'] >= $cutoff);
+                    });
+                    $fileData['smb_xfer']['recent_transfers'] = array_values($fileData['smb_xfer']['recent_transfers']);
+                }
+
+                // Filter Critical Events
+                if (isset($fileData['logs']['critical_events'])) {
+                    $fileData['logs']['critical_events'] = array_filter($fileData['logs']['critical_events'], function($e) use ($cutoff) {
+                        // Some logs use 'timestamp' instead of 'time'
+                        $t = $e['time'] ?? $e['timestamp'] ?? 0;
+                        return ($t >= $cutoff);
+                    });
+                    $fileData['logs']['critical_events'] = array_values($fileData['logs']['critical_events']);
+                }
+            }
+        }
+        
         $stmtSettings = $pdo->query("SELECT max_prompt_chars FROM system_settings LIMIT 1");
         $maxChars = (int)($stmtSettings->fetchColumn() ?: 50000);
         
