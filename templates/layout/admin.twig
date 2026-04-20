@@ -207,6 +207,42 @@
         const modal = document.getElementById('profileModal');
         modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
     }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const profileForm = document.querySelector('#profileModal form');
+        if (profileForm) {
+            profileForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = profileForm.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.disabled = true;
+                btn.textContent = 'Saving...';
+
+                try {
+                    const formData = new FormData(profileForm);
+                    const response = await fetch(profileForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        window.location.reload();
+                    } else {
+                        alert(result.message || 'Failed to update profile');
+                        btn.disabled = false;
+                        btn.textContent = originalText;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    alert('A connection error occurred.');
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                }
+            });
+        }
+    });
 </script>
 {% endblock %}
 

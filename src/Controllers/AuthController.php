@@ -136,8 +136,25 @@ class AuthController
             $_SESSION['name'] = $displayName;
             $_SESSION['timezone'] = $timezone;
             $_SESSION['success'] = "Profile updated successfully.";
+
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => true,
+                    'message' => 'Profile updated successfully.'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
         } catch (\Exception $e) {
-            $_SESSION['error'] = "Failed to update profile: " . $e->getMessage();
+            $msg = "Failed to update profile: " . $e->getMessage();
+            $_SESSION['error'] = $msg;
+
+            if ($request->getHeaderLine('X-Requested-With') === 'XMLHttpRequest') {
+                $response->getBody()->write(json_encode([
+                    'success' => false,
+                    'message' => $msg
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+            }
         }
 
         return $response->withHeader('Location', $this->basePath . '/profile')->withStatus(302);
