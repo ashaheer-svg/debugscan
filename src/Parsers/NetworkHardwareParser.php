@@ -315,13 +315,26 @@ class NetworkHardwareParser implements ParserInterface
         $criticalCount = 0;
         $warningCount = 0;
 
-        foreach ($network['interfaces'] as $if) {
-            if (!$if['link_detected']) {
-                $criticalCount++;
+        $totalEth = 0;
+        $downEth = 0;
+
+        foreach ($network['interfaces'] as $ifname => $if) {
+            // Only aggregate physical ethernet ports (eth0, eth1, etc.)
+            if (preg_match('/^eth/i', (string)$ifname)) {
+                $totalEth++;
+                if (!$if['link_detected']) {
+                    $downEth++;
+                }
             }
+            
             if ($if['speed_mismatch'] ?? false) {
                 $warningCount++;
             }
+        }
+
+        // Flag as critical ONLY if all physical ports are down
+        if ($totalEth > 0 && $downEth === $totalEth) {
+            $criticalCount++;
         }
 
         foreach ($network['network_errors'] as $error) {
