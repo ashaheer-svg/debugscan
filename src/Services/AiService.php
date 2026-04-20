@@ -125,7 +125,8 @@ class AiService
 
         try {
             // Normalize max_completion_tokens for model-specific limits (8B vs 70B+)
-            $outputLimit = strpos($model, '8b') !== false ? 8192 : 32768;
+            // Conservative clamp: although 32768 is documented, 32000 is safer for API gateway stability.
+            $outputLimit = strpos($model, '8b') !== false ? 8192 : 32000;
             $calculatedMaxTokens = min($maxTokens, $outputLimit);
 
             $response = $this->client->post('chat/completions', [
