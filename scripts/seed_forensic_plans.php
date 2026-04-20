@@ -125,7 +125,7 @@ try {
             ")->execute([
                 'pid' => $planId,
                 'key' => $key,
-                'enabled' => $conf['enabled'] ? 1 : 0,
+                'enabled' => $conf['enabled'] ? 'true' : 'false',
                 'rows' => $conf['rows']
             ]);
         }
@@ -142,7 +142,7 @@ try {
             if (!isset($p['parsers'][$s])) {
                 $pdo->prepare("
                     INSERT INTO extraction_config (report_plan_id, section_key, is_enabled, max_rows)
-                    VALUES (:pid, :key, 0, NULL)
+                    VALUES (:pid, :key, false, NULL)
                     ON CONFLICT DO NOTHING
                 ")->execute(['pid' => $planId, 'key' => $s]);
             }
