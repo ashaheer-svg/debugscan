@@ -117,11 +117,13 @@ class NetworkHardwareParser implements ParserInterface
                 ];
 
                 // Check for negotiation issues
-                $advertised = $this->extractValue($content, '/Advertised link modes:\s*([^A-Z]*)/s', 1);
+                // Improved regex to capture the full multi-line list of advertised modes
+                $advertised = $this->extractValue($content, '/Advertised link modes:\s*(.+?)(?=\n\s*[A-Za-z ]+:\s|$)/s', 1);
                 $current = $this->extractValue($content, '/Speed:\s*([0-9]+)/i', 1);
 
                 if ($advertised && $current) {
-                    $interfaces[$ifname]['speed_mismatch'] = !preg_match("/{$current}baseT/i", $advertised);
+                    // Optimized to support both Copper (baseT) and Fibre (baseSR/LR/ER/X) standards
+                    $interfaces[$ifname]['speed_mismatch'] = !preg_match("/{$current}base[TSRLEX]/i", $advertised);
                 }
             }
         }
