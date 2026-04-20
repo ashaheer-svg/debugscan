@@ -187,7 +187,7 @@ class AdminController
                     VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
                     RETURNING id
                 )
-                UPDATE users SET tenant_id = id FROM new_user WHERE users.id = new_user.id RETURNING users.id
+                UPDATE users SET tenant_id = new_user.id FROM new_user WHERE users.id = new_user.id RETURNING users.id
             ");
             $stmt->execute([
                 'email' => $email,
