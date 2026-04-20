@@ -27,8 +27,8 @@ try {
 
     $pdo->beginTransaction();
 
-    echo "Cleaning up existing report plans...\n";
-    $pdo->exec("DELETE FROM report_plans");
+    echo "Deactivating existing report plans to preserve forensic history integrity...\n";
+    $pdo->exec("UPDATE report_plans SET is_active = false");
 
     $plans = [
         [
