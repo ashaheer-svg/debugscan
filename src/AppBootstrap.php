@@ -339,6 +339,7 @@ class AppBootstrap
             $group->post('admin/tenants/allocate', [AdminController::class, 'allocateTokens']);
             $group->get('admin/tenants/audit/{id}', [AdminController::class, 'tenantAudit']);
             $group->get('admin/tenants/audit/{id}/export', [AdminController::class, 'exportTenantAudit']);
+            $group->get('admin/tenants/storage/{id}', [AdminController::class, 'getStorageBreakdown']);
             $group->get('admin/logs', [AdminController::class, 'logs']);
             $group->get('admin/settings', [AdminController::class, 'settings']);
             $group->post('admin/settings/update', [AdminController::class, 'updateSettings']);

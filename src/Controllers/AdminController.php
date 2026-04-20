@@ -1232,7 +1232,86 @@ class AdminController
                 $_SESSION['error'] = 'Failed to delete plan: ' . $e->getMessage();
             }
         }
-        return $response->withHeader('Location', $this->basePath . '/admin/report-plans')->withStatus(302);
+    }
+
+    public function getStorageBreakdown(Request $request, Response $response, array $args): Response
+    {
+        $tenantId = $args['id'];
+        
+        // 1. Validate Tenant exists
+        $stmt = $this->pdo->prepare("SELECT display_name FROM users WHERE id = :id AND role = 'tenant'");
+        $stmt->execute(['id' => $tenantId]);
+        $tenantName = $stmt->fetchColumn();
+        
+        if (!$tenantName) {
+            $response->getBody()->write(json_encode(['success' => false, 'message' => 'Tenant not found']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        // 2. Fetch all projects
+        $stmt = $this->pdo->prepare("SELECT id, name, created_at FROM projects WHERE tenant_id = :tid ORDER BY created_at DESC");
+        $stmt->execute(['tid' => $tenantId]);
+        $projects = $stmt->fetchAll();
+
+        $breakdown = [];
+        $grandTotal = 0;
+
+        $uploadRoot = __DIR__ . '/../../storage/uploads';
+        $extractRoot = __DIR__ . '/../../storage/extracted';
+
+        foreach ($projects as $project) {
+            $projectId = $project['id'];
+            
+            // A. Raw Files (Archive size from DB)
+            $stmtFiles = $this->pdo->prepare("SELECT id, file_size_bytes FROM debug_files WHERE project_id = :pid");
+            $stmtFiles->execute(['pid' => $projectId]);
+            $files = $stmtFiles->fetchAll();
+            
+            $rawBytes = 0;
+            $extractBytes = 0;
+            
+            foreach ($files as $f) {
+                $rawBytes += (int)$f['file_size_bytes'];
+                
+                // B. Extracted Folder Size
+                $extractPath = $extractRoot . DIRECTORY_SEPARATOR . $f['id'];
+                if (is_dir($extractPath)) {
+                    $extractBytes += $this->getFolderSize($extractPath);
+                }
+            }
+
+            // C. Database Weight (Scan Payloads)
+            $stmtScans = $this->pdo->prepare("SELECT SUM(OCTET_LENGTH(result_input_payload::text)) as db_size FROM scan_jobs WHERE project_id = :pid");
+            $stmtScans->execute(['pid' => $projectId]);
+            $dbBytes = (int)($stmtScans->fetchColumn() ?: 0);
+
+            $projectTotal = $rawBytes + $extractBytes + $dbBytes;
+            $grandTotal += $projectTotal;
+
+            $breakdown[] = [
+                'id' => $projectId,
+                'name' => $project['name'],
+                'created_at' => $project['created_at'],
+                'raw_bytes' => $rawBytes,
+                'raw_formatted' => $this->formatBytes($rawBytes),
+                'extract_bytes' => $extractBytes,
+                'extract_formatted' => $this->formatBytes($extractBytes),
+                'db_bytes' => $dbBytes,
+                'db_formatted' => $this->formatBytes($dbBytes),
+                'total_bytes' => $projectTotal,
+                'total_formatted' => $this->formatBytes($projectTotal)
+            ];
+        }
+
+        $response->getBody()->write(json_encode([
+            'success' => true,
+            'tenant_id' => $tenantId,
+            'tenant_name' => $tenantName,
+            'grand_total' => $this->formatBytes($grandTotal),
+            'projects' => $breakdown
+        ]));
+
+        return $response->withHeader('Content-Type', 'application/json');
     }
 }
 

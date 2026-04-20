@@ -90,6 +90,11 @@
                         </form>
                         {% endif %}
 
+                        <!-- Storage Audit -->
+                        <button class="btn-action btn-storage-audit" data-id="{{ tenant.id }}" data-name="{{ tenant.display_name }}" data-tooltip="Detailed Storage Audit" aria-label="Detailed Storage Audit" style="color: #6366f1; background: #eef2ff; border: 1px solid #c7d2fe;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                        </button>
+
                         <!-- Audit Log -->
                         <a href="/admin/tenants/audit/{{ tenant.id }}" class="btn-action btn-info-alt" data-tooltip="View Audit Log" aria-label="View Audit Log" style="color: var(--primary); background: var(--primary-light); border: 1px solid var(--primary);">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -257,14 +262,122 @@
     </form>
 </dialog>
 
+<!-- Storage Audit Modal -->
+<dialog id="storageAuditModal" style="border: none; border-radius: 8px; padding: 0; box-shadow: 0 10px 25px rgba(0,0,0,0.2); width: 100%; max-width: 800px; background: var(--white); margin: auto;">
+    <div style="padding: 24px; border-bottom: 1px solid var(--row-border); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+        <div>
+            <h2 style="font-size: 18px; margin: 0; color: var(--text-primary);">Storage Consumption Breakdown</h2>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 4px 0 0 0;">Organization: <strong id="storageAuditTenantName" style="color: var(--primary);"></strong></p>
+        </div>
+        <button type="button" class="btn-close-modal" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted);">&times;</button>
+    </div>
+    
+    <div id="storageAuditContent" style="padding: 24px; max-height: 70vh; overflow-y: auto;">
+        <!-- Loading State -->
+        <div id="storageAuditLoading" style="padding: 40px; text-align: center;">
+            <div class="spinner" style="border: 3px solid #f3f3f3; border-top: 3px solid var(--primary); border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+            <p style="color: var(--text-secondary); font-size: 13px;">Analyzing forensic workspace storage footprints...</p>
+        </div>
+
+        <!-- Data Table (Hidden initially) -->
+        <div id="storageAuditData" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; background: #eef2ff; padding: 16px; border-radius: 6px; margin-bottom: 24px; border: 1px solid #c7d2fe;">
+                <span style="font-weight: 600; color: #4338ca; font-size: 13px;">Aggregated Capacity Usage</span>
+                <span id="storageAuditGrandTotal" style="font-size: 18px; font-weight: 800; color: #1e1b4b;"></span>
+            </div>
+
+            <table class="data-table" style="width: 100%; border: 1px solid var(--row-border); border-radius: 6px;">
+                <thead>
+                    <tr style="background: var(--bg-light); font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em;">
+                        <th style="padding: 12px; text-align: left;">Project Name / Reference</th>
+                        <th style="padding: 12px; text-align: right;">Raw Archive</th>
+                        <th style="padding: 12px; text-align: right;">Extracted Data</th>
+                        <th style="padding: 12px; text-align: right;">AI Payload</th>
+                        <th style="padding: 12px; text-align: right; background: #f1f5f9;">Total Project Impact</th>
+                    </tr>
+                </thead>
+                <tbody id="storageAuditTableBody">
+                    <!-- Projects populated via JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="padding: 16px 24px; border-top: 1px solid var(--row-border); background: #f8fafc; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; text-align: right;">
+        <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 20px;">Close Audit</button>
+    </div>
+</dialog>
+
+<style>
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .storage-row:hover { background-color: #f8fafc; }
+</style>
+
 <script>
     const provisionModal = document.getElementById('provisionModal');
     const editModal = document.getElementById('editModal');
     const allocateModal = document.getElementById('allocateModal');
     const deleteModal = document.getElementById('deleteModal');
+    const storageAuditModal = document.getElementById('storageAuditModal');
 
     // Button Triggers
     document.getElementById('btnProvision').addEventListener('click', () => provisionModal.showModal());
+
+    // Storage Audit Logic
+    document.querySelectorAll('.btn-storage-audit').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const tenantId = btn.dataset.id;
+            const tenantName = btn.dataset.name;
+            
+            document.getElementById('storageAuditTenantName').textContent = tenantName;
+            document.getElementById('storageAuditLoading').style.display = 'block';
+            document.getElementById('storageAuditData').style.display = 'none';
+            storageAuditModal.showModal();
+
+            try {
+                const response = await fetch(`/admin/tenants/storage/${tenantId}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    const tbody = document.getElementById('storageAuditTableBody');
+                    tbody.innerHTML = '';
+                    
+                    document.getElementById('storageAuditGrandTotal').textContent = data.grand_total;
+
+                    data.projects.forEach(project => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'storage-row';
+                        tr.innerHTML = `
+                            <td style="padding: 12px; border-bottom: 1px solid #f1f5f9;">
+                                <div style="font-weight: 700; color: var(--text-primary); font-size: 13px;">${project.name}</div>
+                                <div style="font-size: 10px; color: var(--text-muted);">${project.id}</div>
+                                <div style="font-size: 10px; color: var(--text-muted); opacity: 0.6;">Created: ${new Date(project.created_at).toLocaleDateString()}</div>
+                            </td>
+                            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-secondary);">${project.raw_formatted}</td>
+                            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-secondary);">${project.extract_formatted}</td>
+                            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f1f5f9; font-size: 13px; color: var(--text-secondary);">${project.db_formatted}</td>
+                            <td style="padding: 12px; text-align: right; border-bottom: 1px solid #f1f5f9; font-weight: 800; color: var(--text-primary); font-size: 13px; background: #f8fafc;">${project.total_formatted}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+
+                    if (data.projects.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--text-muted);">No forensic projects identified for this tenant.</td></tr>';
+                    }
+
+                    document.getElementById('storageAuditLoading').style.display = 'none';
+                    document.getElementById('storageAuditData').style.display = 'block';
+                } else {
+                    alert('Error performing storage audit: ' + (data.message || 'Unknown protocol error'));
+                    storageAuditModal.close();
+                }
+            } catch (err) {
+                console.error('Audit Error:', err);
+                alert('Connection failure during forensic audit fetch.');
+                storageAuditModal.close();
+            }
+        });
+    });
 
     document.querySelectorAll('.btn-edit').forEach(btn => {
         btn.addEventListener('click', () => {
