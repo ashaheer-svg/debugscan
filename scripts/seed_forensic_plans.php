@@ -5,6 +5,13 @@ declare(strict_types=1);
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Database;
+use Dotenv\Dotenv;
+
+// Load environment variables for DB connectivity
+if (file_exists(__DIR__ . '/../.env')) {
+    $dotenv = Dotenv::createUnsafeImmutable(__DIR__ . '/../');
+    $dotenv->load();
+}
 
 /**
  * Forensic Report Plans Seeder
