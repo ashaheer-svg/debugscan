@@ -1232,6 +1232,8 @@ class AdminController
                 $_SESSION['error'] = 'Failed to delete plan: ' . $e->getMessage();
             }
         }
+
+        return $response->withHeader('Location', $this->basePath . '/admin/report-plans')->withStatus(302);
     }
 
     public function getStorageBreakdown(Request $request, Response $response, array $args): Response
