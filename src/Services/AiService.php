@@ -109,10 +109,10 @@ class AiService
             // We enforce a strict per-file limit here.
             if (mb_strlen($rawJson) > $maxChars) {
                 $isTruncated = true;
-                $rawJson = mb_substr($rawJson, 0, $maxChars) . "\n\n[!!! DATA TRUNCATED: RECORD EXCEEDS SAFETY LIMIT (" . number_format($maxChars) . " chars) !!!]";
+                $rawJson = mb_substr($rawJson, 0, $maxChars) . "\n\n[!!! CAUTION: PAYLOAD TRUNCATED BY ANALYZER FOR SAFETY (Limit: " . number_format($maxChars) . " chars) !!!]";
             }
 
-            $userPrompt .= "#### RAW DIAGNOSTIC PAYLOAD\n" . $rawJson . "\n\n";
+            $userPrompt .= "#### RAW DIAGNOSTIC DATA (MAY BE TRUNCATED)\n" . $rawJson . "\n\n";
         }
 
         $fullPromptString = "SYSTEM PROMPT:\n{$systemPrompt}\n\nUSER PROMPT:\n{$userPrompt}";
@@ -124,6 +124,10 @@ class AiService
         }
 
         try {
+            // Normalize max_completion_tokens for model-specific limits (8B vs 70B+)
+            $outputLimit = strpos($model, '8b') !== false ? 8192 : 32768;
+            $calculatedMaxTokens = min($maxTokens, $outputLimit);
+
             $response = $this->client->post('chat/completions', [
                 'json' => [
                     'model' => $model,
@@ -131,7 +135,7 @@ class AiService
                         ['role' => 'system', 'content' => $systemPrompt],
                         ['role' => 'user', 'content' => $userPrompt],
                     ],
-                    'max_completion_tokens' => min($maxTokens, 32768),
+                    'max_completion_tokens' => $calculatedMaxTokens,
                     'response_format' => ['type' => 'json_object'],
                     'temperature' => 0.1,
                 ],
@@ -226,7 +230,8 @@ class AiService
 
     private function getDefaultHeader(): string
     {
-        return "You are the Lead Forensic Support Engineer for Synology.
+        return "You must respond in valid JSON format.
+        You are the Lead Forensic Support Engineer for Synology.
         Your task is to analyze diagnostic 'File Sets' and provide a definitive health audit.
         You are receiving FULL-SPECTRUM raw diagnostic telemetry, including standard text logs and deep SQLite forensic extractions (located in the 'forensic_extractions' key).";
     }
