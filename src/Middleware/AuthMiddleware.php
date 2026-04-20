@@ -49,18 +49,21 @@ class AuthMiddleware implements MiddlewareInterface
         $role     = $_SESSION['role'] ?? 'tenant';
 
         // Verify user still exists and is active in DB
-        $stmt = $this->pdo->prepare("SELECT status, tenant_id FROM users WHERE id = :id");
+        $stmt = $this->pdo->prepare("SELECT status, tenant_id, role, id FROM users WHERE id = :id");
         $stmt->execute(['id' => $userId]);
         $user = $stmt->fetch();
-
+ 
         if (!$user || $user['status'] !== 'active') {
             session_destroy();
             $response = new \Slim\Psr7\Response();
             return $response->withHeader('Location', $this->basePath . '/login?error=Session+expired+or+account+deactivated')->withStatus(302);
         }
-
+ 
+        // Calculate the effective tenant ID using the same logic as the login controller
+        $expectedTenantId = $user['tenant_id'] ?: ($user['role'] === 'tenant' ? $user['id'] : null);
+ 
         // Verify tenant mapping hasn't changed (unless admin)
-        if ($role !== 'admin' && $user['tenant_id'] !== $tenantId) {
+        if ($role !== 'admin' && $expectedTenantId !== $tenantId) {
             session_destroy();
             $response = new \Slim\Psr7\Response();
             return $response->withHeader('Location', $this->basePath . '/login?error=Security+Conflict:+Tenant+mapping+mismatch')->withStatus(302);
