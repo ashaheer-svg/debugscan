@@ -1,0 +1,24 @@
+id: network.link_flapping
+version: 1
+title: "A network interface is flapping"
+severity: high
+actionability: user_fixable
+category: network
+description: >
+  The kernel has logged more than 10 link up/down transitions on a single
+  interface within a 5 minute window. Flapping disrupts SMB/AFP sessions,
+  NFS locks, and packages that hold long-lived TCP state.
+remediation: >
+  Re-seat the Ethernet cable, try a different switch port, and check SFP
+  modules if applicable. If the flap persists after cabling changes,
+  suspect the NIC or switch port.
+tags: [network, link, flap]
+signature:
+  type: aggregate
+  source: kern.log
+  pattern: '(?P<iface>\beth\d+|bond\d+)\s*:\s*link\s+(up|down)'
+  threshold: 10
+  window_seconds: 300
+  group_by: iface
+entities:
+  interface: "$match.iface"

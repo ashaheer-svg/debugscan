@@ -1,0 +1,24 @@
+id: memory.oom_killed_process
+version: 1
+title: "Out-of-Memory killer terminated a process"
+severity: high
+actionability: user_fixable
+category: memory
+description: >
+  The kernel invoked oom-killer and terminated one or more processes
+  to reclaim memory. This almost always manifests as service outages
+  (DSM package crashes, Docker container restarts) and often recurs
+  if unaddressed.
+remediation: >
+  Identify the killed process, correlate against its recent memory
+  consumption (top snapshot), and either tune its limits or add
+  more RAM. Docker workloads are the most common culprit on DSM.
+tags: [oom, memory]
+signature:
+  type: regex
+  source: kern.log
+  pattern: 'Out of memory: Kill(ed)? process\s+(?P<pid>\d+)\s+\((?P<comm>[^)]+)\)'
+  dedupe_by: comm
+entities:
+  pid: "$match.pid"
+  process: "$match.comm"

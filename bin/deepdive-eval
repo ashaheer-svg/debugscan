@@ -1,0 +1,152 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * DeepDive rule-authoring CLI.
+ *
+ * Usage:
+ *   bin/deepdive-eval [--rules=<dir>] [--only=<rule_id>] <extracted_bundle_path>
+ *
+ * Walks an already-extracted DSM debug bundle, runs the full rule
+ * catalogue against it, and prints every finding with its provenance.
+ * Doesn't touch the database or the pipeline — safe to run from a rule
+ * author's workstation against a copied bundle.
+ *
+ * Exit codes:
+ *   0  — ran cleanly (findings may or may not exist)
+ *   1  — usage error / bundle not found
+ *   2  — catalogue failed to load
+ *   3  — evaluator threw rule errors
+ */
+
+$root = dirname(__DIR__);
+require $root . '/vendor/autoload.php';
+
+use App\DeepDive\Parsers\BundleLocator;
+use App\DeepDive\Parsers\TimestampParser;
+use App\DeepDive\Rules\Evaluator;
+use App\DeepDive\Rules\RuleCatalogue;
+use App\DeepDive\Rules\RuleLoader;
+
+$argvCopy = $argv;
+array_shift($argvCopy); // drop script name
+
+$rulesDir = null;
+$only     = null;
+$bundle   = null;
+
+foreach ($argvCopy as $arg) {
+    if (str_starts_with($arg, '--rules=')) {
+        $rulesDir = substr($arg, 8);
+    } elseif (str_starts_with($arg, '--only=')) {
+        $only = substr($arg, 7);
+    } elseif ($arg === '-h' || $arg === '--help') {
+        fwrite(STDOUT, "Usage: deepdive-eval [--rules=DIR] [--only=RULE_ID] <extracted_bundle_path>\n");
+        exit(0);
+    } elseif (str_starts_with($arg, '--')) {
+        fwrite(STDERR, "Unknown option: {$arg}\n");
+        exit(1);
+    } else {
+        $bundle = $arg;
+    }
+}
+
+if ($bundle === null || !is_dir($bundle)) {
+    fwrite(STDERR, "Error: bundle path is required and must be a directory\n");
+    fwrite(STDERR, "Usage: deepdive-eval [--rules=DIR] [--only=RULE_ID] <extracted_bundle_path>\n");
+    exit(1);
+}
+
+$rulesDir ??= $root . '/config/deepdive/rules';
+if (!is_dir($rulesDir)) {
+    fwrite(STDERR, "Error: rules directory not found: {$rulesDir}\n");
+    exit(2);
+}
+
+// --- Load catalogue ---
+$cat = new RuleCatalogue(new RuleLoader());
+try {
+    $cat->loadDirectory($rulesDir);
+} catch (\Throwable $e) {
+    fwrite(STDERR, "Catalogue load failed: " . $e->getMessage() . "\n");
+    exit(2);
+}
+
+if ($only !== null) {
+    $keep = $cat->byId($only);
+    if ($keep === null) {
+        fwrite(STDERR, "Error: --only rule id not in catalogue: {$only}\n");
+        exit(1);
+    }
+    // Rebuild a single-rule catalogue via reflection to reuse the evaluator's machinery.
+    $filtered = new RuleCatalogue(new RuleLoader());
+    $ref = new \ReflectionClass($filtered);
+    $rProp = $ref->getProperty('rules');    $rProp->setAccessible(true);
+    $oProp = $ref->getProperty('origins');  $oProp->setAccessible(true);
+    $vProp = $ref->getProperty('version');  $vProp->setAccessible(true);
+    $rProp->setValue($filtered, [$keep->id => $keep]);
+    $oProp->setValue($filtered, [$keep->id => $cat->origin($only) ?? '(unknown)']);
+    $vProp->setValue($filtered, 'cat-only-' . $keep->id);
+    $cat = $filtered;
+}
+
+fwrite(STDOUT, sprintf(
+    "Catalogue: %d rule(s) loaded (version=%s)\n",
+    $cat->count(),
+    $cat->version(),
+));
+
+// --- Parse bundle into a SourceRegistry ---
+$year     = (int)date('Y');
+$locator  = new BundleLocator(new TimestampParser($year));
+$registry = $locator->locate($bundle);
+
+fwrite(STDOUT, sprintf(
+    "Bundle: %s\n  log sources:    %s\n  sqlite sources: %s\n\n",
+    $bundle,
+    implode(', ', array_keys($registry->allLogs())) ?: '(none)',
+    implode(', ', array_keys($registry->allSqlite())) ?: '(none)',
+));
+
+// --- Evaluate ---
+$ev = new Evaluator();
+$findings = $ev->evaluate($cat, $registry);
+
+$colours = ['critical' => "\033[1;31m", 'high' => "\033[31m", 'warn' => "\033[33m", 'info' => "\033[36m"];
+$reset   = "\033[0m";
+
+if ($findings === []) {
+    fwrite(STDOUT, "No findings.\n");
+} else {
+    fwrite(STDOUT, "Findings (" . count($findings) . "):\n");
+    foreach ($findings as $f) {
+        $col = $colours[$f->severity] ?? '';
+        fwrite(STDOUT, sprintf(
+            "%s[%s]%s %s  (rule=%s v%d  actionability=%s  conf=%.2f)\n",
+            $col, strtoupper($f->severity), $reset,
+            $f->title, $f->ruleId, $f->ruleVersion, $f->actionability, $f->confidence,
+        ));
+        if ($f->entities !== []) {
+            fwrite(STDOUT, "  entities: ");
+            $bits = [];
+            foreach ($f->entities as $k => $v) $bits[] = $k . '=' . (is_scalar($v) ? (string)$v : json_encode($v));
+            fwrite(STDOUT, implode(', ', $bits) . "\n");
+        }
+        foreach (array_slice($f->citations, 0, 3) as $c) {
+            $ts = $c['timestamp'] ?? '-';
+            fwrite(STDOUT, sprintf("  ↳ %s:%d [%s] %s\n",
+                $c['file'], $c['line_number'] ?? 0, $ts, mb_substr((string)$c['excerpt'], 0, 180)));
+        }
+    }
+}
+
+if ($ev->errors() !== []) {
+    fwrite(STDERR, "\nRule errors:\n");
+    foreach ($ev->errors() as $e) {
+        fwrite(STDERR, sprintf("  ! %s: %s\n", $e['rule_id'], $e['error']));
+    }
+    exit(3);
+}
+exit(0);

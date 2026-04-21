@@ -1,0 +1,24 @@
+id: system.unexpected_shutdown
+version: 1
+title: "Unexpected shutdown detected"
+severity: high
+actionability: user_fixable
+category: system
+description: >
+  A boot event follows a prior run with no matching graceful shutdown
+  message. The most common causes are power loss, thermal shutdown, or
+  kernel panic. Unexpected shutdowns risk filesystem inconsistency and
+  RAID dirty-flag rebuilds.
+remediation: >
+  Check UPS health and battery, verify fans, and review kernel log just
+  before the boot for panic traces. Configure DSM → Hardware & Power →
+  Power Schedule + UPS support if not already in place.
+tags: [boot, shutdown, power]
+signature:
+  type: regex
+  source: messages
+  pattern: 'kernel: Linux version.*(Mon|Tue|Wed|Thu|Fri|Sat|Sun)'
+  min_hits: 2
+  dedupe_by: 0
+entities:
+  kind: "boot_event"

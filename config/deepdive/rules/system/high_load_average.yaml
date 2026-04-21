@@ -1,0 +1,22 @@
+id: system.high_load_average
+version: 1
+title: "Load average is elevated"
+severity: warn
+actionability: informational
+category: system
+description: >
+  Recent top snapshot shows a 1-minute load average of 4.0 or higher.
+  While absolute thresholds depend on CPU count, sustained high load on
+  a Synology NAS usually correlates with indexing, backup jobs, or
+  Docker workloads and can slow user-facing services.
+remediation: >
+  Review top_snapshot for the top CPU consumers. Consider rescheduling
+  indexing or Hyper Backup tasks, or reducing Docker workloads running
+  concurrently.
+tags: [cpu, load, performance]
+signature:
+  type: regex
+  source: top_snapshot
+  pattern: 'kind=loadavg l1=(?P<l1>[4-9]\d*(?:\.\d+)?|\d{2,}(?:\.\d+)?)'
+entities:
+  load_1m: "$match.l1"

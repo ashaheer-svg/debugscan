@@ -1,0 +1,22 @@
+id: memory.high_swap_pressure
+version: 1
+title: "System is under sustained swap pressure"
+severity: warn
+actionability: user_fixable
+category: memory
+description: >
+  vmstat shows a high cumulative swap-out (pswpout) count relative to
+  swap-in, indicating the system has been paging actively. On DSM this
+  usually presents as slow UI responsiveness and stuttering file
+  operations.
+remediation: >
+  Review running services and Docker container memory budgets. Consider
+  adding RAM or disabling non-essential packages. If swap usage is
+  incidental (a one-off burst), no action needed.
+tags: [swap, memory, performance]
+signature:
+  type: regex
+  source: vmstat
+  pattern: 'counter=pswpout\s+value=(?P<n>\d{6,})'
+entities:
+  pswpout: "$match.n"

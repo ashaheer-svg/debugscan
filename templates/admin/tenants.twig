@@ -101,12 +101,13 @@
                         </a>
 
                         <!-- Edit Tenant -->
-                        <button class="btn-action btn-edit" 
-                            data-id="{{ tenant.id }}" 
-                            data-name="{{ tenant.display_name }}" 
+                        <button class="btn-action btn-edit"
+                            data-id="{{ tenant.id }}"
+                            data-name="{{ tenant.display_name }}"
                             data-email="{{ tenant.email }}"
                             data-plans='{{ tenant.assigned_plan_ids|json_encode|raw }}'
-                            data-tooltip="Edit Profile" 
+                            data-deepdive="{{ tenant.deepdive_enabled ? '1' : '0' }}"
+                            data-tooltip="Edit Profile"
                             aria-label="Edit Profile">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                         </button>
@@ -167,6 +168,17 @@
                 {% endfor %}
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic;">Tenants can only run authorized report plans.</p>
+        </div>
+        <div class="form-group" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 14px 16px;">
+            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="edit_deepdive_enabled" name="deepdive_enabled" value="1" style="width: 16px; height: 16px; margin-top: 2px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #9a3412; font-size: 13px;">Enable DeepDive Diagnostic Engine</div>
+                    <div style="font-size: 11px; color: #b45309; margin-top: 2px;">
+                        Grants this tenant access to the isolated DeepDive pipeline (rule-based correlation, cause-chain analysis, branded PDF reports).
+                    </div>
+                </div>
+            </label>
         </div>
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
             <button type="button" class="btn btn-cancel-modal" style="background: var(--bg-light); color: var(--text-primary); padding: 8px 16px;">Cancel</button>
@@ -253,6 +265,18 @@
                 {% endfor %}
             </div>
             <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">Selected plans will be available to the tenant immediately.</p>
+        </div>
+
+        <div class="form-group" style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 6px; padding: 14px 16px;">
+            <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" id="provision_deepdive_enabled" name="deepdive_enabled" value="1" style="width: 16px; height: 16px; margin-top: 2px;">
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; color: #9a3412; font-size: 13px;">Enable DeepDive Diagnostic Engine</div>
+                    <div style="font-size: 11px; color: #b45309; margin-top: 2px;">
+                        Opt this tenant into the isolated DeepDive pipeline. Leave unchecked to provision as a standard AI Diagnostic tenant.
+                    </div>
+                </div>
+            </label>
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 12px; margin-top: 8px;">
@@ -397,6 +421,10 @@
             document.querySelectorAll('.edit-plan-checkbox').forEach(cb => {
                 cb.checked = assignedIds.includes(cb.dataset.id);
             });
+
+            // DeepDive flag
+            const ddBox = document.getElementById('edit_deepdive_enabled');
+            if (ddBox) ddBox.checked = btn.dataset.deepdive === '1';
 
             editModal.showModal();
         });

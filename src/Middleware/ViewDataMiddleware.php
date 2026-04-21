@@ -39,6 +39,22 @@ class ViewDataMiddleware implements MiddlewareInterface
                     $this->twig->addGlobal('user_timezone', ($user['timezone'] ?? 'UTC') ?: 'UTC');
                     $this->twig->addGlobal('all_timezones', \DateTimeZone::listIdentifiers());
                 }
+
+                // DeepDive feature flag — exposed as {{ tenant.deepdive_enabled }} in templates.
+                // Wrapped in its own try/catch so a missing column (pre-migration) cannot break the page.
+                try {
+                    $tenantId = $request->getAttribute('tenant_id');
+                    if ($tenantId) {
+                        $stmtDD = $this->pdo->prepare("SELECT deepdive_enabled FROM users WHERE id = :id");
+                        $stmtDD->execute(['id' => $tenantId]);
+                        $this->twig->addGlobal('tenant', [
+                            'id'               => $tenantId,
+                            'deepdive_enabled' => (bool)$stmtDD->fetchColumn(),
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    $this->twig->addGlobal('tenant', ['deepdive_enabled' => false]);
+                }
             } catch (\Exception $e) {
                 // Graceful fallback if migration is pending
                 $this->twig->addGlobal('user_timezone', 'UTC');

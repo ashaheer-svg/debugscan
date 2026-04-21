@@ -1,0 +1,147 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * DeepDive ops telemetry CLI.
+ *
+ * Prints:
+ *   - Job volume + status breakdown
+ *   - Duration percentiles (p50 / p90 / p99) for completed jobs
+ *   - Rule fire rates (top N rules by finding count)
+ *   - Narrator token spend (sum + per-job average)
+ *
+ * Window defaults to the last 14 days. All queries are admin-scoped
+ * (no tenant context set → RLS policies short-circuit via app.current_user_role).
+ *
+ * Usage:
+ *   bin/deepdive-telemetry [--days=14] [--top=10]
+ *
+ * Exit codes:
+ *   0 — ran cleanly
+ *   1 — usage error
+ *   2 — database error
+ */
+
+$root = dirname(__DIR__);
+require $root . '/vendor/autoload.php';
+
+use App\Database;
+
+$argvCopy = $argv;
+array_shift($argvCopy);
+
+$days = 14;
+$top  = 10;
+foreach ($argvCopy as $arg) {
+    if (preg_match('/^--days=(\d+)$/', $arg, $m))      $days = max(1, (int)$m[1]);
+    elseif (preg_match('/^--top=(\d+)$/', $arg, $m))   $top  = max(1, (int)$m[1]);
+    elseif ($arg === '--help' || $arg === '-h') {
+        fwrite(STDOUT, "Usage: bin/deepdive-telemetry [--days=14] [--top=10]\n");
+        exit(0);
+    } else {
+        fwrite(STDERR, "Unknown arg: {$arg}\n");
+        exit(1);
+    }
+}
+
+try {
+    $pdo = Database::getConnection();
+    // Admin context so RLS is transparent.
+    $pdo->exec("SET app.current_user_role = 'admin'");
+} catch (\Throwable $e) {
+    fwrite(STDERR, "DB connection failed: " . $e->getMessage() . "\n");
+    exit(2);
+}
+
+$interval = "INTERVAL '{$days} days'";
+
+// ---- Status breakdown ----
+$stmt = $pdo->query("
+    SELECT status, COUNT(*) AS n
+    FROM deepdive_jobs
+    WHERE queued_at >= NOW() - {$interval}
+    GROUP BY status
+    ORDER BY n DESC
+");
+$statuses = $stmt->fetchAll();
+$total    = array_sum(array_column($statuses, 'n'));
+
+echo "\n\033[1mDeepDive telemetry — last {$days} day(s)\033[0m\n";
+echo str_repeat('─', 56) . "\n";
+echo "Jobs total: {$total}\n";
+foreach ($statuses as $s) {
+    printf("  %-10s %d\n", $s['status'], $s['n']);
+}
+
+// ---- Duration percentiles (completed only) ----
+$stmt = $pdo->query("
+    SELECT
+        COUNT(*) AS n,
+        EXTRACT(EPOCH FROM percentile_cont(0.50) WITHIN GROUP (ORDER BY completed_at - started_at)) AS p50,
+        EXTRACT(EPOCH FROM percentile_cont(0.90) WITHIN GROUP (ORDER BY completed_at - started_at)) AS p90,
+        EXTRACT(EPOCH FROM percentile_cont(0.99) WITHIN GROUP (ORDER BY completed_at - started_at)) AS p99
+    FROM deepdive_jobs
+    WHERE status = 'completed'
+      AND started_at IS NOT NULL
+      AND completed_at IS NOT NULL
+      AND queued_at >= NOW() - {$interval}
+");
+$dur = $stmt->fetch();
+echo "\n\033[1mDuration (completed jobs)\033[0m\n";
+echo str_repeat('─', 56) . "\n";
+if ((int)$dur['n'] === 0) {
+    echo "  No completed jobs in window.\n";
+} else {
+    printf("  n=%d   p50=%.1fs   p90=%.1fs   p99=%.1fs\n",
+        (int)$dur['n'], (float)$dur['p50'], (float)$dur['p90'], (float)$dur['p99']);
+}
+
+// ---- Narrator tokens ----
+$stmt = $pdo->query("
+    SELECT
+        COALESCE(SUM(narrator_tokens_used), 0) AS total_tokens,
+        COUNT(*) FILTER (WHERE narrator_tokens_used > 0) AS jobs_with_narrator,
+        COALESCE(AVG(narrator_tokens_used) FILTER (WHERE narrator_tokens_used > 0), 0) AS avg_tokens
+    FROM deepdive_jobs
+    WHERE queued_at >= NOW() - {$interval}
+");
+$tok = $stmt->fetch();
+echo "\n\033[1mNarrator token spend\033[0m\n";
+echo str_repeat('─', 56) . "\n";
+printf("  Total tokens:        %s\n",     number_format((int)$tok['total_tokens']));
+printf("  Jobs w/ narrator:    %d\n",     (int)$tok['jobs_with_narrator']);
+printf("  Avg tokens per job:  %.0f\n",   (float)$tok['avg_tokens']);
+
+// ---- Rule fire rates ----
+$stmt = $pdo->prepare("
+    SELECT rule_id, COUNT(*) AS findings,
+           COUNT(DISTINCT deepdive_job_id) AS jobs
+    FROM deepdive_findings
+    WHERE created_at >= NOW() - {$interval}
+    GROUP BY rule_id
+    ORDER BY findings DESC
+    LIMIT :lim
+");
+$stmt->bindValue(':lim', $top, PDO::PARAM_INT);
+$stmt->execute();
+$rules = $stmt->fetchAll();
+
+echo "\n\033[1mTop {$top} rules by findings\033[0m\n";
+echo str_repeat('─', 56) . "\n";
+if ($rules === []) {
+    echo "  No findings in window.\n";
+} else {
+    printf("  %-40s  %8s  %6s\n", 'rule_id', 'findings', 'jobs');
+    foreach ($rules as $r) {
+        printf("  %-40s  %8d  %6d\n",
+            substr((string)$r['rule_id'], 0, 40),
+            (int)$r['findings'],
+            (int)$r['jobs']
+        );
+    }
+}
+
+echo "\n";
+exit(0);

@@ -1,0 +1,24 @@
+id: network.bond_failover
+version: 1
+title: "Bond slave interface went down"
+severity: warn
+actionability: user_fixable
+category: network
+description: >
+  An active member of a link-aggregation bond failed, forcing traffic
+  onto remaining slaves. The system remains reachable but at reduced
+  throughput and with no further redundancy until the failed slave
+  recovers.
+remediation: >
+  Inspect the physical link and switch-side port configuration. Bonds
+  configured in active-backup mode tolerate this; LACP/802.3ad bonds
+  require matching switch configuration and both sides must agree.
+tags: [network, bond, lacp]
+signature:
+  type: regex
+  source: kern.log
+  pattern: 'bond\d+.*link status definitely (?P<state>down|up) for interface (?P<iface>\S+)'
+  dedupe_by: iface
+entities:
+  state: "$match.state"
+  interface: "$match.iface"

@@ -184,6 +184,15 @@ class AppBootstrap
                 // 120 requests per 60 seconds (1 minute)
                 return new RateLimitMiddleware($redis, 120, 60);
             },
+
+            // --- DeepDive wiring (isolated) ---
+            \App\DeepDive\Controllers\JobController::class => function (ContainerInterface $container) {
+                return new \App\DeepDive\Controllers\JobController(
+                    $container->get(PDO::class),
+                    $container->get(Environment::class),
+                );
+            },
+            // --- end DeepDive wiring ---
         ];
     }
 
@@ -366,6 +375,14 @@ class AppBootstrap
             $group->get('admin/report-plans', [AdminController::class, 'reportPlans']);
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
+
+            // --- DeepDive routes (isolated; remove this block to disable feature) ---
+            $group->post('deepdive/start/{projectId}',         [\App\DeepDive\Controllers\JobController::class, 'start']);
+            $group->get ('deepdive/view/{id}',                 [\App\DeepDive\Controllers\JobController::class, 'view']);
+            $group->get ('deepdive/report/{id}',               [\App\DeepDive\Controllers\JobController::class, 'report']);
+            $group->get ('deepdive/download/{id}/{format}',    [\App\DeepDive\Controllers\JobController::class, 'download']);
+            $group->post('deepdive/cancel/{id}',               [\App\DeepDive\Controllers\JobController::class, 'cancel']);
+            // --- end DeepDive routes ---
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
     }

@@ -172,6 +172,7 @@ class AdminController
         $email = trim($data['email'] ?? '');
         $password = $data['password'] ?? '';
         $tokens = (int)($data['tokens'] ?? 500000);
+        $deepDiveEnabled = !empty($data['deepdive_enabled']);
 
         if (empty($orgName) || empty($email) || empty($password)) {
             $_SESSION['error'] = 'All fields are required to provision a tenant.';
@@ -183,8 +184,8 @@ class AdminController
             // We use a CTE to insert and set tenant_id to the new id in one go
             $stmt = $this->pdo->prepare("
                 WITH new_user AS (
-                    INSERT INTO users (email, password_hash, display_name, role, status, tokens_available)
-                    VALUES (:email, :pass, :name, 'tenant', 'active', :tokens)
+                    INSERT INTO users (email, password_hash, display_name, role, status, tokens_available, deepdive_enabled)
+                    VALUES (:email, :pass, :name, 'tenant', 'active', :tokens, :dd)
                     RETURNING id
                 )
                 UPDATE users SET tenant_id = new_user.id FROM new_user WHERE users.id = new_user.id RETURNING users.id
@@ -193,10 +194,11 @@ class AdminController
                 'email' => $email,
                 'pass' => $hashedPassword,
                 'name' => $orgName,
-                'tokens' => $tokens
+                'tokens' => $tokens,
+                'dd' => $deepDiveEnabled ? 'true' : 'false',
             ]);
             $tenantId = $stmt->fetchColumn();
-            
+
             // Assign Report Plans
             $planIds = $data['plan_ids'] ?? [];
             if (!empty($planIds)) {
@@ -207,6 +209,7 @@ class AdminController
                 'email' => $email,
                 'display_name' => $orgName,
                 'tokens' => $tokens,
+                'deepdive_enabled' => $deepDiveEnabled,
                 'assigned_plans' => count($planIds)
             ], $tenantId);
 
@@ -229,6 +232,7 @@ class AdminController
         $orgName = trim($data['org_name'] ?? '');
         $email = trim($data['email'] ?? '');
         $password = $data['password'] ?? '';
+        $deepDiveEnabled = !empty($data['deepdive_enabled']);
 
         if (!$id || empty($orgName) || empty($email)) {
             $_SESSION['error'] = 'ID, Organization Name, and Email are required.';
@@ -236,8 +240,13 @@ class AdminController
         }
 
         try {
-            $sql = "UPDATE users SET display_name = :name, email = :email, updated_at = NOW()";
-            $params = ['name' => $orgName, 'email' => $email, 'id' => $id];
+            $sql = "UPDATE users SET display_name = :name, email = :email, deepdive_enabled = :dd, updated_at = NOW()";
+            $params = [
+                'name'  => $orgName,
+                'email' => $email,
+                'dd'    => $deepDiveEnabled ? 'true' : 'false',
+                'id'    => $id,
+            ];
 
             if (!empty($password)) {
                 $sql .= ", password_hash = :pass";
@@ -256,6 +265,7 @@ class AdminController
                 'email' => $email,
                 'display_name' => $orgName,
                 'password_changed' => !empty($password),
+                'deepdive_enabled' => $deepDiveEnabled,
                 'assigned_plans' => count($planIds)
             ], $id);
 

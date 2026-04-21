@@ -228,12 +228,23 @@ class TenantController
         // Fetch authorized plans for this tenant
         $authorizedPlans = $this->reportPlanService->getPlansForTenant($tenantId);
 
+        // DeepDive history for this project. Wrapped in try/catch so a missing
+        // deepdive_jobs table (pre-migration) cannot break the project page.
+        $deepdiveHistory = [];
+        try {
+            $repo = new \App\DeepDive\Services\JobRepository($this->pdo);
+            $deepdiveHistory = $repo->recentForProject($id, 10);
+        } catch (\Throwable $e) {
+            $deepdiveHistory = [];
+        }
+
         $body = $this->view->render('tenant/project_view.twig', [
             'project' => $project,
             'files' => $files,
             'scans' => $scans,
             'plans' => $authorizedPlans,
             'file_reports' => $fileReports,
+            'deepdive_history' => $deepdiveHistory,
             'active_page' => 'projects',
             'success' => $_SESSION['success'] ?? null,
             'error' => $_SESSION['error'] ?? null,
