@@ -1,0 +1,18 @@
+[Unit]
+Description=AI DebugScan DeepDive Worker
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/var/www/ai-debugscan3
+ExecStart=/usr/bin/php /var/www/ai-debugscan3/workers/deepdive_worker.php
+Restart=always
+RestartSec=5
+# Worker intentionally self-exits after N jobs / memory threshold;
+# Restart=always + RestartSec=5 makes that a safe, bounded restart loop.
+StandardOutput=append:/var/www/ai-debugscan3/storage/deepdive/logs/worker.log
+StandardError=append:/var/www/ai-debugscan3/storage/deepdive/logs/worker.log
+
+[Install]
+WantedBy=multi-user.target
