@@ -27,6 +27,12 @@ declare(strict_types=1);
 $root = dirname(__DIR__);
 require $root . '/vendor/autoload.php';
 
+// Load .env so DB_* are populated.
+if (file_exists($root . '/.env')) {
+    $dotenv = Dotenv\Dotenv::createUnsafeImmutable($root);
+    $dotenv->load();
+}
+
 use App\Database;
 
 $argvCopy = $argv;
