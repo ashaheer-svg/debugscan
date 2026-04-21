@@ -1,0 +1,117 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Enqueue a DeepDive job in DEBUG MODE for any project, from the CLI.
+ *
+ * Why this exists: the web UI exposes "Run Deep Dive" to tenants but there's
+ * no tenant-facing toggle for debug mode (which preserves the extracted
+ * bundle on disk so you can re-run rule evaluation against it offline).
+ * Admins don't log in to the tenant portal, so they can't tick a checkbox
+ * there. This CLI is the admin escape hatch.
+ *
+ * Usage:
+ *   bin/deepdive-run-debug <project_id> [--files=<uuid1,uuid2,...>]
+ *
+ * If --files is omitted, the newest debug_file row for the project is used.
+ *
+ * Exit codes:
+ *   0  job enqueued
+ *   1  usage / not found
+ *   2  database error
+ */
+
+$root = dirname(__DIR__);
+require $root . '/vendor/autoload.php';
+
+use App\Database;
+use App\DeepDive\Services\JobRepository;
+
+$argvCopy = $argv;
+array_shift($argvCopy);
+
+$projectId = null;
+$filesArg  = null;
+
+foreach ($argvCopy as $arg) {
+    if ($arg === '-h' || $arg === '--help') {
+        fwrite(STDOUT, "Usage: deepdive-run-debug <project_id> [--files=<uuid,uuid,...>]\n");
+        exit(0);
+    } elseif (str_starts_with($arg, '--files=')) {
+        $filesArg = substr($arg, 8);
+    } elseif (str_starts_with($arg, '--')) {
+        fwrite(STDERR, "Unknown option: {$arg}\n");
+        exit(1);
+    } elseif ($projectId === null) {
+        $projectId = $arg;
+    }
+}
+
+if ($projectId === null) {
+    fwrite(STDERR, "Error: project_id is required\n");
+    fwrite(STDERR, "Usage: deepdive-run-debug <project_id> [--files=<uuid,uuid,...>]\n");
+    exit(1);
+}
+
+if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $projectId)) {
+    fwrite(STDERR, "Error: project_id must be a UUID\n");
+    exit(1);
+}
+
+try {
+    $pdo = Database::getConnection();
+    // RLS bypass: admin role sees every tenant.
+    Database::setTenantContext($pdo, null, 'admin');
+
+    // Resolve tenant_id for the project.
+    $stmt = $pdo->prepare("SELECT tenant_id FROM projects WHERE id = :pid LIMIT 1");
+    $stmt->execute(['pid' => $projectId]);
+    $tenantId = $stmt->fetchColumn();
+    if (!$tenantId) {
+        fwrite(STDERR, "Error: project not found: {$projectId}\n");
+        exit(1);
+    }
+
+    // Resolve debug file ids.
+    if ($filesArg !== null && $filesArg !== '') {
+        $fileIds = array_values(array_filter(array_map('trim', explode(',', $filesArg))));
+    } else {
+        $f = $pdo->prepare("
+            SELECT id FROM debug_files
+            WHERE project_id = :pid
+            ORDER BY created_at DESC
+            LIMIT 1
+        ");
+        $f->execute(['pid' => $projectId]);
+        $latest = $f->fetchColumn();
+        if (!$latest) {
+            fwrite(STDERR, "Error: no debug_files found for project {$projectId}. Upload a bundle first, or pass --files=.\n");
+            exit(1);
+        }
+        $fileIds = [(string)$latest];
+    }
+
+    $jobs = new JobRepository($pdo);
+    $jobId = $jobs->enqueue($tenantId, $projectId, $fileIds, debugMode: true);
+
+    fwrite(STDOUT, "Enqueued DeepDive job in DEBUG MODE\n");
+    fwrite(STDOUT, "  job_id    : {$jobId}\n");
+    fwrite(STDOUT, "  tenant_id : {$tenantId}\n");
+    fwrite(STDOUT, "  project_id: {$projectId}\n");
+    fwrite(STDOUT, "  files     : " . implode(', ', $fileIds) . "\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Watch progress:\n");
+    fwrite(STDOUT, "  tail -f storage/deepdive/logs/worker.log\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "After completion the extracted bundle WILL be preserved at:\n");
+    fwrite(STDOUT, "  storage/deepdive/extracted/{$jobId}/\n");
+    fwrite(STDOUT, "\n");
+    fwrite(STDOUT, "Inspect with:\n");
+    fwrite(STDOUT, "  php bin/deepdive-eval storage/deepdive/extracted/{$jobId}\n");
+    exit(0);
+} catch (\Throwable $e) {
+    fwrite(STDERR, "DB error: " . $e->getMessage() . "\n");
+    exit(2);
+}
