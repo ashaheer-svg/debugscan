@@ -56,9 +56,23 @@ final class BundleLocator
         $reg  = new SourceRegistry();
         $root = rtrim($extractedRoot, '/\\');
 
+        // Synology bundles are usually nested under one or more wrapper dirs
+        // (e.g. dbg_info/<serial>/<timestamp>/var/log/...). Detect every
+        // directory in the extracted tree that could be a DSM filesystem
+        // root (contains a "var" or "proc" child) and run the globs against
+        // each. Dedupe file hits via the registry.
+        $roots = $this->detectFsRoots($root);
+
         foreach (self::LOG_GLOBS as $name => $globs) {
-            $paths = $this->resolveGlobs($root, $globs);
+            $paths = [];
+            foreach ($roots as $r) {
+                foreach ($this->resolveGlobs($r, $globs) as $p) $paths[$p] = true;
+            }
+            $paths = array_keys($paths);
             if ($paths !== []) {
+                usort($paths, static function (string $a, string $b): int {
+                    return self::rotationIndex($b) <=> self::rotationIndex($a);
+                });
                 $reg->registerLog(new FileLogSource(
                     name: $name,
                     paths: $paths,
@@ -68,17 +82,62 @@ final class BundleLocator
         }
 
         foreach (self::SQLITE_GLOBS as $name => $globs) {
-            foreach ($this->resolveGlobs($root, $globs) as $path) {
-                $reg->registerSqlite(new PdoSqliteSource($name, $path));
-                break; // first hit only — DSM doesn't rotate sqlites
+            foreach ($roots as $r) {
+                $hits = $this->resolveGlobs($r, $globs);
+                if ($hits !== []) {
+                    $reg->registerSqlite(new PdoSqliteSource($name, $hits[0]));
+                    continue 2; // first hit wins across roots too
+                }
             }
         }
 
-        // Snapshot-style sources (mdstat, df, top, vmstat, btrfs-check) get
-        // turned into synthetic streams by SnapshotParsers.
-        SnapshotParsers::register($root, $reg);
+        // Snapshot-style sources (mdstat, df, top, vmstat, btrfs-check).
+        foreach ($roots as $r) {
+            SnapshotParsers::register($r, $reg);
+        }
 
         return $reg;
+    }
+
+    /**
+     * Return every directory under $root (plus $root itself) that looks like
+     * a DSM filesystem root — i.e. contains a child named "var" or "proc".
+     * Depth is capped to keep us out of rabbit-holes in weird bundles.
+     *
+     * @return list<string>
+     */
+    private function detectFsRoots(string $root, int $maxDepth = 5): array
+    {
+        $candidates = [];
+        $check = function (string $dir) use (&$candidates): void {
+            if (is_dir($dir . '/var') || is_dir($dir . '/proc')) {
+                $candidates[$dir] = true;
+            }
+        };
+        $check($root);
+
+        // BFS so shallow matches come first (they're more likely the canonical root).
+        $queue = [[$root, 0]];
+        while ($queue !== []) {
+            [$dir, $depth] = array_shift($queue);
+            if ($depth >= $maxDepth) continue;
+            $handle = @opendir($dir);
+            if (!$handle) continue;
+            while (($entry = readdir($handle)) !== false) {
+                if ($entry === '.' || $entry === '..') continue;
+                $sub = $dir . '/' . $entry;
+                if (!is_dir($sub) || is_link($sub)) continue;
+                $check($sub);
+                $queue[] = [$sub, $depth + 1];
+            }
+            closedir($handle);
+        }
+
+        // Always keep $root as a fallback even if nothing matched, so the
+        // registry at least gets SnapshotParsers a shot at the top level.
+        $out = array_keys($candidates);
+        if ($out === []) $out = [$root];
+        return $out;
     }
 
     /**
