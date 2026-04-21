@@ -17,6 +17,18 @@ final class Engine
      */
     public const RULE_CATALOGUE_VERSION_FALLBACK = 'catalogue-0.1';
 
+    /**
+     * Findings older than this many days are excluded from every report.
+     * Override with env DEEPDIVE_WITHIN_DAYS. Set to 0 to disable filtering.
+     * Individual rules may override via signature.within_days.
+     */
+    public static function withinDays(): int
+    {
+        $env = getenv('DEEPDIVE_WITHIN_DAYS');
+        if (is_string($env) && $env !== '' && ctype_digit($env)) return (int)$env;
+        return 365;
+    }
+
     /** Absolute path to the rules directory. Overridable via env for tests. */
     public static function rulesDir(): string
     {

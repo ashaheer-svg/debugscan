@@ -18,6 +18,9 @@ final class FindingRecord
     /**
      * @param array<string,mixed>   $entities
      * @param list<array<string,mixed>> $citations
+     * @param int  $occurrenceCount  total hits collapsed into this finding
+     *                               (>=1; only > 1 when the rule uses dedupe_by
+     *                               and multiple source records matched the same key)
      */
     public function __construct(
         public readonly string  $ruleId,
@@ -28,6 +31,7 @@ final class FindingRecord
         public readonly float   $confidence,
         public readonly array   $entities,
         public readonly array   $citations,
+        public readonly int     $occurrenceCount = 1,
     ) {
         if ($this->citations === []) {
             throw new \InvalidArgumentException("FindingRecord {$this->ruleId}: citations must not be empty");

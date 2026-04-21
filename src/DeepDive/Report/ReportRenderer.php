@@ -7,6 +7,7 @@ namespace App\DeepDive\Report;
 use App\DeepDive\Correlation\Incident;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\RuleCatalogue;
+use App\DeepDive\Support\Engine;
 
 /**
  * Produces the single-file HTML DeepDive report. Kept deliberately free
@@ -138,6 +139,11 @@ HTML;
         }
         $total = count($incidents);
         $totalLabel = $total === 1 ? 'incident' : 'incidents';
+        $days = Engine::withinDays();
+        $window = $days > 0
+            ? "Showing events from the last {$days} days only. Older events are excluded from this report."
+            : "Showing all events regardless of age (date filter disabled).";
+        $window = htmlspecialchars($window, ENT_QUOTES);
         return <<<HTML
 <section class="summary">
   <h2>Executive summary</h2>
@@ -145,6 +151,7 @@ HTML;
     <div class="summary-headline"><strong>{$total}</strong> {$totalLabel} identified</div>
     <div class="summary-chips">{$chips}</div>
   </div>
+  <div class="summary-window">{$window}</div>
 </section>
 HTML;
     }
@@ -253,13 +260,41 @@ HTML;
     {
         $rows = '';
         foreach ($inc->findings as $f) {
-            foreach (array_slice($f->citations, 0, 3) as $c) {
+            // Show up to 5 citations when the finding aggregates multiple
+            // occurrences, else up to 3 — matches RegexMatcher's cap.
+            $maxCites = $f->occurrenceCount > 1 ? 5 : 3;
+
+            // Derive first-seen / last-seen from this finding's citations.
+            $tsList = [];
+            foreach ($f->citations as $c) {
+                $t = (string)($c['timestamp'] ?? '');
+                if ($t === '') continue;
+                $u = strtotime($t);
+                if ($u !== false) $tsList[] = $u;
+            }
+            $firstSeen = $tsList !== [] ? date('Y-m-d', min($tsList)) : null;
+            $lastSeen  = $tsList !== [] ? date('Y-m-d', max($tsList)) : null;
+
+            $ruleLabel = htmlspecialchars($f->ruleId, ENT_QUOTES);
+            if ($f->occurrenceCount > 1) {
+                $ruleLabel .= ' <span class="occ-badge" title="Total matching events">×'
+                            . (int)$f->occurrenceCount . '</span>';
+                if ($firstSeen !== null && $lastSeen !== null && $firstSeen !== $lastSeen) {
+                    $ruleLabel .= '<div class="occ-range">' .
+                        htmlspecialchars($firstSeen, ENT_QUOTES) . ' → ' .
+                        htmlspecialchars($lastSeen,  ENT_QUOTES) . '</div>';
+                }
+            }
+
+            foreach (array_slice($f->citations, 0, $maxCites) as $c) {
                 $file = htmlspecialchars(basename((string)($c['file'] ?? '')), ENT_QUOTES);
                 $line = (int)($c['line_number'] ?? 0);
                 $ts   = htmlspecialchars((string)($c['timestamp'] ?? ''), ENT_QUOTES);
                 $ex   = htmlspecialchars(mb_substr((string)($c['excerpt'] ?? ''), 0, 260), ENT_QUOTES);
-                $rid  = htmlspecialchars($f->ruleId, ENT_QUOTES);
-                $rows .= "<tr><td class=\"mono\">{$rid}</td><td class=\"mono\">{$file}:{$line}</td><td class=\"mono\">{$ts}</td><td>{$ex}</td></tr>";
+                $rows .= "<tr><td class=\"mono\">{$ruleLabel}</td><td class=\"mono\">{$file}:{$line}</td><td class=\"mono\">{$ts}</td><td>{$ex}</td></tr>";
+                // Only label the first row per finding; subsequent rows blank
+                // so the badge+range aren't repeated on every citation line.
+                $ruleLabel = '';
             }
         }
         if ($rows === '') return '';
@@ -407,6 +442,9 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .chain-chip{background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;padding:2px 8px;border-radius:4px;font-size:11px;font-family:"SF Mono",Menlo,Consolas,monospace}
 .chain-arrow{color:#9ca3af;font-weight:700}
 .evidence{margin-top:16px}
+.summary-window{margin-top:10px;font-size:12px;color:#6b7280;font-style:italic}
+.occ-badge{display:inline-block;background:#fef3c7;color:#92400e;border:1px solid #fde68a;border-radius:10px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:6px;font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif}
+.occ-range{font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif;font-size:10px;color:#6b7280;margin-top:2px;font-weight:normal}
 .ev-table{width:100%;border-collapse:collapse;font-size:12px}
 .ev-table th,.ev-table td{text-align:left;padding:6px 8px;border-bottom:1px solid #f3f4f6;vertical-align:top}
 .ev-table th{background:#f9fafb;font-weight:600;color:#6b7280;text-transform:uppercase;font-size:10px;letter-spacing:.05em}

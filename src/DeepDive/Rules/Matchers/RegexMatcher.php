@@ -7,6 +7,7 @@ namespace App\DeepDive\Rules\Matchers;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\Rule;
 use App\DeepDive\Rules\Sources\SourceRegistry;
+use App\DeepDive\Support\Engine;
 
 /**
  * Matches a single regex over a logical log source. Captures (named groups)
@@ -18,7 +19,10 @@ use App\DeepDive\Rules\Sources\SourceRegistry;
  *   pattern: 'md/raid:md\d+ Disk failure on (?P<disk>\S+)'
  *   min_hits: 1               (optional, default 1 — floor for triggering)
  *   exclude_pattern: '...'    (optional — skip records matching this)
- *   dedupe_by: disk           (optional — collapse hits with identical entity value)
+ *   dedupe_by: disk           (optional — aggregate hits with identical entity
+ *                              value into ONE finding with occurrenceCount)
+ *   within_days: 365          (optional — skip records older than this many days;
+ *                              defaults to Engine::withinDays(); 0 = disable)
  */
 final class RegexMatcher implements MatcherInterface
 {
@@ -33,8 +37,14 @@ final class RegexMatcher implements MatcherInterface
         $exclude  = isset($sig['exclude_pattern']) ? (string)$sig['exclude_pattern'] : null;
         $dedupeBy = isset($sig['dedupe_by']) ? (string)$sig['dedupe_by'] : null;
 
+        // Date cutoff: per-rule override, else global default.
+        $withinDays = array_key_exists('within_days', $sig)
+            ? (int)$sig['within_days']
+            : Engine::withinDays();
+        $cutoffTs = $withinDays > 0 ? (time() - ($withinDays * 86400)) : 0;
+
         if ($srcName === '' || $pattern === '') {
-            return []; // silent no-op; caller logs at catalogue-load if concerned
+            return [];
         }
         $src = $reg->log($srcName);
         if ($src === null) return [];
@@ -42,9 +52,16 @@ final class RegexMatcher implements MatcherInterface
         $regex        = $this->compile($pattern);
         $excludeRegex = $exclude !== null ? $this->compile($exclude) : null;
 
-        $hits        = 0;
-        $findings    = [];
-        $seenDedupe  = [];
+        // When dedupeBy is set we accumulate into $groups keyed by dedupe value.
+        // When it isn't, each match emits its own finding immediately.
+        /** @var array<string,array{
+         *   entities: array<string,mixed>,
+         *   citations: list<array<string,mixed>>,
+         *   count: int,
+         * }> $groups */
+        $groups   = [];
+        $hits     = 0;
+        $findings = [];
 
         foreach ($src->records() as $rec) {
             if ($excludeRegex !== null && preg_match($excludeRegex, $rec->text)) continue;
@@ -52,13 +69,15 @@ final class RegexMatcher implements MatcherInterface
             $m = [];
             if (!preg_match($regex, $rec->text, $m)) continue;
 
-            $entities = $this->bindEntities($rule->entities, $m);
-
-            if ($dedupeBy !== null) {
-                $key = (string)($entities[$dedupeBy] ?? '__no_key__');
-                if (isset($seenDedupe[$key])) continue;
-                $seenDedupe[$key] = true;
+            // Date filter. We skip if the record has a parseable timestamp and
+            // it's older than the cutoff. Records with no parseable timestamp
+            // fall through — better to over-include than silently drop.
+            if ($cutoffTs > 0 && $rec->timestamp !== null) {
+                $ts = strtotime($rec->timestamp);
+                if ($ts !== false && $ts < $cutoffTs) continue;
             }
+
+            $entities = $this->bindEntities($rule->entities, $m);
 
             $citation = [
                 'file'        => $rec->file,
@@ -66,6 +85,32 @@ final class RegexMatcher implements MatcherInterface
                 'timestamp'   => $rec->timestamp,
                 'excerpt'     => mb_substr($rec->text, 0, 400),
             ];
+
+            if ($dedupeBy !== null) {
+                $key = (string)($entities[$dedupeBy] ?? '__no_key__');
+                if (!isset($groups[$key])) {
+                    $groups[$key] = [
+                        'entities'  => $entities,
+                        'citations' => [$citation],
+                        'count'     => 1,
+                    ];
+                } else {
+                    $g = &$groups[$key];
+                    $g['count']++;
+                    // Keep at most 5 citations: first + 4 most recent.
+                    if (count($g['citations']) < 5) {
+                        $g['citations'][] = $citation;
+                    } else {
+                        // rolling: keep the first (earliest), drop the oldest of
+                        // the remaining window, append the newest.
+                        array_splice($g['citations'], 1, 1);
+                        $g['citations'][] = $citation;
+                    }
+                    unset($g);
+                }
+                $hits++;
+                continue;
+            }
 
             $hits++;
             if ($hits < $minHits) continue;
@@ -79,9 +124,30 @@ final class RegexMatcher implements MatcherInterface
                 confidence:    0.9,
                 entities:      $entities,
                 citations:     [$citation],
+                occurrenceCount: 1,
             );
             if (count($findings) >= $limit) break;
         }
+
+        // Flush dedupe groups into FindingRecords.
+        if ($dedupeBy !== null) {
+            foreach ($groups as $g) {
+                if ($g['count'] < $minHits) continue;
+                $findings[] = new FindingRecord(
+                    ruleId:        $rule->id,
+                    ruleVersion:   $rule->version,
+                    severity:      $rule->severity,
+                    actionability: $rule->actionability,
+                    title:         $rule->title,
+                    confidence:    0.9,
+                    entities:      $g['entities'],
+                    citations:     $g['citations'],
+                    occurrenceCount: $g['count'],
+                );
+                if (count($findings) >= $limit) break;
+            }
+        }
+
         return $findings;
     }
 
