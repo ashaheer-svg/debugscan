@@ -434,7 +434,7 @@
 
             // Show completion links
             if (data.status === 'completed' && data.report_ready) {
-                this.showCompletion(data.report_url, data.report_pdf_url);
+                this.showCompletion(data.report_url, data.report_html_url, data.report_pdf_url);
             }
         }
 
@@ -480,9 +480,14 @@
             document.getElementById('ddErrorMessage').textContent = message;
         }
 
-        showCompletion(reportUrl, pdfUrl) {
+        showCompletion(reportUrl, reportHtmlUrl, pdfUrl) {
             document.getElementById('ddViewReport').href = reportUrl;
-            document.getElementById('ddDownloadPdf').href = pdfUrl;
+            if (reportHtmlUrl) {
+                document.getElementById('ddDownloadHtml').href = reportHtmlUrl;
+            }
+            if (pdfUrl) {
+                document.getElementById('ddDownloadPdf').href = pdfUrl;
+            }
 
             this.completionActions.style.display = 'flex';
 

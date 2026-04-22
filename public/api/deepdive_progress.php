@@ -66,6 +66,9 @@ while (true) {
             'steps'           => $steps,
             'error_message'   => $row['error_message'],
             'report_ready'    => $row['status'] === 'completed',
+            'report_url'      => $row['status'] === 'completed' ? '/deepdive/report/' . $row['id'] : null,
+            'report_html_url' => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/html' : null,
+            'report_pdf_url'  => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/pdf' : null,
         ];
 
         echo "event: status\ndata: " . json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n\n";
