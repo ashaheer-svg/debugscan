@@ -263,21 +263,40 @@ final class HardwareSpecExtractor
      */
     private function extractDriveBays(): ?array
     {
-        // Try 1: load_info.result
+        // Try 1: load_info.result - uses 'disks' array
         $loadInfo = $this->parseJsonResult('load_info.result');
-        if (is_array($loadInfo) && isset($loadInfo['max_bay_count'])) {
+        if (is_array($loadInfo)) {
+            $diskCount = isset($loadInfo['disks']) ? count((array)$loadInfo['disks']) : 0;
+            $maxBayCount = $loadInfo['max_bay_count'] ?? 0;
+
+            if ($diskCount > 0 || $maxBayCount > 0) {
+                return [
+                    'data' => [
+                        'total' => (int)($maxBayCount ?: $diskCount),
+                        'used' => $diskCount,
+                        'expansion_count' => 0,
+                    ],
+                    'file' => 'dsm/result/load_info.result',
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result')),
+                ];
+            }
+        }
+
+        // Try 2: Count actual disks in synostorage directory
+        $diskDirs = glob($this->extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
+        if (!empty($diskDirs)) {
             return [
                 'data' => [
-                    'total' => (int)$loadInfo['max_bay_count'],
-                    'used' => isset($loadInfo['drives']) ? count((array)$loadInfo['drives']) : 0,
+                    'total' => count($diskDirs) + 2, // Add 2 as estimate for unused bays
+                    'used' => count($diskDirs),
                     'expansion_count' => 0,
                 ],
-                'file' => 'dsm/result/load_info.result',
-                'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result')),
+                'file' => 'dsm/run/synostorage/disks/',
+                'timestamp' => date('Y-m-d H:i:s'),
             ];
         }
 
-        // Try 2: synoinfo.conf parsing (count bay-related entries)
+        // Try 3: synoinfo.conf parsing (count bay-related entries)
         $synoinfo = $this->parseSynoinfo();
         $bayCount = 0;
         foreach ($synoinfo as $key => $value) {
@@ -309,22 +328,22 @@ final class HardwareSpecExtractor
         $sourceFile = '';
         $timestamp = '';
 
-        // Try 1: load_info.result (DSM 6/7)
+        // Try 1: load_info.result (DSM 6/7) - uses 'disks' array
         $loadInfo = $this->parseJsonResult('load_info.result');
-        if (is_array($loadInfo) && isset($loadInfo['drives']) && is_array($loadInfo['drives'])) {
+        if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
             $bay = 1;
-            foreach ($loadInfo['drives'] as $drive) {
-                if (is_array($drive)) {
+            foreach ($loadInfo['disks'] as $disk) {
+                if (is_array($disk)) {
                     $drives[] = [
-                        'bay' => $bay,
-                        'device' => $drive['device'] ?? '',
-                        'model' => $drive['model'] ?? $drive['product'] ?? '',
-                        'serial' => $drive['serial'] ?? '',
-                        'capacity_gb' => isset($drive['capacity']) ? round((int)$drive['capacity'] / (1000**3), 1) : 0,
-                        'firmware' => $drive['firmware'] ?? '',
-                        'temperature_celsius' => $drive['temperature'] ?? 0,
-                        'smart_status' => $drive['smart_status'] ?? 'unknown',
-                        'power_on_hours' => $drive['power_on_hours'] ?? 0,
+                        'bay' => $disk['slot_id'] ?? $bay,
+                        'device' => $disk['id'] ?? '',
+                        'model' => $disk['model'] ?? '',
+                        'serial' => $disk['serial'] ?? '',
+                        'capacity_gb' => isset($disk['size_total']) ? round((int)$disk['size_total'] / (1000**3), 1) : 0,
+                        'firmware' => $disk['firm'] ?? '',
+                        'temperature_celsius' => $disk['temp'] ?? 0,
+                        'smart_status' => $disk['smart_status'] ?? 'unknown',
+                        'power_on_hours' => $disk['power_on_hours'] ?? 0,
                     ];
                     $bay++;
                 }
@@ -333,20 +352,60 @@ final class HardwareSpecExtractor
             $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result'));
         }
 
-        // Try 2: Fallback to diskstats
+        // Try 2: Fallback to /dsm/run/synostorage/disks directory structure
         if (empty($drives)) {
-            $diskstats = $this->extractedPath . '/dsm/proc/diskstats';
-            if (file_exists($diskstats)) {
-                $content = (string)@file_get_contents($diskstats);
+            $diskDirs = glob($this->extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
+            if (!empty($diskDirs)) {
+                $bay = 1;
+                sort($diskDirs);
+                foreach ($diskDirs as $dir) {
+                    $diskName = basename($dir);
+                    $drive = [
+                        'bay' => $bay,
+                        'device' => $diskName,
+                        'model' => '',
+                        'serial' => '',
+                        'capacity_gb' => 0,
+                        'firmware' => '',
+                        'temperature_celsius' => 0,
+                        'smart_status' => 'unknown',
+                        'power_on_hours' => 0,
+                    ];
+
+                    // Read available metadata from disk directory
+                    if (file_exists($dir . '/model')) {
+                        $drive['model'] = trim((string)@file_get_contents($dir . '/model'));
+                    }
+                    if (file_exists($dir . '/serial')) {
+                        $drive['serial'] = trim((string)@file_get_contents($dir . '/serial'));
+                    }
+                    if (file_exists($dir . '/temperature')) {
+                        $drive['temperature_celsius'] = (int)trim((string)@file_get_contents($dir . '/temperature'));
+                    }
+
+                    $drives[] = $drive;
+                    $bay++;
+                }
+                $sourceFile = 'dsm/run/synostorage/disks/';
+                $timestamp = date('Y-m-d H:i:s');
+            }
+        }
+
+        // Try 3: Fallback to /dsm/proc/partitions discovery
+        if (empty($drives)) {
+            $partitions = $this->extractedPath . '/dsm/proc/partitions';
+            if (file_exists($partitions)) {
+                $content = (string)@file_get_contents($partitions);
                 $bay = 1;
                 foreach (explode("\n", $content) as $line) {
-                    if (preg_match('/\s+sd[a-z]\s+/', $line, $m)) {
+                    // Match whole disks (major 8 = internal, major 128 = expansion)
+                    if (preg_match('/^\s+(8|128)\s+\d+\s+(\d+)\s+(sd[a-z]+|sata\d+|nvme\d+n\d+)$/', $line, $m)) {
                         $drives[] = [
                             'bay' => $bay,
-                            'device' => trim($m[0]),
+                            'device' => $m[3],
                             'model' => 'Unknown',
                             'serial' => '',
-                            'capacity_gb' => 0,
+                            'capacity_gb' => round((int)$m[2] / 1024 / 1024, 2),
                             'firmware' => '',
                             'temperature_celsius' => 0,
                             'smart_status' => 'unknown',
@@ -355,8 +414,8 @@ final class HardwareSpecExtractor
                         $bay++;
                     }
                 }
-                $sourceFile = 'dsm/proc/diskstats';
-                $timestamp = date('Y-m-d H:i:s', filemtime($diskstats));
+                $sourceFile = 'dsm/proc/partitions';
+                $timestamp = date('Y-m-d H:i:s', filemtime($partitions));
             }
         }
 
