@@ -1,0 +1,512 @@
+{# DeepDive Progress Modal - Real-time analysis progress tracking #}
+
+<div class="deepdive-modal-backdrop" id="ddProgressBackdrop" style="display: none;">
+    <div class="deepdive-modal" id="ddProgressModal">
+
+        {# Modal Header #}
+        <div class="modal-header">
+            <div>
+                <h2 class="modal-title">DeepDive Analysis in Progress</h2>
+                <p class="modal-subtitle">Analyzing Synology debug bundle...</p>
+            </div>
+            <span class="modal-close" id="ddClose" style="cursor: not-allowed; opacity: 0.3; font-size: 24px;">✕</span>
+        </div>
+
+        {# Modal Body #}
+        <div class="modal-body">
+
+            {# Overall Progress Section #}
+            <div class="progress-section">
+                <div class="progress-label">
+                    <span id="ddStageName">Initializing...</span>
+                    <span id="ddPercent" class="progress-percent">0%</span>
+                </div>
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="ddProgressBar" style="width: 0%;">
+                        <span class="progress-fill"></span>
+                    </div>
+                </div>
+                <div class="progress-detail" id="ddStageDetail"></div>
+            </div>
+
+            {# Step-by-Step Breakdown #}
+            <div class="steps-list" id="ddStepsList">
+                {# Dynamically populated by JavaScript #}
+            </div>
+
+            {# Error Alert (hidden by default) #}
+            <div class="error-alert" id="ddErrorAlert" style="display: none;">
+                <div class="error-icon">⚠️</div>
+                <div class="error-content">
+                    <h3 id="ddErrorTitle">Error Occurred</h3>
+                    <p id="ddErrorMessage"></p>
+                </div>
+            </div>
+
+            {# Completion Actions (hidden initially) #}
+            <div class="completion-actions" id="ddCompletionActions" style="display: none;">
+                <a href="#" id="ddViewReport" class="btn btn-primary">View Report</a>
+                <a href="#" id="ddDownloadHtml" class="btn btn-secondary" download>Download HTML</a>
+                <a href="#" id="ddDownloadPdf" class="btn btn-secondary" download>Download PDF</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Inline Styles for Modal #}
+<style>
+    .deepdive-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .deepdive-modal {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.15);
+        width: 90%;
+        max-width: 600px;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 20px;
+        border-bottom: 1px solid #e0e0e0;
+        background: linear-gradient(135deg, #0066cc 0%, #004a99 100%);
+        color: white;
+    }
+
+    .modal-title {
+        margin: 0 0 4px 0;
+        font-size: 18px;
+        font-weight: 600;
+    }
+
+    .modal-subtitle {
+        margin: 0;
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .modal-close {
+        font-size: 24px;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+        transition: color 0.2s;
+        flex-shrink: 0;
+    }
+
+    .modal-close:hover {
+        color: white;
+    }
+
+    .modal-body {
+        padding: 24px;
+        overflow-y: auto;
+        flex: 1;
+    }
+
+    /* Progress Bar Section */
+    .progress-section {
+        margin-bottom: 24px;
+    }
+
+    .progress-label {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        font-size: 14px;
+        font-weight: 500;
+    }
+
+    .progress-percent {
+        background: #f0f0f0;
+        padding: 2px 8px;
+        border-radius: 3px;
+        font-weight: 600;
+        color: #0066cc;
+    }
+
+    .progress-bar-container {
+        height: 24px;
+        background: #f5f5f5;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e0e0e0;
+        position: relative;
+    }
+
+    .progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #0066cc 0%, #0052a3 100%);
+        width: 0;
+        transition: width 0.4s ease;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        padding-right: 8px;
+    }
+
+    .progress-fill {
+        font-size: 11px;
+        font-weight: 600;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .progress-bar:not([style*="width: 0"]) .progress-fill {
+        opacity: 1;
+    }
+
+    .progress-detail {
+        font-size: 12px;
+        color: #666;
+        margin-top: 6px;
+        min-height: 18px;
+    }
+
+    /* Steps List */
+    .steps-list {
+        margin: 20px 0;
+    }
+
+    .step-item {
+        display: flex;
+        align-items: flex-start;
+        padding: 12px;
+        margin-bottom: 8px;
+        background: #f9f9f9;
+        border-left: 3px solid #ddd;
+        border-radius: 4px;
+        transition: all 0.3s ease;
+    }
+
+    .step-item.pending {
+        border-left-color: #ccc;
+        background: #fafafa;
+    }
+
+    .step-item.running {
+        border-left-color: #0066cc;
+        background: #f0f5ff;
+        animation: pulse 2s infinite;
+    }
+
+    .step-item.completed {
+        border-left-color: #28a745;
+        background: #f0fff4;
+    }
+
+    .step-item.failed {
+        border-left-color: #dc3545;
+        background: #fff5f5;
+    }
+
+    .step-item.skipped {
+        border-left-color: #999;
+        background: #f5f5f5;
+        opacity: 0.7;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .step-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        margin-right: 12px;
+        font-weight: bold;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+
+    .step-item.pending .step-icon {
+        background: #e0e0e0;
+        color: #999;
+    }
+
+    .step-item.running .step-icon {
+        background: #0066cc;
+        color: white;
+        animation: spin 1s linear infinite;
+    }
+
+    .step-item.completed .step-icon {
+        background: #28a745;
+        color: white;
+    }
+
+    .step-item.failed .step-icon {
+        background: #dc3545;
+        color: white;
+    }
+
+    .step-item.skipped .step-icon {
+        background: #aaa;
+        color: white;
+    }
+
+    .step-content {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .step-label {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 2px;
+    }
+
+    .step-detail {
+        font-size: 12px;
+        color: #666;
+        word-break: break-word;
+    }
+
+    .step-error {
+        font-size: 12px;
+        color: #dc3545;
+        margin-top: 4px;
+        padding: 6px;
+        background: #fff5f5;
+        border-left: 2px solid #dc3545;
+        border-radius: 2px;
+    }
+
+    /* Error Alert */
+    .error-alert {
+        display: flex;
+        align-items: flex-start;
+        background: #fff5f5;
+        border: 1px solid #f5c6cb;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+
+    .error-icon {
+        font-size: 24px;
+        margin-right: 12px;
+        flex-shrink: 0;
+    }
+
+    .error-content h3 {
+        margin: 0 0 6px 0;
+        color: #721c24;
+        font-size: 14px;
+    }
+
+    .error-content p {
+        margin: 0;
+        color: #721c24;
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    /* Completion Actions */
+    .completion-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        padding-top: 16px;
+        border-top: 1px solid #e0e0e0;
+    }
+
+    .btn {
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s;
+        border: none;
+    }
+
+    .btn-primary {
+        background: #0066cc;
+        color: white;
+    }
+
+    .btn-primary:hover {
+        background: #004a99;
+    }
+
+    .btn-secondary {
+        background: #e8e8e8;
+        color: #333;
+    }
+
+    .btn-secondary:hover {
+        background: #d0d0d0;
+    }
+</style>
+
+{# Inline JavaScript for Real-Time Updates #}
+<script>
+    class DeepDiveProgressModal {
+        constructor(jobId) {
+            this.jobId = jobId;
+            this.modal = document.getElementById('ddProgressModal');
+            this.backdrop = document.getElementById('ddProgressBackdrop');
+            this.progressBar = document.getElementById('ddProgressBar');
+            this.percentDisplay = document.getElementById('ddPercent');
+            this.stageName = document.getElementById('ddStageName');
+            this.stageDetail = document.getElementById('ddStageDetail');
+            this.stepsList = document.getElementById('ddStepsList');
+            this.errorAlert = document.getElementById('ddErrorAlert');
+            this.completionActions = document.getElementById('ddCompletionActions');
+            this.lastStepsState = {};
+
+            this.init();
+        }
+
+        init() {
+            this.backdrop.style.display = 'flex';
+            this.startPolling();
+        }
+
+        startPolling() {
+            // Use EventSource (SSE) for real-time updates
+            const eventSource = new EventSource(`/api/deepdive_progress.php?id=${this.jobId}`);
+
+            eventSource.addEventListener('status', (event) => {
+                const data = JSON.parse(event.data);
+                this.updateModal(data);
+
+                // Close on completion/failure
+                if (['completed', 'failed', 'cancelled'].includes(data.status)) {
+                    eventSource.close();
+                }
+            });
+
+            eventSource.addEventListener('error', () => {
+                this.showError('Connection lost', 'Could not reach progress API');
+                eventSource.close();
+            });
+        }
+
+        updateModal(data) {
+            // Update progress bar
+            this.progressBar.style.width = data.progress_percent + '%';
+            this.percentDisplay.textContent = data.progress_percent + '%';
+
+            // Update stage info
+            this.stageName.textContent = data.progress_stage || 'Processing...';
+
+            // Update steps
+            if (data.steps) {
+                this.renderSteps(data.steps);
+            }
+
+            // Handle errors
+            if (data.error_message) {
+                this.showError('Error', data.error_message);
+                this.backdrop.style.background = 'rgba(0, 0, 0, 0.8)';
+            }
+
+            // Show completion links
+            if (data.status === 'completed' && data.report_ready) {
+                this.showCompletion(data.report_url, data.report_pdf_url);
+            }
+        }
+
+        renderSteps(steps) {
+            let html = '';
+
+            steps.forEach(step => {
+                const status = step.status || 'pending';
+                const icons = {
+                    'pending': '⋯',
+                    'running': '⟳',
+                    'completed': '✓',
+                    'failed': '✕',
+                    'skipped': '–'
+                };
+
+                // Only update if state changed
+                if (this.lastStepsState[step.id] === status) {
+                    return;
+                }
+                this.lastStepsState[step.id] = status;
+
+                html += `
+                    <div class="step-item ${status}">
+                        <div class="step-icon">${icons[status]}</div>
+                        <div class="step-content">
+                            <div class="step-label">${this.escapeHtml(step.label)}</div>
+                            ${step.detail ? `<div class="step-detail">${this.escapeHtml(step.detail)}</div>` : ''}
+                            ${step.error ? `<div class="step-error">${this.escapeHtml(step.error)}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+
+            if (html) {
+                this.stepsList.innerHTML += html;
+            }
+        }
+
+        showError(title, message) {
+            this.errorAlert.style.display = 'flex';
+            document.getElementById('ddErrorTitle').textContent = title;
+            document.getElementById('ddErrorMessage').textContent = message;
+        }
+
+        showCompletion(reportUrl, pdfUrl) {
+            document.getElementById('ddViewReport').href = reportUrl;
+            document.getElementById('ddDownloadPdf').href = pdfUrl;
+
+            this.completionActions.style.display = 'flex';
+
+            // Allow closing modal now
+            const closeBtn = document.getElementById('ddClose');
+            closeBtn.style.opacity = '1';
+            closeBtn.style.cursor = 'pointer';
+            closeBtn.onclick = () => {
+                this.backdrop.style.display = 'none';
+            };
+        }
+
+        escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    }
+
+    // Auto-initialize when page loads
+    document.addEventListener('DOMContentLoaded', () => {
+        const jobIdMatch = window.location.search.match(/jobId=([^&]+)/);
+        if (jobIdMatch) {
+            new DeepDiveProgressModal(decodeURIComponent(jobIdMatch[1]));
+        }
+    });
+</script>

@@ -322,6 +322,16 @@ HTML;
     /** @param array<string,mixed> $c */
     private function appendixBlock(array $c): string
     {
+        // Hardware specifications (new)
+        $hwBlock = '';
+        foreach (($c['bundles'] ?? []) as $b) {
+            $hw = $b['hardware_spec'] ?? null;
+            if ($hw === null) continue;
+            $hwBlock .= $this->renderHardwareSpecs($hw, $b['data_completeness'] ?? []);
+        }
+        $hwBlock = $hwBlock !== '' ? $hwBlock : '';
+
+        // Bundle metadata
         $bundleRows = '';
         foreach (($c['bundles'] ?? []) as $b) {
             $id    = htmlspecialchars((string)($b['debug_file_id'] ?? ''), ENT_QUOTES);
@@ -334,6 +344,7 @@ HTML;
         }
         $bundleRows = $bundleRows ?: '<tr><td colspan="6" class="muted">No bundle metadata recorded.</td></tr>';
 
+        // Rule evaluation errors
         $errorRows = '';
         foreach (($c['evaluator_errors'] ?? []) as $e) {
             $r = htmlspecialchars((string)($e['rule_id'] ?? ''), ENT_QUOTES);
@@ -350,6 +361,7 @@ HTML;
         return <<<HTML
 <section class="appendix">
   <h2>Appendix</h2>
+  {$hwBlock}
   <div class="apx-block">
     <h3>Bundles processed</h3>
     <table class="apx-table">
@@ -359,6 +371,175 @@ HTML;
   </div>
   {$errorBlock}
 </section>
+HTML;
+    }
+
+    /**
+     * Render comprehensive hardware specifications block
+     */
+    private function renderHardwareSpecs(object $spec, array $completeness): string
+    {
+        $model     = htmlspecialchars((string)($spec->model ?? ''), ENT_QUOTES);
+        $serial    = htmlspecialchars((string)($spec->serial ?? ''), ENT_QUOTES);
+        $location  = htmlspecialchars((string)($spec->location ?? ''), ENT_QUOTES);
+        $cpuModel  = htmlspecialchars((string)($spec->cpu['model'] ?? ''), ENT_QUOTES);
+        $cpuCores  = (int)($spec->cpu['cores'] ?? 0);
+        $ramTotal  = (float)($spec->ram['total_gb'] ?? 0);
+        $ramAvail  = (float)($spec->ram['available_gb'] ?? 0);
+        $uptime    = (float)($spec->uptime_days ?? 0);
+
+        // Device card
+        $deviceCard = <<<HTML
+<div class="hw-device-card">
+  <h4>NAS Device</h4>
+  <div class="hw-spec-grid">
+    <div class="hw-spec-item"><span class="hw-spec-label">Model:</span><span class="hw-spec-value">{$model}</span></div>
+    <div class="hw-spec-item"><span class="hw-spec-label">Serial:</span><span class="hw-spec-value">{$serial}</span></div>
+    <div class="hw-spec-item"><span class="hw-spec-label">CPU:</span><span class="hw-spec-value">{$cpuModel} ({$cpuCores} cores)</span></div>
+    <div class="hw-spec-item"><span class="hw-spec-label">RAM:</span><span class="hw-spec-value">{$ramTotal} GB ({$ramAvail} GB available)</span></div>
+    <div class="hw-spec-item"><span class="hw-spec-label">Uptime:</span><span class="hw-spec-value">{$uptime} days</span></div>
+    {$this->renderCompletenessStatus($completeness)}
+  </div>
+</div>
+HTML;
+
+        // Drive bay info
+        $bayTotal = (int)($spec->driveBays['total'] ?? 0);
+        $bayUsed  = (int)($spec->driveBays['used'] ?? 0);
+        $driveTable = '';
+        if ($bayTotal > 0) {
+            $driveTable = "<h4>Drive Bays</h4>";
+            $driveTable .= "<div class=\"hw-spec-grid\"><div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Total Bays:</span><span class=\"hw-spec-value\">{$bayTotal}</span></div>";
+            $driveTable .= "<div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Used Bays:</span><span class=\"hw-spec-value\">{$bayUsed}</span></div></div>";
+        }
+
+        // Drive details table
+        $driveDetailsTable = '';
+        $drives = $spec->drives ?? [];
+        if (!empty($drives)) {
+            $driveRows = '';
+            foreach ($drives as $drive) {
+                $bay = (int)($drive['bay'] ?? 0);
+                $device = htmlspecialchars((string)($drive['device'] ?? ''), ENT_QUOTES);
+                $model = htmlspecialchars((string)($drive['model'] ?? 'Unknown'), ENT_QUOTES);
+                $serial = htmlspecialchars((string)($drive['serial'] ?? ''), ENT_QUOTES);
+                $capacity = (float)($drive['capacity_gb'] ?? 0);
+                $smart = htmlspecialchars((string)($drive['smart_status'] ?? 'unknown'), ENT_QUOTES);
+                $temp = (int)($drive['temperature_celsius'] ?? 0);
+                $poh = (int)($drive['power_on_hours'] ?? 0);
+
+                $smartBadge = match($smart) {
+                    'passed', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
+                    'warning', 'failing' => '<span class="hw-status-badge hw-status-warning">⚠ Warning</span>',
+                    'failed' => '<span class="hw-status-badge hw-status-critical">✕ Failed</span>',
+                    default => htmlspecialchars($smart, ENT_QUOTES),
+                };
+
+                $driveRows .= "<tr><td>{$bay}</td><td class=\"mono\">{$device}</td><td>{$model}</td><td class=\"mono\">{$serial}</td><td>{$capacity} GB</td><td>{$poh}h</td><td>{$temp}°C</td><td>{$smartBadge}</td></tr>";
+            }
+            $driveDetailsTable = <<<HTML
+<h4>Drives</h4>
+<table class="hw-drive-table">
+  <thead><tr><th>Bay</th><th>Device</th><th>Model</th><th>Serial</th><th>Capacity</th><th>Hours</th><th>Temp</th><th>Status</th></tr></thead>
+  <tbody>{$driveRows}</tbody>
+</table>
+HTML;
+        }
+
+        // RAID configuration table
+        $raidTable = '';
+        $arrays = $spec->raidConfig['arrays'] ?? [];
+        if (!empty($arrays)) {
+            $raidRows = '';
+            foreach ($arrays as $arr) {
+                $name = htmlspecialchars((string)($arr['name'] ?? ''), ENT_QUOTES);
+                $state = htmlspecialchars((string)($arr['state'] ?? ''), ENT_QUOTES);
+                $level = htmlspecialchars((string)($arr['level'] ?? ''), ENT_QUOTES);
+                $members = (int)($arr['members'] ?? 0);
+                $healthy = (int)($arr['healthy_members'] ?? 0);
+                $missing = (int)($arr['missing_members'] ?? 0);
+                $progress = $arr['rebuild_progress'] ?? null;
+
+                $stateBadge = match($state) {
+                    'active' => '<span class="hw-status-badge hw-status-healthy">Active</span>',
+                    'degraded' => '<span class="hw-status-badge hw-status-warning">Degraded</span>',
+                    'recovering', 'resync' => '<span class="hw-status-badge" style="background:#dbeafe;color:#0369a1;">↻ Rebuilding</span>',
+                    default => htmlspecialchars($state, ENT_QUOTES),
+                };
+
+                $progressStr = $progress !== null ? sprintf(' (%.1f%%)', $progress) : '';
+                $raidRows .= "<tr><td>{$name}</td><td>{$level}</td><td>{$members}</td><td>{$healthy}</td><td>{$missing}</td><td>{$stateBadge} {$progressStr}</td></tr>";
+            }
+            $raidTable = <<<HTML
+<h4>RAID Arrays</h4>
+<table class="hw-raid-table">
+  <thead><tr><th>Array</th><th>Level</th><th>Members</th><th>Healthy</th><th>Missing</th><th>State</th></tr></thead>
+  <tbody>{$raidRows}</tbody>
+</table>
+HTML;
+        }
+
+        // Volumes table
+        $volumeTable = '';
+        $volumes = $spec->volumes ?? [];
+        if (!empty($volumes)) {
+            $volRows = '';
+            foreach ($volumes as $vol) {
+                $name = htmlspecialchars((string)($vol['name'] ?? ''), ENT_QUOTES);
+                $mount = htmlspecialchars((string)($vol['mount_point'] ?? ''), ENT_QUOTES);
+                $total = (float)($vol['total_gb'] ?? 0);
+                $used = (float)($vol['used_gb'] ?? 0);
+                $pct = (int)($vol['usage_percent'] ?? 0);
+
+                $pctColor = match(true) {
+                    $pct >= 90 => '#f87171',
+                    $pct >= 75 => '#fb923c',
+                    default => '#86efac',
+                };
+
+                $volRows .= "<tr><td>{$name}</td><td class=\"mono\">{$mount}</td><td>{$total} GB</td><td>{$used} GB</td><td><div style=\"width:100%;height:16px;background:#f3f4f6;border-radius:2px;overflow:hidden\"><div style=\"width:{$pct}%;height:100%;background:{$pctColor};display:flex;align-items:center;justify-content:center;font-size:10px;color:white;font-weight:600\">{$pct}%</div></div></td></tr>";
+            }
+            $volumeTable = <<<HTML
+<h4>Volumes</h4>
+<table class="hw-volume-table">
+  <thead><tr><th>Name</th><th>Mount</th><th>Total</th><th>Used</th><th>Usage</th></tr></thead>
+  <tbody>{$volRows}</tbody>
+</table>
+HTML;
+        }
+
+        return <<<HTML
+<div class="apx-block">
+  <h3>System Configuration</h3>
+  {$deviceCard}
+  {$driveTable}
+  {$driveDetailsTable}
+  {$raidTable}
+  {$volumeTable}
+</div>
+HTML;
+    }
+
+    /**
+     * Render data completeness status indicator
+     */
+    private function renderCompletenessStatus(array $completeness): string
+    {
+        $score = (int)($completeness['hardware_score'] ?? 0);
+        $assessment = htmlspecialchars((string)($completeness['hardware_assessment'] ?? 'Unknown'), ENT_QUOTES);
+
+        $color = match(true) {
+            $score === 100 => '#10b981',
+            $score >= 80 => '#f59e0b',
+            $score >= 50 => '#ef4444',
+            default => '#6b7280',
+        };
+
+        return <<<HTML
+<div class="hw-spec-item">
+  <span class="hw-spec-label">Data Completeness:</span>
+  <span class="hw-spec-value" style="color:{$color};font-weight:500" title="{$assessment}">{$score}%</span>
+</div>
 HTML;
     }
 
@@ -458,6 +639,19 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .apx-table th,.apx-table td{text-align:left;padding:6px 8px;border-bottom:1px solid #f3f4f6;vertical-align:top}
 .apx-table th{background:#f9fafb;font-weight:600;color:#6b7280;text-transform:uppercase;font-size:10px;letter-spacing:.05em}
 .muted{color:#9ca3af;font-style:italic}
+.hw-device-card{background:#f0f9ff;border-left:4px solid #0369a1;padding:14px;margin-bottom:16px;border-radius:6px}
+.hw-device-card h4{margin-top:0;margin-bottom:10px;color:#0369a1}
+.hw-spec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;font-size:13px}
+.hw-spec-item{display:flex;justify-content:space-between;padding:6px;background:#fff;border-radius:4px;border:1px solid #dbeafe}
+.hw-spec-label{font-weight:500;color:#0369a1}
+.hw-spec-value{color:#1e293b;text-align:right;font-weight:600}
+.hw-drive-table,.hw-raid-table,.hw-volume-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.hw-drive-table th,.hw-raid-table th,.hw-volume-table th{background:#f3f4f6;padding:8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600;font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.03em}
+.hw-drive-table td,.hw-raid-table td,.hw-volume-table td{padding:8px;border-bottom:1px solid #f3f4f6}
+.hw-status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
+.hw-status-healthy{background:#d1fae5;color:#047857}
+.hw-status-warning{background:#fef3c7;color:#b45309}
+.hw-status-critical{background:#fee2e2;color:#dc2626}
 CSS;
     }
 }

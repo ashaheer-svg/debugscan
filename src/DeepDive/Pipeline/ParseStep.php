@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\DeepDive\Pipeline;
 
+use App\DeepDive\Hardware\HardwareSpecExtractor;
 use App\DeepDive\Parsers\BundleLocator;
 use App\DeepDive\Parsers\TimestampParser;
 use App\DeepDive\Rules\Sources\SourceRegistry;
@@ -32,8 +33,9 @@ final class ParseStep implements StepInterface
         $locator  = new BundleLocator(new TimestampParser($year));
         $registry = new SourceRegistry();
         $facts    = [];
+        $hwExtractor = new HardwareSpecExtractor();
 
-        foreach ($ctx->bag['bundles'] as $bundle) {
+        foreach ($ctx->bag['bundles'] as &$bundle) {
             $base = $bundle['extracted_path'] ?? null;
             if (!$base || !is_dir($base)) continue;
 
@@ -41,6 +43,16 @@ final class ParseStep implements StepInterface
             $bundleReg = $locator->locate($base);
             foreach ($bundleReg->allLogs()    as $src) $registry->registerLog($src);
             foreach ($bundleReg->allSqlite()  as $src) $registry->registerSqlite($src);
+
+            // Extract comprehensive hardware specifications
+            $hardwareSpec = $hwExtractor->extract($base);
+            $bundle['hardware_spec'] = $hardwareSpec;
+            $bundle['data_completeness'] = [
+                'hardware_score' => $hardwareSpec->completenessScore(),
+                'hardware_assessment' => $hardwareSpec->completenessAssessment(),
+                'extracted_fields' => $hardwareSpec->extractedFields(),
+                'missing_fields' => $hardwareSpec->missingFields(),
+            ];
 
             $facts[] = [
                 'debug_file_id'  => $bundle['debug_file_id'],
@@ -52,6 +64,7 @@ final class ParseStep implements StepInterface
                 'sources_sqlite' => array_keys($bundleReg->allSqlite()),
             ];
         }
+        unset($bundle);
 
         $ctx->bag['facts']           = $facts;
         $ctx->bag['source_registry'] = $registry;
