@@ -74,8 +74,11 @@ $jobs = new JobRepository($pdo);
 // For fetch (JSON): return current status immediately
 if ($wantJson) {
     try {
+        error_log("[DeepDive API] Looking up jobId: $jobId, tenantId: " . ($tenantId ?: 'null'));
+
         $row = $jobs->findForTenant($jobId, $tenantId ?: null);
         if (!$row) {
+            error_log("[DeepDive API] Job not found: $jobId");
             http_response_code(404);
             echo json_encode(['error' => 'Job not found']);
             exit;
@@ -103,8 +106,9 @@ if ($wantJson) {
         http_response_code(200);
         echo json_encode($payload, JSON_UNESCAPED_SLASHES);
     } catch (\Throwable $e) {
+        error_log("[DeepDive API] Error: " . $e->getMessage() . "\n" . $e->getTraceAsString());
         http_response_code(500);
-        echo json_encode(['error' => $e->getMessage()]);
+        echo json_encode(['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
     }
     exit;
 }
