@@ -8,14 +8,22 @@ declare(strict_types=1);
  * breaks DeepDive progress streaming.
  */
 
-require __DIR__ . '/../../vendor/autoload.php';
+try {
+    require __DIR__ . '/../../vendor/autoload.php';
 
-use App\Database;
-use App\DeepDive\Services\JobRepository;
+    use App\Database;
+    use App\DeepDive\Services\JobRepository;
+} catch (\Throwable $e) {
+    http_response_code(500);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => 'Autoload failed: ' . $e->getMessage()]);
+    exit;
+}
 
-// Detect if client wants JSON (fetch) or SSE (EventSource)
-$accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
-$wantJson = strpos($accept, 'application/json') !== false;
+try {
+    // Detect if client wants JSON (fetch) or SSE (EventSource)
+    $accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
+    $wantJson = strpos($accept, 'application/json') !== false;
 
 if ($wantJson) {
     header('Content-Type: application/json');
@@ -165,4 +173,20 @@ while (true) {
         break;
     }
     sleep(2);
+}
+} catch (\Throwable $e) {
+    // Catch any uncaught exceptions
+    error_log('[DeepDive API] Uncaught exception: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+
+    if (!headers_sent()) {
+        header('Content-Type: application/json');
+        http_response_code(500);
+    }
+
+    echo json_encode([
+        'error' => $e->getMessage(),
+        'type' => get_class($e),
+        'file' => $e->getFile(),
+        'line' => $e->getLine(),
+    ]);
 }
