@@ -372,8 +372,9 @@
 {# Inline JavaScript for Real-Time Updates #}
 <script>
     class DeepDiveProgressModal {
-        constructor(jobId) {
+        constructor(jobId, basePath = '') {
             this.jobId = jobId;
+            this.basePath = basePath;
             this.modal = document.getElementById('ddProgressModal');
             this.backdrop = document.getElementById('ddProgressBackdrop');
             this.progressBar = document.getElementById('ddProgressBar');
@@ -395,7 +396,8 @@
 
         startPolling() {
             // Use EventSource (SSE) for real-time updates
-            const eventSource = new EventSource(`/api/deepdive_progress.php?id=${this.jobId}`);
+            const apiUrl = this.basePath + '/api/deepdive_progress.php?id=' + encodeURIComponent(this.jobId);
+            const eventSource = new EventSource(apiUrl);
 
             eventSource.addEventListener('status', (event) => {
                 const data = JSON.parse(event.data);

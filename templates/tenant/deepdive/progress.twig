@@ -10,10 +10,11 @@
 {% include 'tenant/deepdive/progress-modal.twig' %}
 
 <script>
-  // Initialize the progress modal with job ID
+  // Initialize the progress modal with job ID and base path
   document.addEventListener('DOMContentLoaded', function() {
     window._ddJobId = {{ job.id|json_encode|raw }};
-    new DeepDiveProgressModal({{ job.id|json_encode|raw }});
+    window._basePath = {{ base_path|json_encode|raw }};
+    new DeepDiveProgressModal({{ job.id|json_encode|raw }}, {{ base_path|json_encode|raw }});
   });
 </script>
 {% endblock %}
