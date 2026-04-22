@@ -48,7 +48,7 @@ final class RenderStep implements StepInterface
             'generated_at'      => date('Y-m-d H:i:s T'),
             'engine_version'    => Engine::VERSION,
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
-            'bundles'           => $ctx->bag['facts'] ?? [],
+            'bundles'           => $ctx->bag['bundles'] ?? [],
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],
         ];
 
