@@ -259,22 +259,50 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Extract drive bay count
+     * Extract drive bay count including expansion units
      */
     private function extractDriveBays(): ?array
     {
-        // Try 1: load_info.result - uses 'disks' array
+        // Try 1: load_info.result - most comprehensive
         $loadInfo = $this->parseJsonResult('load_info.result');
         if (is_array($loadInfo)) {
+            $mainBayCount = $loadInfo['max_bay_count'] ?? 0;
             $diskCount = isset($loadInfo['disks']) ? count((array)$loadInfo['disks']) : 0;
-            $maxBayCount = $loadInfo['max_bay_count'] ?? 0;
+            $expansionBayCount = 0;
+            $expansionDiskCount = 0;
 
-            if ($diskCount > 0 || $maxBayCount > 0) {
+            // Count expansion disks if present
+            if (isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
+                foreach ($loadInfo['disks'] as $disk) {
+                    if (is_array($disk) && !empty($disk['container']['str'])) {
+                        if (preg_match('/expansion/i', $disk['container']['str'])) {
+                            $expansionDiskCount++;
+                        }
+                    }
+                }
+            }
+
+            // Extract expansion bay count from enclosures
+            if (!empty($loadInfo['enclosures'])) {
+                foreach ((array)$loadInfo['enclosures'] as $enclosure) {
+                    if (is_array($enclosure) && !empty($enclosure['id'])) {
+                        if (preg_match('/expansion/i', (string)$enclosure['id'])) {
+                            $expansionBayCount += $enclosure['bay_count'] ?? 5;
+                        }
+                    }
+                }
+            }
+
+            $mainDiskCount = $diskCount - $expansionDiskCount;
+            if ($mainBayCount > 0 || $diskCount > 0) {
                 return [
                     'data' => [
-                        'total' => (int)($maxBayCount ?: $diskCount),
-                        'used' => $diskCount,
-                        'expansion_count' => 0,
+                        'main_unit_bays' => (int)($mainBayCount ?: max(4, $mainDiskCount + 1)),
+                        'main_unit_used' => max(0, $mainDiskCount),
+                        'expansion_unit_bays' => $expansionBayCount,
+                        'expansion_unit_used' => $expansionDiskCount,
+                        'total_bays' => (int)($mainBayCount ?: max(4, $mainDiskCount + 1)) + $expansionBayCount,
+                        'total_used' => $diskCount,
                     ],
                     'file' => 'dsm/result/load_info.result',
                     'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result')),
@@ -285,31 +313,50 @@ final class HardwareSpecExtractor
         // Try 2: Count actual disks in synostorage directory
         $diskDirs = glob($this->extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
         if (!empty($diskDirs)) {
+            $diskCount = count($diskDirs);
             return [
                 'data' => [
-                    'total' => count($diskDirs) + 2, // Add 2 as estimate for unused bays
-                    'used' => count($diskDirs),
-                    'expansion_count' => 0,
+                    'main_unit_bays' => max(4, $diskCount),
+                    'main_unit_used' => $diskCount,
+                    'expansion_unit_bays' => 0,
+                    'expansion_unit_used' => 0,
+                    'total_bays' => max(4, $diskCount),
+                    'total_used' => $diskCount,
                 ],
                 'file' => 'dsm/run/synostorage/disks/',
                 'timestamp' => date('Y-m-d H:i:s'),
             ];
         }
 
-        // Try 3: synoinfo.conf parsing (count bay-related entries)
+        // Try 3: synoinfo.conf parsing for bay capacity
         $synoinfo = $this->parseSynoinfo();
-        $bayCount = 0;
+        $mainBayCount = 0;
+        $expansionBayCount = 0;
+
         foreach ($synoinfo as $key => $value) {
-            if (preg_match('/^(external_)?slot\d+_type/i', $key)) {
-                $bayCount++;
+            // Main unit bays: slot0_type, slot1_type, etc.
+            if (preg_match('/^slot\d+_type$/i', $key) && !empty($value)) {
+                $mainBayCount++;
+            }
+            // Expansion bays: external_slot0_type, expansion_bays, etc.
+            if (preg_match('/^(external_)?slot\d+_type$/i', $key) && preg_match('/^external/i', $key) && !empty($value)) {
+                $expansionBayCount++;
+            }
+            // Explicit expansion bay count
+            if (preg_match('/^expansion_bays?$/i', $key)) {
+                $expansionBayCount = (int)$value;
             }
         }
-        if ($bayCount > 0) {
+
+        if ($mainBayCount > 0 || $expansionBayCount > 0) {
             return [
                 'data' => [
-                    'total' => $bayCount,
-                    'used' => 0,
-                    'expansion_count' => 0,
+                    'main_unit_bays' => max($mainBayCount, 4),
+                    'main_unit_used' => 0,
+                    'expansion_unit_bays' => $expansionBayCount,
+                    'expansion_unit_used' => 0,
+                    'total_bays' => max($mainBayCount, 4) + $expansionBayCount,
+                    'total_used' => 0,
                 ],
                 'file' => 'dsm/etc/synoinfo.conf',
                 'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/etc/synoinfo.conf')),
@@ -320,34 +367,64 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Extract individual drive information
+     * Extract individual drive information with container/expansion mapping
      */
     private function extractDrives(): ?array
     {
         $drives = [];
         $sourceFile = '';
         $timestamp = '';
+        $mainUnitBays = 0;  // Track how many bays in main unit
 
-        // Try 1: load_info.result (DSM 6/7) - uses 'disks' array
+        // Try 1: load_info.result (DSM 6/7) - uses 'disks' array with container info
         $loadInfo = $this->parseJsonResult('load_info.result');
         if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
-            $bay = 1;
+            $mainBay = 1;
+            $expansionBays = [];  // Track expansion unit bays separately
+
             foreach ($loadInfo['disks'] as $disk) {
-                if (is_array($disk)) {
-                    $drives[] = [
-                        'bay' => $disk['slot_id'] ?? $bay,
-                        'device' => $disk['id'] ?? '',
-                        'model' => $disk['model'] ?? '',
-                        'serial' => $disk['serial'] ?? '',
-                        'capacity_gb' => isset($disk['size_total']) ? round((int)$disk['size_total'] / (1000**3), 1) : 0,
-                        'firmware' => $disk['firm'] ?? '',
-                        'temperature_celsius' => $disk['temp'] ?? 0,
-                        'smart_status' => $disk['smart_status'] ?? 'unknown',
-                        'power_on_hours' => $disk['power_on_hours'] ?? 0,
-                    ];
-                    $bay++;
+                if (!is_array($disk)) continue;
+
+                // Determine which unit this drive belongs to
+                $container = $disk['container']['str'] ?? null;
+                $isExpansion = false;
+                $location = 'main';
+
+                // Check if this is an expansion unit drive
+                if (!empty($container)) {
+                    if (preg_match('/expansion/i', $container) || preg_match('/^[a-z0-9]+-expansion/i', $container)) {
+                        $isExpansion = true;
+                        $location = $container;
+                        if (!isset($expansionBays[$container])) {
+                            $expansionBays[$container] = 1;
+                        }
+                        $bay = $expansionBays[$container];
+                        $expansionBays[$container]++;
+                    }
                 }
+
+                if (!$isExpansion) {
+                    $bay = $mainBay;
+                    $mainBay++;
+                }
+
+                $drives[] = [
+                    'bay' => $bay,
+                    'location' => $location,
+                    'device' => $disk['id'] ?? '',
+                    'model' => $disk['model'] ?? '',
+                    'serial' => $disk['serial'] ?? '',
+                    'vendor' => $disk['vendor'] ?? '',
+                    'capacity_gb' => isset($disk['size_total']) ? round((int)$disk['size_total'] / (1000**3), 1) : 0,
+                    'firmware' => $disk['firm'] ?? '',
+                    'temperature_celsius' => $disk['temp'] ?? 0,
+                    'smart_status' => $disk['smart_status'] ?? 'unknown',
+                    'power_on_hours' => $disk['power_on_hours'] ?? 0,
+                    'is_ssd' => $disk['isSsd'] ?? false,
+                    'status' => $disk['status'] ?? 'unknown',
+                ];
             }
+            $mainUnitBays = $mainBay - 1;
             $sourceFile = 'dsm/result/load_info.result';
             $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result'));
         }
@@ -362,14 +439,18 @@ final class HardwareSpecExtractor
                     $diskName = basename($dir);
                     $drive = [
                         'bay' => $bay,
+                        'location' => 'main',
                         'device' => $diskName,
                         'model' => '',
                         'serial' => '',
+                        'vendor' => '',
                         'capacity_gb' => 0,
                         'firmware' => '',
                         'temperature_celsius' => 0,
                         'smart_status' => 'unknown',
                         'power_on_hours' => 0,
+                        'is_ssd' => false,
+                        'status' => 'detected',
                     ];
 
                     // Read available metadata from disk directory
@@ -386,12 +467,13 @@ final class HardwareSpecExtractor
                     $drives[] = $drive;
                     $bay++;
                 }
+                $mainUnitBays = count($drives);
                 $sourceFile = 'dsm/run/synostorage/disks/';
                 $timestamp = date('Y-m-d H:i:s');
             }
         }
 
-        // Try 3: Fallback to /dsm/proc/partitions discovery
+        // Try 3: Fallback to /dsm/proc/partitions discovery with scsi device type detection
         if (empty($drives)) {
             $partitions = $this->extractedPath . '/dsm/proc/partitions';
             if (file_exists($partitions)) {
@@ -400,16 +482,28 @@ final class HardwareSpecExtractor
                 foreach (explode("\n", $content) as $line) {
                     // Match whole disks (major 8 = internal, major 128 = expansion)
                     if (preg_match('/^\s+(8|128)\s+\d+\s+(\d+)\s+(sd[a-z]+|sata\d+|nvme\d+n\d+)$/', $line, $m)) {
+                        $isExpansion = ($m[1] == '128');
+                        $location = $isExpansion ? 'expansion' : 'main';
+
+                        if ($isExpansion && $mainUnitBays === 0) {
+                            // If we only have partitions data, assume first device is main unit start
+                            $mainUnitBays = 1;
+                        }
+
                         $drives[] = [
                             'bay' => $bay,
+                            'location' => $location,
                             'device' => $m[3],
                             'model' => 'Unknown',
                             'serial' => '',
+                            'vendor' => '',
                             'capacity_gb' => round((int)$m[2] / 1024 / 1024, 2),
                             'firmware' => '',
                             'temperature_celsius' => 0,
                             'smart_status' => 'unknown',
                             'power_on_hours' => 0,
+                            'is_ssd' => false,
+                            'status' => 'detected',
                         ];
                         $bay++;
                     }
@@ -557,37 +651,124 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Extract expansion unit information
+     * Extract expansion unit information - supports multiple units
      */
     private function extractExpansion(): ?array
     {
-        $synoinfo = $this->parseSynoinfo();
+        $units = [];
+        $sourceFile = '';
+        $timestamp = '';
 
-        // Check for expansion_slot_type or related fields
-        $hasExpansion = false;
-        $expansionType = '';
+        // Try 1: load_info.result - check for enclosure/container info
+        $loadInfo = $this->parseJsonResult('load_info.result');
+        if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
+            $expansionContainers = [];
 
-        foreach ($synoinfo as $key => $value) {
-            if (preg_match('/expansion.*type/i', $key) && !empty($value)) {
-                $hasExpansion = true;
-                $expansionType = $value;
-                break;
+            // Scan disks for expansion container references
+            foreach ($loadInfo['disks'] as $disk) {
+                if (is_array($disk) && !empty($disk['container']['str'])) {
+                    $container = $disk['container']['str'];
+                    if (preg_match('/expansion/i', $container)) {
+                        if (!isset($expansionContainers[$container])) {
+                            $expansionContainers[$container] = [
+                                'name' => $container,
+                                'bay_count' => 0,
+                                'drives' => [],
+                            ];
+                        }
+                        $expansionContainers[$container]['bay_count']++;
+                        $expansionContainers[$container]['drives'][] = $disk['id'] ?? '';
+                    }
+                }
+            }
+
+            // Parse expansion info from load_info
+            if (!empty($loadInfo['enclosures'])) {
+                foreach ((array)$loadInfo['enclosures'] as $enclosure) {
+                    if (is_array($enclosure)) {
+                        $enclosureId = $enclosure['id'] ?? null;
+                        if ($enclosureId && preg_match('/expansion/i', (string)$enclosureId)) {
+                            $units[] = [
+                                'enclosure_id' => $enclosureId,
+                                'model' => $enclosure['model'] ?? '',
+                                'serial' => $enclosure['serial'] ?? '',
+                                'firmware' => $enclosure['firmware'] ?? '',
+                                'bay_count' => $enclosure['bay_count'] ?? 5,
+                                'installed_drives' => count($expansionContainers[$enclosureId]['drives'] ?? []),
+                                'drives' => $expansionContainers[$enclosureId]['drives'] ?? [],
+                                'status' => $enclosure['status'] ?? 'unknown',
+                                'power_status' => $enclosure['power_status'] ?? 'unknown',
+                            ];
+                        }
+                    }
+                }
+            }
+
+            // If we found expansion containers but not formal enclosure data
+            if (empty($units) && !empty($expansionContainers)) {
+                foreach ($expansionContainers as $container => $info) {
+                    $units[] = [
+                        'enclosure_id' => $container,
+                        'model' => 'Unknown Expansion',
+                        'serial' => '',
+                        'firmware' => '',
+                        'bay_count' => max($info['bay_count'], 5),  // Assume at least 5 bays
+                        'installed_drives' => $info['bay_count'],
+                        'drives' => $info['drives'],
+                        'status' => 'detected',
+                        'power_status' => 'unknown',
+                    ];
+                }
+            }
+
+            if (!empty($units)) {
+                $sourceFile = 'dsm/result/load_info.result';
+                $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result'));
             }
         }
 
-        if (!$hasExpansion) {
+        // Try 2: Fallback to synoinfo.conf for expansion capability detection
+        if (empty($units)) {
+            $synoinfo = $this->parseSynoinfo();
+            $hasExpansion = false;
+            $expansionType = '';
+            $maxExpansionBays = 0;
+
+            foreach ($synoinfo as $key => $value) {
+                if (preg_match('/expansion.*bays?/i', $key)) {
+                    $maxExpansionBays = (int)$value;
+                }
+                if (preg_match('/expansion.*type/i', $key) && !empty($value)) {
+                    $hasExpansion = true;
+                    $expansionType = $value;
+                }
+            }
+
+            if ($hasExpansion || $maxExpansionBays > 0) {
+                $units[] = [
+                    'enclosure_id' => 'expansion_unit_1',
+                    'model' => $expansionType ?: 'Unknown Expansion Unit',
+                    'serial' => '',
+                    'firmware' => '',
+                    'bay_count' => $maxExpansionBays ?: 5,
+                    'installed_drives' => 0,  // Unknown from synoinfo
+                    'drives' => [],
+                    'status' => 'capable',
+                    'power_status' => 'unknown',
+                ];
+                $sourceFile = 'dsm/etc/synoinfo.conf';
+                $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/etc/synoinfo.conf'));
+            }
+        }
+
+        if (empty($units)) {
             return null;
         }
 
         return [
-            'data' => [
-                'has_expansion' => true,
-                'expansion_type' => $expansionType,
-                'expansion_bays' => 5, // Most common for DX517, etc
-                'expansion_drives' => 0, // Would need SYNODISKDB to know
-            ],
-            'file' => 'dsm/etc/synoinfo.conf',
-            'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/etc/synoinfo.conf')),
+            'data' => $units,
+            'file' => $sourceFile,
+            'timestamp' => $timestamp,
         ];
     }
 

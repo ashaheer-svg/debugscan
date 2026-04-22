@@ -403,23 +403,34 @@ HTML;
 </div>
 HTML;
 
-        // Drive bay info
-        $bayTotal = (int)($spec->driveBays['total'] ?? 0);
-        $bayUsed  = (int)($spec->driveBays['used'] ?? 0);
+        // Drive bay info - now supports expansion units
+        $mainBays = (int)($spec->driveBays['main_unit_bays'] ?? 0);
+        $mainUsed = (int)($spec->driveBays['main_unit_used'] ?? 0);
+        $expBays = (int)($spec->driveBays['expansion_unit_bays'] ?? 0);
+        $expUsed = (int)($spec->driveBays['expansion_unit_used'] ?? 0);
+        $bayTotal = (int)($spec->driveBays['total_bays'] ?? $mainBays + $expBays);
+        $bayUsedTotal = (int)($spec->driveBays['total_used'] ?? $mainUsed + $expUsed);
+
         $driveTable = '';
-        if ($bayTotal > 0) {
-            $driveTable = "<h4>Drive Bays</h4>";
-            $driveTable .= "<div class=\"hw-spec-grid\"><div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Total Bays:</span><span class=\"hw-spec-value\">{$bayTotal}</span></div>";
-            $driveTable .= "<div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Used Bays:</span><span class=\"hw-spec-value\">{$bayUsed}</span></div></div>";
+        if ($mainBays > 0 || $expBays > 0) {
+            $driveTable = "<h4>Storage Capacity</h4>";
+            $driveTable .= "<div class=\"hw-spec-grid\">";
+            $driveTable .= "<div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Main Unit Bays:</span><span class=\"hw-spec-value\">{$mainUsed}/{$mainBays}</span></div>";
+            if ($expBays > 0) {
+                $driveTable .= "<div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Expansion Bays:</span><span class=\"hw-spec-value\">{$expUsed}/{$expBays}</span></div>";
+            }
+            $driveTable .= "<div class=\"hw-spec-item\"><span class=\"hw-spec-label\">Total Capacity:</span><span class=\"hw-spec-value\">{$bayUsedTotal}/{$bayTotal} bays</span></div>";
+            $driveTable .= "</div>";
         }
 
-        // Drive details table
+        // Drive details table with location information
         $driveDetailsTable = '';
         $drives = $spec->drives ?? [];
         if (!empty($drives)) {
             $driveRows = '';
             foreach ($drives as $drive) {
                 $bay = (int)($drive['bay'] ?? 0);
+                $location = htmlspecialchars((string)($drive['location'] ?? 'main'), ENT_QUOTES);
                 $device = htmlspecialchars((string)($drive['device'] ?? ''), ENT_QUOTES);
                 $model = htmlspecialchars((string)($drive['model'] ?? 'Unknown'), ENT_QUOTES);
                 $serial = htmlspecialchars((string)($drive['serial'] ?? ''), ENT_QUOTES);
@@ -427,6 +438,7 @@ HTML;
                 $smart = htmlspecialchars((string)($drive['smart_status'] ?? 'unknown'), ENT_QUOTES);
                 $temp = (int)($drive['temperature_celsius'] ?? 0);
                 $poh = (int)($drive['power_on_hours'] ?? 0);
+                $isSsd = (bool)($drive['is_ssd'] ?? false);
 
                 $smartBadge = match($smart) {
                     'passed', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
@@ -435,13 +447,50 @@ HTML;
                     default => htmlspecialchars($smart, ENT_QUOTES),
                 };
 
-                $driveRows .= "<tr><td>{$bay}</td><td class=\"mono\">{$device}</td><td>{$model}</td><td class=\"mono\">{$serial}</td><td>{$capacity} GB</td><td>{$poh}h</td><td>{$temp}°C</td><td>{$smartBadge}</td></tr>";
+                $typeLabel = $isSsd ? 'SSD' : 'HDD';
+                $locationLabel = $location === 'main' ? 'Main' : preg_replace('/[^a-z0-9]/i', ' ', $location);
+
+                $driveRows .= "<tr><td><strong>{$bay}</strong><br><small class=\"hw-location\">{$locationLabel}</small></td><td class=\"mono\">{$device}</td><td>{$model}<br><small>{$typeLabel}</small></td><td class=\"mono\">{$serial}</td><td>{$capacity} GB</td><td>{$poh}h</td><td>{$temp}°C</td><td>{$smartBadge}</td></tr>";
             }
             $driveDetailsTable = <<<HTML
 <h4>Drives</h4>
 <table class="hw-drive-table">
   <thead><tr><th>Bay</th><th>Device</th><th>Model</th><th>Serial</th><th>Capacity</th><th>Hours</th><th>Temp</th><th>Status</th></tr></thead>
   <tbody>{$driveRows}</tbody>
+</table>
+HTML;
+        }
+
+        // Expansion units section
+        $expansionTable = '';
+        $expansions = $spec->expansion ?? [];
+        if (!empty($expansions)) {
+            $expRows = '';
+            foreach ($expansions as $exp) {
+                $encId = htmlspecialchars((string)($exp['enclosure_id'] ?? ''), ENT_QUOTES);
+                $expModel = htmlspecialchars((string)($exp['model'] ?? 'Unknown'), ENT_QUOTES);
+                $expSerial = htmlspecialchars((string)($exp['serial'] ?? ''), ENT_QUOTES);
+                $expBayCount = (int)($exp['bay_count'] ?? 0);
+                $expUsedCount = (int)($exp['installed_drives'] ?? 0);
+                $expStatus = htmlspecialchars((string)($exp['status'] ?? 'unknown'), ENT_QUOTES);
+                $expPower = htmlspecialchars((string)($exp['power_status'] ?? 'unknown'), ENT_QUOTES);
+                $drivesList = implode(', ', array_map('htmlspecialchars', (array)($exp['drives'] ?? [])));
+
+                $statusBadge = match($expStatus) {
+                    'active', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Active</span>',
+                    'standby' => '<span class="hw-status-badge" style="background:#bfdbfe;color:#0369a1;">⏸ Standby</span>',
+                    'error', 'failed' => '<span class="hw-status-badge hw-status-warning">⚠ Error</span>',
+                    'detected', 'capable' => '<span class="hw-status-badge" style="background:#dbeafe;color:#0284c7;">◎ Detected</span>',
+                    default => htmlspecialchars($expStatus, ENT_QUOTES),
+                };
+
+                $expRows .= "<tr><td>{$encId}</td><td>{$expModel}</td><td class=\"mono\">{$expSerial}</td><td>{$expUsedCount}/{$expBayCount}</td><td>{$statusBadge}</td><td class=\"mono\" style=\"font-size:11px;max-width:200px;word-break:break-all\">{$drivesList}</td></tr>";
+            }
+            $expansionTable = <<<HTML
+<h4>Expansion Units</h4>
+<table class="hw-expansion-table">
+  <thead><tr><th>Enclosure ID</th><th>Model</th><th>Serial</th><th>Bays</th><th>Status</th><th>Drives</th></tr></thead>
+  <tbody>{$expRows}</tbody>
 </table>
 HTML;
         }
@@ -514,6 +563,7 @@ HTML;
   {$deviceCard}
   {$driveTable}
   {$driveDetailsTable}
+  {$expansionTable}
   {$raidTable}
   {$volumeTable}
 </div>
@@ -645,9 +695,10 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .hw-spec-item{display:flex;justify-content:space-between;padding:6px;background:#fff;border-radius:4px;border:1px solid #dbeafe}
 .hw-spec-label{font-weight:500;color:#0369a1}
 .hw-spec-value{color:#1e293b;text-align:right;font-weight:600}
-.hw-drive-table,.hw-raid-table,.hw-volume-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
-.hw-drive-table th,.hw-raid-table th,.hw-volume-table th{background:#f3f4f6;padding:8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600;font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.03em}
-.hw-drive-table td,.hw-raid-table td,.hw-volume-table td{padding:8px;border-bottom:1px solid #f3f4f6}
+.hw-drive-table,.hw-raid-table,.hw-volume-table,.hw-expansion-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.hw-drive-table th,.hw-raid-table th,.hw-volume-table th,.hw-expansion-table th{background:#f3f4f6;padding:8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600;font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.03em}
+.hw-drive-table td,.hw-raid-table td,.hw-volume-table td,.hw-expansion-table td{padding:8px;border-bottom:1px solid #f3f4f6}
+.hw-location{display:block;color:#6b7280;font-size:10px;margin-top:2px}
 .hw-status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
 .hw-status-healthy{background:#d1fae5;color:#047857}
 .hw-status-warning{background:#fef3c7;color:#b45309}

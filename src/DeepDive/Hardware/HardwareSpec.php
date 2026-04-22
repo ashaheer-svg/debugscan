@@ -67,14 +67,10 @@ final class HardwareSpec
     public array $volumes = [];
 
     /**
-     * Expansion unit info
+     * Expansion unit info - supports multiple expansion units
+     * @var array<int, array<string, mixed>>
      */
-    public array $expansion = [
-        'has_expansion' => false,
-        'expansion_type' => '',
-        'expansion_bays' => 0,
-        'expansion_drives' => 0,
-    ];
+    public array $expansion = [];
 
     /**
      * Data source citations
@@ -117,6 +113,10 @@ final class HardwareSpec
         // Volumes (1 field)
         $maxScore += 1;
         if (!empty($this->volumes)) $score++;
+
+        // Expansion (1 field)
+        $maxScore += 1;
+        if (!empty($this->expansion)) $score++;
 
         if ($maxScore === 0) {
             return 0;
