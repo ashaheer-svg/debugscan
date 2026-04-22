@@ -76,7 +76,7 @@ final class BundleLocator
                 $reg->registerLog(new FileLogSource(
                     name: $name,
                     paths: $paths,
-                    tsExtractor: fn(string $line): ?string => $this->tsp->parse($line),
+                    tsp: $this->tsp,
                 ));
             }
         }

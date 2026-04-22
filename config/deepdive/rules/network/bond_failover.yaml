@@ -1,5 +1,5 @@
 id: network.bond_failover
-version: 1
+version: 2
 title: "Bond slave interface went down"
 severity: warn
 actionability: user_fixable
@@ -16,9 +16,8 @@ remediation: >
 tags: [network, bond, lacp]
 signature:
   type: regex
-  source: kern.log
-  pattern: 'bond\d+.*link status definitely (?P<state>down|up) for interface (?P<iface>\S+)'
+  source: messages
+  pattern: 'bond\d+.*link status definitely down for interface (?P<iface>\S+)'
   dedupe_by: iface
 entities:
-  state: "$match.state"
   interface: "$match.iface"

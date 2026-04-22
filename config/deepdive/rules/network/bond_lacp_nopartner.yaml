@@ -1,0 +1,24 @@
+id: network.bond_lacp_nopartner
+version: 1
+title: "LACP bond has no response from link partner"
+severity: high
+actionability: user_fixable
+category: network
+description: >
+  The bond is configured for 802.3ad (LACP) but the switch is not
+  negotiating LACP on the connected ports. In this state the bond
+  falls back to a degraded / no-aggregation mode and redundancy is
+  effectively lost even though both links appear physically up.
+remediation: >
+  On the switch, enable LACP (active or passive) on the ports feeding
+  this NAS and place them in the same port-channel / LAG group. If you
+  cannot configure LACP on the switch, change the DSM bond mode to
+  Active-Backup or Balance-XOR instead of 802.3ad.
+tags: [network, bond, lacp]
+signature:
+  type: regex
+  source: messages
+  pattern: '(?P<iface>bond\d+):\s*Warning:\s*No 802\.3ad response from the link partner'
+  dedupe_by: iface
+entities:
+  interface: "$match.iface"

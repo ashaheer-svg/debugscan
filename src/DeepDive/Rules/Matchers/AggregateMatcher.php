@@ -7,6 +7,7 @@ namespace App\DeepDive\Rules\Matchers;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\Rule;
 use App\DeepDive\Rules\Sources\SourceRegistry;
+use App\DeepDive\Support\Engine;
 
 /**
  * Fires when a (sub-)regex hits >= threshold times on a source — optionally
@@ -35,6 +36,12 @@ final class AggregateMatcher implements MatcherInterface
         $windowSec = isset($sig['window_seconds']) ? (int)$sig['window_seconds'] : 0;
         $groupBy   = isset($sig['group_by']) ? (string)$sig['group_by'] : null;
 
+        // Date cutoff: per-rule override, else global default.
+        $withinDays = array_key_exists('within_days', $sig)
+            ? (int)$sig['within_days']
+            : Engine::withinDays();
+        $cutoffTs = $withinDays > 0 ? (time() - ($withinDays * 86400)) : 0;
+
         if ($srcName === '' || $pattern === '') return [];
         $src = $reg->log($srcName);
         if ($src === null) return [];
@@ -55,6 +62,14 @@ final class AggregateMatcher implements MatcherInterface
         foreach ($src->records() as $rec) {
             $m = [];
             if (!preg_match($regex, $rec->text, $m)) continue;
+
+            // Date filter: drop records older than cutoff. Records with no
+            // parseable timestamp fall through (better to over-include than
+            // silently drop).
+            if ($cutoffTs > 0 && $rec->timestamp !== null) {
+                $ts = strtotime($rec->timestamp);
+                if ($ts !== false && $ts < $cutoffTs) continue;
+            }
 
             $key = $groupBy !== null
                 ? ((string)($m[$groupBy] ?? '__all__'))
