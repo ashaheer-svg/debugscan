@@ -74,7 +74,7 @@ $jobs = new JobRepository($pdo);
 // For fetch (JSON): return current status immediately
 if ($wantJson) {
     try {
-        $row = $jobs->findForTenant($jobId, $tenantId);
+        $row = $jobs->findForTenant($jobId, $tenantId ?: null);
         if (!$row) {
             http_response_code(404);
             echo json_encode(['error' => 'Job not found']);
@@ -115,7 +115,7 @@ $started    = time();
 
 while (true) {
     try {
-        $row = $jobs->findForTenant($jobId, $tenantId);
+        $row = $jobs->findForTenant($jobId, $tenantId ?: null);
         if (!$row) {
             echo "event: error\ndata: Job not found\n\n";
             break;
@@ -140,22 +140,15 @@ while (true) {
             'report_pdf_url'  => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/pdf' : null,
         ];
 
-        if ($wantJson) {
-            echo json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n";
-        } else {
-            echo "event: status\ndata: " . json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n\n";
-        }
+        // SSE format (wantJson already exited above)
+        echo "event: status\ndata: " . json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n\n";
 
         if (in_array($row['status'], ['completed','failed','cancelled'], true)) {
             break;
         }
     } catch (\Throwable $e) {
-        $errorPayload = ['error' => $e->getMessage()];
-        if ($wantJson) {
-            echo json_encode($errorPayload, JSON_UNESCAPED_SLASHES) . "\n";
-        } else {
-            echo "event: error\ndata: " . $e->getMessage() . "\n\n";
-        }
+        // SSE format (wantJson already exited above)
+        echo "event: error\ndata: " . $e->getMessage() . "\n\n";
         break;
     }
 
@@ -163,12 +156,8 @@ while (true) {
     @flush();
 
     if ((time() - $started) > $maxSeconds) {
-        $timeoutPayload = ['error' => 'stream timeout'];
-        if ($wantJson) {
-            echo json_encode($timeoutPayload, JSON_UNESCAPED_SLASHES) . "\n";
-        } else {
-            echo "event: timeout\ndata: stream timeout\n\n";
-        }
+        // SSE format (wantJson already exited above)
+        echo "event: timeout\ndata: stream timeout\n\n";
         break;
     }
     sleep(2);
