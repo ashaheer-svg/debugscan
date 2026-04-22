@@ -7,14 +7,26 @@ declare(strict_types=1);
  * Supports both JSON (fetch) and SSE (EventSource) formats.
  */
 
+// Enable error logging
+error_reporting(E_ALL);
+ini_set('display_errors', '0');
+ini_set('log_errors', '1');
+
 try {
-    require __DIR__ . '/../../vendor/autoload.php';
+    @require __DIR__ . '/../../vendor/autoload.php';
+
+    if (!class_exists('App\Database')) {
+        throw new \Exception('Database class not found after autoload');
+    }
+
     use App\Database;
     use App\DeepDive\Services\JobRepository;
 } catch (\Throwable $e) {
     http_response_code(500);
     header('Content-Type: application/json');
-    echo json_encode(['error' => 'Autoload failed: ' . $e->getMessage()]);
+    $msg = 'Initialization error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine();
+    error_log('[DeepDive] ' . $msg);
+    echo json_encode(['error' => $msg]);
     exit;
 }
 
@@ -151,17 +163,20 @@ try {
     }
 
 } catch (\Throwable $e) {
-    error_log('[DeepDive API] Error: ' . $e->getMessage() . "\n" . $e->getTraceAsString());
+    $errorMsg = 'Exception: ' . get_class($e) . ' - ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine();
+    error_log('[DeepDive API] ' . $errorMsg);
 
     if (!headers_sent()) {
         header('Content-Type: application/json');
         http_response_code(500);
     }
 
+    // Return detailed error for debugging
     echo json_encode([
         'error' => $e->getMessage(),
-        'type' => get_class($e),
+        'exception' => get_class($e),
         'file' => $e->getFile(),
         'line' => $e->getLine(),
-    ]);
+        'trace' => explode("\n", $e->getTraceAsString()),
+    ], JSON_PRETTY_PRINT);
 }
