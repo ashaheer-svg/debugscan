@@ -397,21 +397,35 @@
         startPolling() {
             // Use EventSource (SSE) for real-time updates
             const apiUrl = this.basePath + '/api/deepdive_progress.php?id=' + encodeURIComponent(this.jobId);
+            console.log('DeepDive: Connecting to API:', apiUrl);
+
             const eventSource = new EventSource(apiUrl);
 
             eventSource.addEventListener('status', (event) => {
-                const data = JSON.parse(event.data);
-                this.updateModal(data);
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log('DeepDive: Status update received:', data);
+                    this.updateModal(data);
 
-                // Close on completion/failure
-                if (['completed', 'failed', 'cancelled'].includes(data.status)) {
-                    eventSource.close();
+                    // Close on completion/failure
+                    if (['completed', 'failed', 'cancelled'].includes(data.status)) {
+                        console.log('DeepDive: Job finished with status:', data.status);
+                        eventSource.close();
+                    }
+                } catch (e) {
+                    console.error('DeepDive: Error parsing status event:', e, event.data);
                 }
             });
 
-            eventSource.addEventListener('error', () => {
-                this.showError('Connection lost', 'Could not reach progress API');
+            eventSource.addEventListener('error', (event) => {
+                console.error('DeepDive: EventSource error:', event);
+                console.error('ReadyState:', eventSource.readyState);
+                this.showError('Connection Error', 'Failed to connect to API endpoint. Check browser console.');
                 eventSource.close();
+            });
+
+            eventSource.addEventListener('error', () => {
+                console.warn('DeepDive: Generic error event received');
             });
         }
 

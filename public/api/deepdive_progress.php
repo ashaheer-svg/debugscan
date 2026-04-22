@@ -17,24 +17,29 @@ header('Content-Type: text/event-stream');
 header('Cache-Control: no-cache');
 header('Connection: keep-alive');
 header('X-Accel-Buffering: no');
+header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Credentials: true');
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+$jobId = (string)($_GET['id'] ?? '');
+
+if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $jobId)) {
+    http_response_code(400);
+    echo "event: error\ndata: Invalid job ID format\n\n";
+    exit;
+}
+
 if (!isset($_SESSION['user_id'])) {
-    echo "event: error\ndata: Unauthorized\n\n";
+    http_response_code(401);
+    echo "event: error\ndata: Unauthorized - Please log in\n\n";
     exit;
 }
 
 $tenantId = (string)($_SESSION['tenant_id'] ?? '');
 $role     = (string)($_SESSION['role'] ?? 'tenant');
-$jobId    = (string)($_GET['id'] ?? '');
-
-if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $jobId)) {
-    echo "event: error\ndata: Invalid job ID\n\n";
-    exit;
-}
 
 $pdo = Database::getConnection();
 Database::setTenantContext($pdo, $tenantId ?: null, $role);
