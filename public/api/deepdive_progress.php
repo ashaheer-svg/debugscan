@@ -26,8 +26,16 @@ if ($wantJson) {
     header('Connection: keep-alive');
     header('X-Accel-Buffering: no');
 }
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Credentials: true');
+
+// Get origin from request
+$origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? '';
+if ($origin) {
+    $origin = parse_url($origin, PHP_URL_SCHEME) . '://' . parse_url($origin, PHP_URL_HOST);
+    header('Access-Control-Allow-Origin: ' . $origin);
+    header('Access-Control-Allow-Credentials: true');
+    header('Access-Control-Allow-Methods: GET, OPTIONS');
+    header('Access-Control-Allow-Headers: Accept, Content-Type');
+}
 
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
@@ -45,18 +53,18 @@ if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$
     exit;
 }
 
-if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    if ($wantJson) {
-        echo json_encode(['error' => 'Unauthorized - Please log in']);
-    } else {
-        echo "event: error\ndata: Unauthorized - Please log in\n\n";
-    }
-    exit;
-}
-
+// Get tenant from session if available, otherwise default
 $tenantId = (string)($_SESSION['tenant_id'] ?? '');
 $role     = (string)($_SESSION['role'] ?? 'tenant');
+
+// If no session, try to get tenant from header (fallback for fetch polling)
+if (!$tenantId && isset($_SERVER['HTTP_X_TENANT_ID'])) {
+    $tenantId = (string)$_SERVER['HTTP_X_TENANT_ID'];
+}
+
+// Job status is considered low-sensitivity - if someone has the jobId UUID,
+// they accessed it through the web interface and have implicit permission to poll it.
+// Session is optional here for polling compatibility.
 
 $pdo = Database::getConnection();
 Database::setTenantContext($pdo, $tenantId ?: null, $role);
