@@ -4,17 +4,55 @@
   <a href="{{ base_path }}/projects/view/{{ job.project_id }}" style="font-size:13px;color:#0b5ed7;text-decoration:none">&larr; back to project</a>
   <h2 style="margin:8px 0 4px">Deep Diagnostic</h2>
   <div style="color:#666;font-size:13px">Job <code>{{ job.id }}</code> · queued {{ job.queued_at|default('—') }}</div>
+
+  <div style="margin-top:20px;padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-weight:600;font-size:14px" id="dd-stage">{{ job.progress_stage|default('Queued') }}</div>
+        <div style="font-size:12px;color:#666" id="dd-status">Status: {{ job.status }}</div>
+      </div>
+      <div style="font-size:20px;font-weight:600" id="dd-pct">{{ job.progress_percent|default(0) }}%</div>
+    </div>
+    <div style="height:6px;border-radius:3px;background:#eef1f6;margin-top:12px;overflow:hidden">
+      <div id="dd-bar" style="height:100%;width:{{ job.progress_percent|default(0) }}%;background:#0b5ed7;transition:width .4s"></div>
+    </div>
+
+    <ol id="dd-steps" style="list-style:none;padding:0;margin:18px 0 0;font-size:13px">
+      {% for s in steps %}
+        <li data-id="{{ s.id }}" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed #eef1f6">
+          <span class="dd-icon" style="width:18px;display:inline-block;text-align:center">{{ {'done':'✓','failed':'✗','skipped':'–','running':'•','pending':'·'}[s.status]|default('·') }}</span>
+          <span style="flex:1">
+            <div style="font-weight:500">{{ s.label }}</div>
+            {% if s.detail %}<div style="color:#666;font-size:12px">{{ s.detail }}</div>{% endif %}
+            {% if s.error %}<div style="color:#b91c1c;font-size:12px">error: {{ s.error }}</div>{% endif %}
+          </span>
+        </li>
+      {% endfor %}
+    </ol>
+
+    <div id="dd-done" style="display:{% if job.status == 'completed' %}flex{% else %}none{% endif %};gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #eef1f6">
+      <a href="{{ base_path }}/deepdive/report/{{ job.id }}" target="_blank" style="background:#0b5ed7;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">View Report</a>
+      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/html" style="background:#fff;color:#0b5ed7;border:1px solid #0b5ed7;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:13px">Download HTML</a>
+      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/pdf" style="background:#fff;color:#0b5ed7;border:1px solid #0b5ed7;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:13px">Download PDF</a>
+    </div>
+
+    <div id="dd-error" style="display:{% if job.status == 'failed' %}block{% else %}none{% endif %};color:#b91c1c;margin-top:14px;font-size:13px">
+      Job failed: <span id="dd-err-msg">{{ job.error_message|default('unknown error') }}</span>
+    </div>
+  </div>
 </div>
 
-{# Include the advanced progress modal #}
-{% include 'tenant/deepdive/progress-modal.twig' %}
-
 <script>
-  // Initialize the progress modal with job ID and base path
-  document.addEventListener('DOMContentLoaded', function() {
-    window._ddJobId = {{ job.id|json_encode|raw }};
-    window._basePath = {{ base_path|json_encode|raw }};
-    new DeepDiveProgressModal({{ job.id|json_encode|raw }}, {{ base_path|json_encode|raw }});
-  });
+(function(){
+  var jobId = {{ job.id|json_encode|raw }};
+  var baseUrl = {{ (base_path ~ '/projects/deepdive/progress/' ~ job.id)|json_encode|raw }};
+
+  // Auto-reload every 2 seconds if job is not completed
+  if ('{{ job.status }}' !== 'completed' && '{{ job.status }}' !== 'failed') {
+    setTimeout(function() {
+      location.reload();
+    }, 2000);
+  }
+})();
 </script>
 {% endblock %}
