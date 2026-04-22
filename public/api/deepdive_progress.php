@@ -37,13 +37,21 @@ $jobId = (string)($_GET['id'] ?? '');
 
 if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $jobId)) {
     http_response_code(400);
-    echo "event: error\ndata: Invalid job ID format\n\n";
+    if ($wantJson) {
+        echo json_encode(['error' => 'Invalid job ID format']);
+    } else {
+        echo "event: error\ndata: Invalid job ID format\n\n";
+    }
     exit;
 }
 
 if (!isset($_SESSION['user_id'])) {
     http_response_code(401);
-    echo "event: error\ndata: Unauthorized - Please log in\n\n";
+    if ($wantJson) {
+        echo json_encode(['error' => 'Unauthorized - Please log in']);
+    } else {
+        echo "event: error\ndata: Unauthorized - Please log in\n\n";
+    }
     exit;
 }
 
@@ -55,7 +63,46 @@ Database::setTenantContext($pdo, $tenantId ?: null, $role);
 
 $jobs = new JobRepository($pdo);
 
-$maxSeconds = 1800; // 30 min hard cap on an SSE connection
+// For fetch (JSON): return current status immediately
+if ($wantJson) {
+    try {
+        $row = $jobs->findForTenant($jobId, $tenantId);
+        if (!$row) {
+            http_response_code(404);
+            echo json_encode(['error' => 'Job not found']);
+            exit;
+        }
+
+        $steps = [];
+        if (!empty($row['steps_json'])) {
+            $decoded = json_decode((string)$row['steps_json'], true);
+            if (is_array($decoded)) $steps = $decoded;
+        }
+
+        $payload = [
+            'id'              => $row['id'],
+            'status'          => $row['status'],
+            'progress_percent'=> (int)($row['progress_percent'] ?? 0),
+            'progress_stage'  => $row['progress_stage'],
+            'steps'           => $steps,
+            'error_message'   => $row['error_message'],
+            'report_ready'    => $row['status'] === 'completed',
+            'report_url'      => $row['status'] === 'completed' ? '/deepdive/report/' . $row['id'] : null,
+            'report_html_url' => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/html' : null,
+            'report_pdf_url'  => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/pdf' : null,
+        ];
+
+        http_response_code(200);
+        echo json_encode($payload, JSON_UNESCAPED_SLASHES);
+    } catch (\Throwable $e) {
+        http_response_code(500);
+        echo json_encode(['error' => $e->getMessage()]);
+    }
+    exit;
+}
+
+// For SSE: stream updates every 2 seconds
+$maxSeconds = 1800;
 $started    = time();
 
 while (true) {
