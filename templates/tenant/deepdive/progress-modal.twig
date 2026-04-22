@@ -395,38 +395,45 @@
         }
 
         startPolling() {
-            // Use EventSource (SSE) for real-time updates
+            // Use fetch polling instead of EventSource to support session cookies
             const apiUrl = this.basePath + '/api/deepdive_progress.php?id=' + encodeURIComponent(this.jobId);
-            console.log('DeepDive: Connecting to API:', apiUrl);
+            console.log('DeepDive: Polling API:', apiUrl);
 
-            const eventSource = new EventSource(apiUrl);
-
-            eventSource.addEventListener('status', (event) => {
-                try {
-                    const data = JSON.parse(event.data);
+            const poll = () => {
+                fetch(apiUrl, {
+                    method: 'GET',
+                    credentials: 'include', // Send cookies for session
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`API returned ${response.status}: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
                     console.log('DeepDive: Status update received:', data);
                     this.updateModal(data);
 
-                    // Close on completion/failure
+                    // Stop polling on completion/failure
                     if (['completed', 'failed', 'cancelled'].includes(data.status)) {
                         console.log('DeepDive: Job finished with status:', data.status);
-                        eventSource.close();
+                        return; // Stop polling
                     }
-                } catch (e) {
-                    console.error('DeepDive: Error parsing status event:', e, event.data);
-                }
-            });
 
-            eventSource.addEventListener('error', (event) => {
-                console.error('DeepDive: EventSource error:', event);
-                console.error('ReadyState:', eventSource.readyState);
-                this.showError('Connection Error', 'Failed to connect to API endpoint. Check browser console.');
-                eventSource.close();
-            });
+                    // Continue polling every 2 seconds
+                    setTimeout(poll, 2000);
+                })
+                .catch(error => {
+                    console.error('DeepDive: Fetch error:', error);
+                    this.showError('Connection Error', error.message);
+                });
+            };
 
-            eventSource.addEventListener('error', () => {
-                console.warn('DeepDive: Generic error event received');
-            });
+            // Start polling
+            poll();
         }
 
         updateModal(data) {

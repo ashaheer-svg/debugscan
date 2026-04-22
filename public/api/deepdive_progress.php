@@ -13,10 +13,19 @@ require __DIR__ . '/../../vendor/autoload.php';
 use App\Database;
 use App\DeepDive\Services\JobRepository;
 
-header('Content-Type: text/event-stream');
-header('Cache-Control: no-cache');
-header('Connection: keep-alive');
-header('X-Accel-Buffering: no');
+// Detect if client wants JSON (fetch) or SSE (EventSource)
+$accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
+$wantJson = strpos($accept, 'application/json') !== false;
+
+if ($wantJson) {
+    header('Content-Type: application/json');
+    header('Cache-Control: no-cache');
+} else {
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    header('X-Accel-Buffering: no');
+}
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Credentials: true');
 
@@ -76,13 +85,22 @@ while (true) {
             'report_pdf_url'  => $row['status'] === 'completed' ? '/deepdive/download/' . $row['id'] . '/pdf' : null,
         ];
 
-        echo "event: status\ndata: " . json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n\n";
+        if ($wantJson) {
+            echo json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n";
+        } else {
+            echo "event: status\ndata: " . json_encode($payload, JSON_UNESCAPED_SLASHES) . "\n\n";
+        }
 
         if (in_array($row['status'], ['completed','failed','cancelled'], true)) {
             break;
         }
     } catch (\Throwable $e) {
-        echo "event: error\ndata: " . $e->getMessage() . "\n\n";
+        $errorPayload = ['error' => $e->getMessage()];
+        if ($wantJson) {
+            echo json_encode($errorPayload, JSON_UNESCAPED_SLASHES) . "\n";
+        } else {
+            echo "event: error\ndata: " . $e->getMessage() . "\n\n";
+        }
         break;
     }
 
@@ -90,7 +108,12 @@ while (true) {
     @flush();
 
     if ((time() - $started) > $maxSeconds) {
-        echo "event: timeout\ndata: stream timeout\n\n";
+        $timeoutPayload = ['error' => 'stream timeout'];
+        if ($wantJson) {
+            echo json_encode($timeoutPayload, JSON_UNESCAPED_SLASHES) . "\n";
+        } else {
+            echo "event: timeout\ndata: stream timeout\n\n";
+        }
         break;
     }
     sleep(2);
