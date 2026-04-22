@@ -2,87 +2,53 @@
 
 declare(strict_types=1);
 
-/**
- * DeepDive progress endpoint. Returns job status for polling clients.
- * Supports both JSON (fetch) and SSE (EventSource) formats.
- */
-
-// Enable error logging
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 
-try {
-    @require __DIR__ . '/../../vendor/autoload.php';
+header('Content-Type: application/json');
+header('Cache-Control: no-cache');
 
+try {
+    // Step 1: Autoload
+    $autoloadPath = __DIR__ . '/../../vendor/autoload.php';
+    if (!file_exists($autoloadPath)) {
+        throw new \Exception("Autoload file not found: $autoloadPath");
+    }
+    require $autoloadPath;
+
+    // Step 2: Validate classes exist
     if (!class_exists('App\Database')) {
-        throw new \Exception('Database class not found after autoload');
+        throw new \Exception('App\Database class not found');
+    }
+    if (!class_exists('App\DeepDive\Services\JobRepository')) {
+        throw new \Exception('JobRepository class not found');
     }
 
-    use App\Database;
-    use App\DeepDive\Services\JobRepository;
-} catch (\Throwable $e) {
-    http_response_code(500);
-    header('Content-Type: application/json');
-    $msg = 'Initialization error: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine();
-    error_log('[DeepDive] ' . $msg);
-    echo json_encode(['error' => $msg]);
-    exit;
-}
-
-try {
-    // Detect if client wants JSON (fetch) or SSE (EventSource)
+    // Step 3: Parse request
     $accept = strtolower($_SERVER['HTTP_ACCEPT'] ?? '');
     $wantJson = strpos($accept, 'application/json') !== false;
-
-    // Set appropriate headers
-    if ($wantJson) {
-        header('Content-Type: application/json');
-        header('Cache-Control: no-cache');
-    } else {
-        header('Content-Type: text/event-stream');
-        header('Cache-Control: no-cache');
-        header('Connection: keep-alive');
-        header('X-Accel-Buffering: no');
-    }
-
-    // CORS headers
-    $origin = $_SERVER['HTTP_ORIGIN'] ?? $_SERVER['HTTP_REFERER'] ?? '';
-    if ($origin) {
-        $origin = parse_url($origin, PHP_URL_SCHEME) . '://' . parse_url($origin, PHP_URL_HOST);
-        header('Access-Control-Allow-Origin: ' . $origin);
-        header('Access-Control-Allow-Credentials: true');
-        header('Access-Control-Allow-Methods: GET, OPTIONS');
-        header('Access-Control-Allow-Headers: Accept, Content-Type');
-    }
-
-    // Start session
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    // Get and validate job ID
     $jobId = (string)($_GET['id'] ?? '');
+
+    // Step 4: Validate job ID
     if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $jobId)) {
         http_response_code(400);
-        echo $wantJson
-            ? json_encode(['error' => 'Invalid job ID format'])
-            : "event: error\ndata: Invalid job ID format\n\n";
+        echo json_encode(['error' => 'Invalid job ID format']);
         exit;
     }
 
-    // Get tenant context
+    // Step 5: Get database connection
+    use App\Database;
+    use App\DeepDive\Services\JobRepository;
+
     $tenantId = (string)($_SESSION['tenant_id'] ?? '');
     $role = (string)($_SESSION['role'] ?? 'tenant');
-    if (!$tenantId && isset($_SERVER['HTTP_X_TENANT_ID'])) {
-        $tenantId = (string)$_SERVER['HTTP_X_TENANT_ID'];
-    }
 
     $pdo = Database::getConnection();
     Database::setTenantContext($pdo, $tenantId ?: null, $role);
     $jobs = new JobRepository($pdo);
 
-    // For JSON (fetch): return immediately
+    // Step 6: For JSON requests, return immediately
     if ($wantJson) {
         $row = $jobs->findForTenant($jobId, $tenantId ?: null);
         if (!$row) {
@@ -115,7 +81,11 @@ try {
         exit;
     }
 
-    // For SSE: stream updates every 2 seconds
+    // Step 7: For SSE, stream updates
+    header('Content-Type: text/event-stream');
+    header('Connection: keep-alive');
+    header('X-Accel-Buffering: no');
+
     $maxSeconds = 1800;
     $started = time();
 
@@ -163,20 +133,22 @@ try {
     }
 
 } catch (\Throwable $e) {
-    $errorMsg = 'Exception: ' . get_class($e) . ' - ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine();
-    error_log('[DeepDive API] ' . $errorMsg);
-
     if (!headers_sent()) {
-        header('Content-Type: application/json');
         http_response_code(500);
     }
 
-    // Return detailed error for debugging
-    echo json_encode([
+    $errorData = [
         'error' => $e->getMessage(),
         'exception' => get_class($e),
         'file' => $e->getFile(),
         'line' => $e->getLine(),
-        'trace' => explode("\n", $e->getTraceAsString()),
-    ], JSON_PRETTY_PRINT);
+    ];
+
+    error_log('[DeepDive API] ' . json_encode($errorData));
+
+    if (headers_sent()) {
+        echo "\n\nevent: error\ndata: " . json_encode($errorData) . "\n\n";
+    } else {
+        echo json_encode($errorData);
+    }
 }
