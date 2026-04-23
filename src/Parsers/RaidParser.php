@@ -24,6 +24,7 @@ class RaidParser implements ParserInterface
                     'level' => $matches[2],
                     'disks' => $this->parseDisks($matches[3]),
                     'status' => 'active',
+                    'type' => $this->classifyArray($currentMd),  // Internal vs User array
                 ];
             } elseif ($currentMd && preg_match('/^\s+(\d+) blocks super (.*) \[(\d+)\/(\d+)\] \[(.*)\]/', $line, $matches)) {
                 $raids[$currentMd]['size_gb'] = round((int)$matches[1] / 1024 / 1024, 2);
@@ -42,8 +43,21 @@ class RaidParser implements ParserInterface
                 $raids[$currentMd]['health'] = ($configured === $active) ? 'clean' : 'check_status';
                 $raids[$currentMd]['member_count'] = $configured;  // Number of configured slots
                 $raids[$currentMd]['total_count'] = $active;       // Number of online/active drives
-                if ($configured > $active) {
-                    $raids[$currentMd]['status_note'] = "Configured for {$configured} drives, {$active} active. May indicate empty bays or failed drives.";
+
+                // Special handling for internal system arrays (md0, md1)
+                if ($raids[$currentMd]['type'] === 'internal') {
+                    // Internal RAID 1 arrays are designed to handle missing drives
+                    // Only flag as problem if ONLY 1 drive is active
+                    if ($active === 1) {
+                        $raids[$currentMd]['status_note'] = "Internal system array running on single drive. Performance degraded.";
+                    } else {
+                        $raids[$currentMd]['status_note'] = null;  // Healthy internal array
+                    }
+                } else {
+                    // User RAID arrays: flag for verification if not fully populated
+                    if ($configured > $active) {
+                        $raids[$currentMd]['status_note'] = "Configured for {$configured} drives, {$active} active. May indicate empty bays or failed drives.";
+                    }
                 }
             } elseif (preg_match('/^Personalities : (.*)/', $line, $matches)) {
                 $context['personalities'] = $matches[1];
@@ -72,5 +86,19 @@ class RaidParser implements ParserInterface
             }
         }
         return $disks;
+    }
+
+    /**
+     * Classify RAID array as internal system or user-created
+     * md0 = Internal System RAID 1 (root filesystem)
+     * md1 = Internal Swap RAID 1
+     * mdX (X>=2) = User-created RAID arrays
+     */
+    private function classifyArray(string $mdName): string
+    {
+        if (in_array($mdName, ['md0', 'md1'], true)) {
+            return 'internal';
+        }
+        return 'user';
     }
 }

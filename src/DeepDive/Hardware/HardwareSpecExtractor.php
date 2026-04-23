@@ -579,10 +579,12 @@ final class HardwareSpecExtractor
                     $arrays[] = $current;
                 }
 
+                $mdName = $m[1];
                 $current = [
-                    'name' => $m[1],
+                    'name' => $mdName,
                     'state' => $m[2],
                     'level' => $m[3],
+                    'type' => $this->classifyRaidArray($mdName),  // internal vs user
                     'members' => count(array_filter(explode(' ', $m[4]))),
                     'healthy_members' => count(array_filter(explode(' ', $m[4]))),
                     'missing_members' => 0,
@@ -591,8 +593,9 @@ final class HardwareSpecExtractor
                     'sync_action' => 'idle',
                 ];
 
-                // Track degraded/rebuilding
-                if ($m[2] === 'degraded') {
+                // Track degraded/rebuilding - but not for internal system arrays
+                // md0 and md1 are designed to handle missing drives and function on single drive
+                if ($m[2] === 'degraded' && $current['type'] !== 'internal') {
                     $degradedCount++;
                 }
             } elseif ($current !== null && preg_match('/\[([_U]+)\]/', $line, $m)) {
@@ -885,6 +888,20 @@ final class HardwareSpecExtractor
 
         $content = (string)@file_get_contents($file);
         return json_decode($content, associative: true);
+    }
+
+    /**
+     * Classify RAID array as internal system or user-created
+     * md0 = Internal System RAID 1 (root filesystem)
+     * md1 = Internal Swap RAID 1
+     * mdX (X>=2) = User-created RAID arrays
+     */
+    private function classifyRaidArray(string $mdName): string
+    {
+        if (in_array($mdName, ['md0', 'md1'], true)) {
+            return 'internal';
+        }
+        return 'user';
     }
 
     /**
