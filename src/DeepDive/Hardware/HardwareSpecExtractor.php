@@ -685,7 +685,7 @@ final class HardwareSpecExtractor
 
     /**
      * Extract expansion unit information - supports multiple units
-     * Identifies specific Synology expansion models: DX513, DX517, DX214, DX215, RX217, etc.
+     * Retrieves actual model data from load_info.result without assumptions
      */
     private function extractExpansion(): ?array
     {
@@ -693,123 +693,42 @@ final class HardwareSpecExtractor
         $sourceFile = '';
         $timestamp = '';
 
-        // Try 1: load_info.result - check for enclosure/container info + device patterns
+        // Extract expansion data from load_info.result
         $loadInfo = $this->parseJsonResult('load_info.result');
         // Handle both DSM 6 and DSM 7 JSON structures
         $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
+
         if (is_array($loadInfo) && !empty($disksArray)) {
-            $expansionContainers = [];
-            $expansionDevices = [];  // Track devices with expansion naming pattern
-            $enclosureModels = [];   // Track enclosure models for proper identification
+            // Extract actual enclosure/expansion data from load_info
+            $units = $this->extractEnclosureData($loadInfo, $disksArray);
 
-            // Scan disks for expansion container references and device patterns
-            foreach ($disksArray as $disk) {
-                if (!is_array($disk)) continue;
+            // If we found units, set source info
+            if (!empty($units)) {
+                $sourceFile = 'dsm/result/load_info.result';
+                $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result'));
+            }
+        }
 
-                $deviceId = $disk['id'] ?? '';
+        // Try 2: Fallback to synoinfo.conf for expansion capability detection
+        if (empty($units)) {
+            $synoinfo = $this->parseSynoinfo();
+            $hasExpansion = false;
+            $expansionType = '';
+            $maxExpansionBays = 0;
 
-                // Method 1: Check container metadata
-                if (!empty($disk['container']['str'])) {
-                    $container = $disk['container']['str'];
-                    if (preg_match('/expansion/i', $container)) {
-                        if (!isset($expansionContainers[$container])) {
-                            $expansionContainers[$container] = [
-                                'name' => $container,
-                                'bay_count' => 0,
-                                'drives' => [],
-                            ];
-                        }
-                        $expansionContainers[$container]['bay_count']++;
-                        $expansionContainers[$container]['drives'][] = $deviceId;
-                    }
+            foreach ($synoinfo as $key => $value) {
+                if (preg_match('/expansion.*bays?/i', $key)) {
+                    $maxExpansionBays = (int)$value;
                 }
-
-                // Method 2: Detect expansion by device naming (sdea, sdeb, sdec, etc.)
-                // Device naming pattern: sdea-sdef (5-bay typical), sdea-sdei (8-bay), etc.
-                if (preg_match('/^sde([a-z])/', $deviceId, $matches)) {
-                    $slotNum = ord($matches[1]) - ord('a') + 1;  // Convert a->1, b->2, etc.
-                    // Estimate bay count based on device count (typically 5, 8, or 12)
-                    if ($slotNum <= 5) {
-                        $bayCount = 5;  // DX513, DX214
-                    } elseif ($slotNum <= 8) {
-                        $bayCount = 8;  // DX517, DX215
-                    } else {
-                        $bayCount = 12; // RX217, RX418
-                    }
-
-                    if (!isset($expansionDevices['expansion_unit_1'])) {
-                        $expansionDevices['expansion_unit_1'] = [
-                            'drives' => [],
-                            'bay_count' => $bayCount,
-                            'estimated_model' => $bayCount === 5 ? 'DX513/DX214 (5-bay)' : ($bayCount === 8 ? 'DX517/DX215 (8-bay)' : 'RX217/RX418 (12-bay)'),
-                        ];
-                    }
-                    $expansionDevices['expansion_unit_1']['drives'][] = $deviceId;
-                    $expansionDevices['expansion_unit_1']['bay_count'] = max($expansionDevices['expansion_unit_1']['bay_count'], $bayCount);
+                if (preg_match('/expansion.*type/i', $key) && !empty($value)) {
+                    $hasExpansion = true;
+                    $expansionType = $value;
                 }
             }
 
-            // Parse expansion info from load_info enclosures (most reliable)
-            if (!empty($loadInfo['enclosures'])) {
-                foreach ((array)$loadInfo['enclosures'] as $enclosure) {
-                    if (!is_array($enclosure)) continue;
-
-                    $enclosureId = $enclosure['id'] ?? null;
-                    $model = $enclosure['model'] ?? '';
-
-                    // Only process expansion enclosures
-                    if ($enclosureId && (preg_match('/expansion|enclosure/i', (string)$enclosureId) || preg_match('/^(DX|RX)\d+/i', $model))) {
-                        // Map Synology model codes to human-readable names
-                        $modelName = $this->identifySynergyModel($model);
-
-                        $units[] = [
-                            'enclosure_id' => $enclosureId,
-                            'model' => $modelName ?: $model ?: 'Synology Expansion Unit',
-                            'serial' => $enclosure['serial'] ?? '',
-                            'firmware' => $enclosure['firmware'] ?? '',
-                            'bay_count' => $enclosure['bay_count'] ?? 5,
-                            'installed_drives' => count($expansionContainers[$enclosureId]['drives'] ?? $expansionDevices[$enclosureId]['drives'] ?? []),
-                            'drives' => $expansionContainers[$enclosureId]['drives'] ?? $expansionDevices[$enclosureId]['drives'] ?? [],
-                            'status' => $enclosure['status'] ?? 'unknown',
-                            'power_status' => $enclosure['power_status'] ?? 'unknown',
-                        ];
-                    }
-                }
-            }
-
-            // If we found expansion containers but not formal enclosure data
-            if (empty($units) && !empty($expansionContainers)) {
-                foreach ($expansionContainers as $container => $info) {
-                    $units[] = [
-                        'enclosure_id' => $container,
-                        'model' => 'Synology Expansion Unit (metadata only)',
-                        'serial' => '',
-                        'firmware' => '',
-                        'bay_count' => max($info['bay_count'], 5),
-                        'installed_drives' => $info['bay_count'],
-                        'drives' => $info['drives'],
-                        'status' => 'detected',
-                        'power_status' => 'unknown',
-                    ];
-                }
-            }
-
-            // If we found expansion devices by naming pattern, create unit entry with estimated model
-            if (empty($units) && !empty($expansionDevices)) {
-                foreach ($expansionDevices as $unitId => $info) {
-                    $units[] = [
-                        'enclosure_id' => $unitId,
-                        'model' => $info['estimated_model'] ?? 'Synology Expansion Unit',
-                        'serial' => '',
-                        'firmware' => '',
-                        'bay_count' => $info['bay_count'],
-                        'installed_drives' => count($info['drives']),
-                        'drives' => $info['drives'],
-                        'status' => 'active',
-                        'power_status' => 'unknown',
-                    ];
-                }
-            }
+            if ($hasExpansion || $maxExpansionBays > 0) {
+                $units[] = [
+                    'enclosure_id' => 'expansion_unit_1',
 
             if (!empty($units)) {
                 $sourceFile = 'dsm/result/load_info.result';
@@ -911,61 +830,117 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Identify specific Synology expansion model from model string
-     * Maps model codes to human-readable product names
+     * Extract actual enclosure data from load_info.result
+     * Maps enclosure data to expansion units with drive information
+     *
+     * @param array $loadInfo Parsed load_info.result
+     * @param array $disksArray Array of disk entries
+     * @return array List of expansion units
      */
-    private function identifySynergyModel(string $model): ?string
+    private function extractEnclosureData(array $loadInfo, array $disksArray): array
     {
-        if (empty($model)) {
-            return null;
-        }
+        $units = [];
+        $containerToDrives = [];  // Map containers to their drives
+        $deviceToContainer = []; // Map devices to their containers
 
-        // Trim and uppercase for comparison
-        $model = strtoupper(trim($model));
+        // First pass: build maps of drives by container
+        foreach ($disksArray as $disk) {
+            if (!is_array($disk)) continue;
 
-        // Direct model mappings
-        $modelMap = [
-            'DX513' => 'Synology DX513 (5-bay expansion)',
-            'DX517' => 'Synology DX517 (8-bay expansion)',
-            'DX214' => 'Synology DX214 (5-bay expansion)',
-            'DX215' => 'Synology DX215 (8-bay expansion)',
-            'RX217' => 'Synology RX217 (12-bay expansion)',
-            'RX418' => 'Synology RX418 (16-bay expansion)',
-            'RX2417SAC' => 'Synology RX2417sac (expansion)',
-            'RX4417SAC' => 'Synology RX4417sac (expansion)',
-        ];
+            $deviceId = $disk['id'] ?? '';
+            $container = $disk['container']['str'] ?? null;
 
-        // Check for exact match
-        if (isset($modelMap[$model])) {
-            return $modelMap[$model];
-        }
-
-        // Pattern-based identification
-        if (preg_match('/^DX(\d{3})/', $model, $m)) {
-            $bays = (int)$m[1];
-            if ($bays === 513 || $bays === 214) {
-                return 'Synology DX513/DX214 (5-bay expansion)';
-            } elseif ($bays === 517 || $bays === 215) {
-                return 'Synology DX517/DX215 (8-bay expansion)';
+            if ($container) {
+                $deviceToContainer[$deviceId] = $container;
+                if (!isset($containerToDrives[$container])) {
+                    $containerToDrives[$container] = [];
+                }
+                $containerToDrives[$container][] = $deviceId;
             }
-            return "Synology DX expansion (model: {$model})";
         }
 
-        if (preg_match('/^RX(\d{3})/', $model, $m)) {
-            return "Synology RX expansion (model: {$model})";
+        // Second pass: extract enclosure data from load_info['enclosures']
+        if (!empty($loadInfo['enclosures'])) {
+            foreach ((array)$loadInfo['enclosures'] as $enclosure) {
+                if (!is_array($enclosure)) continue;
+
+                $enclosureId = $enclosure['id'] ?? null;
+                if (!$enclosureId) continue;
+
+                // Check if this enclosure is for an expansion unit
+                // Extract directly from load_info data, don't assume
+                $isExpansion = false;
+
+                // Check multiple indicators without assuming model
+                if (preg_match('/expansion|enclosure/i', (string)$enclosureId)) {
+                    $isExpansion = true;
+                }
+
+                // Also check if enclosure contains external drives
+                // (devices not in main NAS, i.e., sdea and above)
+                $containsExternalDrives = false;
+                if (isset($containerToDrives[$enclosureId])) {
+                    foreach ($containerToDrives[$enclosureId] as $device) {
+                        if (preg_match('/^sde[a-z]/', $device)) {
+                            $containsExternalDrives = true;
+                            break;
+                        }
+                    }
+                    if ($containsExternalDrives) {
+                        $isExpansion = true;
+                    }
+                }
+
+                // Extract only what's actually in the data
+                if ($isExpansion) {
+                    $unit = [
+                        'enclosure_id' => $enclosureId,
+                        'model' => $enclosure['model'] ?? 'Unknown Model',
+                        'serial' => $enclosure['serial'] ?? '',
+                        'firmware' => $enclosure['firmware'] ?? '',
+                        'bay_count' => (int)($enclosure['bay_count'] ?? 0),
+                        'drives' => $containerToDrives[$enclosureId] ?? [],
+                        'installed_drives' => count($containerToDrives[$enclosureId] ?? []),
+                        'status' => $enclosure['status'] ?? 'unknown',
+                        'power_status' => $enclosure['power_status'] ?? 'unknown',
+                    ];
+
+                    // Only include fields that have actual data
+                    $units[] = $this->stripEmptyFields($unit);
+                }
+            }
         }
 
-        // If model contains known expansion indicators
-        if (preg_match('/expansion|enclosure/i', $model)) {
-            return "Synology Expansion Unit (model: {$model})";
+        // Third pass: detect expansion units by container metadata without enclosure entries
+        if (empty($units)) {
+            foreach ($containerToDrives as $container => $drives) {
+                // Look for expansion indication in container name
+                if (preg_match('/expansion|enclosure|^sde/i', (string)$container)) {
+                    $unit = [
+                        'enclosure_id' => $container,
+                        'model' => 'Unknown (detected by container)',
+                        'bay_count' => count($drives),
+                        'drives' => $drives,
+                        'installed_drives' => count($drives),
+                        'status' => 'detected',
+                    ];
+                    $units[] = $this->stripEmptyFields($unit);
+                }
+            }
         }
 
-        // Fallback: return original if it looks like a Synology model
-        if (preg_match('/^[A-Z]{2}\d+/', $model)) {
-            return "Synology Expansion (model: {$model})";
-        }
+        return $units;
+    }
 
-        return null;
+    /**
+     * Remove empty/null fields from expansion unit data
+     * Only keep fields that have actual values
+     */
+    private function stripEmptyFields(array $unit): array
+    {
+        return array_filter($unit, function ($value) {
+            return !is_null($value) && $value !== '' && $value !== 0;
+        });
     }
 
     /**

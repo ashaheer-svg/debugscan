@@ -103,6 +103,43 @@ final class JobController
         return $res->withHeader('Content-Type', 'text/html; charset=utf-8');
     }
 
+    public function status(ServerRequestInterface $req, ResponseInterface $res, array $args): ResponseInterface
+    {
+        [$tenantId] = $this->currentUser();
+        if (!$tenantId) {
+            return $res->withStatus(401)->withHeader('Content-Type', 'application/json');
+        }
+
+        $jobId = (string)($args['id'] ?? '');
+        if (!$this->validUuid($jobId)) {
+            return $res->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        $jobs = new JobRepository($this->pdo);
+        $job  = $jobs->findForTenant($jobId, $tenantId);
+        if (!$job) {
+            return $res->withStatus(404)->withHeader('Content-Type', 'application/json');
+        }
+
+        $steps = [];
+        if (!empty($job['steps_json'])) {
+            $decoded = json_decode((string)$job['steps_json'], true);
+            if (is_array($decoded)) $steps = $decoded;
+        }
+
+        $response = [
+            'job_id'           => $job['id'],
+            'status'           => $job['status'],
+            'progress_percent' => (int)$job['progress_percent'],
+            'progress_stage'   => $job['progress_stage'],
+            'error_message'    => $job['error_message'],
+            'steps'            => $steps,
+        ];
+
+        $res->getBody()->write(json_encode($response, JSON_UNESCAPED_SLASHES));
+        return $res->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
     public function report(ServerRequestInterface $req, ResponseInterface $res, array $args): ResponseInterface
     {
         [$tenantId] = $this->currentUser();

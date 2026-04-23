@@ -90,22 +90,153 @@
 
 <script>
 (function(){
-  // Auto-reload every 2 seconds if job is not completed
-  if ('{{ job.status }}' !== 'completed' && '{{ job.status }}' !== 'failed') {
-    setTimeout(function() {
-      location.reload();
-    }, 2000);
+  const jobId = '{{ job.id }}';
+  const backdrop = document.getElementById('dd-modal-backdrop');
+  const closeBtn = document.getElementById('dd-close-btn');
+  let pollInterval = null;
+
+  // Fetch job status and update DOM
+  async function fetchAndUpdate() {
+    try {
+      const response = await fetch('/deepdive/api/job/' + encodeURIComponent(jobId) + '/status');
+      if (!response.ok) return;
+
+      const data = await response.json();
+      const isComplete = data.status === 'completed' || data.status === 'failed';
+
+      // Update progress bar and percentage
+      const bar = document.getElementById('dd-bar');
+      const pct = document.getElementById('dd-pct');
+      bar.style.width = data.progress_percent + '%';
+      pct.textContent = data.progress_percent + '%';
+
+      // Update status text
+      document.getElementById('dd-stage').textContent = data.progress_stage;
+      document.getElementById('dd-status').textContent = 'Status: ' + data.status;
+
+      // Update steps list
+      if (data.steps && data.steps.length > 0) {
+        updateStepsList(data.steps);
+      }
+
+      // Update error message
+      if (data.status === 'failed') {
+        const errorDiv = document.getElementById('dd-error');
+        errorDiv.style.display = 'flex';
+        document.getElementById('dd-err-msg').textContent = data.error_message || 'unknown error';
+      }
+
+      // When job completes, close modal and show fallback
+      if (isComplete) {
+        clearInterval(pollInterval);
+        closeBtn.style.opacity = '1';
+        closeBtn.style.cursor = 'pointer';
+        closeBtn.onclick = function() {
+          backdrop.style.display = 'none';
+        };
+
+        // Auto-close modal after 2 seconds
+        setTimeout(function() {
+          backdrop.style.display = 'none';
+        }, 2000);
+      }
+    } catch (e) {
+      console.error('Poll error:', e);
+    }
   }
 
-  // Ensure modal is always visible
-  document.getElementById('dd-modal-backdrop').style.display = 'flex';
+  function updateStepsList(steps) {
+    const stepsList = document.getElementById('dd-steps');
 
-  // Disable close button until job completes
-  const closeBtn = document.getElementById('dd-close-btn');
-  if ('{{ job.status }}' !== 'completed' && '{{ job.status }}' !== 'failed') {
+    // Update existing steps or create new ones
+    steps.forEach((step, idx) => {
+      let li = document.querySelector('li[data-id="' + step.id + '"]');
+
+      if (!li) {
+        // Create new step element
+        li = document.createElement('li');
+        li.setAttribute('data-id', step.id);
+        li.style.cssText = 'display:flex;gap:10px;padding:12px;margin-bottom:8px;background:#f9f9f9;border-left:3px solid #ddd;border-radius:4px;transition:all .3s';
+
+        const icon = document.createElement('span');
+        icon.className = 'dd-icon';
+        icon.style.cssText = 'width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;flex-shrink:0;transition:all .3s';
+
+        const content = document.createElement('span');
+        content.style.cssText = 'flex:1';
+
+        li.appendChild(icon);
+        li.appendChild(content);
+        stepsList.appendChild(li);
+      }
+
+      // Update step status icon and styling
+      const icon = li.querySelector('.dd-icon');
+      const content = li.querySelector('span:last-child');
+
+      let iconBg = '#e0e0e0', iconColor = '#999', iconText = '·';
+      if (step.status === 'done' || step.status === 'completed') {
+        iconBg = '#28a745'; iconColor = '#fff'; iconText = '✓';
+      } else if (step.status === 'failed') {
+        iconBg = '#dc3545'; iconColor = '#fff'; iconText = '✕';
+      } else if (step.status === 'running') {
+        iconBg = '#0066cc'; iconColor = '#fff'; iconText = '⟳';
+      } else if (step.status === 'skipped') {
+        iconBg = '#999'; iconColor = '#fff'; iconText = '–';
+      }
+
+      icon.style.background = iconBg;
+      icon.style.color = iconColor;
+      icon.textContent = iconText;
+      if (step.status === 'running') {
+        icon.style.animation = 'pulse 2s infinite';
+      } else {
+        icon.style.animation = 'none';
+      }
+
+      // Update step content
+      let html = '<div style="font-weight:500;color:#333">' + escapeHtml(step.label) + '</div>';
+      if (step.detail) {
+        html += '<div style="color:#666;font-size:12px;margin-top:2px">' + escapeHtml(step.detail) + '</div>';
+      }
+      if (step.error) {
+        html += '<div style="color:#dc3545;font-size:12px;margin-top:4px;padding:6px;background:#fff5f5;border-left:2px solid #dc3545;border-radius:2px">' + escapeHtml(step.error) + '</div>';
+      }
+      content.innerHTML = html;
+    });
+  }
+
+  function escapeHtml(text) {
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+  }
+
+  // Ensure modal is visible on load
+  backdrop.style.display = 'flex';
+
+  // Initial state: disable close button if job not complete
+  const initialStatus = '{{ job.status }}';
+  if (initialStatus !== 'completed' && initialStatus !== 'failed') {
     closeBtn.style.opacity = '0.3';
     closeBtn.style.cursor = 'not-allowed';
     closeBtn.onclick = function() { return false; };
+
+    // Start polling
+    fetchAndUpdate();
+    pollInterval = setInterval(fetchAndUpdate, 2000);
+  } else {
+    // Job already complete, allow close immediately
+    closeBtn.style.opacity = '1';
+    closeBtn.style.cursor = 'pointer';
+    closeBtn.onclick = function() {
+      backdrop.style.display = 'none';
+    };
   }
 })();
 </script>
