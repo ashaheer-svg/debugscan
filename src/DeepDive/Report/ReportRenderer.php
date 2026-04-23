@@ -106,6 +106,7 @@ HTML;
     {
         $gen  = htmlspecialchars((string)($c['generated_at']      ?? date('Y-m-d H:i:s T')), ENT_QUOTES);
         $eng  = htmlspecialchars((string)($c['engine_version']    ?? ''),                    ENT_QUOTES);
+        $rep  = htmlspecialchars((string)($c['report_version']    ?? ''),                    ENT_QUOTES);
         $cat  = htmlspecialchars((string)($c['catalogue_version'] ?? ''),                    ENT_QUOTES);
         $job  = htmlspecialchars((string)($c['job_id']            ?? ''),                    ENT_QUOTES);
         $proj = htmlspecialchars((string)($c['project_id']        ?? ''),                    ENT_QUOTES);
@@ -120,6 +121,7 @@ HTML;
     <div class="hdr-kv"><span>Project</span><code>{$proj}</code></div>
     <div class="hdr-kv"><span>Generated</span>{$gen}</div>
     <div class="hdr-kv"><span>Engine / Catalogue</span>{$eng} &middot; {$cat}</div>
+    <div class="hdr-kv"><span>Report Version</span><code>{$rep}</code></div>
   </div>
 </header>
 HTML;

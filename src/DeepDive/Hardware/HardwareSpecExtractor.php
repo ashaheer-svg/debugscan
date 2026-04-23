@@ -381,9 +381,13 @@ final class HardwareSpecExtractor
         if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
             $mainBay = 1;
             $expansionBays = [];  // Track expansion unit bays separately
+            $devicePattern = [];    // Map device to bay for expansion detection
 
             foreach ($loadInfo['disks'] as $disk) {
                 if (!is_array($disk)) continue;
+
+                $deviceId = $disk['id'] ?? '';
+                $devicePattern[$deviceId] = $disk;
 
                 // Determine which unit this drive belongs to
                 $container = $disk['container']['str'] ?? null;
@@ -403,23 +407,44 @@ final class HardwareSpecExtractor
                     }
                 }
 
+                // Fallback: detect expansion based on device naming pattern
+                // Synology uses sdea, sdeb, sdec, etc. for expansion units
+                if (!$isExpansion && preg_match('/^sde[a-z]/', $deviceId)) {
+                    $isExpansion = true;
+                    $location = 'expansion_unit_1';
+                    if (!isset($expansionBays['expansion_unit_1'])) {
+                        $expansionBays['expansion_unit_1'] = 1;
+                    }
+                    $bay = $expansionBays['expansion_unit_1'];
+                    $expansionBays['expansion_unit_1']++;
+                }
+
                 if (!$isExpansion) {
                     $bay = $mainBay;
                     $mainBay++;
                 }
 
+                // Calculate capacity from multiple sources
+                $capacity = 0;
+                if (!empty($disk['size_total'])) {
+                    $capacity = round((int)$disk['size_total'] / (1000**3), 1);
+                } elseif (!empty($disk['size']) && is_numeric($disk['size'])) {
+                    // Try alternate field name
+                    $capacity = round((int)$disk['size'] / (1000**3), 1);
+                }
+
                 $drives[] = [
                     'bay' => $bay,
                     'location' => $location,
-                    'device' => $disk['id'] ?? '',
+                    'device' => $deviceId,
                     'model' => $disk['model'] ?? '',
                     'serial' => $disk['serial'] ?? '',
                     'vendor' => $disk['vendor'] ?? '',
-                    'capacity_gb' => isset($disk['size_total']) ? round((int)$disk['size_total'] / (1000**3), 1) : 0,
+                    'capacity_gb' => $capacity,
                     'firmware' => $disk['firm'] ?? '',
                     'temperature_celsius' => $disk['temp'] ?? 0,
                     'smart_status' => $disk['smart_status'] ?? 'unknown',
-                    'power_on_hours' => $disk['power_on_hours'] ?? 0,
+                    'power_on_hours' => (int)($disk['power_on_hours'] ?? 0),
                     'is_ssd' => $disk['isSsd'] ?? false,
                     'status' => $disk['status'] ?? 'unknown',
                 ];
@@ -659,14 +684,20 @@ final class HardwareSpecExtractor
         $sourceFile = '';
         $timestamp = '';
 
-        // Try 1: load_info.result - check for enclosure/container info
+        // Try 1: load_info.result - check for enclosure/container info + device patterns
         $loadInfo = $this->parseJsonResult('load_info.result');
         if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
             $expansionContainers = [];
+            $expansionDevices = [];  // Track devices with expansion naming pattern
 
-            // Scan disks for expansion container references
+            // Scan disks for expansion container references and device patterns
             foreach ($loadInfo['disks'] as $disk) {
-                if (is_array($disk) && !empty($disk['container']['str'])) {
+                if (!is_array($disk)) continue;
+
+                $deviceId = $disk['id'] ?? '';
+
+                // Method 1: Check container metadata
+                if (!empty($disk['container']['str'])) {
                     $container = $disk['container']['str'];
                     if (preg_match('/expansion/i', $container)) {
                         if (!isset($expansionContainers[$container])) {
@@ -677,29 +708,41 @@ final class HardwareSpecExtractor
                             ];
                         }
                         $expansionContainers[$container]['bay_count']++;
-                        $expansionContainers[$container]['drives'][] = $disk['id'] ?? '';
+                        $expansionContainers[$container]['drives'][] = $deviceId;
                     }
+                }
+
+                // Method 2: Detect expansion by device naming (sdea, sdeb, sdec, etc.)
+                if (preg_match('/^sde[a-z]/', $deviceId)) {
+                    if (!isset($expansionDevices['expansion_unit_1'])) {
+                        $expansionDevices['expansion_unit_1'] = [
+                            'drives' => [],
+                            'bay_count' => 0,
+                        ];
+                    }
+                    $expansionDevices['expansion_unit_1']['drives'][] = $deviceId;
+                    $expansionDevices['expansion_unit_1']['bay_count']++;
                 }
             }
 
-            // Parse expansion info from load_info
+            // Parse expansion info from load_info enclosures
             if (!empty($loadInfo['enclosures'])) {
                 foreach ((array)$loadInfo['enclosures'] as $enclosure) {
-                    if (is_array($enclosure)) {
-                        $enclosureId = $enclosure['id'] ?? null;
-                        if ($enclosureId && preg_match('/expansion/i', (string)$enclosureId)) {
-                            $units[] = [
-                                'enclosure_id' => $enclosureId,
-                                'model' => $enclosure['model'] ?? '',
-                                'serial' => $enclosure['serial'] ?? '',
-                                'firmware' => $enclosure['firmware'] ?? '',
-                                'bay_count' => $enclosure['bay_count'] ?? 5,
-                                'installed_drives' => count($expansionContainers[$enclosureId]['drives'] ?? []),
-                                'drives' => $expansionContainers[$enclosureId]['drives'] ?? [],
-                                'status' => $enclosure['status'] ?? 'unknown',
-                                'power_status' => $enclosure['power_status'] ?? 'unknown',
-                            ];
-                        }
+                    if (!is_array($enclosure)) continue;
+
+                    $enclosureId = $enclosure['id'] ?? null;
+                    if ($enclosureId && preg_match('/expansion/i', (string)$enclosureId)) {
+                        $units[] = [
+                            'enclosure_id' => $enclosureId,
+                            'model' => $enclosure['model'] ?? '',
+                            'serial' => $enclosure['serial'] ?? '',
+                            'firmware' => $enclosure['firmware'] ?? '',
+                            'bay_count' => $enclosure['bay_count'] ?? 5,
+                            'installed_drives' => count($expansionContainers[$enclosureId]['drives'] ?? $expansionDevices[$enclosureId]['drives'] ?? []),
+                            'drives' => $expansionContainers[$enclosureId]['drives'] ?? $expansionDevices[$enclosureId]['drives'] ?? [],
+                            'status' => $enclosure['status'] ?? 'unknown',
+                            'power_status' => $enclosure['power_status'] ?? 'unknown',
+                        ];
                     }
                 }
             }
@@ -712,10 +755,27 @@ final class HardwareSpecExtractor
                         'model' => 'Unknown Expansion',
                         'serial' => '',
                         'firmware' => '',
-                        'bay_count' => max($info['bay_count'], 5),  // Assume at least 5 bays
+                        'bay_count' => max($info['bay_count'], 5),
                         'installed_drives' => $info['bay_count'],
                         'drives' => $info['drives'],
                         'status' => 'detected',
+                        'power_status' => 'unknown',
+                    ];
+                }
+            }
+
+            // If we found expansion devices by naming pattern, create unit entry
+            if (empty($units) && !empty($expansionDevices)) {
+                foreach ($expansionDevices as $unitId => $info) {
+                    $units[] = [
+                        'enclosure_id' => $unitId,
+                        'model' => 'Expansion Unit (DX513/DX517 equiv)',
+                        'serial' => '',
+                        'firmware' => '',
+                        'bay_count' => max($info['bay_count'], 5),
+                        'installed_drives' => $info['bay_count'],
+                        'drives' => $info['drives'],
+                        'status' => 'active',
                         'power_status' => 'unknown',
                     ];
                 }
@@ -751,7 +811,7 @@ final class HardwareSpecExtractor
                     'serial' => '',
                     'firmware' => '',
                     'bay_count' => $maxExpansionBays ?: 5,
-                    'installed_drives' => 0,  // Unknown from synoinfo
+                    'installed_drives' => 0,
                     'drives' => [],
                     'status' => 'capable',
                     'power_status' => 'unknown',
