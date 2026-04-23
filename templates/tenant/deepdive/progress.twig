@@ -1,58 +1,113 @@
 {% extends "layout/dashboard.twig" %}
 {% block content %}
-<div style="max-width:820px;margin:0 auto">
+
+{# Modal Backdrop & Container #}
+<div id="dd-modal-backdrop" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);display:flex;align-items:center;justify-content:center;z-index:9998;font-family:system-ui,-apple-system,'Segoe UI',sans-serif">
+
+  {# Modal Dialog #}
+  <div id="dd-modal" style="background:#fff;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,0.2);width:90%;max-width:600px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden">
+
+    {# Modal Header #}
+    <div style="padding:20px;border-bottom:1px solid #e5e7eb;background:linear-gradient(135deg,#0066cc 0%,#004a99 100%);color:#fff;display:flex;justify-content:space-between;align-items:flex-start">
+      <div>
+        <h2 style="margin:0 0 4px;font-size:18px;font-weight:600">DeepDive Analysis in Progress</h2>
+        <p style="margin:0;font-size:13px;opacity:0.85">Job <code style="background:rgba(255,255,255,0.2);padding:2px 6px;border-radius:3px;font-family:monospace">{{ job.id }}</code></p>
+      </div>
+      <button id="dd-close-btn" onclick="document.getElementById('dd-modal-backdrop').style.display='none'" style="background:none;border:none;color:#fff;font-size:24px;cursor:pointer;padding:0;width:24px;height:24px;display:flex;align-items:center;justify-content:center;opacity:0.7;transition:opacity .2s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">✕</button>
+    </div>
+
+    {# Modal Body #}
+    <div style="padding:24px;overflow-y:auto;flex:1">
+
+      {# Progress Section #}
+      <div style="margin-bottom:24px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-weight:600;font-size:14px" id="dd-stage">{{ job.progress_stage|default('Queued') }}</div>
+          <div style="background:#f0f0f0;padding:2px 8px;border-radius:3px;font-weight:600;color:#0066cc;font-size:13px" id="dd-pct">{{ job.progress_percent|default(0) }}%</div>
+        </div>
+        <div style="height:24px;background:#f5f5f5;border-radius:12px;overflow:hidden;border:1px solid #e0e0e0;position:relative">
+          <div id="dd-bar" style="height:100%;width:{{ job.progress_percent|default(0) }}%;background:linear-gradient(90deg,#0066cc 0%,#0052a3 100%);transition:width .4s ease;display:flex;align-items:center;justify-content:flex-end;padding-right:8px">
+            <span style="font-size:11px;font-weight:600;color:#fff;opacity:0" id="dd-bar-text"></span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:#666;margin-top:6px" id="dd-status">Status: {{ job.status }}</div>
+      </div>
+
+      {# Steps List #}
+      <div style="margin:20px 0">
+        <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:12px;text-transform:uppercase;letter-spacing:0.5px">Analysis Steps</div>
+        <ol id="dd-steps" style="list-style:none;padding:0;margin:0;font-size:13px">
+          {% for s in steps %}
+            <li data-id="{{ s.id }}" style="display:flex;gap:10px;padding:12px;margin-bottom:8px;background:#f9f9f9;border-left:3px solid #ddd;border-radius:4px;transition:all .3s">
+              <span class="dd-icon" style="width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:600;flex-shrink:0;{% if s.status == 'done' or s.status == 'completed' %}background:#28a745;color:#fff{% elseif s.status == 'failed' %}background:#dc3545;color:#fff{% elseif s.status == 'running' %}background:#0066cc;color:#fff;animation:pulse 2s infinite{% elseif s.status == 'skipped' %}background:#999;color:#fff;opacity:.7{% else %}background:#e0e0e0;color:#999{% endif %}">
+                {% if s.status == 'done' or s.status == 'completed' %}✓{% elseif s.status == 'failed' %}✕{% elseif s.status == 'running' %}⟳{% elseif s.status == 'skipped' %}–{% else %}·{% endif %}
+              </span>
+              <span style="flex:1">
+                <div style="font-weight:500;color:#333">{{ s.label }}</div>
+                {% if s.detail %}<div style="color:#666;font-size:12px;margin-top:2px">{{ s.detail }}</div>{% endif %}
+                {% if s.error %}<div style="color:#dc3545;font-size:12px;margin-top:4px;padding:6px;background:#fff5f5;border-left:2px solid #dc3545;border-radius:2px">{{ s.error }}</div>{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+
+      {# Error Alert #}
+      <div id="dd-error" style="display:{% if job.status == 'failed' %}flex{% else %}none{% endif %};align-items:flex-start;background:#fff5f5;border:1px solid #f5c6cb;border-radius:6px;padding:16px;margin-bottom:16px">
+        <div style="font-size:24px;margin-right:12px;flex-shrink:0">⚠️</div>
+        <div>
+          <h3 style="margin:0 0 6px;color:#721c24;font-size:14px">Job Failed</h3>
+          <p style="margin:0;color:#721c24;font-size:13px;line-height:1.5" id="dd-err-msg">{{ job.error_message|default('unknown error') }}</p>
+        </div>
+      </div>
+
+      {# Completion Actions #}
+      <div id="dd-done" style="display:{% if job.status == 'completed' %}flex{% else %}none{% endif %};gap:10px;padding-top:16px;border-top:1px solid #e0e0e0;flex-wrap:wrap;justify-content:center">
+        <a href="{{ base_path }}/deepdive/report/{{ job.id }}" target="_blank" style="background:#0066cc;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px;transition:background .2s" onmouseover="this.style.background='#004a99'" onmouseout="this.style.background='#0066cc'">View Report</a>
+        <a href="{{ base_path }}/deepdive/download/{{ job.id }}/html" style="background:#e8e8e8;color:#333;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px;transition:background .2s" onmouseover="this.style.background='#d0d0d0'" onmouseout="this.style.background='#e8e8e8'">Download HTML</a>
+        <a href="{{ base_path }}/deepdive/download/{{ job.id }}/pdf" style="background:#e8e8e8;color:#333;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px;transition:background .2s" onmouseover="this.style.background='#d0d0d0'" onmouseout="this.style.background='#e8e8e8'">Download PDF</a>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+{# Fallback page content (visible if modal is closed) #}
+<div style="max-width:820px;margin:0 auto;opacity:0.5;pointer-events:none">
   <a href="{{ base_path }}/projects/view/{{ job.project_id }}" style="font-size:13px;color:#0b5ed7;text-decoration:none">&larr; back to project</a>
   <h2 style="margin:8px 0 4px">Deep Diagnostic</h2>
   <div style="color:#666;font-size:13px">Job <code>{{ job.id }}</code> · queued {{ job.queued_at|default('—') }}</div>
-
-  <div style="margin-top:20px;padding:16px;border:1px solid #e5e7eb;border-radius:8px;background:#fff">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <div>
-        <div style="font-weight:600;font-size:14px" id="dd-stage">{{ job.progress_stage|default('Queued') }}</div>
-        <div style="font-size:12px;color:#666" id="dd-status">Status: {{ job.status }}</div>
-      </div>
-      <div style="font-size:20px;font-weight:600" id="dd-pct">{{ job.progress_percent|default(0) }}%</div>
-    </div>
-    <div style="height:6px;border-radius:3px;background:#eef1f6;margin-top:12px;overflow:hidden">
-      <div id="dd-bar" style="height:100%;width:{{ job.progress_percent|default(0) }}%;background:#0b5ed7;transition:width .4s"></div>
-    </div>
-
-    <ol id="dd-steps" style="list-style:none;padding:0;margin:18px 0 0;font-size:13px">
-      {% for s in steps %}
-        <li data-id="{{ s.id }}" style="display:flex;gap:10px;padding:8px 0;border-bottom:1px dashed #eef1f6">
-          <span class="dd-icon" style="width:18px;display:inline-block;text-align:center">{{ {'done':'✓','failed':'✗','skipped':'–','running':'•','pending':'·'}[s.status]|default('·') }}</span>
-          <span style="flex:1">
-            <div style="font-weight:500">{{ s.label }}</div>
-            {% if s.detail %}<div style="color:#666;font-size:12px">{{ s.detail }}</div>{% endif %}
-            {% if s.error %}<div style="color:#b91c1c;font-size:12px">error: {{ s.error }}</div>{% endif %}
-          </span>
-        </li>
-      {% endfor %}
-    </ol>
-
-    <div id="dd-done" style="display:{% if job.status == 'completed' %}flex{% else %}none{% endif %};gap:10px;margin-top:18px;padding-top:14px;border-top:1px solid #eef1f6">
-      <a href="{{ base_path }}/deepdive/report/{{ job.id }}" target="_blank" style="background:#0b5ed7;color:#fff;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">View Report</a>
-      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/html" style="background:#fff;color:#0b5ed7;border:1px solid #0b5ed7;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:13px">Download HTML</a>
-      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/pdf" style="background:#fff;color:#0b5ed7;border:1px solid #0b5ed7;padding:8px 14px;border-radius:6px;text-decoration:none;font-size:13px">Download PDF</a>
-    </div>
-
-    <div id="dd-error" style="display:{% if job.status == 'failed' %}block{% else %}none{% endif %};color:#b91c1c;margin-top:14px;font-size:13px">
-      Job failed: <span id="dd-err-msg">{{ job.error_message|default('unknown error') }}</span>
-    </div>
-  </div>
 </div>
+
+{# Pulse animation for running steps #}
+<style>
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+</style>
 
 <script>
 (function(){
-  var jobId = {{ job.id|json_encode|raw }};
-  var baseUrl = {{ (base_path ~ '/projects/deepdive/progress/' ~ job.id)|json_encode|raw }};
-
   // Auto-reload every 2 seconds if job is not completed
   if ('{{ job.status }}' !== 'completed' && '{{ job.status }}' !== 'failed') {
     setTimeout(function() {
       location.reload();
     }, 2000);
   }
+
+  // Ensure modal is always visible
+  document.getElementById('dd-modal-backdrop').style.display = 'flex';
+
+  // Disable close button until job completes
+  const closeBtn = document.getElementById('dd-close-btn');
+  if ('{{ job.status }}' !== 'completed' && '{{ job.status }}' !== 'failed') {
+    closeBtn.style.opacity = '0.3';
+    closeBtn.style.cursor = 'not-allowed';
+    closeBtn.onclick = function() { return false; };
+  }
 })();
 </script>
+
 {% endblock %}
