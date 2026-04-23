@@ -19,12 +19,27 @@ class DiskParser implements ParserInterface
                 foreach ($loadInfo['disks'] as $disk) {
                     $id = $disk['id'] ?? null;
                     if (!$id) continue;
+
+                    // Determine container: formal metadata or device naming pattern fallback
+                    $container = $disk['container']['str'] ?? null;
+                    if (!$container && preg_match('/^sde[a-z]/', $id)) {
+                        $container = 'Expansion Unit';
+                    }
+
+                    // Calculate capacity with fallbacks for different field names
+                    $capacity = 0;
+                    if (!empty($disk['size_total'])) {
+                        $capacity = round((int)$disk['size_total'] / 1024 / 1024 / 1024, 2);
+                    } elseif (!empty($disk['size']) && is_numeric($disk['size'])) {
+                        $capacity = round((int)$disk['size'] / 1024 / 1024 / 1024, 2);
+                    }
+
                     $disks[$id] = [
                         'model' => $disk['model'] ?? '',
                         'serial' => $disk['serial'] ?? '',
                         'vendor' => $disk['vendor'] ?? '',
                         'firmware' => $disk['firm'] ?? '',
-                        'size_gb' => round(($disk['size_total'] ?? 0) / 1024 / 1024 / 1024, 2),
+                        'size_gb' => $capacity,
                         'temp' => $disk['temp'] ?? 0,
                         'status' => $disk['status'] ?? '',
                         'smart_status' => $disk['smart_status'] ?? '',
@@ -33,7 +48,7 @@ class DiskParser implements ParserInterface
                         'firmware_status' => $disk['firmware_status'] ?? null,
                         'exceed_bad_sector_thr' => $disk['exceed_bad_sector_thr'] ?? false,
                         'slot' => $disk['slot_id'] ?? null,
-                        'container' => $disk['container']['str'] ?? null
+                        'container' => $container
                     ];
                 }
                 $citations[] = [
