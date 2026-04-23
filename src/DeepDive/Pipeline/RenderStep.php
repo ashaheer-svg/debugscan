@@ -47,7 +47,7 @@ final class RenderStep implements StepInterface
             'project_id'        => $ctx->projectId,
             'generated_at'      => date('Y-m-d H:i:s T'),
             'engine_version'    => Engine::VERSION,
-            'report_version'    => '2.1.0',  // Hardware extraction with expansion unit detection
+            'report_version'    => '2.2.0',  // DiskParser expansion unit detection and capacity fallbacks
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],
