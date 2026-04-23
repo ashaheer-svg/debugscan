@@ -47,7 +47,7 @@ final class RenderStep implements StepInterface
             'project_id'        => $ctx->projectId,
             'generated_at'      => date('Y-m-d H:i:s T'),
             'engine_version'    => Engine::VERSION,
-            'report_version'    => '2.3.0',  // Fixed load_info.result JSON path - data now extracted
+            'report_version'    => '2.4.0',  // Fixed HardwareSpecExtractor JSON path for DSM 7 compatibility
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],

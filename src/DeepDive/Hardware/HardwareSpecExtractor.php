@@ -266,14 +266,17 @@ final class HardwareSpecExtractor
         // Try 1: load_info.result - most comprehensive
         $loadInfo = $this->parseJsonResult('load_info.result');
         if (is_array($loadInfo)) {
+            // Handle both DSM 6 and DSM 7 JSON structures
+            $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
+
             $mainBayCount = $loadInfo['max_bay_count'] ?? 0;
-            $diskCount = isset($loadInfo['disks']) ? count((array)$loadInfo['disks']) : 0;
+            $diskCount = !empty($disksArray) ? count($disksArray) : 0;
             $expansionBayCount = 0;
             $expansionDiskCount = 0;
 
             // Count expansion disks if present
-            if (isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
-                foreach ($loadInfo['disks'] as $disk) {
+            if (!empty($disksArray)) {
+                foreach ($disksArray as $disk) {
                     if (is_array($disk) && !empty($disk['container']['str'])) {
                         if (preg_match('/expansion/i', $disk['container']['str'])) {
                             $expansionDiskCount++;
@@ -378,12 +381,14 @@ final class HardwareSpecExtractor
 
         // Try 1: load_info.result (DSM 6/7) - uses 'disks' array with container info
         $loadInfo = $this->parseJsonResult('load_info.result');
-        if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
+        // Handle both DSM 6 and DSM 7 JSON structures
+        $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
+        if (is_array($loadInfo) && !empty($disksArray)) {
             $mainBay = 1;
             $expansionBays = [];  // Track expansion unit bays separately
             $devicePattern = [];    // Map device to bay for expansion detection
 
-            foreach ($loadInfo['disks'] as $disk) {
+            foreach ($disksArray as $disk) {
                 if (!is_array($disk)) continue;
 
                 $deviceId = $disk['id'] ?? '';
@@ -686,12 +691,14 @@ final class HardwareSpecExtractor
 
         // Try 1: load_info.result - check for enclosure/container info + device patterns
         $loadInfo = $this->parseJsonResult('load_info.result');
-        if (is_array($loadInfo) && isset($loadInfo['disks']) && is_array($loadInfo['disks'])) {
+        // Handle both DSM 6 and DSM 7 JSON structures
+        $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
+        if (is_array($loadInfo) && !empty($disksArray)) {
             $expansionContainers = [];
             $expansionDevices = [];  // Track devices with expansion naming pattern
 
             // Scan disks for expansion container references and device patterns
-            foreach ($loadInfo['disks'] as $disk) {
+            foreach ($disksArray as $disk) {
                 if (!is_array($disk)) continue;
 
                 $deviceId = $disk['id'] ?? '';
