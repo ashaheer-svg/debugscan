@@ -47,7 +47,7 @@ final class RenderStep implements StepInterface
             'project_id'        => $ctx->projectId,
             'generated_at'      => date('Y-m-d H:i:s T'),
             'engine_version'    => Engine::VERSION,
-            'report_version'    => '2.6.0',  // Progress page converted to modal with auto-reload fallback
+            'report_version'    => '2.7.0',  // Hardware configuration moved to top of report
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],

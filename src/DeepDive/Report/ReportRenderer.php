@@ -51,6 +51,10 @@ final class ReportRenderer
     {
         $css  = $this->styles();
         $head = $this->headerBlock($context);
+
+        // Hardware configuration section (moved to top of report)
+        $hardware = $this->hardwareConfigurationBlock($context);
+
         $summary = $this->summaryBlock($incidents);
 
         $grouped = $this->groupByActionability($incidents);
@@ -78,6 +82,7 @@ final class ReportRenderer
 <body>
 <main class="report">
 {$head}
+{$hardware}
 {$summary}
 {$body}
 {$appendix}
@@ -321,18 +326,34 @@ HTML;
         return "<div class=\"ent-row\">{$chips}</div>";
     }
 
-    /** @param array<string,mixed> $c */
-    private function appendixBlock(array $c): string
+    /**
+     * Render hardware configuration block (displayed at top of report)
+     * @param array<string,mixed> $c
+     */
+    private function hardwareConfigurationBlock(array $c): string
     {
-        // Hardware specifications (new)
         $hwBlock = '';
         foreach (($c['bundles'] ?? []) as $b) {
             $hw = $b['hardware_spec'] ?? null;
             if ($hw === null) continue;
             $hwBlock .= $this->renderHardwareSpecs($hw, $b['data_completeness'] ?? []);
         }
-        $hwBlock = $hwBlock !== '' ? $hwBlock : '';
 
+        if ($hwBlock === '') {
+            return '';
+        }
+
+        return <<<HTML
+<section class="hw-section">
+  <h2>Hardware Configuration</h2>
+  {$hwBlock}
+</section>
+HTML;
+    }
+
+    /** @param array<string,mixed> $c */
+    private function appendixBlock(array $c): string
+    {
         // Bundle metadata
         $bundleRows = '';
         foreach (($c['bundles'] ?? []) as $b) {
@@ -363,7 +384,6 @@ HTML;
         return <<<HTML
 <section class="appendix">
   <h2>Appendix</h2>
-  {$hwBlock}
   <div class="apx-block">
     <h3>Bundles processed</h3>
     <table class="apx-table">
