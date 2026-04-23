@@ -15,8 +15,10 @@ class DiskParser implements ParserInterface
         $loadInfoFile = $extractedPath . '/dsm/result/load_info.result';
         if (file_exists($loadInfoFile)) {
             $loadInfo = json_decode(file_get_contents($loadInfoFile), true);
-            if ($loadInfo && isset($loadInfo['disks'])) {
-                foreach ($loadInfo['disks'] as $disk) {
+            // load_info.result structure: { "data": { "disks": [...] } }
+            $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
+            if (!empty($disksArray)) {
+                foreach ($disksArray as $disk) {
                     $id = $disk['id'] ?? null;
                     if (!$id) continue;
 
