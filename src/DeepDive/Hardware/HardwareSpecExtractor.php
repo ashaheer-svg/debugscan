@@ -685,6 +685,7 @@ final class HardwareSpecExtractor
 
     /**
      * Extract expansion unit information - supports multiple units
+     * Identifies specific Synology expansion models: DX513, DX517, DX214, DX215, RX217, etc.
      */
     private function extractExpansion(): ?array
     {
@@ -699,6 +700,7 @@ final class HardwareSpecExtractor
         if (is_array($loadInfo) && !empty($disksArray)) {
             $expansionContainers = [];
             $expansionDevices = [];  // Track devices with expansion naming pattern
+            $enclosureModels = [];   // Track enclosure models for proper identification
 
             // Scan disks for expansion container references and device patterns
             foreach ($disksArray as $disk) {
@@ -723,28 +725,46 @@ final class HardwareSpecExtractor
                 }
 
                 // Method 2: Detect expansion by device naming (sdea, sdeb, sdec, etc.)
-                if (preg_match('/^sde[a-z]/', $deviceId)) {
+                // Device naming pattern: sdea-sdef (5-bay typical), sdea-sdei (8-bay), etc.
+                if (preg_match('/^sde([a-z])/', $deviceId, $matches)) {
+                    $slotNum = ord($matches[1]) - ord('a') + 1;  // Convert a->1, b->2, etc.
+                    // Estimate bay count based on device count (typically 5, 8, or 12)
+                    if ($slotNum <= 5) {
+                        $bayCount = 5;  // DX513, DX214
+                    } elseif ($slotNum <= 8) {
+                        $bayCount = 8;  // DX517, DX215
+                    } else {
+                        $bayCount = 12; // RX217, RX418
+                    }
+
                     if (!isset($expansionDevices['expansion_unit_1'])) {
                         $expansionDevices['expansion_unit_1'] = [
                             'drives' => [],
-                            'bay_count' => 0,
+                            'bay_count' => $bayCount,
+                            'estimated_model' => $bayCount === 5 ? 'DX513/DX214 (5-bay)' : ($bayCount === 8 ? 'DX517/DX215 (8-bay)' : 'RX217/RX418 (12-bay)'),
                         ];
                     }
                     $expansionDevices['expansion_unit_1']['drives'][] = $deviceId;
-                    $expansionDevices['expansion_unit_1']['bay_count']++;
+                    $expansionDevices['expansion_unit_1']['bay_count'] = max($expansionDevices['expansion_unit_1']['bay_count'], $bayCount);
                 }
             }
 
-            // Parse expansion info from load_info enclosures
+            // Parse expansion info from load_info enclosures (most reliable)
             if (!empty($loadInfo['enclosures'])) {
                 foreach ((array)$loadInfo['enclosures'] as $enclosure) {
                     if (!is_array($enclosure)) continue;
 
                     $enclosureId = $enclosure['id'] ?? null;
-                    if ($enclosureId && preg_match('/expansion/i', (string)$enclosureId)) {
+                    $model = $enclosure['model'] ?? '';
+
+                    // Only process expansion enclosures
+                    if ($enclosureId && (preg_match('/expansion|enclosure/i', (string)$enclosureId) || preg_match('/^(DX|RX)\d+/i', $model))) {
+                        // Map Synology model codes to human-readable names
+                        $modelName = $this->identifySynergyModel($model);
+
                         $units[] = [
                             'enclosure_id' => $enclosureId,
-                            'model' => $enclosure['model'] ?? '',
+                            'model' => $modelName ?: $model ?: 'Synology Expansion Unit',
                             'serial' => $enclosure['serial'] ?? '',
                             'firmware' => $enclosure['firmware'] ?? '',
                             'bay_count' => $enclosure['bay_count'] ?? 5,
@@ -762,7 +782,7 @@ final class HardwareSpecExtractor
                 foreach ($expansionContainers as $container => $info) {
                     $units[] = [
                         'enclosure_id' => $container,
-                        'model' => 'Unknown Expansion',
+                        'model' => 'Synology Expansion Unit (metadata only)',
                         'serial' => '',
                         'firmware' => '',
                         'bay_count' => max($info['bay_count'], 5),
@@ -774,16 +794,16 @@ final class HardwareSpecExtractor
                 }
             }
 
-            // If we found expansion devices by naming pattern, create unit entry
+            // If we found expansion devices by naming pattern, create unit entry with estimated model
             if (empty($units) && !empty($expansionDevices)) {
                 foreach ($expansionDevices as $unitId => $info) {
                     $units[] = [
                         'enclosure_id' => $unitId,
-                        'model' => 'Expansion Unit (DX513/DX517 equiv)',
+                        'model' => $info['estimated_model'] ?? 'Synology Expansion Unit',
                         'serial' => '',
                         'firmware' => '',
-                        'bay_count' => max($info['bay_count'], 5),
-                        'installed_drives' => $info['bay_count'],
+                        'bay_count' => $info['bay_count'],
+                        'installed_drives' => count($info['drives']),
                         'drives' => $info['drives'],
                         'status' => 'active',
                         'power_status' => 'unknown',
@@ -888,6 +908,64 @@ final class HardwareSpecExtractor
 
         $content = (string)@file_get_contents($file);
         return json_decode($content, associative: true);
+    }
+
+    /**
+     * Identify specific Synology expansion model from model string
+     * Maps model codes to human-readable product names
+     */
+    private function identifySynergyModel(string $model): ?string
+    {
+        if (empty($model)) {
+            return null;
+        }
+
+        // Trim and uppercase for comparison
+        $model = strtoupper(trim($model));
+
+        // Direct model mappings
+        $modelMap = [
+            'DX513' => 'Synology DX513 (5-bay expansion)',
+            'DX517' => 'Synology DX517 (8-bay expansion)',
+            'DX214' => 'Synology DX214 (5-bay expansion)',
+            'DX215' => 'Synology DX215 (8-bay expansion)',
+            'RX217' => 'Synology RX217 (12-bay expansion)',
+            'RX418' => 'Synology RX418 (16-bay expansion)',
+            'RX2417SAC' => 'Synology RX2417sac (expansion)',
+            'RX4417SAC' => 'Synology RX4417sac (expansion)',
+        ];
+
+        // Check for exact match
+        if (isset($modelMap[$model])) {
+            return $modelMap[$model];
+        }
+
+        // Pattern-based identification
+        if (preg_match('/^DX(\d{3})/', $model, $m)) {
+            $bays = (int)$m[1];
+            if ($bays === 513 || $bays === 214) {
+                return 'Synology DX513/DX214 (5-bay expansion)';
+            } elseif ($bays === 517 || $bays === 215) {
+                return 'Synology DX517/DX215 (8-bay expansion)';
+            }
+            return "Synology DX expansion (model: {$model})";
+        }
+
+        if (preg_match('/^RX(\d{3})/', $model, $m)) {
+            return "Synology RX expansion (model: {$model})";
+        }
+
+        // If model contains known expansion indicators
+        if (preg_match('/expansion|enclosure/i', $model)) {
+            return "Synology Expansion Unit (model: {$model})";
+        }
+
+        // Fallback: return original if it looks like a Synology model
+        if (preg_match('/^[A-Z]{2}\d+/', $model)) {
+            return "Synology Expansion (model: {$model})";
+        }
+
+        return null;
     }
 
     /**
