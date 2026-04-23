@@ -1,0 +1,61 @@
+From 90b9d601ff41f5993540e8fc374a0b5bc292be6e Mon Sep 17 00:00:00 2001
+From: Shaheer <ashaheer@gmail.com>
+Date: Thu, 23 Apr 2026 12:23:16 +0530
+Subject: [PATCH] fix: Enable expansion unit detection in DiskParser using
+ device naming patterns
+
+- Detect expansion drives (sdea, sdeb, sdec, sded) by device naming pattern
+- Set container to 'Expansion Unit' when formal metadata unavailable
+- Add capacity extraction fallbacks for different DSM field names
+- Fixes 0 GB capacity issue and expansion unit classification in hardware report
+
+Co-Authored-By: Claude Haiku 4.5 <noreply@anthropic.com>
+---
+ src/Parsers/DiskParser.php | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
+
+diff --git a/src/Parsers/DiskParser.php b/src/Parsers/DiskParser.php
+index bf2ffc9..b512a9b 100644
+--- a/src/Parsers/DiskParser.php
++++ b/src/Parsers/DiskParser.php
+@@ -19,12 +19,27 @@ class DiskParser implements ParserInterface
+                 foreach ($loadInfo['disks'] as $disk) {
+                     $id = $disk['id'] ?? null;
+                     if (!$id) continue;
++
++                    // Determine container: formal metadata or device naming pattern fallback
++                    $container = $disk['container']['str'] ?? null;
++                    if (!$container && preg_match('/^sde[a-z]/', $id)) {
++                        $container = 'Expansion Unit';
++                    }
++
++                    // Calculate capacity with fallbacks for different field names
++                    $capacity = 0;
++                    if (!empty($disk['size_total'])) {
++                        $capacity = round((int)$disk['size_total'] / 1024 / 1024 / 1024, 2);
++                    } elseif (!empty($disk['size']) && is_numeric($disk['size'])) {
++                        $capacity = round((int)$disk['size'] / 1024 / 1024 / 1024, 2);
++                    }
++
+                     $disks[$id] = [
+                         'model' => $disk['model'] ?? '',
+                         'serial' => $disk['serial'] ?? '',
+                         'vendor' => $disk['vendor'] ?? '',
+                         'firmware' => $disk['firm'] ?? '',
+-                        'size_gb' => round(($disk['size_total'] ?? 0) / 1024 / 1024 / 1024, 2),
++                        'size_gb' => $capacity,
+                         'temp' => $disk['temp'] ?? 0,
+                         'status' => $disk['status'] ?? '',
+                         'smart_status' => $disk['smart_status'] ?? '',
+@@ -33,7 +48,7 @@ class DiskParser implements ParserInterface
+                         'firmware_status' => $disk['firmware_status'] ?? null,
+                         'exceed_bad_sector_thr' => $disk['exceed_bad_sector_thr'] ?? false,
+                         'slot' => $disk['slot_id'] ?? null,
+-                        'container' => $disk['container']['str'] ?? null
++                        'container' => $container
+                     ];
+                 }
+                 $citations[] = [
+-- 
+2.34.1
+
