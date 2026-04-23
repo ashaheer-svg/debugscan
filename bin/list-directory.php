@@ -2,22 +2,41 @@
 <?php
 /**
  * CLI Directory Listing Tool
- * Usage: php bin/list-directory.php [path] [--json] [--tree]
+ * Usage: php list-directory.php [path] [--json] [--tree]
  *
- * Examples:
- *   php bin/list-directory.php                     # List entire project
- *   php bin/list-directory.php sample              # List sample directory
- *   php bin/list-directory.php --json              # Output JSON format
- *   php bin/list-directory.php --tree              # Tree view only
+ * Examples (run from bin/ directory):
+ *   php list-directory.php                        # List entire project root
+ *   php list-directory.php --json                 # Project root as JSON
+ *   php list-directory.php sample                 # List sample directory
+ *   php list-directory.php sample --json          # Sample as JSON
+ *   php list-directory.php public/tools --tree    # Specific dir as tree
+ *   php list-directory.php /var/www/other-path    # Absolute path
  */
 
-$path = $_SERVER['argv'][1] ?? '.';
 $json = in_array('--json', $_SERVER['argv']);
 $tree = in_array('--tree', $_SERVER['argv']);
 
+// Get path - default to project root (parent of bin directory)
+$path = null;
+foreach ($_SERVER['argv'] as $arg) {
+    if ($arg !== $argv[0] && !preg_match('/^--/', $arg)) {
+        $path = $arg;
+        break;
+    }
+}
+
+// If no path provided, use project root (parent of bin/)
+if (!$path) {
+    $path = dirname(dirname(__FILE__));
+}
+
 // Make path absolute if relative
 if (!preg_match('#^/#', $path)) {
-    $path = getcwd() . '/' . $path;
+    if ($path === '.') {
+        $path = dirname(dirname(__FILE__));
+    } else {
+        $path = dirname(dirname(__FILE__)) . '/' . $path;
+    }
 }
 
 $path = realpath($path);
