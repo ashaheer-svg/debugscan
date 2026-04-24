@@ -337,15 +337,45 @@ final class HardwareSpecExtractor
             // Handle both DSM 6 and DSM 7 JSON structures
             $disksArray = $loadInfo['data']['disks'] ?? $loadInfo['disks'] ?? [];
 
-            $mainBayCount = $loadInfo['max_bay_count'] ?? 0;
+            // IMPORTANT: max_bay_count is MAXIMUM capacity, not actual bays
+            // We need actual bay count - check internal_slot_count or count actual slot definitions
+            $actualBayCount = 0;
+
+            // Get actual main unit bay count from internal_slot_count (actual bays)
+            if (!empty($loadInfo['internal_slot_count'])) {
+                $actualBayCount = (int)$loadInfo['internal_slot_count'];
+            }
+
+            // Fallback: Count actual disk slots in main unit (non-expansion)
+            if ($actualBayCount === 0 && !empty($disksArray)) {
+                $mainSlots = [];
+                foreach ($disksArray as $disk) {
+                    if (!is_array($disk)) continue;
+
+                    // Skip expansion disks
+                    if (!empty($disk['container']['str']) && preg_match('/expansion/i', $disk['container']['str'])) {
+                        continue;
+                    }
+                    if (!empty($disk['id']) && preg_match('/^sde[a-z]/', $disk['id'])) {
+                        continue;
+                    }
+
+                    // Count main unit slot
+                    $slot = (int)($disk['slot'] ?? 0);
+                    if ($slot > 0) {
+                        $mainSlots[$slot] = true;
+                    }
+                }
+                if (!empty($mainSlots)) {
+                    $actualBayCount = count($mainSlots);
+                }
+            }
+
             $diskCount = !empty($disksArray) ? count($disksArray) : 0;
             $expansionBayCount = 0;
             $expansionDiskCount = 0;
 
             // Count expansion disks if present
-            // Expansion drives are identified by:
-            // 1. Container name containing "expansion"
-            // 2. Device name starting with sdea or higher (expansion device naming)
             if (!empty($disksArray)) {
                 foreach ($disksArray as $disk) {
                     if (!is_array($disk)) continue;
@@ -384,16 +414,15 @@ final class HardwareSpecExtractor
             }
 
             $mainDiskCount = $diskCount - $expansionDiskCount;
-            // ONLY use actual extracted data - NO assumptions
-            // If max_bay_count exists in load_info, use it. Don't guess or assume defaults.
-            if ($mainBayCount > 0 || $diskCount > 0) {
+            // Use actual bay count, not max_bay_count
+            if ($actualBayCount > 0 || $diskCount > 0) {
                 return [
                     'data' => [
-                        'main_unit_bays' => (int)$mainBayCount,  // Only use actual data from load_info
+                        'main_unit_bays' => $actualBayCount,  // Actual bay count, not maximum
                         'main_unit_used' => max(0, $mainDiskCount),
                         'expansion_unit_bays' => $expansionBayCount,
                         'expansion_unit_used' => $expansionDiskCount,
-                        'total_bays' => (int)$mainBayCount + $expansionBayCount,  // No assumptions
+                        'total_bays' => $actualBayCount + $expansionBayCount,
                         'total_used' => $diskCount,
                     ],
                     'file' => 'dsm/result/load_info.result',
@@ -422,14 +451,14 @@ final class HardwareSpecExtractor
         }
 
         // Try 3: synoinfo.conf parsing for bay capacity
-        // Only count actual slot definitions - don't assume minimums
+        // Count actual slot definitions - no assumptions or fallback minimums
         $synoinfo = $this->parseSynoinfo();
         $mainBayCount = 0;
         $expansionBayCount = 0;
 
         foreach ($synoinfo as $key => $value) {
             // Main unit bays: slot0_type, slot1_type, etc.
-            // Only count if slot type is defined
+            // Only count if slot type is defined (actual slots, not maximum)
             if (preg_match('/^slot(\d+)_type$/i', $key) && !empty($value)) {
                 $mainBayCount++;
             }
@@ -443,14 +472,15 @@ final class HardwareSpecExtractor
             }
         }
 
+        // Use actual slot count - no min() fallback assumptions
         if ($mainBayCount > 0 || $expansionBayCount > 0) {
             return [
                 'data' => [
-                    'main_unit_bays' => max($mainBayCount, 4),
+                    'main_unit_bays' => $mainBayCount,  // Actual bay count from slots
                     'main_unit_used' => 0,
                     'expansion_unit_bays' => $expansionBayCount,
                     'expansion_unit_used' => 0,
-                    'total_bays' => max($mainBayCount, 4) + $expansionBayCount,
+                    'total_bays' => $mainBayCount + $expansionBayCount,
                     'total_used' => 0,
                 ],
                 'file' => 'dsm/etc/synoinfo.conf',
