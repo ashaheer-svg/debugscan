@@ -47,7 +47,7 @@ final class RenderStep implements StepInterface
             'project_id'        => $ctx->projectId,
             'generated_at'      => date('Y-m-d H:i:s T'),
             'engine_version'    => Engine::VERSION,
-            'report_version'    => '2.9.0',  // Fetch-based progress modal, no page reload; modal auto-closes on completion
+            'report_version'    => '3.0.0',  // Added RAID failure detection with systemic vs staggered pattern analysis and drive replacement tracking via serial numbers
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],
