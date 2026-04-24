@@ -73,6 +73,27 @@ final class HardwareSpec
     public array $expansion = [];
 
     /**
+     * RAID failure analysis - classified failures with context
+     * Includes historical vs current, replacements, patterns
+     * @var array<string, array<string, mixed>>
+     */
+    public array $failures = [];
+
+    /**
+     * Failure pattern analysis
+     * Detects systemic vs staggered failures per RAID array
+     * @var array<string, array<string, mixed>>
+     */
+    public array $failurePatterns = [];
+
+    /**
+     * Raw RAID failure log events
+     * Extracted from /var/log/messages with timestamps
+     * @var array<int, array<string, mixed>>
+     */
+    public array $raidFailureLogs = [];
+
+    /**
      * Data source citations
      * Maps extracted fields to their source files with timestamps
      * @var array<string, array{file: string, timestamp: string, lines?: string}>
@@ -199,6 +220,9 @@ final class HardwareSpec
             'raid_config' => $this->raidConfig,
             'volumes' => $this->volumes,
             'expansion' => $this->expansion,
+            'failures' => $this->failures,
+            'failure_patterns' => $this->failurePatterns,
+            'raid_failure_logs' => $this->raidFailureLogs,
             'citations' => $this->citations,
             'completeness_score' => $this->completenessScore(),
             'completeness_assessment' => $this->completenessAssessment(),

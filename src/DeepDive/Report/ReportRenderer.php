@@ -579,6 +579,84 @@ HTML;
 HTML;
         }
 
+        // RAID failure analysis section
+        $failureAnalysisTable = '';
+        $failures = $spec->failures ?? [];
+        if (!empty($failures)) {
+            $failureRows = '';
+            $failuresFound = false;
+
+            foreach ($failures as $device => $failure) {
+                // Only show drives with failure history or current failures
+                if (empty($failure['failure_history']) && !$failure['is_currently_failed']) {
+                    continue;
+                }
+                $failuresFound = true;
+
+                $device = htmlspecialchars((string)($device ?? ''), ENT_QUOTES);
+                $bay = htmlspecialchars((string)($failure['bay'] ?? ''), ENT_QUOTES);
+                $location = htmlspecialchars((string)($failure['location'] ?? 'main'), ENT_QUOTES);
+                $model = htmlspecialchars((string)($failure['model'] ?? ''), ENT_QUOTES);
+                $serial = htmlspecialchars((string)($failure['current_serial'] ?? ''), ENT_QUOTES);
+                $classification = htmlspecialchars((string)($failure['failure_classification'] ?? ''), ENT_QUOTES);
+                $detail = htmlspecialchars((string)($failure['status_detail'] ?? ''), ENT_QUOTES);
+
+                // Determine badge color
+                $badgeColor = match($classification) {
+                    'currently_failed' => '<span class="hw-status-badge hw-status-critical">✕ Currently Failed</span>',
+                    'replaced_after_failure' => '<span class="hw-status-badge hw-status-warning">⚠ Replaced After Failure</span>',
+                    'historically_failed_now_operational' => '<span class="hw-status-badge" style="background:#fcd34d;color:#78350f;">◈ Recovered</span>',
+                    'current_failure_no_log_record' => '<span class="hw-status-badge hw-status-warning">⚠ Unrecorded Failure</span>',
+                    default => htmlspecialchars($classification, ENT_QUOTES),
+                };
+
+                $failureRows .= "<tr><td><strong>{$bay}</strong><br><small class=\"hw-location\">{$location}</small></td><td class=\"mono\">{$device}</td><td>{$model}</td><td class=\"mono\">{$serial}</td><td>{$badgeColor}<br><small>{$detail}</small></td></tr>";
+            }
+
+            if ($failuresFound) {
+                $failureAnalysisTable = <<<HTML
+<h4>Drive Failure Analysis</h4>
+<table class="hw-failure-table">
+  <thead><tr><th>Bay</th><th>Device</th><th>Model</th><th>Serial</th><th>Status & Details</th></tr></thead>
+  <tbody>{$failureRows}</tbody>
+</table>
+HTML;
+            }
+        }
+
+        // Failure pattern analysis section
+        $failurePatternTable = '';
+        $patterns = $spec->failurePatterns ?? [];
+        if (!empty($patterns)) {
+            $patternRows = '';
+            foreach ($patterns as $arrayName => $pattern) {
+                $arrayName = htmlspecialchars((string)($arrayName ?? ''), ENT_QUOTES);
+                $patternType = htmlspecialchars((string)($pattern['pattern_type'] ?? ''), ENT_QUOTES);
+                $deviceCount = (int)($pattern['device_count'] ?? 0);
+                $totalFailures = (int)($pattern['total_failures'] ?? 0);
+                $cause = htmlspecialchars((string)($pattern['presumed_cause'] ?? ''), ENT_QUOTES);
+                $devices = htmlspecialchars(implode(', ', (array)($pattern['affected_devices'] ?? [])), ENT_QUOTES);
+
+                // Determine pattern badge
+                $patternBadge = match($patternType) {
+                    'systemic' => '<span class="hw-status-badge hw-status-critical">⚡ Systemic</span>',
+                    'staggered' => '<span class="hw-status-badge hw-status-warning">⚠ Staggered</span>',
+                    'single_device' => '<span class="hw-status-badge" style="background:#bfdbfe;color:#0369a1;">◎ Single</span>',
+                    default => htmlspecialchars($patternType, ENT_QUOTES),
+                };
+
+                $patternRows .= "<tr><td>{$arrayName}</td><td>{$patternBadge}</td><td>{$deviceCount}</td><td>{$totalFailures}</td><td>{$cause}<br><small class=\"mono\">{$devices}</small></td></tr>";
+            }
+
+            $failurePatternTable = <<<HTML
+<h4>Failure Patterns</h4>
+<table class="hw-pattern-table">
+  <thead><tr><th>Array</th><th>Pattern Type</th><th>Devices Affected</th><th>Total Failures</th><th>Presumed Cause & Devices</th></tr></thead>
+  <tbody>{$patternRows}</tbody>
+</table>
+HTML;
+        }
+
         return <<<HTML
 <div class="apx-block">
   <h3>System Configuration</h3>
@@ -587,6 +665,8 @@ HTML;
   {$driveTable}
   {$driveDetailsTable}
   {$raidTable}
+  {$failureAnalysisTable}
+  {$failurePatternTable}
   {$volumeTable}
 </div>
 HTML;
@@ -717,9 +797,9 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .hw-spec-item{display:flex;justify-content:space-between;padding:6px;background:#fff;border-radius:4px;border:1px solid #dbeafe}
 .hw-spec-label{font-weight:500;color:#0369a1}
 .hw-spec-value{color:#1e293b;text-align:right;font-weight:600}
-.hw-drive-table,.hw-raid-table,.hw-volume-table,.hw-expansion-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
-.hw-drive-table th,.hw-raid-table th,.hw-volume-table th,.hw-expansion-table th{background:#f3f4f6;padding:8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600;font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.03em}
-.hw-drive-table td,.hw-raid-table td,.hw-volume-table td,.hw-expansion-table td{padding:8px;border-bottom:1px solid #f3f4f6}
+.hw-drive-table,.hw-raid-table,.hw-volume-table,.hw-expansion-table,.hw-failure-table,.hw-pattern-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}
+.hw-drive-table th,.hw-raid-table th,.hw-volume-table th,.hw-expansion-table th,.hw-failure-table th,.hw-pattern-table th{background:#f3f4f6;padding:8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:600;font-size:11px;color:#4b5563;text-transform:uppercase;letter-spacing:.03em}
+.hw-drive-table td,.hw-raid-table td,.hw-volume-table td,.hw-expansion-table td,.hw-failure-table td,.hw-pattern-table td{padding:8px;border-bottom:1px solid #f3f4f6}
 .hw-location{display:block;color:#6b7280;font-size:10px;margin-top:2px}
 .hw-status-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:600}
 .hw-status-healthy{background:#d1fae5;color:#047857}

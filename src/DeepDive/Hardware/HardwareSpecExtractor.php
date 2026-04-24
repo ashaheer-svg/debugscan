@@ -83,6 +83,32 @@ final class HardwareSpecExtractor
             $this->addCitation($spec, 'expansion', $expansion['file'], $expansion['timestamp']);
         }
 
+        // Failure Analysis - Extract from logs and correlate with snapshot
+        $raidFailureLogs = $this->parseRAIDFailureLogs();
+        if (!empty($raidFailureLogs)) {
+            $spec->raidFailureLogs = $raidFailureLogs;
+            $this->addCitation($spec, 'raid_failure_logs', 'dsm/var/log/messages', date('Y-m-d H:i:s'));
+        }
+
+        // Detect failure patterns
+        $failurePatterns = $this->detectFailurePatterns($raidFailureLogs);
+        if (!empty($failurePatterns)) {
+            $spec->failurePatterns = $failurePatterns;
+        }
+
+        // Get current RAID state for correlation
+        $mdstatData = $this->parseMdstat();
+
+        // Correlate with snapshot to classify failures
+        if (!empty($spec->drives) && (!empty($raidFailureLogs) || !empty($mdstatData))) {
+            $spec->failures = $this->correlateWithSnapshot(
+                $spec->drives,
+                $failurePatterns,
+                $mdstatData
+            );
+            $this->addCitation($spec, 'failures', 'dsm/proc/mdstat, dsm/var/log/messages', date('Y-m-d H:i:s'));
+        }
+
         return $spec;
     }
 
@@ -1047,5 +1073,640 @@ final class HardwareSpecExtractor
             'file' => $file,
             'timestamp' => $timestamp,
         ];
+    }
+
+    /**
+     * Parse RAID failure logs from /var/log/messages
+     * Extracts all failure events with timestamps for pattern analysis
+     * DSM 6/7 compatible log format parsing
+     *
+     * @return array<int, array> Array of failure events with timestamp, device, array, error type
+     */
+    public function parseRAIDFailureLogs(): array
+    {
+        $failures = [];
+
+        // Try multiple log locations for DSM 6 and DSM 7 compatibility
+        $logPaths = [
+            $this->extractedPath . '/dsm/var/log/messages',
+            $this->extractedPath . '/dsm/var/log/syslog',
+            $this->extractedPath . '/dsm/var/log/kern.log',
+        ];
+
+        foreach ($logPaths as $logFile) {
+            if (!file_exists($logFile)) {
+                continue;
+            }
+
+            $content = (string)@file_get_contents($logFile);
+            if (empty($content)) {
+                continue;
+            }
+
+            // Parse each line looking for RAID failure patterns
+            foreach (explode("\n", $content) as $line) {
+                $failure = $this->parseRAIDFailureLine($line);
+                if ($failure !== null) {
+                    $failures[] = $failure;
+                }
+            }
+        }
+
+        return $failures;
+    }
+
+    /**
+     * Parse a single log line for RAID failure events
+     * Handles various kernel log formats and error messages
+     *
+     * @param string $line Raw log line
+     * @return ?array Failure event array or null if not a failure line
+     */
+    private function parseRAIDFailureLine(string $line): ?array
+    {
+        // Match kernel log timestamp format: "Apr 27 22:59:19" or "2025-04-27T22:59:19"
+        $timestamp = null;
+
+        // Try ISO format: 2025-04-27T22:59:19
+        if (preg_match('/^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})/', $line, $m)) {
+            $timestamp = $m[1];
+        }
+        // Try syslog format: "Apr 27 22:59:19" - need to infer year
+        elseif (preg_match('/^([A-Za-z]{3}\s+\d{1,2}\s+\d{2}:\d{2}:\d{2})/', $line, $m)) {
+            // For syslog format, convert to ISO with inferred year
+            // Try current year first, then previous year if it's in the future
+            $syslogTime = $m[1];
+            $tryYear = (int)date('Y');
+
+            // Attempt to parse with current year
+            $dt = \DateTime::createFromFormat('M d H:i:s Y', $syslogTime . ' ' . $tryYear);
+            if ($dt && $dt->getTimestamp() > time()) {
+                // Timestamp is in the future, try previous year
+                $dt = \DateTime::createFromFormat('M d H:i:s Y', $syslogTime . ' ' . ($tryYear - 1));
+            }
+
+            if ($dt) {
+                $timestamp = $dt->format('Y-m-d H:i:s');
+            } else {
+                // Fallback: use as-is and let grouping handle it
+                $timestamp = $syslogTime;
+            }
+        } else {
+            return null;
+        }
+
+        // RAID array name: md0, md1, md2, etc.
+        $raidArray = null;
+        if (preg_match('/(md\d+)/', $line, $m)) {
+            $raidArray = $m[1];
+        }
+
+        // Device name: sda, sdb, sdea, sdeb, etc.
+        $device = null;
+        if (preg_match('/\b(sd[a-z]+)\b/', $line, $m)) {
+            $device = $m[1];
+        }
+
+        // Only record if we have array and device
+        if ($raidArray === null || $device === null) {
+            return null;
+        }
+
+        // Determine error type
+        $errorType = 'unknown_error';
+        if (preg_match('/read error|I\/O error/i', $line)) {
+            $errorType = 'read_error';
+        } elseif (preg_match('/write error/i', $line)) {
+            $errorType = 'write_error';
+        } elseif (preg_match('/timeout|time out/i', $line)) {
+            $errorType = 'timeout';
+        } elseif (preg_match('/fail|failed|failure|Disk failure/i', $line)) {
+            $errorType = 'disk_failure';
+        } elseif (preg_match('/not correctable|unc/i', $line)) {
+            $errorType = 'uncorrectable_error';
+        }
+
+        // Extract sector information if present
+        $sector = null;
+        if (preg_match('/sector\s+(\d+)/i', $line, $m)) {
+            $sector = (int)$m[1];
+        }
+
+        return [
+            'timestamp' => $timestamp,
+            'device' => $device,
+            'raid_array' => $raidArray,
+            'error_type' => $errorType,
+            'sector' => $sector,
+            'raw_line' => $line,
+        ];
+    }
+
+    /**
+     * Parse current RAID state from /proc/mdstat
+     * Returns current status of all RAID arrays including failed devices
+     *
+     * @return array<string, array> RAID array states keyed by array name
+     */
+    public function parseMdstat(): array
+    {
+        $mdstat = $this->extractedPath . '/dsm/proc/mdstat';
+        if (!file_exists($mdstat)) {
+            return [];
+        }
+
+        $content = (string)@file_get_contents($mdstat);
+        if (empty($content)) {
+            return [];
+        }
+
+        $arrays = [];
+        $currentArray = null;
+
+        foreach (explode("\n", $content) as $line) {
+            // Header line: "md2 : active raid5 sdea[0](F) sdeb[1](F) sdec[2] sded[3]"
+            if (preg_match('/^(md\d+)\s*:\s*(\S+)\s+(\S+)\s+(.*)$/', $line, $m)) {
+                $arrayName = $m[1];
+                $status = $m[2];  // active, inactive, recovery, etc.
+                $level = $m[3];   // raid0, raid1, raid5, raid6, etc.
+                $devices = $m[4];
+
+                // Parse device list with status markers
+                $deviceList = [];
+                if (preg_match_all('/(\w+)\[(\d+)\](?:\(([A-Z]+)\))?/', $devices, $matches, PREG_SET_ORDER)) {
+                    foreach ($matches as $match) {
+                        $deviceList[] = [
+                            'name' => $match[1],
+                            'index' => (int)$match[2],
+                            'status' => $match[3] ?? 'ok',  // F = failed, S = spare, etc.
+                        ];
+                    }
+                }
+
+                $currentArray = [
+                    'name' => $arrayName,
+                    'status' => $status,
+                    'level' => $level,
+                    'devices' => $deviceList,
+                    'failed_devices' => array_filter($deviceList, fn($d) => $d['status'] === 'F'),
+                ];
+
+                $arrays[$arrayName] = $currentArray;
+            }
+        }
+
+        return $arrays;
+    }
+
+    /**
+     * Extract historical serial numbers from logs and device info
+     * Builds timeline of which serial numbers were in which devices
+     * Aggregates from multiple sources without data loss
+     *
+     * @return array<string, array> Timeline of serial numbers per device
+     */
+    public function extractHistoricalSerialNumbers(): array
+    {
+        $deviceTimeline = [];
+
+        // Try to extract from /dev/disk/by-id symlinks if captured
+        $fromLinks = $this->extractFromDeviceLinks();
+        foreach ($fromLinks as $device => $entries) {
+            if (!isset($deviceTimeline[$device])) {
+                $deviceTimeline[$device] = [];
+            }
+            $deviceTimeline[$device] = array_merge($deviceTimeline[$device], $entries);
+        }
+
+        // Try to extract from kernel logs (device detection messages)
+        $fromLogs = $this->extractFromKernelLogs();
+        foreach ($fromLogs as $device => $entries) {
+            if (!isset($deviceTimeline[$device])) {
+                $deviceTimeline[$device] = [];
+            }
+            $deviceTimeline[$device] = array_merge($deviceTimeline[$device], $entries);
+        }
+
+        // Try to extract from SMART data if available
+        $fromSmart = $this->extractFromSmartData();
+        foreach ($fromSmart as $device => $entries) {
+            if (!isset($deviceTimeline[$device])) {
+                $deviceTimeline[$device] = [];
+            }
+            $deviceTimeline[$device] = array_merge($deviceTimeline[$device], $entries);
+        }
+
+        return $deviceTimeline;
+    }
+
+    /**
+     * Extract serial numbers from /dev/disk/by-id/ symlinks
+     * These typically encode serial numbers in the symlink names
+     *
+     * @return array<string, array> Timeline entries
+     */
+    private function extractFromDeviceLinks(): array
+    {
+        $timeline = [];
+
+        $devDiskPath = $this->extractedPath . '/dsm/dev/disk/by-id';
+        if (!is_dir($devDiskPath)) {
+            return $timeline;
+        }
+
+        // Read symlink directory
+        $files = @scandir($devDiskPath);
+        if ($files === false) {
+            return $timeline;
+        }
+
+        foreach ($files as $link) {
+            if ($link === '.' || $link === '..' || strpos($link, '-part') !== false) {
+                continue;
+            }
+
+            // Try to read where symlink points
+            $linkPath = $devDiskPath . '/' . $link;
+            $target = @readlink($linkPath);
+            if ($target === false) {
+                continue;
+            }
+
+            // Extract device name from target (e.g., ../../../sda)
+            if (preg_match('/\/(sd[a-z0-9]+)$/i', $target, $m)) {
+                $device = strtolower($m[1]);
+
+                // Extract serial from symlink name
+                // Format: ata-MODEL_SERIAL or scsi-SCSISERIAL
+                // More explicit pattern to avoid edge cases
+                $serial = null;
+                if (preg_match('/^(?:ata|scsi)[a-z0-9\-]*?_([\w]+)$/i', $link, $m)) {
+                    $serial = strtoupper($m[1]);
+                }
+
+                if ($serial !== null) {
+                    if (!isset($timeline[$device])) {
+                        $timeline[$device] = [];
+                    }
+
+                    // Use actual symlink file modification time, not current time
+                    $timestamp = date('Y-m-d H:i:s', filemtime($linkPath));
+
+                    $timeline[$device][] = [
+                        'timestamp' => $timestamp,
+                        'serial' => $serial,
+                        'source' => 'device_symlink',
+                        'symlink_name' => $link,
+                    ];
+                }
+            }
+        }
+
+        return $timeline;
+    }
+
+    /**
+     * Extract serial numbers from kernel boot logs
+     * When drives are detected, kernel logs include model and sometimes serial
+     *
+     * @return array<string, array> Timeline entries
+     */
+    private function extractFromKernelLogs(): array
+    {
+        $timeline = [];
+
+        $logPaths = [
+            $this->extractedPath . '/dsm/var/log/messages',
+            $this->extractedPath . '/dsm/var/log/kern.log',
+        ];
+
+        foreach ($logPaths as $logFile) {
+            if (!file_exists($logFile)) {
+                continue;
+            }
+
+            $content = (string)@file_get_contents($logFile);
+            if (empty($content)) {
+                continue;
+            }
+
+            $currentDevice = null;  // Track device context across lines
+
+            foreach (explode("\n", $content) as $line) {
+                // Track device when mentioned in log
+                if (preg_match('/\b(sd[a-z0-9]+)\b/i', $line, $m)) {
+                    $currentDevice = strtolower($m[1]);
+                }
+
+                // Look for device detection lines
+                // Format: "ata3.00: ATA-9: MODEL_NAME, FIRMWARE_VER, max UDMA/133"
+                if (preg_match('/^(.{15,20})(ata\d+\.\d+|scsi\s+\d+:\d+:\d+:\d+):\s+(Direct-Access|ATA|SCSI).*Model:\s+(.+?)$/i', $line, $m)) {
+                    $timestamp = trim($m[1]);
+                    $model = trim($m[4]);
+
+                    // Extract serial if present
+                    $serial = null;
+                    if (preg_match('/Serial:\s+([A-Z0-9]+)/i', $line, $sm)) {
+                        $serial = $sm[1];
+                    }
+
+                    // Store extracted data if we have device context and serial
+                    if ($currentDevice !== null && $serial !== null) {
+                        if (!isset($timeline[$currentDevice])) {
+                            $timeline[$currentDevice] = [];
+                        }
+
+                        $timeline[$currentDevice][] = [
+                            'timestamp' => $timestamp,
+                            'serial' => $serial,
+                            'model' => $model,
+                            'source' => 'kernel_log',
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $timeline;
+    }
+
+    /**
+     * Extract serial numbers from SMART data if available
+     *
+     * @return array<string, array> Timeline entries
+     */
+    private function extractFromSmartData(): array
+    {
+        $timeline = [];
+
+        // Check for smartctl output or SMART attribute dumps
+        $smartPaths = [
+            $this->extractedPath . '/dsm/var/log/smartctl_output',
+            $this->extractedPath . '/dsm/result/smart_data.result',
+        ];
+
+        foreach ($smartPaths as $file) {
+            if (!file_exists($file)) {
+                continue;
+            }
+
+            $content = (string)@file_get_contents($file);
+            if (empty($content)) {
+                continue;
+            }
+
+            // Parse SMART output for serial numbers
+            $currentDevice = null;
+            foreach (explode("\n", $content) as $line) {
+                // Extract device context from lines like "smartctl output for /dev/sda"
+                if (preg_match('/\/dev\/(sd[a-z0-9]+)/i', $line, $m)) {
+                    $currentDevice = strtolower($m[1]);
+                }
+
+                // Extract serial number
+                if (preg_match('/Serial Number:\s+([A-Z0-9]+)/i', $line, $m)) {
+                    $serial = $m[1];
+
+                    // Store with device context
+                    if ($currentDevice !== null) {
+                        if (!isset($timeline[$currentDevice])) {
+                            $timeline[$currentDevice] = [];
+                        }
+
+                        $timeline[$currentDevice][] = [
+                            'timestamp' => date('Y-m-d H:i:s', filemtime($file)),
+                            'serial' => $serial,
+                            'source' => 'smart_data',
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $timeline;
+    }
+
+    /**
+     * Detect failure patterns: simultaneous vs staggered
+     * Analyzes timestamps to identify systemic vs individual failures
+     *
+     * @param array $failures Parsed failure events from logs
+     * @return array Pattern analysis by RAID array
+     */
+    public function detectFailurePatterns(array $failures): array
+    {
+        $patterns = [];
+
+        // Group failures by RAID array
+        $byArray = [];
+        foreach ($failures as $failure) {
+            $array = $failure['raid_array'];
+            if (!isset($byArray[$array])) {
+                $byArray[$array] = [];
+            }
+            $byArray[$array][] = $failure;
+        }
+
+        // Analyze each array for patterns
+        foreach ($byArray as $arrayName => $arrayFailures) {
+            // Group by timestamp (within ±2 seconds tolerance)
+            $failureGroups = $this->groupFailuresByTimestamp($arrayFailures);
+
+            // Determine pattern type
+            $devices = array_unique(array_column($arrayFailures, 'device'));
+            $deviceCount = count($devices);
+
+            $pattern = [
+                'raid_array' => $arrayName,
+                'total_failures' => count($arrayFailures),
+                'affected_devices' => $devices,
+                'device_count' => $deviceCount,
+                'failure_groups' => $failureGroups,
+            ];
+
+            // Classification: if all devices fail at same time = systemic
+            if ($deviceCount > 1 && count($failureGroups) === 1) {
+                $pattern['pattern_type'] = 'systemic';
+                $pattern['presumed_cause'] = 'shared_failure_source_power_connection_enclosure';
+            } else if ($deviceCount > 1 && count($failureGroups) > 1) {
+                $pattern['pattern_type'] = 'staggered';
+                $pattern['presumed_cause'] = 'individual_component_failures';
+            } else {
+                $pattern['pattern_type'] = 'single_device';
+                $pattern['presumed_cause'] = 'individual_drive_failure';
+            }
+
+            $patterns[$arrayName] = $pattern;
+        }
+
+        return $patterns;
+    }
+
+    /**
+     * Group failures by timestamp with tolerance window
+     * Allows for log buffering delays (±2 second window)
+     *
+     * @param array $failures Array of failure events
+     * @return array<int, array> Grouped failures
+     */
+    private function groupFailuresByTimestamp(array $failures): array
+    {
+        $groups = [];
+        $tolerance = 2;  // seconds
+
+        foreach ($failures as $failure) {
+            $timestamp = $failure['timestamp'];
+            $device = $failure['device'];
+            $found = false;
+
+            // Try to match with existing group
+            foreach ($groups as &$group) {
+                $groupTime = $group[0]['timestamp'];
+
+                // Convert to Unix timestamp for comparison if possible
+                $failureTs = strtotime($timestamp) ?: 0;
+                $groupTs = strtotime($groupTime) ?: 0;
+
+                if ($failureTs > 0 && $groupTs > 0 && abs($failureTs - $groupTs) <= $tolerance) {
+                    $group[] = $failure;
+                    $found = true;
+                    break;
+                }
+            }
+
+            // Create new group if not matched
+            if (!$found) {
+                $groups[] = [$failure];
+            }
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Correlate failure patterns with current snapshot
+     * Identifies historical vs current failures and applies serial number tracking
+     *
+     * @param array $drives Current drive snapshot from load_info
+     * @param array $patterns Failure patterns from logs
+     * @param array $mdstatData Current RAID state from mdstat
+     * @return array Classified failures with full context
+     */
+    public function correlateWithSnapshot(array $drives, array $patterns, array $mdstatData): array
+    {
+        $classified = [];
+
+        // Extract historical serial numbers
+        $serialTimeline = $this->extractHistoricalSerialNumbers();
+
+        // Create lookup of current drives by device
+        $currentByDevice = [];
+        foreach ($drives as $drive) {
+            // Validate drive array structure
+            if (!is_array($drive) || empty($drive['device'])) {
+                continue;  // Skip invalid entries
+            }
+            $currentByDevice[$drive['device']] = $drive;
+        }
+
+        // Create lookup of failed devices from mdstat
+        $failedDevices = [];
+        foreach ($mdstatData as $arrayData) {
+            if (!is_array($arrayData) || empty($arrayData['failed_devices'])) {
+                continue;
+            }
+            foreach ($arrayData['failed_devices'] as $failedDev) {
+                if (is_array($failedDev) && !empty($failedDev['name'])) {
+                    $failedDevices[$failedDev['name']] = $arrayData['name'] ?? '';
+                }
+            }
+        }
+
+        // Process each drive in the system
+        foreach ($drives as $drive) {
+            // Validate drive array before accessing
+            if (!is_array($drive) || empty($drive['device'])) {
+                continue;
+            }
+
+            $device = $drive['device'];
+            $currentSerial = $drive['serial'] ?? '';
+
+            $classification = [
+                'device' => $device,
+                'bay' => $drive['bay'] ?? 0,
+                'location' => $drive['location'] ?? 'unknown',
+                'model' => $drive['model'] ?? 'Unknown',
+                'current_serial' => $currentSerial,
+                'current_status' => $drive['status'] ?? 'unknown',
+                'snapshot_status' => $drive['status'] ?? 'unknown',
+                'failure_history' => [],
+                'replacement_history' => [],
+                'is_currently_failed' => isset($failedDevices[$device]),
+                'failure_classification' => 'no_failure_record',
+            ];
+
+            // Check for failure records in logs
+            foreach ($patterns as $pattern) {
+                if (!is_array($pattern) || empty($pattern['affected_devices'])) {
+                    continue;
+                }
+                if (in_array($device, $pattern['affected_devices'])) {
+                    // This device has failure records
+                    // Safely merge failure groups (check if not empty to avoid unpacking error)
+                    $failureTimestamps = [];
+                    if (!empty($pattern['failure_groups']) && is_array($pattern['failure_groups'])) {
+                        $failureTimestamps = array_column(array_merge(...$pattern['failure_groups']), 'timestamp');
+                    }
+                    $classification['failure_history'] = $failureTimestamps;
+                    $classification['pattern_type'] = $pattern['pattern_type'] ?? 'unknown';
+                    $classification['pattern_presumed_cause'] = $pattern['presumed_cause'] ?? 'unknown';
+                    $classification['raid_array'] = $pattern['raid_array'] ?? '';
+                }
+            }
+
+            // Check if device is currently failed
+            if ($classification['is_currently_failed']) {
+                if (!empty($classification['failure_history'])) {
+                    // Drive failed and is still failed
+                    $classification['failure_classification'] = 'currently_failed';
+                    $classification['status_detail'] = 'Drive failed in logs and remains failed in current state';
+                } else {
+                    // Current failure not in logs (unusual)
+                    $classification['failure_classification'] = 'current_failure_no_log_record';
+                    $classification['status_detail'] = 'Drive is currently failed but no failure record in logs';
+                }
+            } else {
+                if (!empty($classification['failure_history'])) {
+                    // Drive failed but is no longer failed (recovered or replaced)
+                    $classification['failure_classification'] = 'historically_failed_now_operational';
+                    $classification['status_detail'] = 'Drive failed historically but is now operational';
+
+                    // Check for replacement using serial number
+                    if (!empty($serialTimeline[$device])) {
+                        $serials = array_unique(array_column($serialTimeline[$device], 'serial'));
+                        if (count($serials) > 1 && !in_array($currentSerial, $serials)) {
+                            $classification['failure_classification'] = 'replaced_after_failure';
+                            $classification['replacement_status'] = 'replaced_once';
+                            $classification['replacement_history'] = [
+                                [
+                                    'original_serial' => reset($serials),
+                                    'replacement_serial' => $currentSerial,
+                                    'replacement_indication' => 'serial_mismatch',
+                                ]
+                            ];
+                        }
+                    }
+                } else {
+                    // No failure history, healthy drive
+                    $classification['failure_classification'] = 'no_failure_record';
+                    $classification['status_detail'] = 'No failure history, drive is operational';
+                }
+            }
+
+            $classified[$device] = $classification;
+        }
+
+        return $classified;
     }
 }
