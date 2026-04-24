@@ -8,6 +8,7 @@ use App\DeepDive\Correlation\Incident;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\RuleCatalogue;
 use App\DeepDive\Support\Engine;
+use App\DeepDive\Visualization\BayLayoutRenderer;
 
 /**
  * Produces the single-file HTML DeepDive report. Kept deliberately free
@@ -445,9 +446,15 @@ HTML;
             $driveTable .= "</div>";
         }
 
+        // Bay layout diagrams (visual drive positions)
+        $bayLayoutDiagrams = '';
+        $drives = $spec->drives ?? [];
+        if (!empty($drives)) {
+            $bayLayoutDiagrams = $this->renderBayLayoutDiagrams($drives);
+        }
+
         // Drive details table with location information
         $driveDetailsTable = '';
-        $drives = $spec->drives ?? [];
         if (!empty($drives)) {
             $driveRows = '';
             foreach ($drives as $drive) {
@@ -688,6 +695,7 @@ HTML;
   {$deviceCard}
   {$expansionTable}
   {$driveTable}
+  {$bayLayoutDiagrams}
   {$driveDetailsTable}
   {$raidTable}
   {$failureAnalysisTable}
@@ -831,5 +839,80 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .hw-status-warning{background:#fef3c7;color:#b45309}
 .hw-status-critical{background:#fee2e2;color:#dc2626}
 CSS;
+    }
+
+    /**
+     * Render bay layout diagrams for all storage units
+     */
+    private function renderBayLayoutDiagrams(array $drives): string
+    {
+        if (empty($drives)) {
+            return '';
+        }
+
+        $renderer = new BayLayoutRenderer();
+
+        // Group drives by location/container
+        $drivesByLocation = [];
+        $locationBayCount = [];
+
+        foreach ($drives as $drive) {
+            $location = $drive['location'] ?? 'Unknown';
+            if (!isset($drivesByLocation[$location])) {
+                $drivesByLocation[$location] = [];
+                $locationBayCount[$location] = 0;
+            }
+            $drivesByLocation[$location][] = $drive;
+
+            // Determine total bays for this location
+            $bay = (int)($drive['bay'] ?? 0);
+            if ($bay > $locationBayCount[$location]) {
+                $locationBayCount[$location] = $bay;
+            }
+        }
+
+        // Determine bay counts based on location
+        $bayCountMap = [
+            'RS3617RPxs' => 16,
+            'RX1217rp-1' => 12,
+            'RX1217rp-2' => 12,
+        ];
+
+        // Render diagrams
+        $html = '<h4>Drive Bay Layout</h4>';
+        $html .= '<div class="bay-layout-container" style="margin: 15px 0;">';
+
+        // Render Main unit first
+        if (isset($drivesByLocation['Main'])) {
+            $location = 'Main Unit (RS3617RPxs)';
+            $totalBays = 16;
+            $locationDrivesToSort = $drivesByLocation['Main'];
+            $html .= $renderer->renderBayLayout($location, $locationDrivesToSort, $totalBays);
+        }
+
+        // Render expansion units
+        foreach ($drivesByLocation as $location => $locationDrives) {
+            if ($location === 'Main') {
+                continue; // Already rendered
+            }
+
+            $totalBays = $bayCountMap[$location] ?? 12;
+            $displayName = $location;
+            $html .= $renderer->renderBayLayout($displayName, $locationDrives, $totalBays);
+        }
+
+        $html .= '</div>';
+
+        // Add legend
+        $html .= '<div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 12px;">';
+        $html .= '<strong>Bay Status Legend:</strong><br>';
+        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #4CAF50; border-radius: 2px; margin-right: 5px;"></span>Healthy</span>';
+        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #FFC107; border-radius: 2px; margin-right: 5px;"></span>Caution (10-50 sectors)</span>';
+        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #FF9800; border-radius: 2px; margin-right: 5px;"></span>Warning (50+ sectors)</span>';
+        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #F44336; border-radius: 2px; margin-right: 5px;"></span>Critical (100+ sectors)</span>';
+        $html .= '<span style="display: inline-block;"><span style="display: inline-block; width: 15px; height: 15px; background: #EEEEEE; border: 1px dashed #999; border-radius: 2px; margin-right: 5px;"></span>Empty Bay</span>';
+        $html .= '</div>';
+
+        return $html;
     }
 }

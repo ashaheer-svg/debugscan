@@ -593,6 +593,9 @@ final class HardwareSpecExtractor
         $timestamp = '';
         $mainUnitBays = 0;  // Track how many bays in main unit
 
+        // Extract drive change history (installation dates, replacements)
+        $driveHistory = $this->extractDriveChangeHistory();
+
         // Try 1: load_info.result (DSM 6/7) - uses 'disks' array with container info
         $loadInfo = $this->parseJsonResult('load_info.result');
         // Handle both DSM 6 and DSM 7 JSON structures
@@ -683,6 +686,20 @@ final class HardwareSpecExtractor
                     'is_ssd' => $disk['isSsd'] ?? false,
                     'status' => $disk['status'] ?? 'unknown',
                 ];
+
+                // Add installation date from drive history
+                $installDate = $this->getDriveInstallationDate($serial, $driveHistory);
+                if ($installDate && $installDate !== '1970/01/01 05:30:00') {
+                    $driveData['installation_date'] = $installDate;
+                }
+
+                // Add slot replacement history
+                $slotKey = "{$location}:{$bay}";
+                $replacementHistory = $this->getSlotReplacementHistory($slotKey, $driveHistory);
+                if ($replacementHistory) {
+                    $driveData['replacement_count'] = $replacementHistory['count'];
+                    $driveData['replacement_timeline'] = $replacementHistory['timeline'];
+                }
 
                 // Add SMART health metrics if available
                 if ($smartHealth) {
@@ -1847,5 +1864,126 @@ final class HardwareSpecExtractor
         }
 
         return $classified;
+    }
+
+    /**
+     * Extract drive change history from disk_log.csv
+     * Identifies installation dates, replacements, and problem slots
+     */
+    private function extractDriveChangeHistory(): array
+    {
+        $history = [
+            'by_serial' => [],      // Serial -> installation dates
+            'by_slot' => [],        // Container:Slot -> serial timeline
+            'replacements' => [],   // Slots with multiple drives
+        ];
+
+        $diskLogPath = $this->extractedPath . '/dsm/var/log/disk_log.csv';
+        if (!file_exists($diskLogPath)) {
+            return $history;
+        }
+
+        try {
+            $file = fopen($diskLogPath, 'r');
+            if (!$file) return $history;
+
+            // Skip header
+            fgets($file);
+
+            while (($line = fgets($file)) !== false) {
+                $parts = str_getcsv($line, ',');
+                if (count($parts) < 7) continue;
+
+                $parts = array_map('trim', $parts);
+                $time = $parts[1] ?? '';
+                $device = $parts[2] ?? '';
+                $serial = $parts[4] ?? '';
+                $container = $parts[5] ?? '';
+                $slot = $parts[6] ?? '';
+                $msg = $parts[7] ?? '';
+
+                if (empty($serial) || empty($container) || empty($slot)) {
+                    continue;
+                }
+
+                $slotKey = "{$container}:{$slot}";
+
+                // Track installation/plugin events
+                if (stripos($msg, 'plugin') !== false) {
+                    if (!isset($history['by_serial'][$serial])) {
+                        $history['by_serial'][$serial] = [
+                            'first_seen' => $time,
+                            'last_seen' => $time,
+                            'devices' => [],
+                            'slots' => [],
+                        ];
+                    }
+                    $history['by_serial'][$serial]['last_seen'] = $time;
+                    if (!in_array($device, $history['by_serial'][$serial]['devices'])) {
+                        $history['by_serial'][$serial]['devices'][] = $device;
+                    }
+                    if (!in_array($slotKey, $history['by_serial'][$serial]['slots'])) {
+                        $history['by_serial'][$serial]['slots'][] = $slotKey;
+                    }
+                }
+
+                // Track slot history (for replacement detection)
+                if (!isset($history['by_slot'][$slotKey])) {
+                    $history['by_slot'][$slotKey] = [];
+                }
+
+                // Add to slot timeline if not already there
+                $found = false;
+                foreach ($history['by_slot'][$slotKey] as $entry) {
+                    if ($entry['serial'] === $serial) {
+                        $found = true;
+                        break;
+                    }
+                }
+
+                if (!$found && !empty($time) && $time !== '1970/01/01 05:30:00') {
+                    $history['by_slot'][$slotKey][] = [
+                        'time' => $time,
+                        'serial' => $serial,
+                        'device' => $device,
+                    ];
+                }
+            }
+
+            fclose($file);
+
+            // Identify slots with multiple drives (replacements)
+            foreach ($history['by_slot'] as $slot => $timeline) {
+                if (count($timeline) > 1) {
+                    $serials = array_unique(array_column($timeline, 'serial'));
+                    if (count($serials) > 1) {
+                        $history['replacements'][$slot] = [
+                            'count' => count($serials),
+                            'timeline' => $timeline,
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Silent fail, return partial data
+        }
+
+        return $history;
+    }
+
+    /**
+     * Get installation date for a drive by serial
+     */
+    private function getDriveInstallationDate(string $serial, array $history): ?string
+    {
+        return $history['by_serial'][$serial]['first_seen'] ?? null;
+    }
+
+    /**
+     * Get replacement history for current drive slot
+     */
+    private function getSlotReplacementHistory(string $containerSlot, array $history): ?array
+    {
+        return $history['replacements'][$containerSlot] ?? null;
     }
 }
