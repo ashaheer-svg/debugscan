@@ -450,13 +450,19 @@ HTML;
         $bayLayoutDiagrams = '';
         $drives = $spec->drives ?? [];
         if (!empty($drives)) {
-            $bayLayoutDiagrams = $this->renderBayLayoutDiagrams($drives);
+            $bayLayoutDiagrams = $this->renderBayLayoutDiagrams($drives, $spec);
         }
 
         // Drive details table with location information
         $driveDetailsTable = '';
+        $driveHistorySection = '';
+        $badSectorGrowthSection = '';
+
         if (!empty($drives)) {
             $driveRows = '';
+            $driveHistoryData = [];
+            $badSectorData = [];
+
             foreach ($drives as $drive) {
                 $bay = (int)($drive['bay'] ?? 0);
                 $location = htmlspecialchars((string)($drive['location'] ?? 'main'), ENT_QUOTES);
@@ -470,6 +476,8 @@ HTML;
                 $isSsd = (bool)($drive['is_ssd'] ?? false);
                 $badSectors = (int)($drive['bad_sectors'] ?? 0);
                 $healthStatus = (string)($drive['health_status'] ?? '');
+                $installDate = htmlspecialchars((string)($drive['installation_date'] ?? ''), ENT_QUOTES);
+                $replacementCount = (int)($drive['replacement_count'] ?? 0);
 
                 // Determine health badge based on SMART attributes and bad sector count
                 if (!empty($healthStatus)) {
@@ -504,6 +512,29 @@ HTML;
                 $typeLabel = $isSsd ? 'SSD' : 'HDD';
                 $locationLabel = $location === 'main' ? 'Main' : preg_replace('/[^a-z0-9]/i', ' ', $location);
 
+                // Collect history and growth data for separate sections
+                if ($installDate || $replacementCount > 0) {
+                    $driveHistoryData[] = [
+                        'serial' => $serial,
+                        'model' => $model,
+                        'location' => $locationLabel,
+                        'bay' => $bay,
+                        'install_date' => $installDate,
+                        'replacements' => $replacementCount,
+                    ];
+                }
+
+                if ($badSectors > 0) {
+                    $badSectorData[] = [
+                        'serial' => $serial,
+                        'model' => $model,
+                        'location' => $locationLabel,
+                        'bay' => $bay,
+                        'sectors' => $badSectors,
+                        'status' => $healthStatus,
+                    ];
+                }
+
                 $driveRows .= "<tr><td><strong>{$bay}</strong><br><small class=\"hw-location\">{$locationLabel}</small></td><td class=\"mono\">{$device}</td><td>{$model}<br><small>{$typeLabel}</small></td><td class=\"mono\">{$serial}</td><td>{$capacity} GB</td><td>{$poh}h</td><td>{$temp}°C</td><td>{$smartBadge}</td></tr>";
             }
             $driveDetailsTable = <<<HTML
@@ -513,7 +544,91 @@ HTML;
   <tbody>{$driveRows}</tbody>
 </table>
 HTML;
+
+            // Build drive history section
+            if (!empty($driveHistoryData)) {
+                $historyRows = '';
+                foreach ($driveHistoryData as $hist) {
+                    $histSerial = htmlspecialchars($hist['serial'], ENT_QUOTES);
+                    $histModel = htmlspecialchars($hist['model'], ENT_QUOTES);
+                    $histLocation = htmlspecialchars($hist['location'], ENT_QUOTES);
+                    $histBay = (int)$hist['bay'];
+                    $histDate = htmlspecialchars($hist['install_date'], ENT_QUOTES);
+                    $histReplacements = (int)$hist['replacements'];
+                    $replacementBadge = '';
+                    if ($histReplacements > 0) {
+                        $badgeClass = $histReplacements >= 3 ? 'hw-status-critical' : 'hw-status-warning';
+                        $replacementBadge = "<span class=\"hw-status-badge {$badgeClass}\" style=\"font-size:11px;padding:2px 6px;\">{$histReplacements} replaced</span>";
+                    }
+                    $historyRows .= "<tr><td>{$histBay}</td><td>{$histLocation}</td><td class=\"mono\">{$histSerial}</td><td>{$histModel}</td><td>{$histDate}</td><td>{$replacementBadge}</td></tr>";
+                }
+                $driveHistorySection = <<<HTML
+<h4>Drive Installation & Replacement History</h4>
+<table class="hw-drive-table">
+  <thead><tr><th>Bay</th><th>Location</th><th>Serial</th><th>Model</th><th>Installation Date</th><th>Replacement History</th></tr></thead>
+  <tbody>{$historyRows}</tbody>
+</table>
+HTML;
+            }
+
+            // Build bad sector growth section
+            if (!empty($badSectorData)) {
+                $growthRows = '';
+                foreach ($badSectorData as $growth) {
+                    $growthSerial = htmlspecialchars($growth['serial'], ENT_QUOTES);
+                    $growthModel = htmlspecialchars($growth['model'], ENT_QUOTES);
+                    $growthLocation = htmlspecialchars($growth['location'], ENT_QUOTES);
+                    $growthBay = (int)$growth['bay'];
+                    $growthSectors = (int)$growth['sectors'];
+                    $growthStatus = htmlspecialchars($growth['status'], ENT_QUOTES);
+
+                    $statusBadge = match($growthStatus) {
+                        'caution' => '<span class="hw-status-badge" style="background:#fef3c7;color:#92400e;">⚠ Caution</span>',
+                        'warning' => '<span class="hw-status-badge hw-status-warning">⚠ Warning</span>',
+                        'critical' => '<span class="hw-status-badge hw-status-critical">✕ Critical</span>',
+                        default => htmlspecialchars($growthStatus, ENT_QUOTES),
+                    };
+                    $growthRows .= "<tr><td>{$growthBay}</td><td>{$growthLocation}</td><td class=\"mono\">{$growthSerial}</td><td>{$growthModel}</td><td>{$growthSectors}</td><td>{$statusBadge}</td></tr>";
+                }
+                $driveHistorySection .= <<<HTML
+
+<h4>Bad Sector Analysis</h4>
+<table class="hw-drive-table">
+  <thead><tr><th>Bay</th><th>Location</th><th>Serial</th><th>Model</th><th>Bad Sectors</th><th>Health Status</th></tr></thead>
+  <tbody>{$growthRows}</tbody>
+</table>
+HTML;
+            }
         }
+
+        // Main unit information section
+        $mainUnitTable = '';
+        $mainUnitModel = htmlspecialchars((string)($spec->model ?? 'Unknown'), ENT_QUOTES);
+        $mainUnitSerial = htmlspecialchars((string)($spec->serial ?? ''), ENT_QUOTES);
+        $mainUnitBayCount = (int)($spec->driveBays['main_unit_bays'] ?? 0);
+        $mainUnitUsedCount = (int)($spec->driveBays['main_unit_used'] ?? 0);
+
+        // Count main unit drives from drives array
+        $mainUnitDrives = [];
+        if (!empty($drives)) {
+            foreach ($drives as $drive) {
+                if (($drive['location'] ?? 'Main') === 'Main') {
+                    $mainUnitDrives[] = htmlspecialchars((string)($drive['serial'] ?? ''), ENT_QUOTES);
+                }
+            }
+        }
+        $mainDrivesList = implode(', ', $mainUnitDrives);
+
+        // Main unit status is always Active if it has bays
+        $mainStatusBadge = '<span class="hw-status-badge hw-status-healthy">✓ Active</span>';
+
+        $mainUnitTable = <<<HTML
+<h4>Main Unit</h4>
+<table class="hw-expansion-table">
+  <thead><tr><th>Model</th><th>Serial</th><th>Bays</th><th>Status</th><th>Drives</th></tr></thead>
+  <tbody><tr><td>{$mainUnitModel}</td><td class="mono">{$mainUnitSerial}</td><td>{$mainUnitUsedCount}/{$mainUnitBayCount}</td><td>{$mainStatusBadge}</td><td class="mono" style="font-size:11px;max-width:200px;word-break:break-all">{$mainDrivesList}</td></tr></tbody>
+</table>
+HTML;
 
         // Expansion units section
         $expansionTable = '';
@@ -693,10 +808,12 @@ HTML;
 <div class="apx-block">
   <h3>System Configuration</h3>
   {$deviceCard}
+  {$mainUnitTable}
   {$expansionTable}
   {$driveTable}
   {$bayLayoutDiagrams}
   {$driveDetailsTable}
+  {$driveHistorySection}
   {$raidTable}
   {$failureAnalysisTable}
   {$failurePatternTable}
@@ -844,7 +961,7 @@ CSS;
     /**
      * Render bay layout diagrams for all storage units
      */
-    private function renderBayLayoutDiagrams(array $drives): string
+    private function renderBayLayoutDiagrams(array $drives, object $spec): string
     {
         if (empty($drives)) {
             return '';
@@ -854,49 +971,54 @@ CSS;
 
         // Group drives by location/container
         $drivesByLocation = [];
-        $locationBayCount = [];
 
         foreach ($drives as $drive) {
             $location = $drive['location'] ?? 'Unknown';
             if (!isset($drivesByLocation[$location])) {
                 $drivesByLocation[$location] = [];
-                $locationBayCount[$location] = 0;
             }
             $drivesByLocation[$location][] = $drive;
-
-            // Determine total bays for this location
-            $bay = (int)($drive['bay'] ?? 0);
-            if ($bay > $locationBayCount[$location]) {
-                $locationBayCount[$location] = $bay;
-            }
         }
-
-        // Determine bay counts based on location
-        $bayCountMap = [
-            'RS3617RPxs' => 16,
-            'RX1217rp-1' => 12,
-            'RX1217rp-2' => 12,
-        ];
 
         // Render diagrams
         $html = '<h4>Drive Bay Layout</h4>';
         $html .= '<div class="bay-layout-container" style="margin: 15px 0;">';
 
-        // Render Main unit first
+        // Render Main unit first - use ACTUAL bay count from hardware spec, not assumptions
         if (isset($drivesByLocation['Main'])) {
-            $location = 'Main Unit (RS3617RPxs)';
-            $totalBays = 16;
+            $mainModel = htmlspecialchars((string)($spec->model ?? 'NAS Device'), ENT_QUOTES);
+            // Use actual bay count from hardware detection (load_info, synoinfo, etc)
+            $mainTotalBays = (int)($spec->driveBays['main_unit_bays'] ?? 0);
+            if ($mainTotalBays <= 0) {
+                // Fallback: count actual drives if hardware bay count unavailable
+                $mainTotalBays = max(count($drivesByLocation['Main'] ?? []), 1);
+            }
+            $location = "Main Unit ({$mainModel})";
             $locationDrivesToSort = $drivesByLocation['Main'];
-            $html .= $renderer->renderBayLayout($location, $locationDrivesToSort, $totalBays);
+            $html .= $renderer->renderBayLayout($location, $locationDrivesToSort, $mainTotalBays);
         }
 
-        // Render expansion units
+        // Render expansion units - use ACTUAL bay counts from hardware spec
         foreach ($drivesByLocation as $location => $locationDrives) {
             if ($location === 'Main') {
                 continue; // Already rendered
             }
 
-            $totalBays = $bayCountMap[$location] ?? 12;
+            // For expansion units, find matching unit in spec->expansion by model name
+            // and use its actual bay_count from hardware detection
+            $totalBays = 0;
+            if (!empty($spec->expansion)) {
+                foreach ($spec->expansion as $expansionUnit) {
+                    if (isset($expansionUnit['model']) && $expansionUnit['model'] === $location) {
+                        $totalBays = (int)($expansionUnit['bay_count'] ?? 0);
+                        break;
+                    }
+                }
+            }
+            // Fall back to count of drives if metadata unavailable
+            if ($totalBays <= 0) {
+                $totalBays = max(count($locationDrives ?? []), 1);
+            }
             $displayName = $location;
             $html .= $renderer->renderBayLayout($displayName, $locationDrives, $totalBays);
         }
