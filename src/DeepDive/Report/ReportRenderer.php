@@ -537,6 +537,28 @@ HTML;
 
                 $driveRows .= "<tr><td><strong>{$bay}</strong><br><small class=\"hw-location\">{$locationLabel}</small></td><td class=\"mono\">{$device}</td><td>{$model}<br><small>{$typeLabel}</small></td><td class=\"mono\">{$serial}</td><td>{$capacity} GB</td><td>{$poh}h</td><td>{$temp}°C</td><td>{$smartBadge}</td></tr>";
             }
+
+            // Add disconnected drives from history (drives that were used but are now removed)
+            if (!empty($spec->driveHistory)) {
+                $currentSerials = array_column($drives, 'serial');
+                foreach ($spec->driveHistory as $histSerial => $histData) {
+                    if (!in_array($histSerial, $currentSerials)) {
+                        // This drive was seen before but is not currently plugged in
+                        $firstSeen = $histData['first_seen'] ?? 'Unknown';
+                        $lastSeen = $histData['last_seen'] ?? 'Unknown';
+                        $driveHistoryData[] = [
+                            'serial' => htmlspecialchars((string)$histSerial, ENT_QUOTES),
+                            'model' => 'Disconnected',  // We don't have the model for removed drives
+                            'location' => 'Removed',
+                            'bay' => 0,
+                            'install_date' => htmlspecialchars((string)$firstSeen, ENT_QUOTES),
+                            'replacements' => 0,
+                            'last_seen' => htmlspecialchars((string)$lastSeen, ENT_QUOTES),
+                        ];
+                    }
+                }
+            }
+
             $driveDetailsTable = <<<HTML
 <h4>Drives</h4>
 <table class="hw-drive-table">
@@ -549,18 +571,28 @@ HTML;
             if (!empty($driveHistoryData)) {
                 $historyRows = '';
                 foreach ($driveHistoryData as $hist) {
-                    $histSerial = htmlspecialchars($hist['serial'], ENT_QUOTES);
-                    $histModel = htmlspecialchars($hist['model'], ENT_QUOTES);
-                    $histLocation = htmlspecialchars($hist['location'], ENT_QUOTES);
+                    $histSerial = $hist['serial'];  // Already escaped
+                    $histModel = $hist['model'];     // Already escaped
+                    $histLocation = $hist['location']; // Already escaped
                     $histBay = (int)$hist['bay'];
-                    $histDate = htmlspecialchars($hist['install_date'], ENT_QUOTES);
+                    $histDate = $hist['install_date']; // Already escaped
                     $histReplacements = (int)$hist['replacements'];
+                    $lastSeen = $hist['last_seen'] ?? '';
+
                     $replacementBadge = '';
-                    if ($histReplacements > 0) {
+                    // Mark disconnected drives
+                    if ($histLocation === 'Removed') {
+                        $replacementBadge = "<span class=\"hw-status-badge\" style=\"background:#e5e7eb;color:#374151;\">⊘ Disconnected</span>";
+                        if (!empty($lastSeen)) {
+                            $replacementBadge .= "<br><small style=\"color:#666;\">Last: {$lastSeen}</small>";
+                        }
+                    } elseif ($histReplacements > 0) {
                         $badgeClass = $histReplacements >= 3 ? 'hw-status-critical' : 'hw-status-warning';
                         $replacementBadge = "<span class=\"hw-status-badge {$badgeClass}\" style=\"font-size:11px;padding:2px 6px;\">{$histReplacements} replaced</span>";
                     }
-                    $historyRows .= "<tr><td>{$histBay}</td><td>{$histLocation}</td><td class=\"mono\">{$histSerial}</td><td>{$histModel}</td><td>{$histDate}</td><td>{$replacementBadge}</td></tr>";
+
+                    $bayDisplay = $histBay > 0 ? "{$histBay}" : '—';
+                    $historyRows .= "<tr><td>{$bayDisplay}</td><td>{$histLocation}</td><td class=\"mono\">{$histSerial}</td><td>{$histModel}</td><td>{$histDate}</td><td>{$replacementBadge}</td></tr>";
                 }
                 $driveHistorySection = <<<HTML
 <h4>Drive Installation & Replacement History</h4>
@@ -608,12 +640,15 @@ HTML;
         $mainUnitBayCount = (int)($spec->driveBays['main_unit_bays'] ?? 0);
         $mainUnitUsedCount = (int)($spec->driveBays['main_unit_used'] ?? 0);
 
-        // Count main unit drives from drives array
+        // Count main unit drives with bay references (not serials)
         $mainUnitDrives = [];
         if (!empty($drives)) {
             foreach ($drives as $drive) {
                 if (($drive['location'] ?? 'Main') === 'Main') {
-                    $mainUnitDrives[] = htmlspecialchars((string)($drive['serial'] ?? ''), ENT_QUOTES);
+                    $bay = (int)($drive['bay'] ?? 0);
+                    if ($bay > 0) {
+                        $mainUnitDrives[] = "Bay " . $bay;
+                    }
                 }
             }
         }

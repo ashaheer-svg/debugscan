@@ -52,6 +52,13 @@ final class HardwareSpec
     public array $drives = [];
 
     /**
+     * Drive change history: All drives seen historically (including removed/disconnected drives)
+     * Contains installation dates and replacement timelines
+     * @var array<string, array<string, mixed>>
+     */
+    public array $driveHistory = [];
+
+    /**
      * RAID Configuration
      */
     public array $raidConfig = [

@@ -20,9 +20,12 @@ final class BayLayoutRenderer
         int $totalBays = 12,
         int $columnsPerRow = 4
     ): string {
+        // Escape containerName for SVG context
+        $containerName = htmlspecialchars($containerName, ENT_QUOTES, 'UTF-8');
+
         $rows = (int)ceil($totalBays / $columnsPerRow);
-        $width = 600;
-        $height = 100 + ($rows * 90);
+        $width = 420;
+        $height = 80 + ($rows * 70);
         $svgWidth = $width;
         $svgHeight = $height;
 
@@ -32,8 +35,8 @@ final class BayLayoutRenderer
         $svg .= "</style>\n";
 
         // Title
-        $svg .= "<text x=\"20\" y=\"30\" class=\"bay-title\">$containerName</text>\n";
-        $svg .= "<text x=\"20\" y=\"55\" class=\"bay-subtitle\">$totalBays Bays - Slots: " . count($drives) . " occupied</text>\n";
+        $svg .= "<text x=\"15\" y=\"25\" class=\"bay-title\">{$containerName}</text>\n";
+        $svg .= "<text x=\"15\" y=\"45\" class=\"bay-subtitle\">$totalBays Bays - " . count($drives) . " occupied</text>\n";
 
         // Create drive mapping
         $driveMap = [];
@@ -41,13 +44,13 @@ final class BayLayoutRenderer
             $driveMap[$drive['bay']] = $drive;
         }
 
-        // Render bays
-        $xStart = 40;
-        $yStart = 80;
-        $bayWidth = 120;
-        $bayHeight = 70;
-        $xGap = 20;
-        $yGap = 20;
+        // Render bays - sleeker compact design
+        $xStart = 20;
+        $yStart = 55;
+        $bayWidth = 85;
+        $bayHeight = 60;
+        $xGap = 12;
+        $yGap = 15;
 
         for ($bay = 1; $bay <= $totalBays; $bay++) {
             $row = (int)floor(($bay - 1) / $columnsPerRow);
@@ -72,12 +75,13 @@ final class BayLayoutRenderer
      * Render a single occupied bay
      */
     private function renderBay(array $drive, float $x, float $y, float $w, float $h): string {
-        $bay = $drive['bay'];
-        $serial = $drive['serial'] ?? 'Unknown';
-        $model = $drive['model'] ?? '';
-        $healthStatus = $drive['health_status'] ?? 'unknown';
+        // Type-safe extraction with escaping
+        $bay = (int)($drive['bay'] ?? 0);
+        $serial = htmlspecialchars((string)($drive['serial'] ?? 'Unknown'), ENT_QUOTES, 'UTF-8');
+        $model = htmlspecialchars((string)($drive['model'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $healthStatus = (string)($drive['health_status'] ?? 'unknown');
         $badSectors = (int)($drive['bad_sectors'] ?? 0);
-        $installed = $drive['installation_date'] ?? 'Unknown';
+        $installed = (string)($drive['installation_date'] ?? 'Unknown');
         $replacementCount = (int)($drive['replacement_count'] ?? 0);
 
         // Determine color and icon based on health
@@ -87,13 +91,13 @@ final class BayLayoutRenderer
         // Check if recently replaced (< 6 months)
         $recentReplacementBorder = '';
         if ($replacementCount > 0 && $this->isRecentlyReplaced($installed)) {
-            $recentReplacementBorder = " stroke=\"#FF9800\" stroke-width=\"3\"";
+            $recentReplacementBorder = " stroke=\"#FF9800\" stroke-width=\"2\"";
         }
 
         // Check if problematic slot (3+ replacements)
         $problemSlotBorder = '';
         if ($replacementCount >= 3) {
-            $problemSlotBorder = " stroke=\"#F44336\" stroke-width=\"2\"";
+            $problemSlotBorder = " stroke=\"#F44336\" stroke-width=\"1.5\"";
         }
 
         $svg = "<g class=\"bay-item\">\n";
@@ -102,33 +106,40 @@ final class BayLayoutRenderer
         $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" class=\"bay-bg $colorClass\"{$recentReplacementBorder}{$problemSlotBorder} />\n";
 
         // Bay number (top-left)
-        $svg .= "  <text x=\"" . ($x + 8) . "\" y=\"" . ($y + 18) . "\" class=\"bay-number\">Slot $bay</text>\n";
+        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 14) . "\" class=\"bay-number\">Slot {$bay}</text>\n";
 
         // Health icon (top-right)
-        $svg .= "  <text x=\"" . ($x + $w - 15) . "\" y=\"" . ($y + 20) . "\" class=\"health-icon\">$icon</text>\n";
+        $svg .= "  <text x=\"" . ($x + $w - 10) . "\" y=\"" . ($y + 15) . "\" class=\"health-icon\">$icon</text>\n";
 
-        // Serial (middle)
-        $shortSerial = strlen($serial) > 12 ? substr($serial, 0, 12) : $serial;
-        $svg .= "  <text x=\"" . ($x + 8) . "\" y=\"" . ($y + 38) . "\" class=\"bay-serial\">$shortSerial</text>\n";
+        // Serial (middle) - shorter for compact display
+        $shortSerial = strlen($serial) > 10 ? substr($serial, 0, 10) : $serial;
+        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 33) . "\" class=\"bay-serial\">$shortSerial</text>\n";
 
         // Model (below serial)
-        $shortModel = strlen($model) > 12 ? substr($model, 0, 10) . '...' : $model;
-        $svg .= "  <text x=\"" . ($x + 8) . "\" y=\"" . ($y + 52) . "\" class=\"bay-model\">$shortModel</text>\n";
+        $shortModel = strlen($model) > 10 ? substr($model, 0, 8) . '...' : $model;
+        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 45) . "\" class=\"bay-model\">$shortModel</text>\n";
 
         // Bad sectors count if any
         if ($badSectors > 0) {
-            $svg .= "  <text x=\"" . ($x + 8) . "\" y=\"" . ($y + 64) . "\" class=\"bay-sectors\">$badSectors sectors</text>\n";
+            $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 56) . "\" class=\"bay-sectors\">$badSectors s</text>\n";
         }
 
-        // Tooltip (SVG title for hover)
-        $tooltip = htmlspecialchars("Slot $bay\n$serial\n$model\nStatus: $healthStatus\nInstalled: $installed");
+        // Tooltip (SVG title for hover) - proper component-level escaping
+        $tooltipParts = [
+            "Slot {$bay}",
+            $serial,
+            $model,
+            "Status: {$healthStatus}",
+            "Installed: {$installed}"
+        ];
         if ($replacementCount > 0) {
-            $tooltip .= htmlspecialchars("\nReplacements: $replacementCount");
+            $tooltipParts[] = "Replacements: {$replacementCount}";
         }
         if ($badSectors > 0) {
-            $tooltip .= htmlspecialchars("\nBad Sectors: $badSectors");
+            $tooltipParts[] = "Bad Sectors: {$badSectors}";
         }
-        $svg .= "  <title>$tooltip</title>\n";
+        $tooltip = implode("\n", $tooltipParts);
+        $svg .= "  <title>{$tooltip}</title>\n";
 
         $svg .= "</g>\n";
 

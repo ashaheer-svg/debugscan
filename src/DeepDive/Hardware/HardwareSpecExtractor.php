@@ -62,6 +62,12 @@ final class HardwareSpecExtractor
             $this->addCitation($spec, 'drives', $drives['file'], $drives['timestamp']);
         }
 
+        // Drive history (all drives ever seen, including removed/disconnected)
+        $driveHistory = $this->extractDriveChangeHistory();
+        if (!empty($driveHistory['by_serial'])) {
+            $spec->driveHistory = $driveHistory['by_serial'];
+        }
+
         // RAID Configuration
         $raid = $this->extractRaidConfig();
         if ($raid) {
