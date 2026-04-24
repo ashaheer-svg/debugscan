@@ -352,14 +352,16 @@ final class HardwareSpecExtractor
             }
 
             $mainDiskCount = $diskCount - $expansionDiskCount;
+            // ONLY use actual extracted data - NO assumptions
+            // If max_bay_count exists in load_info, use it. Don't guess or assume defaults.
             if ($mainBayCount > 0 || $diskCount > 0) {
                 return [
                     'data' => [
-                        'main_unit_bays' => (int)($mainBayCount ?: max(4, $mainDiskCount + 1)),
+                        'main_unit_bays' => (int)$mainBayCount,  // Only use actual data from load_info
                         'main_unit_used' => max(0, $mainDiskCount),
                         'expansion_unit_bays' => $expansionBayCount,
                         'expansion_unit_used' => $expansionDiskCount,
-                        'total_bays' => (int)($mainBayCount ?: max(4, $mainDiskCount + 1)) + $expansionBayCount,
+                        'total_bays' => (int)$mainBayCount + $expansionBayCount,  // No assumptions
                         'total_used' => $diskCount,
                     ],
                     'file' => 'dsm/result/load_info.result',
@@ -369,16 +371,17 @@ final class HardwareSpecExtractor
         }
 
         // Try 2: Count actual disks in synostorage directory
+        // Only use actual data - don't assume bay count is higher than disk count
         $diskDirs = glob($this->extractedPath . '/dsm/run/synostorage/disks/*', GLOB_ONLYDIR);
         if (!empty($diskDirs)) {
             $diskCount = count($diskDirs);
             return [
                 'data' => [
-                    'main_unit_bays' => max(4, $diskCount),
+                    'main_unit_bays' => $diskCount,  // Use actual disk count, don't guess
                     'main_unit_used' => $diskCount,
                     'expansion_unit_bays' => 0,
                     'expansion_unit_used' => 0,
-                    'total_bays' => max(4, $diskCount),
+                    'total_bays' => $diskCount,  // No assumptions
                     'total_used' => $diskCount,
                 ],
                 'file' => 'dsm/run/synostorage/disks/',
@@ -387,13 +390,15 @@ final class HardwareSpecExtractor
         }
 
         // Try 3: synoinfo.conf parsing for bay capacity
+        // Only count actual slot definitions - don't assume minimums
         $synoinfo = $this->parseSynoinfo();
         $mainBayCount = 0;
         $expansionBayCount = 0;
 
         foreach ($synoinfo as $key => $value) {
             // Main unit bays: slot0_type, slot1_type, etc.
-            if (preg_match('/^slot\d+_type$/i', $key) && !empty($value)) {
+            // Only count if slot type is defined
+            if (preg_match('/^slot(\d+)_type$/i', $key) && !empty($value)) {
                 $mainBayCount++;
             }
             // Expansion bays: external_slot0_type, expansion_bays, etc.
@@ -781,13 +786,15 @@ final class HardwareSpecExtractor
                 }
             }
 
-            if ($hasExpansion || $maxExpansionBays > 0) {
+            // Only create expansion unit if we have ACTUAL data about it
+            // Don't assume 5 bays - use only what's extracted
+            if ($maxExpansionBays > 0) {  // Only if we have actual bay count
                 $units[] = [
                     'enclosure_id' => 'expansion_unit_1',
                     'model' => $expansionType ?: 'Unknown Expansion Unit',
                     'serial' => '',
                     'firmware' => '',
-                    'bay_count' => $maxExpansionBays ?: 5,
+                    'bay_count' => $maxExpansionBays,  // Use actual value only
                     'installed_drives' => 0,
                     'drives' => [],
                     'status' => 'capable',
