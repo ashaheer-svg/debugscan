@@ -729,33 +729,6 @@ final class HardwareSpecExtractor
             if ($hasExpansion || $maxExpansionBays > 0) {
                 $units[] = [
                     'enclosure_id' => 'expansion_unit_1',
-
-            if (!empty($units)) {
-                $sourceFile = 'dsm/result/load_info.result';
-                $timestamp = date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result'));
-            }
-        }
-
-        // Try 2: Fallback to synoinfo.conf for expansion capability detection
-        if (empty($units)) {
-            $synoinfo = $this->parseSynoinfo();
-            $hasExpansion = false;
-            $expansionType = '';
-            $maxExpansionBays = 0;
-
-            foreach ($synoinfo as $key => $value) {
-                if (preg_match('/expansion.*bays?/i', $key)) {
-                    $maxExpansionBays = (int)$value;
-                }
-                if (preg_match('/expansion.*type/i', $key) && !empty($value)) {
-                    $hasExpansion = true;
-                    $expansionType = $value;
-                }
-            }
-
-            if ($hasExpansion || $maxExpansionBays > 0) {
-                $units[] = [
-                    'enclosure_id' => 'expansion_unit_1',
                     'model' => $expansionType ?: 'Unknown Expansion Unit',
                     'serial' => '',
                     'firmware' => '',
