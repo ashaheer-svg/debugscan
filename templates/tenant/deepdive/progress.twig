@@ -98,7 +98,9 @@
   // Fetch job status and update DOM
   async function fetchAndUpdate() {
     try {
-      const response = await fetch('/deepdive/api/job/' + encodeURIComponent(jobId) + '/status');
+      const response = await fetch('/deepdive/api/job/' + encodeURIComponent(jobId) + '/status', {
+        credentials: 'include'
+      });
       if (!response.ok) return;
 
       const data = await response.json();
