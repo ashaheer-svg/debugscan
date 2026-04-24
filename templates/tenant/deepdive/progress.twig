@@ -74,10 +74,26 @@
 </div>
 
 {# Fallback page content (visible if modal is closed) #}
-<div style="max-width:820px;margin:0 auto;opacity:0.5;pointer-events:none">
+<div style="max-width:820px;margin:0 auto">
   <a href="{{ base_path }}/projects/view/{{ job.project_id }}" style="font-size:13px;color:#0b5ed7;text-decoration:none">&larr; back to project</a>
   <h2 style="margin:8px 0 4px">Deep Diagnostic</h2>
   <div style="color:#666;font-size:13px">Job <code>{{ job.id }}</code> · queued {{ job.queued_at|default('—') }}</div>
+
+  {% if job.status == 'completed' %}
+  <div style="margin-top:20px;padding:16px;background:#f0f9ff;border:1px solid #bfe7ff;border-radius:6px">
+    <h3 style="margin:0 0 10px;color:#0066cc">Report Ready</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <a href="{{ base_path }}/deepdive/report/{{ job.id }}" style="background:#0066cc;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">View Report</a>
+      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/html" style="background:#e8e8e8;color:#333;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">Download HTML</a>
+      <a href="{{ base_path }}/deepdive/download/{{ job.id }}/pdf" style="background:#e8e8e8;color:#333;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:13px">Download PDF</a>
+    </div>
+  </div>
+  {% elseif job.status == 'failed' %}
+  <div style="margin-top:20px;padding:16px;background:#fff5f5;border:1px solid #f5c6cb;border-radius:6px">
+    <h3 style="margin:0 0 10px;color:#721c24">Job Failed</h3>
+    <p style="margin:0;color:#721c24;font-size:13px">{{ job.error_message|default('unknown error') }}</p>
+  </div>
+  {% endif %}
 </div>
 
 {# Pulse animation for running steps #}
