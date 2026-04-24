@@ -898,18 +898,32 @@ final class HardwareSpecExtractor
             }
         }
 
-        // Third pass: detect expansion units by container metadata without enclosure entries
+        // Third pass: detect expansion units by device naming (sdea, sdeb, etc = expansion devices)
         if (empty($units)) {
-            foreach ($containerToDrives as $container => $drives) {
-                // Look for expansion indication in container name
-                if (preg_match('/expansion|enclosure|^sde/i', (string)$container)) {
+            $expansionDrives = [];
+            foreach ($deviceToContainer as $device => $container) {
+                // Expansion devices start with sdea and above
+                if (preg_match('/^sde[a-z]/', $device)) {
+                    if (!isset($expansionDrives[$container])) {
+                        $expansionDrives[$container] = [];
+                    }
+                    $expansionDrives[$container][] = $device;
+                }
+            }
+
+            // Create expansion units from detected drives
+            if (!empty($expansionDrives)) {
+                foreach ($expansionDrives as $container => $drives) {
                     $unit = [
                         'enclosure_id' => $container,
-                        'model' => 'Unknown (detected by container)',
+                        'model' => 'Expansion Unit',  // Generic label - actual model from load_info if available
+                        'serial' => '',
+                        'firmware' => '',
                         'bay_count' => count($drives),
                         'drives' => $drives,
                         'installed_drives' => count($drives),
-                        'status' => 'detected',
+                        'status' => 'active',
+                        'power_status' => 'online',
                     ];
                     $units[] = $this->stripEmptyFields($unit);
                 }
@@ -920,14 +934,32 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Remove empty/null fields from expansion unit data
-     * Only keep fields that have actual values
+     * Keep all fields but ensure they have meaningful defaults
+     * Don't strip numeric 0 values (bay counts) - only filter truly empty data
      */
     private function stripEmptyFields(array $unit): array
     {
-        return array_filter($unit, function ($value) {
-            return !is_null($value) && $value !== '' && $value !== 0;
-        });
+        // Ensure required fields always exist with defaults
+        $defaults = [
+            'enclosure_id' => 'Unknown',
+            'model' => 'Unknown Expansion Unit',
+            'serial' => '',
+            'firmware' => '',
+            'bay_count' => 0,
+            'installed_drives' => 0,
+            'drives' => [],
+            'status' => 'unknown',
+            'power_status' => 'unknown',
+        ];
+
+        // Merge with provided data, keeping defaults for missing/null fields
+        foreach ($unit as $key => $value) {
+            if ($value !== null && $value !== '') {
+                $defaults[$key] = $value;
+            }
+        }
+
+        return $defaults;
     }
 
     /**
