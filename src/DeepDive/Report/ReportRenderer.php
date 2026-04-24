@@ -583,9 +583,9 @@ HTML;
 <div class="apx-block">
   <h3>System Configuration</h3>
   {$deviceCard}
+  {$expansionTable}
   {$driveTable}
   {$driveDetailsTable}
-  {$expansionTable}
   {$raidTable}
   {$volumeTable}
 </div>

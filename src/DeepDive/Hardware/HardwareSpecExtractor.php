@@ -205,36 +205,72 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Extract RAM information
+     * Extract RAM information with fallback to load_info.result
      */
     private function extractRamInfo(): ?array
     {
-        $file = $this->extractedPath . '/dsm/proc/meminfo';
-        if (!file_exists($file)) {
-            return null;
-        }
-
-        $content = (string)@file_get_contents($file);
         $data = [
             'total_gb' => 0,
             'available_gb' => 0,
         ];
+        $sourceFile = '';
+        $timestamp = '';
 
-        // Parse MemTotal
-        if (preg_match('/MemTotal:\s+(\d+)\s+kB/i', $content, $m)) {
-            $data['total_gb'] = round((int)$m[1] / 1024 / 1024, 2);
+        // Try 1: /dsm/proc/meminfo (most direct)
+        $file = $this->extractedPath . '/dsm/proc/meminfo';
+        if (file_exists($file)) {
+            $content = (string)@file_get_contents($file);
+
+            // Parse MemTotal in kB to GB
+            if (preg_match('/MemTotal:\s+(\d+)\s+kB/i', $content, $m)) {
+                $data['total_gb'] = round((int)$m[1] / 1024 / 1024, 2);
+            }
+
+            // Parse MemAvailable in kB to GB
+            if (preg_match('/MemAvailable:\s+(\d+)\s+kB/i', $content, $m)) {
+                $data['available_gb'] = round((int)$m[1] / 1024 / 1024, 2);
+            }
+
+            if ($data['total_gb'] > 0) {
+                return [
+                    'data' => $data,
+                    'file' => 'dsm/proc/meminfo',
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($file)),
+                ];
+            }
         }
 
-        // Parse MemAvailable
-        if (preg_match('/MemAvailable:\s+(\d+)\s+kB/i', $content, $m)) {
-            $data['available_gb'] = round((int)$m[1] / 1024 / 1024, 2);
+        // Try 2: Fallback to load_info.result memory field
+        $loadInfo = $this->parseJsonResult('load_info.result');
+        if (is_array($loadInfo)) {
+            // Check for memory in load_info
+            $memoryData = $loadInfo['memory'] ?? $loadInfo['data']['memory'] ?? null;
+            if (is_array($memoryData) && !empty($memoryData['total'])) {
+                // Memory might be in bytes or MB - detect and convert
+                $total = (int)$memoryData['total'];
+                $available = (int)($memoryData['available'] ?? $memoryData['free'] ?? 0);
+
+                // If value > 1000000, assume it's bytes; convert to GB
+                if ($total > 1000000) {
+                    $data['total_gb'] = round($total / 1024 / 1024 / 1024, 2);
+                    $data['available_gb'] = round($available / 1024 / 1024 / 1024, 2);
+                } else {
+                    // Assume already in MB
+                    $data['total_gb'] = round($total / 1024, 2);
+                    $data['available_gb'] = round($available / 1024, 2);
+                }
+
+                if ($data['total_gb'] > 0) {
+                    return [
+                        'data' => $data,
+                        'file' => 'dsm/result/load_info.result (memory field)',
+                        'timestamp' => date('Y-m-d H:i:s', filemtime($this->extractedPath . '/dsm/result/load_info.result')),
+                    ];
+                }
+            }
         }
 
-        return [
-            'data' => $data,
-            'file' => 'dsm/proc/meminfo',
-            'timestamp' => date('Y-m-d H:i:s', filemtime($file)),
-        ];
+        return null;
     }
 
     /**
@@ -275,12 +311,31 @@ final class HardwareSpecExtractor
             $expansionDiskCount = 0;
 
             // Count expansion disks if present
+            // Expansion drives are identified by:
+            // 1. Container name containing "expansion"
+            // 2. Device name starting with sdea or higher (expansion device naming)
             if (!empty($disksArray)) {
                 foreach ($disksArray as $disk) {
-                    if (is_array($disk) && !empty($disk['container']['str'])) {
+                    if (!is_array($disk)) continue;
+
+                    $isExpansion = false;
+
+                    // Check container name
+                    if (!empty($disk['container']['str'])) {
                         if (preg_match('/expansion/i', $disk['container']['str'])) {
-                            $expansionDiskCount++;
+                            $isExpansion = true;
                         }
+                    }
+
+                    // Check device name (sdea and above are expansion)
+                    if (!$isExpansion && !empty($disk['id'])) {
+                        if (preg_match('/^sde[a-z]/', $disk['id'])) {
+                            $isExpansion = true;
+                        }
+                    }
+
+                    if ($isExpansion) {
+                        $expansionDiskCount++;
                     }
                 }
             }
