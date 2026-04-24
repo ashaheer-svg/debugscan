@@ -1,0 +1,7 @@
+
+[a7e4dd2a-3688-40e4-9631-c134ec62468d]
+fs_disk_power_abnormal=false
+parity_disk_power_abnormal=false
+trans_rw_count=1
+bad_sector=false
+access_type=rw

@@ -1,0 +1,67 @@
+{
+   "adapterPolicyMap" : {
+      "global" : 2
+   },
+   "name" : "default",
+   "rules" : {
+      "global" : [
+         {
+            "adapterDirect" : 1,
+            "blLog" : false,
+            "chainList" : [ "FORWARD_FIREWALL", "INPUT_FIREWALL" ],
+            "enable" : true,
+            "ipDirect" : 1,
+            "ipGroup" : 5,
+            "ipList" : [],
+            "ipType" : 2,
+            "labelList" : [],
+            "name" : "",
+            "policy" : 0,
+            "portDirect" : 0,
+            "portGroup" : 1,
+            "portList" : [ "5000" ],
+            "protocol" : 3,
+            "ruleIndex" : 0,
+            "table" : "filter"
+         },
+         {
+            "adapterDirect" : 1,
+            "blLog" : false,
+            "chainList" : [ "FORWARD_FIREWALL", "INPUT_FIREWALL" ],
+            "enable" : true,
+            "ipDirect" : 1,
+            "ipGroup" : 5,
+            "ipList" : [],
+            "ipType" : 2,
+            "labelList" : [],
+            "name" : "",
+            "policy" : 0,
+            "portDirect" : 0,
+            "portGroup" : 1,
+            "portList" : [ "80", "135", "136", "137", "138", "139", "445" ],
+            "protocol" : 3,
+            "ruleIndex" : 1,
+            "table" : "filter"
+         },
+         {
+            "adapterDirect" : 1,
+            "blLog" : false,
+            "chainList" : [ "FORWARD_FIREWALL", "INPUT_FIREWALL" ],
+            "enable" : true,
+            "ipDirect" : 1,
+            "ipGroup" : 5,
+            "ipList" : [],
+            "ipType" : 2,
+            "labelList" : [],
+            "name" : "",
+            "policy" : 1,
+            "portDirect" : 0,
+            "portGroup" : 3,
+            "portList" : [],
+            "protocol" : 3,
+            "ruleIndex" : 2,
+            "table" : "filter"
+         }
+      ]
+   }
+}

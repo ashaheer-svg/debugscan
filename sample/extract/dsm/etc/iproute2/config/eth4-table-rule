@@ -1,0 +1,5 @@
+[eth4_policy]
+	mask=255.255.255.0
+	ip=172.16.10.100
+	ifname=eth4
+	gateway=172.16.10.100

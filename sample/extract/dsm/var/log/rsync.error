@@ -1,0 +1,46 @@
+Dec 16 12:16:54 (2432) [ERROR]: rsync: change_dir "/NAS_1.hbk" (in Backup) failed: No such file or directory (2)
+Dec 16 12:16:54 (2432) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:16:55 (2433) [ERROR]: rsync: change_dir "/NAS_1" (in Backup) failed: No such file or directory (2)
+Dec 16 12:16:55 (2433) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:17:05 (2492) [ERROR]: rsync: link_stat "/NAS_1.hbk" (in Backup) failed: No such file or directory (2)
+Dec 16 12:17:05 (2492) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:17:05 (2496) [ERROR]: rsync: link_stat "/NAS_1" (in Backup) failed: No such file or directory (2)
+Dec 16 12:17:05 (2496) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:18:58 (3300) [ERROR]: rsync: link_stat "/NAS_1.hbk" (in Backup) failed: No such file or directory (2)
+Dec 16 12:18:58 (3300) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:19:36 (3545) [ERROR]: rsync error: rsync service is no running (code 43) at io.c(687) [sender=3.0.9]
+Dec 16 12:19:46 (3587) [ERROR]: rsync: change_dir "/NAS_1.hbk/Control/@writer" (in Backup) failed: No such file or directory (2)
+Dec 16 12:19:46 (3587) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:21:33 (4355) [ERROR]: rsync error: rsync service is no running (code 43) at io.c(687) [sender=3.0.9]
+Dec 16 12:21:43 (4421) [ERROR]: rsync: change_dir "/NAS_1.hbk/Control/lock" (in Backup) failed: No such file or directory (2)
+Dec 16 12:21:43 (4421) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:25:50 (6035) [ERROR]: rsync error: rsync service is no running (code 43) at io.c(687) [sender=3.0.9]
+Dec 16 12:26:01 (6141) [ERROR]: rsync: change_dir "/NAS_1.hbk/Guard/cloud" (in Backup) failed: No such file or directory (2)
+Dec 16 12:26:01 (6141) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:29:34 (7470) [ERROR]: rsync: link_stat "/NAS_1.hbk/Control/@writer/seq_mapping.temp" (in Backup) failed: No such file or directory (2)
+Dec 16 12:29:34 (7470) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 12:36:34 (9952) [ERROR]: rsync error: rsync service is no running (code 43) at io.c(687) [sender=3.0.9]
+Dec 16 12:36:45 (10026) [ERROR]: rsync: change_dir "/NAS_1.hbk/Control/@reader_version_1.adce7dab-1d57-4ae6-8282-fb536e2794cf" (in Backup) failed: No such file or directory (2)
+Dec 16 12:36:45 (10026) [ERROR]: rsync error: some files/attrs were not transferred (see previous errors) (code 23) at main.c(1898) [Receiver=3.0.9]
+Dec 16 19:12:06 (12313) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:12:06 (12313) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:12:18 (12366) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:12:18 (12366) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:12:31 (12369) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:12:31 (12369) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:12:46 (12373) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:12:46 (12373) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:13:05 (12388) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:13:05 (12388) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:13:32 (12431) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:13:32 (12431) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:14:15 (12466) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:14:15 (12466) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:15:30 (12564) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:15:30 (12564) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:17:49 (12686) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:17:49 (12686) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:22:16 (12950) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:22:16 (12950) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]
+Dec 16 19:26:43 (13182) [ERROR]: rsync: failed to connect to 10.10.11.65 (10.10.11.65): No route to host (113)
+Dec 16 19:26:43 (13182) [ERROR]: rsync error: connection failed (code 42) at socket.c(325) [sender=3.0.9]

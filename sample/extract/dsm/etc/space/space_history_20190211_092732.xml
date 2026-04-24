@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spaces>
+	<space path="/dev/md2" reference="/volume1" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" device_type="2" drive_type="0" container_type="2" limited_raidgroup_num="12" >
+		<device>
+			<raid path="/dev/md2" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" level="raid5" version="1.2">
+				<disks>
+					<disk status="normal" dev_path="/dev/sdb3" model="ST4000NM0035-1V4107     " serial="ZC12RK95" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="1">
+					</disk>
+					<disk status="normal" dev_path="/dev/sdc3" model="ST4000NM0035-1V4107     " serial="ZC12PNH9" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="2">
+					</disk>
+					<disk status="normal" dev_path="/dev/sdd3" model="ST4000NM0035-1V4107     " serial="ZC13E3RC" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="3">
+					</disk>
+					<disk status="normal" dev_path="/dev/sde3" model="ST4000NM0035-1V4107     " serial="ZC17TJHN" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="5">
+					</disk>
+					<disk status="normal" dev_path="/dev/sdf3" model="ST4000NM0035-1V4107     " serial="ZC17ZSKN" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="4">
+					</disk>
+					<disk status="rebuilding" dev_path="/dev/sdl3" model="ST4000NM0035-1V4107     " serial="ZC184H3P" partition_version="8" partition_start="9437184" partition_size="7804395168" slot="0">
+					</disk>
+				</disks>
+			</raid>
+		</device>
+		<reference>
+			<volume path="/volume1" dev_path="/dev/md2" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" type="btrfs">
+			</volume>
+		</reference>
+	</space>
+</spaces>

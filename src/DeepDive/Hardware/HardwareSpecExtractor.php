@@ -456,6 +456,134 @@ final class HardwareSpecExtractor
     }
 
     /**
+     * Extract SMART health data from diskprediction snapshots
+     * Analyzes SMART attributes and bad sector counts for accurate health assessment
+     *
+     * @param string $diskSerial Drive serial number to look up
+     * @return array|null Health metrics including bad_sectors, growth_rate, health_score
+     */
+    private function extractSmartHealthData(string $diskSerial): ?array
+    {
+        // Try to get latest diskprediction snapshot
+        $diskpredictionDir = $this->extractedPath . '/dsm/var/log/diskprediction';
+        if (!is_dir($diskpredictionDir)) {
+            return null;
+        }
+
+        // Find the most recent data file
+        $files = glob($diskpredictionDir . '/data-*.json');
+        if (empty($files)) {
+            return null;
+        }
+
+        rsort($files);  // Sort newest first
+        $latestFile = $files[0];
+
+        $content = (string)@file_get_contents($latestFile);
+        if (empty($content)) {
+            return null;
+        }
+
+        $data = json_decode($content, true);
+        if (!is_array($data) || empty($data['disks'])) {
+            return null;
+        }
+
+        // Find the drive in the disks array
+        $driveData = null;
+        foreach ((array)$data['disks'] as $disk) {
+            if (($disk['serial'] ?? '') === $diskSerial) {
+                $driveData = $disk;
+                break;
+            }
+        }
+
+        if (!$driveData) {
+            return null;
+        }
+
+        // Extract SMART attributes
+        $badSectors = (int)($driveData['bad_sec_ct'] ?? 0);
+        $reallocatedCurrent = 100;  // Default healthy
+        $pendingCurrent = 100;
+        $uncorrectable = 0;
+
+        // Extract individual SMART attributes
+        if (!empty($driveData['smart_attr']) && is_array($driveData['smart_attr'])) {
+            foreach ($driveData['smart_attr'] as $attr) {
+                if (!is_array($attr) || count($attr) < 2) continue;
+                $attrId = (string)$attr[0];
+                $current = (int)($attr[1] ?? 100);
+
+                // Attribute 5: Reallocated Sectors
+                if ($attrId === '5') {
+                    $reallocatedCurrent = $current;
+                }
+                // Attribute 197: Current Pending Sectors
+                elseif ($attrId === '197') {
+                    $pendingCurrent = $current;
+                }
+                // Attribute 198: Offline Uncorrectable
+                elseif ($attrId === '198') {
+                    $uncorrectable = $current;
+                }
+            }
+        }
+
+        // Calculate health score based on SMART attributes and bad sector count
+        $healthScore = 100;
+
+        // Penalize for reallocated sectors
+        if ($badSectors > 100) {
+            $healthScore = 20;  // Critical
+        } else if ($badSectors > 50) {
+            $healthScore = 50;  // Warning
+        } else if ($badSectors > 10) {
+            $healthScore = 75;  // Caution
+        }
+
+        // Further penalize if SMART attribute is below threshold
+        if ($reallocatedCurrent < 100) {
+            $healthScore -= 10;
+        }
+
+        // Penalize for pending sectors
+        if ($pendingCurrent < 100) {
+            $healthScore -= 20;
+        }
+
+        // Any uncorrectable sectors = critical
+        if ($uncorrectable < 100) {
+            $healthScore -= 30;
+        }
+
+        $healthScore = max(1, $healthScore);
+
+        // Determine health status
+        $healthStatus = 'healthy';
+        if ($healthScore >= 95 && $badSectors === 0) {
+            $healthStatus = 'healthy';
+        } else if ($healthScore >= 80 && $badSectors < 50) {
+            $healthStatus = 'caution';
+        } else if ($badSectors > 50 || $healthScore < 60) {
+            $healthStatus = 'warning';
+        } else if ($badSectors > 100 || $healthScore < 40) {
+            $healthStatus = 'critical';
+        }
+
+        return [
+            'bad_sectors' => $badSectors,
+            'reallocated_current' => $reallocatedCurrent,
+            'pending_current' => $pendingCurrent,
+            'uncorrectable' => $uncorrectable,
+            'health_score' => $healthScore,
+            'health_status' => $healthStatus,
+            'source_file' => $latestFile,
+            'source_date' => date('Y-m-d H:i:s', filemtime($latestFile)),
+        ];
+    }
+
+    /**
      * Extract individual drive information with container/expansion mapping
      */
     private function extractDrives(): ?array
@@ -481,33 +609,42 @@ final class HardwareSpecExtractor
                 $devicePattern[$deviceId] = $disk;
 
                 // Determine which unit this drive belongs to
-                $container = $disk['container']['str'] ?? null;
+                $containerStr = $disk['container']['str'] ?? null;
+                $containerType = $disk['container']['type'] ?? null;
                 $isExpansion = false;
-                $location = 'main';
+                $location = 'Main';  // Default to Main unit
 
-                // Check if this is an expansion unit drive
-                if (!empty($container)) {
-                    if (preg_match('/expansion/i', $container) || preg_match('/^[a-z0-9]+-expansion/i', $container)) {
-                        $isExpansion = true;
-                        $location = $container;
-                        if (!isset($expansionBays[$container])) {
-                            $expansionBays[$container] = 1;
-                        }
-                        $bay = $expansionBays[$container];
-                        $expansionBays[$container]++;
+                // DSM 7.xx: Check container.type field (most reliable)
+                if ($containerType === 'ebox') {
+                    $isExpansion = true;
+                    $location = $containerStr ?? 'Expansion Unit';
+                    if (!isset($expansionBays[$location])) {
+                        $expansionBays[$location] = 1;
                     }
+                    $bay = $expansionBays[$location];
+                    $expansionBays[$location]++;
+                }
+                // DSM 6 Fallback: Check container name for expansion indicators
+                elseif (!empty($containerStr) && (preg_match('/expansion/i', $containerStr) || preg_match('/^RX[0-9]/i', $containerStr))) {
+                    $isExpansion = true;
+                    $location = $containerStr;
+                    if (!isset($expansionBays[$location])) {
+                        $expansionBays[$location] = 1;
+                    }
+                    $bay = $expansionBays[$location];
+                    $expansionBays[$location]++;
                 }
 
-                // Fallback: detect expansion based on device naming pattern
-                // Synology uses sdea, sdeb, sdec, etc. for expansion units
+                // Legacy fallback: detect expansion based on device naming pattern
+                // Synology uses sdea, sdeb, etc. for old expansion units
                 if (!$isExpansion && preg_match('/^sde[a-z]/', $deviceId)) {
                     $isExpansion = true;
-                    $location = 'expansion_unit_1';
-                    if (!isset($expansionBays['expansion_unit_1'])) {
-                        $expansionBays['expansion_unit_1'] = 1;
+                    $location = 'Expansion Unit 1';
+                    if (!isset($expansionBays[$location])) {
+                        $expansionBays[$location] = 1;
                     }
-                    $bay = $expansionBays['expansion_unit_1'];
-                    $expansionBays['expansion_unit_1']++;
+                    $bay = $expansionBays[$location];
+                    $expansionBays[$location]++;
                 }
 
                 if (!$isExpansion) {
@@ -524,12 +661,19 @@ final class HardwareSpecExtractor
                     $capacity = round((int)$disk['size'] / (1000**3), 1);
                 }
 
-                $drives[] = [
+                // Extract SMART health data from diskprediction snapshots
+                $serial = $disk['serial'] ?? '';
+                $smartHealth = null;
+                if (!empty($serial)) {
+                    $smartHealth = $this->extractSmartHealthData($serial);
+                }
+
+                $driveData = [
                     'bay' => $bay,
                     'location' => $location,
                     'device' => $deviceId,
                     'model' => $disk['model'] ?? '',
-                    'serial' => $disk['serial'] ?? '',
+                    'serial' => $serial,
                     'vendor' => $disk['vendor'] ?? '',
                     'capacity_gb' => $capacity,
                     'firmware' => $disk['firm'] ?? '',
@@ -539,6 +683,18 @@ final class HardwareSpecExtractor
                     'is_ssd' => $disk['isSsd'] ?? false,
                     'status' => $disk['status'] ?? 'unknown',
                 ];
+
+                // Add SMART health metrics if available
+                if ($smartHealth) {
+                    $driveData['bad_sectors'] = $smartHealth['bad_sectors'];
+                    $driveData['health_score'] = $smartHealth['health_score'];
+                    $driveData['health_status'] = $smartHealth['health_status'];
+                    $driveData['reallocated_current'] = $smartHealth['reallocated_current'];
+                    $driveData['pending_current'] = $smartHealth['pending_current'];
+                    $driveData['uncorrectable'] = $smartHealth['uncorrectable'];
+                }
+
+                $drives[] = $driveData;
             }
             $mainUnitBays = $mainBay - 1;
             $sourceFile = 'dsm/result/load_info.result';
@@ -915,26 +1071,39 @@ final class HardwareSpecExtractor
     private function extractEnclosureData(array $loadInfo, array $disksArray): array
     {
         $units = [];
+        $containerMetadata = [];  // Metadata about each container
         $containerToDrives = [];  // Map containers to their drives
-        $deviceToContainer = []; // Map devices to their containers
 
-        // First pass: build maps of drives by container
+        // First pass: build container metadata and drive mappings from disks array
+        // This works for both DSM 6 and DSM 7 by reading container info from each disk
         foreach ($disksArray as $disk) {
             if (!is_array($disk)) continue;
 
             $deviceId = $disk['id'] ?? '';
-            $container = $disk['container']['str'] ?? null;
+            $containerStr = $disk['container']['str'] ?? null;
+            $containerType = $disk['container']['type'] ?? null;
+            $containerOrder = $disk['container']['order'] ?? 0;
 
-            if ($container) {
-                $deviceToContainer[$deviceId] = $container;
-                if (!isset($containerToDrives[$container])) {
-                    $containerToDrives[$container] = [];
+            if ($containerStr) {
+                // Store container metadata (from first disk we see in that container)
+                if (!isset($containerMetadata[$containerStr])) {
+                    $containerMetadata[$containerStr] = [
+                        'str' => $containerStr,
+                        'type' => $containerType,
+                        'order' => $containerOrder,
+                    ];
                 }
-                $containerToDrives[$container][] = $deviceId;
+
+                // Map this drive to the container
+                if (!isset($containerToDrives[$containerStr])) {
+                    $containerToDrives[$containerStr] = [];
+                }
+                $containerToDrives[$containerStr][] = $deviceId;
             }
         }
 
-        // Second pass: extract enclosure data from load_info['enclosures']
+        // Second pass: Try load_info['enclosures'] array (DSM 6 format)
+        // This is a fallback for older DSM versions
         if (!empty($loadInfo['enclosures'])) {
             foreach ((array)$loadInfo['enclosures'] as $enclosure) {
                 if (!is_array($enclosure)) continue;
@@ -943,30 +1112,11 @@ final class HardwareSpecExtractor
                 if (!$enclosureId) continue;
 
                 // Check if this enclosure is for an expansion unit
-                // Extract directly from load_info data, don't assume
                 $isExpansion = false;
-
-                // Check multiple indicators without assuming model
                 if (preg_match('/expansion|enclosure/i', (string)$enclosureId)) {
                     $isExpansion = true;
                 }
 
-                // Also check if enclosure contains external drives
-                // (devices not in main NAS, i.e., sdea and above)
-                $containsExternalDrives = false;
-                if (isset($containerToDrives[$enclosureId])) {
-                    foreach ($containerToDrives[$enclosureId] as $device) {
-                        if (preg_match('/^sde[a-z]/', $device)) {
-                            $containsExternalDrives = true;
-                            break;
-                        }
-                    }
-                    if ($containsExternalDrives) {
-                        $isExpansion = true;
-                    }
-                }
-
-                // Extract only what's actually in the data
                 if ($isExpansion) {
                     $unit = [
                         'enclosure_id' => $enclosureId,
@@ -979,37 +1129,26 @@ final class HardwareSpecExtractor
                         'status' => $enclosure['status'] ?? 'unknown',
                         'power_status' => $enclosure['power_status'] ?? 'unknown',
                     ];
-
-                    // Only include fields that have actual data
                     $units[] = $this->stripEmptyFields($unit);
                 }
             }
         }
 
-        // Third pass: detect expansion units by device naming (sdea, sdeb, etc = expansion devices)
+        // Third pass: Detect expansion units from container metadata (DSM 7.xx native)
+        // This is the primary method for DSM 7 which embeds expansion unit info in disks array
         if (empty($units)) {
-            $expansionDrives = [];
-            foreach ($deviceToContainer as $device => $container) {
-                // Expansion devices start with sdea and above
-                if (preg_match('/^sde[a-z]/', $device)) {
-                    if (!isset($expansionDrives[$container])) {
-                        $expansionDrives[$container] = [];
-                    }
-                    $expansionDrives[$container][] = $device;
-                }
-            }
-
-            // Create expansion units from detected drives
-            if (!empty($expansionDrives)) {
-                foreach ($expansionDrives as $container => $drives) {
+            foreach ($containerMetadata as $containerName => $metadata) {
+                // Create expansion unit entries for all ebox type containers
+                // Skip the main/internal unit (type == "internal")
+                if ($metadata['type'] === 'ebox') {
                     $unit = [
-                        'enclosure_id' => $container,
-                        'model' => 'Expansion Unit',  // Generic label - actual model from load_info if available
-                        'serial' => '',
+                        'enclosure_id' => $containerName,
+                        'model' => $containerName,  // e.g., "RX1217rp-1" - use actual model name
+                        'serial' => '',  // Serial not available in container metadata
                         'firmware' => '',
-                        'bay_count' => count($drives),
-                        'drives' => $drives,
-                        'installed_drives' => count($drives),
+                        'bay_count' => count($containerToDrives[$containerName] ?? []),
+                        'drives' => $containerToDrives[$containerName] ?? [],
+                        'installed_drives' => count($containerToDrives[$containerName] ?? []),
                         'status' => 'active',
                         'power_status' => 'online',
                     ];

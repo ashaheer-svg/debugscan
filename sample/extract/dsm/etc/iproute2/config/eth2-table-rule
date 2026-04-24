@@ -1,0 +1,5 @@
+[eth2_policy]
+	mask=255.255.0.0
+	ip=169.254.129.91
+	ifname=eth2
+	gateway=169.254.129.91

@@ -1,0 +1,20 @@
+Checking network status (Global).........................PASS
+Checking API auth........................................PASS
+Checking register site connectivity......................PASS
+Checking relayd main config and network interface info...FAIL
+Checking long poll server................................PASS
+Checking UDP punch server................................FAIL
+Checking relayd services config..........................PASS
+Checking relayd misc config..............................PASS
+Checking relayd status...................................FAIL
+Checking /etc/resolv.conf................................PASS
+----------------------------------------------------------------------
+[Checking relayd main config and network interface info]
+Could not get service ID from relayd config
+
+[Checking UDP punch server]
+Failed to receive messages from the punch server
+
+[Checking relayd status]
+Relay daemon is not running
+

@@ -1,0 +1,10 @@
+driver: igb
+version: 5.3.5.22
+firmware-version: 3.25, 0x800005cf
+expansion-rom-version: 
+bus-info: 0000:0e:00.0
+supports-statistics: yes
+supports-test: yes
+supports-eeprom-access: yes
+supports-register-dump: yes
+supports-priv-flags: no

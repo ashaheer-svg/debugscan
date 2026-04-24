@@ -1,0 +1,13 @@
+Filesystem               Inodes IUsed    IFree IUse% Mounted on
+/dev/md0                 155648 47218   108430   31% /
+devtmpfs                2009666  1294  2008372    1% /dev
+tmpfs                   2018914     3  2018911    1% /dev/shm
+tmpfs                   2018914  5689  2013225    1% /run
+tmpfs                   2018914    10  2018904    1% /sys/fs/cgroup
+tmpfs                   2018914  1288  2017626    1% /tmp
+/dev/loop0                 8192    10     8182    1% /tmp/SynologyAuthService
+/dev/mapper/cachedev_0        0     0        0     - /volume2
+/dev/mapper/cachedev_1        0     0        0     - /volume1
+/dev/loop1             20971520  6700 20964820    1% /volume1/@accountdb/@accountcache
+tmpfs                   2018914     4  2018910    1% /run/user/196791
+/dev/mapper/cachedev_1        0     0        0     - /volume1/VM1_NEW_BACKUP_NEW/#snapshot

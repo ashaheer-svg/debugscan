@@ -1,0 +1,6 @@
+[0]
+	slave=no
+	dns=
+	class=ethernet
+	ifname=eth4
+	gateway=

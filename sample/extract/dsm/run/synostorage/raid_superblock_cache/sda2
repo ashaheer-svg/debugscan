@@ -1,0 +1,10 @@
+
+[raid_superblock]
+hostname=ÿÿÿÿÿÿÿÿ
+uuid=543b9d6f:f39b4352:c69de3af:22ddbed7
+events=560
+disigned_disk_cnt=12
+slot=11
+version=0.9
+level=raid1
+path=/dev/md1

@@ -1,0 +1,5 @@
+[eth1_policy_v6_link_1]
+	ip=fe80::211:32ff:fe7e:6f72
+	ifname=eth1
+	gateway=
+	prefix_length=64

@@ -1,0 +1,685 @@
+
+****** /dev/sda ******
+start to get root block for [/dev/sda]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdb ******
+start to get root block for [/dev/sdb]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdc ******
+start to get root block for [/dev/sdc]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdd ******
+start to get root block for [/dev/sdd]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sde ******
+start to get root block for [/dev/sde]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdf ******
+start to get root block for [/dev/sdf]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdg ******
+start to get root block for [/dev/sdg]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdh ******
+start to get root block for [/dev/sdh]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdi ******
+start to get root block for [/dev/sdi]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdj ******
+start to get root block for [/dev/sdj]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdk ******
+start to get root block for [/dev/sdk]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdl ******
+start to get root block for [/dev/sdl]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdma ******
+start to get root block for [/dev/sdma]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdmb ******
+start to get root block for [/dev/sdmb]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdmc ******
+start to get root block for [/dev/sdmc]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdna ******
+start to get root block for [/dev/sdna]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdnb ******
+start to get root block for [/dev/sdnb]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdnc ******
+start to get root block for [/dev/sdnc]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdoa ******
+start to get root block for [/dev/sdoa]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdob ******
+start to get root block for [/dev/sdob]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdoc ******
+start to get root block for [/dev/sdoc]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdpa ******
+start to get root block for [/dev/sdpa]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdpb ******
+start to get root block for [/dev/sdpb]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdpc ******
+start to get root block for [/dev/sdpc]
+===== Syno Layout =====
+version :  [8]
+blRaidType:  [YES]
+part 1 ullSize:  [4980480]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [260352]
+part 1 offset:  [2048]
+part 2 offset:  [4982528]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdqa ******
+start to get root block for [/dev/sdqa]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdqb ******
+start to get root block for [/dev/sdqb]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdqc ******
+start to get root block for [/dev/sdqc]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdra ******
+start to get root block for [/dev/sdra]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdrb ******
+start to get root block for [/dev/sdrb]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdrc ******
+start to get root block for [/dev/sdrc]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdsa ******
+start to get root block for [/dev/sdsa]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdsb ******
+start to get root block for [/dev/sdsb]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdsc ******
+start to get root block for [/dev/sdsc]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdta ******
+start to get root block for [/dev/sdta]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdtb ******
+start to get root block for [/dev/sdtb]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+
+****** /dev/sdtc ******
+start to get root block for [/dev/sdtc]
+===== Syno Layout =====
+version :  [9]
+blRaidType:  [YES]
+part 1 ullSize:  [16777216]
+part 2 ullSize:  [4194304]
+part 3 ullSize:  [262144]
+part 1 offset:  [8192]
+part 2 offset:  [16785408]
+part 3 offset:  [18446744073709551615]
+blBuildinStorage:  [NO]
+===== Drive Attribute =====
+Warranty: new [0x00000000]
+===== Capability =====
+Capability: [0x0]
+===== OS Type =====
+OS Type: [1]
+

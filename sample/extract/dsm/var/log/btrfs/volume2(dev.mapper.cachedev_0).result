@@ -1,0 +1,241 @@
+/dev/mapper/cachedev_0 mount on /volume2
+=====file show=====
+Data, single: total=9.43TiB, used=9.42TiB
+System, DUP: total=8.00MiB, used=128.00KiB
+Metadata, DUP: total=11.00GiB, used=7.68GiB
+GlobalReserve, single: total=810.50MiB, used=0.00B
+=====file show=====
+Label: '2024.09.26-11:11:46 v69057'  uuid: 32b26da3-67d3-4ad4-9320-f8026566bcfb
+	Total devices 1 FS bytes used 9.43TiB
+	devid    1 size 39.92TiB used 9.46TiB path /dev/mapper/cachedev_0
+
+=====filesystem usage=====
+Overall:
+    Device size:		  39.92TiB
+    Device allocated:		   9.46TiB
+    Device unallocated:		  30.46TiB
+    Device missing:		     0.00B
+    Used:			   9.44TiB
+    Free (estimated):		  30.47TiB	(min: 15.24TiB)
+    Data ratio:			      1.00
+    Metadata ratio:		      2.00
+    Global reserve:		 810.50MiB	(used: 0.00B)
+
+Data,single: Size:9.43TiB, Used:9.42TiB
+   /dev/mapper/cachedev_0	   9.43TiB
+
+Metadata,DUP: Size:11.00GiB, Used:7.68GiB
+   /dev/mapper/cachedev_0	  22.00GiB
+
+System,DUP: Size:8.00MiB, Used:128.00KiB
+   /dev/mapper/cachedev_0	  16.00MiB
+
+Unallocated:
+   /dev/mapper/cachedev_0	  30.46TiB
+=====filesystem usage(byte)=====
+Overall:
+    Device size:		    43887049572352
+    Device allocated:		    10395993505792
+    Device unallocated:		    33491056066560
+    Device missing:		                 0
+    Used:			    10380023164928
+    Free (estimated):		    33499884818432	(min: 16754356785152)
+    Data ratio:			              1.00
+    Metadata ratio:		              2.00
+    Global reserve:		         849870848	(used: 0)
+
+Data,single: Size:10372354408448, Used:10363525656576
+   /dev/mapper/cachedev_0	10372354408448
+
+Metadata,DUP: Size:11811160064, Used:8248623104
+   /dev/mapper/cachedev_0	23622320128
+
+System,DUP: Size:8388608, Used:131072
+   /dev/mapper/cachedev_0	  16777216
+
+Unallocated:
+   /dev/mapper/cachedev_0	33491056066560
+=====superblock information=====
+superblock: bytenr=65536, device=/dev/mapper/cachedev_0
+---------------------------------------------------------
+csum			0xe781b6ec [match]
+bytenr			65536
+flags			0x1
+			( WRITTEN )
+magic			_BHRfS_M [match]
+fsid			32b26da3-67d3-4ad4-9320-f8026566bcfb
+metadata_uuid		32b26da3-67d3-4ad4-9320-f8026566bcfb
+label			2024.09.26-11:11:46 v69057
+generation		112623
+root			8446581702656
+sys_array_size		129
+chunk_root_generation	110831
+root_level		1
+chunk_root		21020672
+chunk_root_level	1
+log_root		0
+log_root_transid	0
+log_root_level		0
+log tree reserve bg	0
+rbd_mapping_table_first_offset	0
+total_bytes		43887049572352
+bytes_used		10371774410752
+sectorsize		4096
+nodesize		16384
+leafsize		16384
+stripesize		4096
+root_dir		6
+num_devices		1
+compat_flags		0xe000000000000000
+compat_ro_flags		0x3
+			( FREE_SPACE_TREE |
+			  FREE_SPACE_TREE_VALID )
+incompat_flags		0x16b
+			( MIXED_BACKREF |
+			  DEFAULT_SUBVOL |
+			  COMPRESS_LZO |
+			  BIG_METADATA |
+			  EXTENDED_IREF |
+			  SKINNY_METADATA )
+syno_capability_flags		0x0
+syno_capability_generation	112623
+csum_type		0
+csum_size		4
+cache_generation	18446744073709551615
+uuid_tree_generation	112623
+dev_item.uuid		b2bf9d0e-03ec-4731-840d-2304d2a3a80f
+dev_item.fsid		32b26da3-67d3-4ad4-9320-f8026566bcfb [match]
+dev_item.type		0
+dev_item.total_bytes	43887049572352
+dev_item.bytes_used	10395993505792
+dev_item.io_align	4096
+dev_item.io_width	4096
+dev_item.sector_size	4096
+dev_item.devid		1
+dev_item.dev_group	0
+dev_item.seek_speed	0
+dev_item.bandwidth	0
+dev_item.generation	0
+
+superblock: bytenr=67108864, device=/dev/mapper/cachedev_0
+---------------------------------------------------------
+csum			0x47e09e22 [match]
+bytenr			67108864
+flags			0x1
+			( WRITTEN )
+magic			_BHRfS_M [match]
+fsid			32b26da3-67d3-4ad4-9320-f8026566bcfb
+metadata_uuid		32b26da3-67d3-4ad4-9320-f8026566bcfb
+label			2024.09.26-11:11:46 v69057
+generation		112623
+root			8446581702656
+sys_array_size		129
+chunk_root_generation	110831
+root_level		1
+chunk_root		21020672
+chunk_root_level	1
+log_root		0
+log_root_transid	0
+log_root_level		0
+log tree reserve bg	0
+rbd_mapping_table_first_offset	0
+total_bytes		43887049572352
+bytes_used		10371774410752
+sectorsize		4096
+nodesize		16384
+leafsize		16384
+stripesize		4096
+root_dir		6
+num_devices		1
+compat_flags		0xe000000000000000
+compat_ro_flags		0x3
+			( FREE_SPACE_TREE |
+			  FREE_SPACE_TREE_VALID )
+incompat_flags		0x16b
+			( MIXED_BACKREF |
+			  DEFAULT_SUBVOL |
+			  COMPRESS_LZO |
+			  BIG_METADATA |
+			  EXTENDED_IREF |
+			  SKINNY_METADATA )
+syno_capability_flags		0x0
+syno_capability_generation	112623
+csum_type		0
+csum_size		4
+cache_generation	18446744073709551615
+uuid_tree_generation	112623
+dev_item.uuid		b2bf9d0e-03ec-4731-840d-2304d2a3a80f
+dev_item.fsid		32b26da3-67d3-4ad4-9320-f8026566bcfb [match]
+dev_item.type		0
+dev_item.total_bytes	43887049572352
+dev_item.bytes_used	10395993505792
+dev_item.io_align	4096
+dev_item.io_width	4096
+dev_item.sector_size	4096
+dev_item.devid		1
+dev_item.dev_group	0
+dev_item.seek_speed	0
+dev_item.bandwidth	0
+dev_item.generation	0
+
+superblock: bytenr=274877906944, device=/dev/mapper/cachedev_0
+---------------------------------------------------------
+csum			0xba67c813 [match]
+bytenr			274877906944
+flags			0x1
+			( WRITTEN )
+magic			_BHRfS_M [match]
+fsid			32b26da3-67d3-4ad4-9320-f8026566bcfb
+metadata_uuid		32b26da3-67d3-4ad4-9320-f8026566bcfb
+label			2024.09.26-11:11:46 v69057
+generation		112623
+root			8446581702656
+sys_array_size		129
+chunk_root_generation	110831
+root_level		1
+chunk_root		21020672
+chunk_root_level	1
+log_root		0
+log_root_transid	0
+log_root_level		0
+log tree reserve bg	0
+rbd_mapping_table_first_offset	0
+total_bytes		43887049572352
+bytes_used		10371774410752
+sectorsize		4096
+nodesize		16384
+leafsize		16384
+stripesize		4096
+root_dir		6
+num_devices		1
+compat_flags		0xe000000000000000
+compat_ro_flags		0x3
+			( FREE_SPACE_TREE |
+			  FREE_SPACE_TREE_VALID )
+incompat_flags		0x16b
+			( MIXED_BACKREF |
+			  DEFAULT_SUBVOL |
+			  COMPRESS_LZO |
+			  BIG_METADATA |
+			  EXTENDED_IREF |
+			  SKINNY_METADATA )
+syno_capability_flags		0x0
+syno_capability_generation	112623
+csum_type		0
+csum_size		4
+cache_generation	18446744073709551615
+uuid_tree_generation	112623
+dev_item.uuid		b2bf9d0e-03ec-4731-840d-2304d2a3a80f
+dev_item.fsid		32b26da3-67d3-4ad4-9320-f8026566bcfb [match]
+dev_item.type		0
+dev_item.total_bytes	43887049572352
+dev_item.bytes_used	10395993505792
+dev_item.io_align	4096
+dev_item.io_width	4096
+dev_item.sector_size	4096
+dev_item.devid		1
+dev_item.dev_group	0
+dev_item.seek_speed	0
+dev_item.bandwidth	0
+dev_item.generation	0
+

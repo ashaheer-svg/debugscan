@@ -461,13 +461,38 @@ HTML;
                 $temp = (int)($drive['temperature_celsius'] ?? 0);
                 $poh = (int)($drive['power_on_hours'] ?? 0);
                 $isSsd = (bool)($drive['is_ssd'] ?? false);
+                $badSectors = (int)($drive['bad_sectors'] ?? 0);
+                $healthStatus = (string)($drive['health_status'] ?? '');
 
-                $smartBadge = match($smart) {
-                    'passed', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
-                    'warning', 'failing' => '<span class="hw-status-badge hw-status-warning">⚠ Warning</span>',
-                    'failed' => '<span class="hw-status-badge hw-status-critical">✕ Failed</span>',
-                    default => htmlspecialchars($smart, ENT_QUOTES),
-                };
+                // Determine health badge based on SMART attributes and bad sector count
+                if (!empty($healthStatus)) {
+                    // New logic: use health_status from SMART analysis
+                    $smartBadge = match($healthStatus) {
+                        'healthy' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
+                        'caution' => '<span class="hw-status-badge hw-status-warning">⚠ Monitor</span>',
+                        'warning' => '<span class="hw-status-badge hw-status-warning">⚠ Replace Soon</span>',
+                        'critical' => '<span class="hw-status-badge hw-status-critical">✕ Critical</span>',
+                        default => match($smart) {
+                            'passed', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
+                            'warning', 'failing' => '<span class="hw-status-badge hw-status-warning">⚠ Warning</span>',
+                            'failed' => '<span class="hw-status-badge hw-status-critical">✕ Failed</span>',
+                            default => htmlspecialchars($smart, ENT_QUOTES),
+                        }
+                    };
+                    // Add bad sector information to status if present
+                    if ($badSectors > 0 && $healthStatus !== 'healthy') {
+                        $smartBadge .= '<div style="font-size: 11px; color: #666; margin-top: 2px;">(' .
+                            htmlspecialchars((string)$badSectors, ENT_QUOTES) . ' sectors)</div>';
+                    }
+                } else {
+                    // Fallback: original logic using smart_status
+                    $smartBadge = match($smart) {
+                        'passed', 'ok' => '<span class="hw-status-badge hw-status-healthy">✓ Healthy</span>',
+                        'warning', 'failing' => '<span class="hw-status-badge hw-status-warning">⚠ Warning</span>',
+                        'failed' => '<span class="hw-status-badge hw-status-critical">✕ Failed</span>',
+                        default => htmlspecialchars($smart, ENT_QUOTES),
+                    };
+                }
 
                 $typeLabel = $isSsd ? 'SSD' : 'HDD';
                 $locationLabel = $location === 'main' ? 'Main' : preg_replace('/[^a-z0-9]/i', ' ', $location);

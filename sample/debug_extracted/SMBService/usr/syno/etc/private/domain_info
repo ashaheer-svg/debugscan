@@ -1,0 +1,16 @@
+ads:dc_name=ADServer.survey.lk
+ads:machine_name=NAS
+ads:domain_name=SURVEY.LK
+ads:account_ou=CN=Computers,dc=SURVEY,dc=LK
+ads:admin_account=administrator
+ads:join_flags=33
+ads:create_upn=0
+ads:secure_channel_type=2
+ads:netbios_domain_name=SURVEY
+ads:dns_domain_name=survey.lk
+ads:dn=CN=NAS,CN=Computers,DC=survey,DC=lk
+ads:modified_config=0
+ads:domain_is_ad=1
+ads:result.w=0
+ads:domain_sid=S-1-5-21-2362900583-1916112954-2432647866
+ads:mtime=1581329286

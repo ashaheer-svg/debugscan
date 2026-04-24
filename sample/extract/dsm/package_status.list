@@ -1,0 +1,387 @@
+{
+   "data" : {
+      "packages" : [
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "ActiveBackup",
+            "name" : "Active Backup for Business",
+            "timestamp" : 1773976881486,
+            "version" : "3.1.0-24967"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "ActiveInsight",
+            "name" : "Active Insight",
+            "timestamp" : 1773976881518,
+            "version" : "3.0.4-24119"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "AntiVirus",
+            "name" : "Antivirus Essential",
+            "timestamp" : 1773976881548,
+            "version" : "1.5.7-3241"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "DhcpServer",
+            "name" : "DHCP Server",
+            "timestamp" : 1773976881577,
+            "version" : "1.0.2-0046"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "FileStation",
+            "name" : "File Station",
+            "timestamp" : 1773976881621,
+            "version" : "1.4.1-1559"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "HybridShare",
+            "name" : "Hybrid Share",
+            "timestamp" : 1773976881639,
+            "version" : "1.4.2-1735"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "HyperBackup",
+            "name" : "Hyper Backup",
+            "timestamp" : 1773976881668,
+            "version" : "4.1.2-4039"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "LogCenter",
+            "name" : "Log Center",
+            "timestamp" : 1773976881717,
+            "version" : "1.3.0-1667"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "limit_type" : "non",
+               "status" : "version_limit",
+               "status_code" : 264,
+               "status_description" : "failed to start because the pkg is end of life on the os",
+               "status_origin" : "version_limit"
+            },
+            "id" : "Node.js_v12",
+            "name" : "Node.js v12",
+            "timestamp" : 1773976881726,
+            "version" : "12.22.12-2031"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "Node.js_v18",
+            "name" : "Node.js v18",
+            "timestamp" : 1773976881738,
+            "version" : "18.18.2-1011"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "Node.js_v20",
+            "name" : "Node.js v20",
+            "timestamp" : 1773976881779,
+            "version" : "20.19.5-1014"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "OAuthService",
+            "name" : "OAuth Service",
+            "timestamp" : 1773976881802,
+            "version" : "1.1.5-0111"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "PDFViewer",
+            "name" : "PDF Viewer",
+            "timestamp" : 1773976881879,
+            "version" : "1.3.0-1204"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "PHP7.4",
+            "name" : "PHP 7.4",
+            "timestamp" : 1773976881892,
+            "version" : "7.4.33-0130"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "Perl",
+            "name" : "Perl",
+            "timestamp" : 1773976882013,
+            "version" : "5.34.1-0301"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "Python2",
+            "name" : "Python2",
+            "timestamp" : 1773976882042,
+            "version" : "2.7.18-1004"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "QuickConnect",
+            "name" : "QuickConnect",
+            "timestamp" : 1773976882077,
+            "version" : "1.0.9-0171"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "ReplicationService",
+            "name" : "Replication Service",
+            "timestamp" : 1773976882106,
+            "version" : "1.3.0-0505"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SMBService",
+            "name" : "SMB Service",
+            "timestamp" : 1773976882126,
+            "version" : "4.15.13-2502"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "ScsiTarget",
+            "name" : "SAN Manager",
+            "timestamp" : 1773976882154,
+            "version" : "1.0.12-0336"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SecureSignIn",
+            "name" : "Secure SignIn Service",
+            "timestamp" : 1773976882179,
+            "version" : "1.1.6-0391"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SnapshotReplication",
+            "name" : "Snapshot Replication",
+            "timestamp" : 1773976882225,
+            "version" : "7.4.5-1698"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "StorageAnalyzer",
+            "name" : "Storage Analyzer",
+            "timestamp" : 1773976882237,
+            "version" : "2.1.0-0620"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "StorageManager",
+            "name" : "Storage Manager",
+            "timestamp" : 1773976882257,
+            "version" : "1.0.0-0017"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SynoFinder",
+            "name" : "Universal Search",
+            "timestamp" : 1773976882298,
+            "version" : "1.7.0-0704"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SynologyApplicationService",
+            "name" : "Synology Application Service",
+            "timestamp" : 1773976882335,
+            "version" : "1.8.1-20710"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "SynologyDrive",
+            "name" : "Synology Drive Server",
+            "timestamp" : 1773976882401,
+            "version" : "3.5.0-26085"
+         },
+         {
+            "additional" : {
+               "install_type" : "system",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "USBCopy",
+            "name" : "USB Copy",
+            "timestamp" : 1773976882480,
+            "version" : "2.2.1-1306"
+         },
+         {
+            "additional" : {
+               "install_type" : "",
+               "status" : "running",
+               "status_code" : 0,
+               "status_description" : "retrieve from status script",
+               "status_origin" : "running"
+            },
+            "id" : "UniversalViewer",
+            "name" : "Universal Viewer",
+            "timestamp" : 1773976882503,
+            "version" : "1.4.0-0712"
+         }
+      ],
+      "total" : 29
+   },
+   "httpd_restart" : false,
+   "success" : true
+}

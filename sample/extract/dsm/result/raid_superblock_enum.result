@@ -1,0 +1,252 @@
+sdmc:
+
+sdmc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdna:
+
+sdna3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdnb:
+
+sdnb3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdnc:
+
+sdnc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdoa:
+
+sdoa3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdob:
+
+sdob3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdoc:
+
+sdoc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdma:
+
+sdma3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdpb:
+
+sdpb3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdpc:
+
+sdpc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdqa:
+
+sdqa3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdqb:
+
+sdqb3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdqc:
+
+sdqc3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdra:
+
+sdra3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdrb:
+
+sdrb3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdrc:
+
+sdrc3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdsa:
+
+sdsa3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdsb:
+
+sdsb3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdsc:
+
+sdsc3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdta:
+
+sdta3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdtb:
+
+sdtb3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdtc:
+
+sdtc3:
+ARRAY /dev/md/3  metadata=1.2 UUID=030b558c:144bd653:14ba53a8:a317f6fe name=NAS:3
+
+sdpa:
+
+sdpa3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sda:
+
+sda1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sda2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sda3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdb:
+
+sdb1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdb2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdb3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdc:
+
+sdc1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdc2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdd:
+
+sdd1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdd2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdd3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sde:
+
+sde1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sde2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sde3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdf:
+
+sdf1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdf2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdf3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdg:
+
+sdg1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdg2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdg3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdh:
+
+sdh1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdh2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdh3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdi:
+
+sdi1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdi2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdi3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdj:
+
+sdj1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdj2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdj3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdk:
+
+sdk1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdk2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdk3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdl:
+
+sdl1:
+ARRAY /dev/md0 UUID=19bd70ef:c4a5d840:c69de3af:22ddbed7
+
+sdl2:
+ARRAY /dev/md1 UUID=543b9d6f:f39b4352:c69de3af:22ddbed7
+
+sdl3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+
+sdmb:
+
+sdmb3:
+ARRAY /dev/md/2  metadata=1.2 UUID=851d2679:e284f7fc:4d06c3ac:691fe969 name=RackStation:2
+

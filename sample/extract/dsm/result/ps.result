@@ -1,0 +1,684 @@
+  PID USER        VSZ STAT COMMAND
+    1 root      16084 Ss   /sbin/init
+    2 root          0 S    [kthreadd]
+    3 root          0 S    [ksoftirqd/0]
+    5 root          0 S<   [kworker/0:0H]
+    7 root          0 S    [rcu_sched]
+    8 root          0 S    [rcu_bh]
+    9 root          0 S    [migration/0]
+   10 root          0 S    [watchdog/0]
+   11 root          0 S    [watchdog/1]
+   12 root          0 S    [migration/1]
+   13 root          0 S    [ksoftirqd/1]
+   15 root          0 S<   [kworker/1:0H]
+   16 root          0 S    [watchdog/2]
+   17 root          0 S    [migration/2]
+   18 root          0 S    [ksoftirqd/2]
+   20 root          0 S<   [kworker/2:0H]
+   21 root          0 S    [watchdog/3]
+   22 root          0 S    [migration/3]
+   23 root          0 S    [ksoftirqd/3]
+   25 root          0 S<   [kworker/3:0H]
+   26 root          0 S    [watchdog/4]
+   27 root          0 S    [migration/4]
+   28 root          0 S    [ksoftirqd/4]
+   30 root          0 S<   [kworker/4:0H]
+   31 root          0 S    [watchdog/5]
+   32 root          0 S    [migration/5]
+   33 root          0 S    [ksoftirqd/5]
+   35 root          0 S<   [kworker/5:0H]
+   36 root          0 S    [watchdog/6]
+   37 root          0 S    [migration/6]
+   38 root          0 S    [ksoftirqd/6]
+   40 root          0 S<   [kworker/6:0H]
+   41 root          0 S    [watchdog/7]
+   42 root          0 S    [migration/7]
+   43 root          0 S    [ksoftirqd/7]
+   45 root          0 S<   [kworker/7:0H]
+   46 root          0 S    [kdevtmpfs]
+   47 root          0 S<   [netns]
+   50 root          0 S<   [perf]
+  236 root          0 S    [khungtaskd]
+  237 root          0 S<   [writeback]
+  240 root          0 SN   [ksmd]
+  241 root          0 S<   [crypto]
+  242 root          0 S<   [kintegrityd]
+  243 root          0 S<   [bioset]
+  245 root          0 S<   [kblockd]
+  322 root     135564 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+  366 root      64864 S<s  /usr/local/bin/notification_send
+  422 root     962140 Ssl  /var/packages/Node.js_v20/target/usr/local/bin/node /var/packages/SynologyApplicationService/target/node_libs/VapidSendServer.js
+  451 root          0 S    [kworker/1:1]
+  507 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+  539 root     135604 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+  708 root          0 S<   [ata_sff]
+  718 root          0 S<   [md]
+  721 root          0 S<   [edac-poller]
+  749 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+  770 root      85132 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+  790 root          0 S<   [kworker/u17:3]
+ 1059 root          0 S<   [kswapd0:0]
+ 1067 root          0 S<   [vmstat]
+ 1203 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1204 root          0 S<   [kworker/u17:4]
+ 1212 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1220 root          0 S    [fsnotify_mark]
+ 1294 root          0 S    [kworker/4:0]
+ 1347 root          0 S    [kworker/6:1]
+ 1451 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1464 root          0 S    [kworker/0:2]
+ 1470 root          0 S    [kworker/u16:5]
+ 1510 SURVEY\+ 135208 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1535 root          0 S    [kworker/2:1]
+ 1565 root          0 S    [kworker/5:1]
+ 1660 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1725 root          0 S    [kworker/u16:6]
+ 1782 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 1864 root          0 S    [kworker/7:1]
+ 2020 root          0 S    [kworker/1:2]
+ 2191 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 2526 root          0 S    [kworker/6:2]
+ 2527 root          0 S    [kworker/6:3]
+ 2528 root          0 S    [kworker/6:5]
+ 2529 root          0 S    [kworker/6:6]
+ 2530 root          0 S    [kworker/6:7]
+ 2531 root          0 S    [kworker/6:8]
+ 2532 root          0 S    [kworker/6:9]
+ 2533 root          0 S    [kworker/6:10]
+ 2584 Antivir+  13788 Ss   /usr/lib/systemd/systemd --user
+ 2588 Antivir+  16500 S    (sd-pam)
+ 2725 root          0 S    [kworker/6:11]
+ 2726 root          0 S    [kworker/6:12]
+ 2738 root          0 S    [kworker/5:2]
+ 2743 root          0 S    [kworker/7:3]
+ 2745 Antivir+ 276124 Ssl  /var/packages/AntiVirus/target/bin/synoavd
+ 2750 root          0 S    [kworker/7:4]
+ 2751 root          0 S    [kworker/7:5]
+ 2752 root          0 S    [kworker/7:6]
+ 2753 root          0 S    [kworker/7:7]
+ 2754 root          0 S    [kworker/7:8]
+ 2755 root          0 S    [kworker/7:9]
+ 2756 root          0 S    [kworker/7:10]
+ 2758 root          0 S    [kworker/1:3]
+ 2759 root          0 S    [kworker/1:4]
+ 2760 root          0 S    [kworker/1:5]
+ 2761 root          0 S    [kworker/1:6]
+ 2762 root          0 S    [kworker/1:7]
+ 2763 root          0 S    [kworker/1:8]
+ 2764 root          0 S    [kworker/1:9]
+ 2765 root          0 S    [kworker/1:10]
+ 2766 root          0 S    [kworker/1:11]
+ 2767 root          0 S    [kworker/1:12]
+ 2812 root          0 S    [kworker/0:3]
+ 2822 root          0 S    [kworker/2:2]
+ 2867 root          0 S    [kworker/2:3]
+ 2880 root          0 S    [kworker/4:3]
+ 2892 root          0 S    [kworker/4:4]
+ 2893 root          0 S    [kworker/4:5]
+ 2894 root          0 S    [kworker/4:6]
+ 2914 root          0 S    [kworker/7:11]
+ 2955 system    47484 S    synoscgi
+ 3457 root       2500 SLs  /bin/vmtouch -dl /usr/syno/bin/syno_mib_disk_tool
+ 3459 root       2480 SLs  /bin/vmtouch -dl /usr/syno/bin/syno_mib_disk_mapping
+ 3460 root      79352 Ss   /var/packages/ActiveInsight/target/bin/synoaic_monitor
+ 3466 root     102620 Ssl  /var/packages/ActiveInsight/target/bin/synoaic_server_status_cache_daemon
+ 3758 root          0 S    [kworker/3:0]
+ 3759 root          0 S    [kworker/3:1]
+ 3763 root          0 S    [kworker/7:12]
+ 3764 root          0 S    [kworker/3:2]
+ 3765 root          0 S    [kworker/3:3]
+ 3766 root          0 S    [kworker/3:4]
+ 3768 root          0 S    [kworker/3:6]
+ 3769 root          0 S    [kworker/3:8]
+ 3770 root          0 S    [kworker/3:9]
+ 3779 system    47484 S    synoscgi
+ 3871 root          0 S<   [bioset]
+ 3872 root          0 S<   [bioset]
+ 3873 root          0 S<   [bioset]
+ 3874 root          0 S<   [bioset]
+ 3875 root          0 S<   [bioset]
+ 3876 root          0 S<   [bioset]
+ 3877 root          0 S<   [bioset]
+ 3878 root          0 S<   [bioset]
+ 3879 root          0 S<   [bioset]
+ 3881 root          0 S<   [bioset]
+ 3882 root          0 S<   [bioset]
+ 3884 root          0 S<   [bioset]
+ 3886 root          0 S<   [bioset]
+ 3888 root          0 S<   [bioset]
+ 3889 root          0 S<   [bioset]
+ 3890 root          0 S<   [bioset]
+ 3942 root      76648 S<s  synoscgi_SYNO.Core.SupportForm.Log_1_collect
+ 4093 root      35444 Ss   /var/packages/ActiveInsight/target/bin/synoaic_logd
+ 4099 root     328352 Ssl  /var/packages/ActiveInsight/target/bin/synoaic_login_uploader
+ 4119 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 4181 root          0 S<   [iscsi_eh]
+ 4203 root          0 S<   [kmpath_rdacd]
+ 4215 root          0 S<   [spinup_wq]
+ 4216 root          0 S<   [nvme]
+ 4228 root      84936 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 4241 system    47484 S    synoscgi
+ 4252 root      90432 Ss   synoscgi                                                                        --mode apid --conf /var/packages/SynologyDrive/target/etc/synoapid.json
+ 4253 root      90440 Ss   synoscgi                                                                        --mode apid --conf /var/packages/SynologyDrive/target/etc/synoapid.json
+ 4287 root          0 S    [scsi_eh_0]
+ 4292 root          0 S<   [scsi_tmf_0]
+ 4327 root          0 S    [scsi_eh_1]
+ 4328 root      50988 Ss   /var/packages/ActiveInsight/target/bin/synoaic_backup_uploader
+ 4332 root          0 S<   [scsi_tmf_1]
+ 4345 root          0 S    [scsi_eh_2]
+ 4346 root          0 S<   [scsi_tmf_2]
+ 4351 root     1687956 Ssl /var/packages/ActiveInsight/target/bin/synomibcollectoronlineupdater daemon --conf /var/packages/ActiveInsight/target/configs/synomibonlineupdater_conf.json
+ 4355 root          0 S    [scsi_eh_3]
+ 4356 root          0 S<   [scsi_tmf_3]
+ 4385 root          0 S    [scsi_eh_4]
+ 4391 root          0 S<   [scsi_tmf_4]
+ 4420 root          0 S    [scsi_eh_5]
+ 4421 root          0 S<   [scsi_tmf_5]
+ 4434 root          0 S    [scsi_eh_6]
+ 4435 root          0 S<   [scsi_tmf_6]
+ 4445 root          0 S    [scsi_eh_7]
+ 4446 root          0 S<   [scsi_tmf_7]
+ 4656 root          0 S<   [deferwq]
+ 4660 root          0 S    [kworker/7:13]
+ 4666 root          0 S    [kworker/6:13]
+ 4679 root          0 S    [kworker/2:4]
+ 4680 root          0 S    [kworker/2:5]
+ 4681 root          0 S    [kworker/2:7]
+ 4682 root          0 S    [kworker/2:8]
+ 4683 root          0 S    [kworker/2:9]
+ 4684 root          0 S    [kworker/2:10]
+ 4700 root       4084 Ss   /bin/sh /usr/syno/bin/log_collector.sh /volume1/@tmp/SupportFormAttach3942/dsm
+ 4702 system    47484 S    synoscgi
+ 4710 root       4376 S    /bin/sh /usr/syno/bin/logcollector/collector_common.sh /volume1/@tmp/SupportFormAttach3942/dsm
+ 4764 root          0 S<   [kworker/u17:1]
+ 4765 root          0 S<   [kworker/u17:2]
+ 4908 root     1836312 Ssl /var/packages/ActiveInsight/target/bin/synomibresourcemonitor daemon --conf /var/packages/ActiveInsight/target/configs/resource_monitor.json
+ 4913 root     1150960 Ss  /var/packages/ActiveInsight/tmp/venv/bin/python3 /var/packages/ActiveInsight/tmp/venv/bin/synomibexecutor --host 127.0.0.1 --port 33301
+ 4950 root     2509784 Ssl /var/packages/ActiveInsight/target/bin/otel-collector --config /var/packages/ActiveInsight/target/configs/otel-collector-config.yaml
+ 4989 root          0 S<   [bioset]
+ 5037 root      85132 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+ 5113 root          0 S<   [kworker/u17:5]
+ 5114 root          0 S<   [kworker/u17:6]
+ 5115 root          0 S<   [kworker/u17:7]
+ 5121 root          0 S    [kworker/u16:9]
+ 5147 system    47484 S    synoscgi
+ 5179 system    47484 S    synoscgi
+ 5184 system    47484 Ss   synoscgi
+ 5185 root      97296 D<s  synoscgi_SYNO.Core.System_1_poll
+ 5204 root      11620 R    /bin/ps -e -o pid,user,vsz,stat,command
+ 5620 root          0 S<   [bioset]
+ 5621 root          0 S<   [kworker/5:1H]
+ 5622 root          0 S<   [kworker/2:1H]
+ 5627 root          0 S<   [bioset]
+ 5671 root          0 S<   [bioset]
+ 5689 root          0 S<   [bioset]
+ 5709 system    47484 S    synoscgi
+ 5713 root          0 S<   [kworker/3:1H]
+ 5717 root          0 S<   [bioset]
+ 5736 root          0 S<   [bioset]
+ 5785 root          0 S<   [bioset]
+ 5880 root          0 S<   [bioset]
+ 5903 root          0 S<   [bioset]
+ 5913 root          0 S<   [bioset]
+ 5946 root          0 S<   [bioset]
+ 6180 root          0 S<   [bioset]
+ 6181 root          0 S<   [kworker/7:1H]
+ 6182 root          0 S<   [kworker/0:1H]
+ 6187 root          0 S<   [bioset]
+ 6205 root          0 S<   [bioset]
+ 6226 root          0 S<   [bioset]
+ 6237 root          0 S<   [bioset]
+ 6243 root          0 S<   [kworker/6:1H]
+ 6275 root          0 S<   [bioset]
+ 6294 root          0 S<   [bioset]
+ 6320 root          0 S<   [bioset]
+ 6354 root          0 S<   [bioset]
+ 6459 root          0 S<   [bioset]
+ 6475 root          0 S<   [bioset]
+ 6495 root          0 S<   [bioset]
+ 6519 root          0 S<   [bioset]
+ 6525 root          0 S<   [kworker/1:1H]
+ 6553 root          0 S<   [bioset]
+ 6569 root          0 S<   [bioset]
+ 6589 root          0 S<   [bioset]
+ 6614 root          0 S<   [bioset]
+ 6646 root          0 S<   [bioset]
+ 6663 root          0 S<   [bioset]
+ 6682 root          0 S<   [bioset]
+ 6786 root          0 S<   [kworker/4:1H]
+ 7448 Antivir+  26612 S    /usr/syno/sbin/synocrond
+ 7633 root          0 S<   [mv_work_queue]
+ 7634 root          0 S    [mv14xx_recycle]
+ 7643 root          0 S    [scsi_eh_8]
+ 7644 root          0 S<   [scsi_tmf_8]
+ 7645 root          0 S    [irq/40-mv14xx-0]
+ 7646 root          0 S    [irq/41-mv14xx-1]
+ 7647 root          0 S    [irq/42-mv14xx-2]
+ 7648 root          0 S    [irq/43-mv14xx-3]
+ 7649 root          0 S    [irq/44-mv14xx-4]
+ 7650 root          0 S    [irq/45-mv14xx-5]
+ 7651 root          0 S    [irq/46-mv14xx-6]
+ 7652 root          0 S    [irq/47-mv14xx-7]
+ 7661 root          0 S<   [bioset]
+ 7667 root          0 S<   [bioset]
+ 7794 root          0 S<   [bioset]
+ 7921 root          0 S<   [bioset]
+ 8048 root          0 S<   [bioset]
+ 8175 root          0 S<   [bioset]
+ 8224 root          0 S<   [bioset]
+ 8351 root          0 S<   [bioset]
+ 8478 root          0 S<   [bioset]
+ 8546 Antivir+  26636 S    /var/packages/AntiVirus/target/bin/synoavscan --all
+ 8547 Antivir+ 1733164 RNsl /var/packages/AntiVirus/target/bin/synoavscan --all
+ 8605 root          0 S<   [bioset]
+ 8647 Antivir+      0 Z    [clamav.sh] <defunct>
+ 8732 root          0 S<   [bioset]
+ 8859 root          0 S<   [bioset]
+ 8907 Antivir+      0 Z    [synoavscan] <defunct>
+ 9244 root          0 S<   [bioset]
+ 9764 root          0 S<   [bioset]
+ 9837 root          0 S<   [bioset]
+ 9859 root          0 S<   [bioset]
+ 9860 root          0 S<   [bioset]
+ 9861 root          0 S    [md0_raid1]
+10169 system    47484 S    synoscgi
+10245 root          0 S<   [bioset]
+10248 root          0 S<   [bioset]
+10251 root          0 S<   [bioset]
+10254 root          0 S<   [bioset]
+10259 root          0 S<   [bioset]
+10269 root          0 S<   [bioset]
+10274 root          0 S<   [bioset]
+10284 root          0 S<   [bioset]
+10488 root          0 S    [kworker/u16:0]
+10754 root          0 S<   [ext4-group-desc]
+10755 root          0 S    [jbd2/md0-8]
+10756 root          0 S<   [ext4-rsv-conver]
+10868 root       3044 Ss   /usr/sbin/mcelog --daemon --foreground
+10911 synoplu+  14740 Ss   /usr/syno/sbin/synoplugind
+10922 root      24076 S<s  /usr/lib/systemd/systemd-journald
+10938 root          0 S    [kauditd]
+10975 root       4696 Ss   /sbin/dbus-daemon --session --fork --print-address
+11048 root      12680 Ss   /sbin/dbus-daemon --system --nopidfile
+11063 root          0 S<   [bioset]
+11065 root          0 S<   [kcopyd]
+11067 root          0 S<   [bioset]
+11068 root          0 S<   [bioset]
+11069 root          0 S<   [bioset]
+11070 root          0 S<   [kcopyd]
+11071 root          0 S<   [bioset]
+11072 root          0 S<   [ssd-cache]
+11073 root          0 S<   [bioset]
+11074 root          0 S<   [ipv6_addrconf]
+11097 root     104008 Ssl  /usr/syno/sbin/synonetd
+11103 root          0 S<   [dm_bufio_cache]
+11113 root      30288 Ss   /usr/syno/sbin/synoneteventd
+11190 root          0 S<   [ixgbe]
+11191 root          0 S<   [i40e]
+11204 system   1781036 Ssl /usr/bin/syslog-ng -Fe --worker-threads=8 -u system -g log
+11318 root          0 S<   [atlantic]
+11319 root          0 S<   [mlx4]
+11320 root          0 S<   [iov-01:00.00]
+11323 root          0 S<   [rdma_wq]
+11324 root          0 S<   [iov-01:00.01]
+11325 root          0 S<   [rdma_wq]
+11326 root          0 S<   [bnx2x]
+11327 root          0 S<   [bnx2x_iov]
+11507 root          0 S<   [bioset]
+11508 root          0 S<   [bioset]
+11509 root          0 S<   [bioset]
+11510 root          0 S<   [bioset]
+11612 root          0 S    [scsi_eh_9]
+11613 root          0 S<   [scsi_tmf_9]
+11614 root          0 S    [usb-storage]
+11625 root          0 S<   [uas]
+11953 root          0 S<   [bioset]
+11958 root          0 S<   [bioset]
+11959 root          0 S<   [bioset]
+11960 root          0 S    [md1_raid1]
+11980 root          0 S<   [bioset]
+12029 root       4868 Ss   /usr/lib/systemd/systemd-udevd
+12052 tokenmgr  19560 Ss   /usr/syno/bin/synotokenmgr
+12053 taskmgr   18836 Ss   /usr/syno/bin/synotaskmgr
+12055 root      10828 Ss+  /sbin/agetty --keep-baud 115200,38400,9600 ttyS0
+12066 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12067 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12068 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12070 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12072 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12073 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12074 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12075 tokenmgr  19560 S    /usr/syno/bin/synotokenmgr
+12077 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12078 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12079 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12080 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12081 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12083 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12085 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12088 taskmgr   18836 S    /usr/syno/bin/synotaskmgr
+12627 http      25188 S<   nginx: worker process
+12628 http      25188 S<   nginx: worker process
+12629 http      25188 S<   nginx: worker process
+12630 http      25188 S<   nginx: worker process
+12631 http      25188 S<   nginx: worker process
+12632 http      25188 S<   nginx: worker process
+12633 http      25188 S<   nginx: worker process
+12634 http      25188 S<   nginx: worker process
+13995 root      88144 SNsl /var/packages/SynologyDrive/target/sbin/cloud-vmtouchd
+14016 root      70708 Ss   /var/packages/SynologyDrive/target/sbin/cloud-authd
+14017 root     213952 SNsl /var/packages/SynologyDrive/target/sbin/syno-cloud-clientd
+14020 root     767612 SNsl /var/packages/SynologyDrive/target/sbin/cloud-workerd
+14029 root      50272 Ssl  /var/packages/SynologyDrive/target/usr/bin/redis-server unixsocket:/run/SynologyDrive/redis.sock
+14048 root      91780 Ssl  /var/packages/SynologyDrive/target/sbin/syncd
+14105 root     254548 Sl   /var/packages/SynologyDrive/target/sbin/syncd
+14138 root     196560 SNsl /usr/syno/sbin/synocontentextractd
+14152 root     145116 Sl   /var/packages/SynologyDrive/target/sbin/syncd
+14222 root     122828 SNs  /usr/syno/sbin/synocontentextractd
+14223 root     122828 SNs  /usr/syno/sbin/synocontentextractd
+14226 root      89612 Ss   synoscgi                                                                        --mode apid --conf /var/packages/SynologyDrive/target/etc/synoapid.json
+14262 root     729600 Ssl  /var/packages/SynologyDrive/target/sharesync/bin/cloud-daemon.exe /var/packages/SynologyDrive/etc/sharesync/daemon.conf
+14265 root     194588 Ssl  /var/packages/SynologyDrive/target/sharesync/bin/cloud-monitor /var/packages/SynologyDrive/etc/sharesync/monitor.conf
+14293 root     2028812 Ss  /var/packages/SMBService/target/usr/syno/bin/smbd-unlinkd
+14301 root      53800 Ss   /var/packages/SMBService/target/usr/sbin/nmbd -F --no-process-group
+14336 nobody    16188 Ss   /var/packages/SMBService/target/usr/syno/bin/synowstransferd
+14343 nobody    16836 Ss   /var/packages/SMBService/target/usr/syno/bin/synowsdiscoveryd
+14384 root      77244 Ss   /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14454 root      67116 SLs  /usr/local/packages/@appstore/SMBService/usr/sbin/winbindd -F --no-process-group
+14470 root      75604 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14494 root      67128 S    /usr/local/packages/@appstore/SMBService/usr/sbin/winbindd: domain child [SURVEY]
+14495 root     148580 S    /usr/local/packages/@appstore/SMBService/usr/sbin/winbindd -F --no-process-group
+14523 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14524 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14525 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14526 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14527 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14528 root      72632 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+14571 root      64604 S    /usr/local/packages/@appstore/SMBService/usr/sbin/winbindd: idmap child
+14651 root     135148 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+15528 system    47484 S    synoscgi
+17310 root     135120 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+17651 root      19260 Ss   /usr/syno/bin/synobackupd
+17654 root      23008 Ss   /usr/syno/sbin/synologaccd -f
+17672 root      65460 Ssl  /usr/syno/sbin/synotifyd
+17683 root          0 S    [kworker/0:1]
+17692 root      26772 Ss   /usr/syno/sbin/synoscheduled
+17703 root      78968 Ssl  /usr/sbin/irqbalance
+17740 root     255592 Ssl  /usr/syno/sbin/synoconfd -D
+17879 root      33720 Ss   /usr/syno/bin/synologrotated
+17972 root      49324 Ss   /var/packages/ReplicationService/target/sbin/synobtrfsreplicad --port 5566
+18158 root      26596 S    /usr/syno/sbin/synocrond
+18205 root     135440 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+18279 root       5836 Ss   /usr/sbin/dhclient -4 -d -q -lf /tmp/dhcpv4.leases.eth0 -pf /tmp/dhcpcd-eth0.pid -cf /etc/dhclient/ipv4/dhclient.conf -sf /var/run/dhclient-script eth0
+18301 root       5832 Ss   /usr/sbin/dhclient -4 -d -q -lf /tmp/dhcpv4.leases.eth2 -pf /tmp/dhcpcd-eth2.pid -cf /etc/dhclient/ipv4/dhclient.conf -sf /var/run/dhclient-script eth2
+18337 root       5836 Ss   /usr/sbin/dhclient -4 -d -q -lf /tmp/dhcpv4.leases.eth3 -pf /tmp/dhcpcd-eth3.pid -cf /etc/dhclient/ipv4/dhclient.conf -sf /var/run/dhclient-script eth3
+18393 root       5832 Ss   /usr/sbin/dhclient -4 -d -q -lf /tmp/dhcpv4.leases.eth5 -pf /tmp/dhcpcd-eth5.pid -cf /etc/dhclient/ipv4/dhclient.conf -sf /var/run/dhclient-script eth5
+18554 root       5832 Ss   /usr/sbin/dhclient -4 -d -q -lf /tmp/dhcpv4.leases.eth6 -pf /tmp/dhcpcd-eth6.pid -cf /etc/dhclient/ipv4/dhclient.conf -sf /var/run/dhclient-script eth6
+18758 root      27328 S<Ls /usr/syno/bin/findhostd
+18769 root      58212 Ssl  /usr/bin/redis-server unixsocket:/run/synocached.sock
+19448 root     186052 Ssl  /var/packages/SecureSignIn/target/invoked/invoked
+19475 root          0 S<   [bioset]
+19505 root     726012 S<sl /usr/bin/synonode /usr/syno/sbin/synoscgi_socket.js
+19508 root          0 S<   [loop0]
+19529 root          0 S<   [ext4-group-desc]
+19530 root          0 S    [jbd2/loop0-8]
+19531 root          0 S<   [ext4-rsv-conver]
+19565 root          0 S<   [raid5wq]
+19580 system    47484 S    synoscgi
+19581 root          0 S<   [bioset]
+19582 root          0 S<   [bioset]
+19583 root          0 S    [md3_defer0]
+19584 root          0 S    [md3_defer1]
+19585 root          0 S    [md3_defer2]
+19586 root          0 S    [md3_raid5]
+19588 root          0 S<   [bioset]
+19589 root          0 S<   [kworker/u17:0]
+19620 root          0 S<   [bioset]
+19621 root          0 S<   [bioset]
+19622 root          0 S    [md2_defer0]
+19623 root          0 S    [md2_defer1]
+19624 root          0 S    [md2_defer2]
+19625 root          0 S    [md2_defer3]
+19626 root          0 S    [md2_defer4]
+19627 root          0 S    [md2_defer5]
+19628 root          0 S    [md2_raid5]
+19658 root      47484 S<s  synoscgi
+19937 root          0 S<   [kdmflush]
+19938 root          0 S<   [bioset]
+19941 root          0 S<   [kdmflush]
+19942 root          0 S<   [bioset]
+20198 ntp       80816 S    /usr/sbin/chronyd -f /etc/chrony.conf
+20204 root       6820 S    avahi-daemon: running [NAS.local]
+20224 root      77252 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+20225 root      77244 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+20417 root       3240 Ss   /usr/lib/systemd/systemd-logind
+20594 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+20639 root          0 S<   [kdmflush]
+20650 root          0 S<   [bioset]
+20667 root          0 S<   [kdmflush]
+21009 root          0 S    [ecryptfs-kthrea]
+21041 root          0 S<   [bioset]
+21048 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+21381 root          0 S<   [btrfs-worker]
+21383 root          0 S<   [btrfs-worker-hi]
+21384 root          0 S<   [btrfs-delalloc]
+21385 root          0 S<   [btrfs-flush_del]
+21386 root          0 S<   [btrfs-cache]
+21387 root          0 S<   [btrfs-submit]
+21388 root          0 S<   [btrfs-fixup]
+21389 root          0 S<   [btrfs-endio]
+21390 root          0 S<   [btrfs-endio-met]
+21391 root          0 S<   [btrfs-endio-met]
+21392 root          0 S<   [btrfs-endio-met]
+21393 root          0 S<   [btrfs-endio-rai]
+21394 root          0 S<   [btrfs-endio-rep]
+21395 root          0 S<   [btrfs-rmw]
+21396 root          0 S<   [btrfs-endio-wri]
+21397 root          0 S<   [btrfs-endio-wri]
+21398 root          0 S<   [btrfs-freespace]
+21399 root          0 S<   [btrfs-delayed-m]
+21400 root          0 S<   [btrfs-readahead]
+21402 root          0 S<   [btrfs-qgroup-re]
+21403 root          0 S<   [btrfs-usrquota-]
+21404 root          0 S<   [btrfs-extent-re]
+21405 root          0 S<   [btrfs-syno_cow]
+21406 root          0 S<   [btrfs-syno_noco]
+21407 root          0 S<   [btrfs-syno_high]
+21408 root          0 S<   [btrfs-syno_high]
+21409 root          0 S<   [btrfs-syno-mult]
+21410 root          0 S<   [btrfs-syno_cow_]
+21411 root          0 S<   [btrfs-syno_cow_]
+21412 root          0 S<   [btrfs-syno-bg-c]
+21414 root          0 S<   [btrfs-worker]
+21415 root          0 S<   [btrfs-worker-hi]
+21416 root          0 S<   [btrfs-delalloc]
+21417 root          0 S<   [btrfs-flush_del]
+21418 root          0 S<   [btrfs-cache]
+21419 root          0 S<   [btrfs-submit]
+21420 root          0 S<   [btrfs-fixup]
+21421 root          0 S<   [btrfs-endio]
+21422 root          0 S<   [btrfs-endio-met]
+21423 root          0 S<   [btrfs-endio-met]
+21424 root          0 S<   [btrfs-endio-met]
+21425 root          0 S<   [btrfs-endio-rai]
+21426 root          0 S<   [btrfs-endio-rep]
+21427 root          0 S<   [btrfs-rmw]
+21428 root          0 S<   [btrfs-endio-wri]
+21429 root          0 S<   [btrfs-endio-wri]
+21430 root          0 S<   [btrfs-freespace]
+21431 root          0 S<   [btrfs-delayed-m]
+21432 root          0 S<   [btrfs-readahead]
+21434 root          0 S<   [btrfs-qgroup-re]
+21435 root          0 S<   [btrfs-usrquota-]
+21436 root          0 S<   [btrfs-extent-re]
+21437 root          0 S<   [btrfs-syno_cow]
+21438 root          0 S<   [btrfs-syno_noco]
+21439 root          0 S<   [btrfs-syno_high]
+21441 root          0 S<   [btrfs-syno_high]
+21442 root          0 S<   [btrfs-syno-mult]
+21443 root          0 S<   [btrfs-syno_cow_]
+21444 root          0 S<   [btrfs-syno_cow_]
+21445 root          0 S<   [btrfs-syno-bg-c]
+21451 root     111624 Ss   synoscgi                                                                        --mode apid --conf /var/packages/ActiveBackup/target/etc/apid.config
+21452 root     111624 S    synoscgi                                                                        --mode apid --conf /var/packages/ActiveBackup/target/etc/apid.config
+21453 root     111624 S    synoscgi                                                                        --mode apid --conf /var/packages/ActiveBackup/target/etc/apid.config
+21454 root          0 S    [btrfs-cleaner]
+21455 root          0 S    [btrfs-transacti]
+21459 root     366212 Ssl  /var/packages/ActiveBackup/target/bin/synoabk-logd
+21464 ActiveB+ 166028 Ssl  python /var/packages/ActiveBackup/target/bin/synoabk-syslog-service.py
+21469 root      71180 Ss   /var/packages/ActiveBackup/target/bin/synoabk-privileged
+21474 root      71248 Ss   /var/packages/ActiveBackup/target/bin/synoabk-fused
+21479 root      79472 Ssl  /var/packages/ActiveBackup/target/bin/synoabk-proxyd
+21487 root     144928 Ss   /var/packages/ActiveBackup/target/bin/synoabk-dsmcached
+21492 root      71436 Ss   /var/packages/ActiveBackup/target/bin/synoabk-retention
+21497 root      71168 Ss   /var/packages/ActiveBackup/target/bin/lo-server
+21502 ActiveB+  65400 Ss   /var/packages/ActiveBackup/target/bin/synodedup-engined
+21508 root      72036 Ss   /var/packages/ActiveBackup/target/bin/abk-agent-authd
+21513 root      81260 Ssl  /var/packages/ActiveBackup/target/bin/abk-agent-restored
+21518 ActiveB+  75880 Ss   /var/packages/ActiveBackup/target/bin/abk-agent-server -p 5510
+21524 root     1174228 Ssl /var/packages/ActiveBackup/target/bin/abk-agentless-server
+21529 root      66160 Ssl  /var/packages/ActiveBackup/target/bin/smbc-agent -d
+21534 ActiveB+ 111932 Ss   python /var/packages/ActiveBackup/target/bin/hypervisor_server.py
+21543 root      71600 Ss   /var/packages/ActiveBackup/target/bin/synoabk-job-queued
+21553 root     320120 Ssl  /usr/syno/bin/tcmu-runner
+21613 root          0 S    [kworker/1:0]
+21750 root          0 S    [btrfs-cleaner]
+21751 root          0 S    [btrfs-transacti]
+22384 root      37636 Ssl  /usr/syno/sbin/synocachepinfiled --config-path /usr/syno/etc/flashcache_pin_file.conf
+22406 root     135372 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+22409 ActiveB+ 684924 Sl   /var/packages/ActiveBackup/target/bin/abk-agent-server -p 5510
+22480 ActiveB+ 242540 Sl   /var/packages/ActiveBackup/target/bin/abk-agent-server -p 5510
+22490 root      26612 Ss   /usr/syno/sbin/synocrond
+22523 root     188852 Ssl  /usr/syno/sbin/synologand
+22530 root      47636 Ss   /usr/syno/sbin/syno_ip_conflict_detect --start
+22536 root      61276 Ss   synostoraged
+22537 root      61276 S    synostgd-disk
+22538 root      61388 S    synostgd-space
+22539 root      61580 S    synostgd-cache
+22541 root      61388 S    synostgd-volume
+22542 root      61276 S    synostgd-external-volume
+22595 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+22751 root       3936 SLs  /bin/vmtouch -l /usr/syno/bin/synoschedtask /usr/syno/bin/synoschedtool /usr/syno/bin/synoschedmultirun /bin/bash /usr/syno/etc/synoschedule.d/root/1.task /usr/syno/etc/synoschedule.d/root/10.task /usr/syno/etc/synoschedule.d/root/11.task /usr/syno/etc/synoschedule.d/root/12.task /usr/syno/etc/synoschedule.d/root/13.task /usr/syno/etc/synoschedule.d/root/14.task /usr/syno/etc/synoschedule.d/root/15.task /usr/syno/etc/synoschedule.d/root/16.task /usr/syno/etc/synoschedule.d/root/17.task /usr/syno/etc/synoschedule.d/root/18.task /usr/syno/etc/synoschedule.d/root/19.task /usr/syno/etc/synoschedule.d/root/2.task /usr/syno/etc/synoschedule.d/root/20.task /usr/syno/etc/synoschedule.d/root/21.task /usr/syno/etc/synoschedule.d/root/22.task /usr/syno/etc/synoschedule.d/root/23.task /usr/syno/etc/synoschedule.d/root/25.task /usr/syno/etc/synoschedule.d/root/26.task /usr/syno/etc/synoschedule.d/root/27.task /usr/syno/etc/synoschedule.d/root/3.task /usr/syno/etc/synoschedule.d/root/30.task /usr/syno/etc/synoschedule.d/root/31.task /usr/syno/etc/synoschedule.d/root/33.task /usr/syno/etc/synoschedule.d/root/38.task /usr/syno/etc/synoschedule.d/root/4.task /usr/syno/etc/synoschedule.d/root/41.task /usr/syno/etc/synoschedule.d/root/42.task /usr/syno/etc/synoschedule.d/root/44.task /usr/syno/etc/synoschedule.d/root/45.task /usr/syno/etc/synoschedule.d/root/47.task /usr/syno/etc/synoschedule.d/root/49.task /usr/syno/etc/synoschedule.d/root/5.task /usr/syno/etc/synoschedule.d/root/50.task /usr/syno/etc/synoschedule.d/root/51.task /usr/syno/etc/synoschedule.d/root/52.task /usr/syno/etc/synoschedule.d/root/53.task /usr/syno/etc/synoschedule.d/root/54.task /usr/syno/etc/synoschedule.d/root/6.task /usr/syno/etc/synoschedule.d/root/7.task /usr/syno/etc/synoschedule.d/root/8.task /usr/syno/etc/synoschedule.d/root/9.task /usr/local/etc/synoschedule.d/StorageAnalyzer/3.task /usr/local/etc/synoschedule.d/StorageAnalyzer/9.task /etc/cron.d/synosched.spacereclaim.task.task
+22845 root       2640 SLs  /bin/vmtouch -ld /usr/syno/sbin/synocrond
+22940 SURVEY\+ 136404 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+23024 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+23218 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+23239 root      17148 S<s  nginx: master process /usr/bin/nginx -c /etc/nginx/nginx.conf.run -g pid /run/nginx.pid; daemon on; master_process on;
+23376 root       2444 Ss   /usr/bin/minissdpd -i eth0 -i eth1 -i eth2 -i eth3 -i eth4 -i eth5 -i eth6
+23377 root     135084 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+23707 root      84936 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+23875 root          0 S    [kworker/u16:4]
+24175 root          0 S<   [loop1]
+24200 root      29148 Ss   /usr/syno/bin/recyclebind
+24227 root      36656 Ss   /usr/syno/bin/s2s_daemon -d
+24268 root      64224 S    /usr/bin/netatalk
+24320 root      35824 Ss   /usr/syno/sbin/hotplugd
+24328 root          0 S<   [ext4-group-desc]
+24335 root          0 S    [jbd2/loop1-8]
+24336 root          0 S<   [ext4-rsv-conver]
+24339 root      92124 S    /usr/bin/afpd -d -F /etc/afp.conf
+24340 root      64220 S    /usr/bin/cnid_metad -d -F /etc/afp.conf
+24354 root     110124 S<s  /usr/syno/sbin/synocgid -D
+24361 root     135100 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+24627 root     135120 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+24726 root       3400 Ss   /usr/sbin/crond -n
+24799 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+24976 root      61008 Ss   synosmpkgd
+25179 root      33612 Ss   /usr/syno/bin/synodisklatencyd
+25368 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25404 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25438 root     859304 Ssl  /usr/syno/bin/scemd
+25562 root     137460 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25731 root     135188 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25752 root     135156 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25934 root     100384 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+25958 root          0 S    [kworker/u16:1]
+25961 root          0 S    [kworker/u16:7]
+25962 root          0 S    [kworker/u16:8]
+26831 root          0 S    [kworker/4:1]
+26926 SURVEY\+ 135484 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27219 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27233 root     135160 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27347 root      50100 SNs  /usr/syno/sbin/synoindexplugind
+27481 root     135432 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27692 root     136284 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27835 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+27874 SURVEY\+ 135724 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+28320 postgres 694972 Ss   postgres: postgres mediaserver [local] idle
+28335 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+28347 root     135480 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+28364 root     135392 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+28455 root          0 S    [kworker/2:6]
+28665 root      95484 SNsl /usr/syno/sbin/synoindexworkerd
+28667 postgres 664196 Ss   postgres: postgres synoindex [local] idle
+28847 root      25784 SL   /run/synocrond/synocrond-job-builtin-synodatacollect-udc -c udc
+29135 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+29192 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+29238 root     285784 Ssl  /var/packages/USBCopy/target/sbin/usb-copyd
+29283 postgres 661684 Ss   /usr/bin/postgres -D /var/services/pgsql
+29352 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+29373 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+29577 postgres 662696 Ss   postgres: checkpointer   
+29578 postgres 662196 Ss   postgres: background writer   
+29579 postgres 661684 Ss   postgres: walwriter   
+29580 postgres 663364 Ss   postgres: logical replication launcher  
+29626 root          0 S    [kworker/5:3]
+29809 root      76300 Ss   /usr/bin/snmpd -fLn -c /etc/snmp/snmpd.conf -p /var/run/snmpd.pid udp:127.0.0.1:161,tcp:127.0.0.1:161
+29881 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+29998 root      99808 S<s  /usr/syno/sbin/synosnmpcd
+30037 root          0 S    [RODSP_ODX_LOGIN]
+30038 root          0 S    [RODSP_VLUN_LOGI]
+30039 root          0 S    [RODSP_VDISK_LOG]
+30059 root          0 D    [EP_JNL_TASK]
+30061 root          0 S    [iscsi_np]
+30062 root          0 S    [iscsi_np]
+30063 root          0 S    [iscsi_np]
+30065 root     1659776 Ssl /var/packages/SupportService/target/bin/synomibgrpcclient daemon --conf /var/packages/SupportService/target/configs/synomibgrpcclient_conf.json
+30070 root     1614224 Ssl /var/packages/SupportService/target/bin/synomibactiononlineupdater daemon --conf /var/packages/SupportService/target/configs/synomibonlineupdater_conf.json
+30085 root          0 S<   [fc_exch_workque]
+30086 root          0 S<   [fc_rport_eq]
+30092 root          0 S    [ocs_proxy]
+30095 root      67748 Ss   /var/packages/ScsiTarget/target/bin/synoscsitmonitor
+30098 root     515300 Ssl  /var/packages/ScsiTarget/target/bin/scsi_plugin_server
+30168 root          0 S    [iscsi_ttx]
+30169 root          0 S<   [iscsi_trx]
+30191 root          0 S    [iscsi_ttx]
+30192 root          0 S<   [iscsi_trx]
+30497 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+30519 root     135456 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+30531 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+30553 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+30722 root          0 S<   [kworker/u17:8]
+30734 root          0 S    [kworker/u16:2]
+30735 root          0 S    [kworker/u16:3]
+30819 root          0 S    [kworker/7:2]
+30824 root      42028 S    python3 /var/packages/SnapshotReplication/target/user.data.collector/synouserdata_dr
+30844 root          0 S    [kworker/6:4]
+30982 root      74976 Ss   synowebapi --exec api=SYNO.Entry.Request method=request version=2 mode "parallel" compound [{"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "01-SG-2023", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "ActiveBackupforBusiness", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "AD-Backup", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "ADMIN-TC", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Attendance", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Backup", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Building-Branch", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CommonShareFolder", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CRS-GIS", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CRS-IMAGE-ARCHIVING", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CRS-IMAGE-ARCHIVING-2", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CRS-Mapping", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "CSC-Mapping", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "DMS", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "DSG-GeoInfomatics", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GEODETIC", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GeoNames", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS Data", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS-BACKUP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS-GeoNames", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS-MAPPING", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GIS_AIR", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GNB-Backup", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GNB-Mapping", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "GNB-Public", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Intel", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "LIS-GEO-TIFF", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "LIS-GIS", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "LIS-SpSurvey", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "LIS_Branch", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "LIS_DATA", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Logs", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Mail-Tacking-Backup", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "MB-Daily-Backup", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "MB_BACKUP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "MB_Public", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "MDTU", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "NSDI", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "Photo Unit", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "PhotoLab", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "RM", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "RnD", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "RnD-NSDI", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "RSBranch", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SG", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SG-OFFICE", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SGO_IMAGE_BACKUP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SHARE-IT", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SLT-BACKUP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "SoftWare", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "STU-DATA", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "TR Branch", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "VM-BACKP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "VM1_NEW_BACKUP_NEW", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}, {"api": "SYNO.Core.Share.Snapshot", "method": "list", "version": 2, "name": "VM2_NEW_BACKUP", "additional": ["worm_lock"], "filter": {"attr": ["worm_lock==true"]}}]
+31124 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+31231 root     1340500 Ssl /var/packages/LogCenter/target/usr/bin/syslog-ng --cfgfile=/var/packages/LogCenter/target/etc/syslog-ng/syslog-ng.conf -Fe --worker-threads=8 --no-caps
+31358 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+31445 root          0 S    [kworker/4:2]
+31709 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+31748 root     134960 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+31819 root      62720 Ss   /var/packages/FileStation/target/sbin/thumbd
+31820 root      62720 S    /var/packages/FileStation/target/sbin/thumbd
+31921 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+32027 root          0 S    [kworker/3:5]
+32029 root          0 S    [kworker/3:7]
+32033 root          0 S    [kworker/3:11]
+32165 root     135348 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+32219 root          0 S    [kworker/5:0]
+32226 root          0 S    [kworker/7:0]
+32245 root          0 S    [kworker/6:0]
+32267 root     495776 Ssl  /var/packages/SynoFinder/target/sbin/synoelasticd
+32321 root      21744 Ss   /usr/syno/sbin/synoindexnotifyd
+32323 root      70744 SNs  /usr/syno/sbin/synoindexscand
+32324 root      49952 SNs  /usr/syno/sbin/synomediaparserd
+32331 root      20368 SNs  /usr/syno/sbin/synoindexd
+32335 root     134988 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+32344 root     1195364 Ssl /var/packages/SynoFinder/target/sbin/fileindexd
+32634 root          0 S    [kworker/2:0]
+32637 root          0 S    [kworker/0:0]
+32648 root     135456 S    /usr/local/packages/@appstore/SMBService/usr/sbin/smbd -F --no-process-group
+32760 Synolog+   7404 Ss   /var/packages/SynologyApplicationService/target/daemon/pgbouncer -q /var/packages/SynologyApplicationService/target/etc/pgbouncer.ini

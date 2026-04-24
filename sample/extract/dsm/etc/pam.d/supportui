@@ -1,0 +1,6 @@
+auth    [success=1]                   pam_syno_support.so webui
+auth    [default=die]                 pam_syno_log_fail.so []
+auth    [default=done]                pam_syno_log_success.so [] log=no
+account [success=1 acct_expired=die authtok_expired=die new_authtok_reqd=die default=ignore] pam_unix.so
+account [default=die]                 pam_syno_log_fail.so [] log=no
+account [default=done]                pam_syno_log_success.so []

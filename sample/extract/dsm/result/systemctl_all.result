@@ -1,0 +1,887 @@
+  UNIT                                                                                                                 LOAD      ACTIVE     SUB       DESCRIPTION
+  dev-dm\x2d0.device                                                                                                   loaded    active     plugged   /dev/dm-0
+  dev-dm\x2d1.device                                                                                                   loaded    active     plugged   /dev/dm-1
+  dev-dm\x2d2.device                                                                                                   loaded    active     plugged   /dev/dm-2
+  dev-dm\x2d3.device                                                                                                   loaded    active     plugged   /dev/dm-3
+  dev-eth0.device                                                                                                      loaded    active     plugged   /dev/eth0
+  dev-eth1.device                                                                                                      loaded    active     plugged   /dev/eth1
+  dev-eth2.device                                                                                                      loaded    active     plugged   /dev/eth2
+  dev-eth3.device                                                                                                      loaded    active     plugged   /dev/eth3
+  dev-eth4.device                                                                                                      loaded    active     plugged   /dev/eth4
+  dev-eth5.device                                                                                                      loaded    active     plugged   /dev/eth5
+  dev-eth6.device                                                                                                      loaded    active     plugged   /dev/eth6
+  dev-loop0.device                                                                                                     loaded    active     plugged   /dev/loop0
+  dev-loop1.device                                                                                                     loaded    active     plugged   /dev/loop1
+  dev-mapper-cachedev_0.device                                                                                         loaded    activating tentative /dev/mapper/cachedev_0
+  dev-mapper-cachedev_1.device                                                                                         loaded    activating tentative /dev/mapper/cachedev_1
+  dev-md0.device                                                                                                       loaded    active     plugged   /dev/md0
+  dev-md1.device                                                                                                       loaded    active     plugged   /dev/md1
+  dev-md2.device                                                                                                       loaded    active     plugged   /dev/md2
+  dev-md3.device                                                                                                       loaded    active     plugged   /dev/md3
+  dev-sda.device                                                                                                       loaded    active     plugged   /dev/sda
+  dev-sda1.device                                                                                                      loaded    active     plugged   /dev/sda1
+  dev-sda2.device                                                                                                      loaded    active     plugged   /dev/sda2
+  dev-sda3.device                                                                                                      loaded    active     plugged   /dev/sda3
+  dev-sdb.device                                                                                                       loaded    active     plugged   /dev/sdb
+  dev-sdb1.device                                                                                                      loaded    active     plugged   /dev/sdb1
+  dev-sdb2.device                                                                                                      loaded    active     plugged   /dev/sdb2
+  dev-sdb3.device                                                                                                      loaded    active     plugged   /dev/sdb3
+  dev-sdc.device                                                                                                       loaded    active     plugged   /dev/sdc
+  dev-sdc1.device                                                                                                      loaded    active     plugged   /dev/sdc1
+  dev-sdc2.device                                                                                                      loaded    active     plugged   /dev/sdc2
+  dev-sdc3.device                                                                                                      loaded    active     plugged   /dev/sdc3
+  dev-sdd.device                                                                                                       loaded    active     plugged   /dev/sdd
+  dev-sdd1.device                                                                                                      loaded    active     plugged   /dev/sdd1
+  dev-sdd2.device                                                                                                      loaded    active     plugged   /dev/sdd2
+  dev-sdd3.device                                                                                                      loaded    active     plugged   /dev/sdd3
+  dev-sde.device                                                                                                       loaded    active     plugged   /dev/sde
+  dev-sde1.device                                                                                                      loaded    active     plugged   /dev/sde1
+  dev-sde2.device                                                                                                      loaded    active     plugged   /dev/sde2
+  dev-sde3.device                                                                                                      loaded    active     plugged   /dev/sde3
+  dev-sdf.device                                                                                                       loaded    active     plugged   /dev/sdf
+  dev-sdf1.device                                                                                                      loaded    active     plugged   /dev/sdf1
+  dev-sdf2.device                                                                                                      loaded    active     plugged   /dev/sdf2
+  dev-sdf3.device                                                                                                      loaded    active     plugged   /dev/sdf3
+  dev-sdg.device                                                                                                       loaded    active     plugged   /dev/sdg
+  dev-sdg1.device                                                                                                      loaded    active     plugged   /dev/sdg1
+  dev-sdg2.device                                                                                                      loaded    active     plugged   /dev/sdg2
+  dev-sdg3.device                                                                                                      loaded    active     plugged   /dev/sdg3
+  dev-sdh.device                                                                                                       loaded    active     plugged   /dev/sdh
+  dev-sdh1.device                                                                                                      loaded    active     plugged   /dev/sdh1
+  dev-sdh2.device                                                                                                      loaded    active     plugged   /dev/sdh2
+  dev-sdh3.device                                                                                                      loaded    active     plugged   /dev/sdh3
+  dev-sdi.device                                                                                                       loaded    active     plugged   /dev/sdi
+  dev-sdi1.device                                                                                                      loaded    active     plugged   /dev/sdi1
+  dev-sdi2.device                                                                                                      loaded    active     plugged   /dev/sdi2
+  dev-sdi3.device                                                                                                      loaded    active     plugged   /dev/sdi3
+  dev-sdj.device                                                                                                       loaded    active     plugged   /dev/sdj
+  dev-sdj1.device                                                                                                      loaded    active     plugged   /dev/sdj1
+  dev-sdj2.device                                                                                                      loaded    active     plugged   /dev/sdj2
+  dev-sdj3.device                                                                                                      loaded    active     plugged   /dev/sdj3
+  dev-sdk.device                                                                                                       loaded    active     plugged   /dev/sdk
+  dev-sdk1.device                                                                                                      loaded    active     plugged   /dev/sdk1
+  dev-sdk2.device                                                                                                      loaded    active     plugged   /dev/sdk2
+  dev-sdk3.device                                                                                                      loaded    active     plugged   /dev/sdk3
+  dev-sdl.device                                                                                                       loaded    active     plugged   /dev/sdl
+  dev-sdl1.device                                                                                                      loaded    active     plugged   /dev/sdl1
+  dev-sdl2.device                                                                                                      loaded    active     plugged   /dev/sdl2
+  dev-sdl3.device                                                                                                      loaded    active     plugged   /dev/sdl3
+  dev-sdma.device                                                                                                      loaded    active     plugged   /dev/sdma
+  dev-sdma1.device                                                                                                     loaded    active     plugged   /dev/sdma1
+  dev-sdma2.device                                                                                                     loaded    active     plugged   /dev/sdma2
+  dev-sdma3.device                                                                                                     loaded    active     plugged   /dev/sdma3
+  dev-sdmb.device                                                                                                      loaded    active     plugged   /dev/sdmb
+  dev-sdmb1.device                                                                                                     loaded    active     plugged   /dev/sdmb1
+  dev-sdmb2.device                                                                                                     loaded    active     plugged   /dev/sdmb2
+  dev-sdmb3.device                                                                                                     loaded    active     plugged   /dev/sdmb3
+  dev-sdmc.device                                                                                                      loaded    active     plugged   /dev/sdmc
+  dev-sdmc1.device                                                                                                     loaded    active     plugged   /dev/sdmc1
+  dev-sdmc2.device                                                                                                     loaded    active     plugged   /dev/sdmc2
+  dev-sdmc3.device                                                                                                     loaded    active     plugged   /dev/sdmc3
+  dev-sdna.device                                                                                                      loaded    active     plugged   /dev/sdna
+  dev-sdna1.device                                                                                                     loaded    active     plugged   /dev/sdna1
+  dev-sdna2.device                                                                                                     loaded    active     plugged   /dev/sdna2
+  dev-sdna3.device                                                                                                     loaded    active     plugged   /dev/sdna3
+  dev-sdnb.device                                                                                                      loaded    active     plugged   /dev/sdnb
+  dev-sdnb1.device                                                                                                     loaded    active     plugged   /dev/sdnb1
+  dev-sdnb2.device                                                                                                     loaded    active     plugged   /dev/sdnb2
+  dev-sdnb3.device                                                                                                     loaded    active     plugged   /dev/sdnb3
+  dev-sdnc.device                                                                                                      loaded    active     plugged   /dev/sdnc
+  dev-sdnc1.device                                                                                                     loaded    active     plugged   /dev/sdnc1
+  dev-sdnc2.device                                                                                                     loaded    active     plugged   /dev/sdnc2
+  dev-sdnc3.device                                                                                                     loaded    active     plugged   /dev/sdnc3
+  dev-sdoa.device                                                                                                      loaded    active     plugged   /dev/sdoa
+  dev-sdoa1.device                                                                                                     loaded    active     plugged   /dev/sdoa1
+  dev-sdoa2.device                                                                                                     loaded    active     plugged   /dev/sdoa2
+  dev-sdoa3.device                                                                                                     loaded    active     plugged   /dev/sdoa3
+  dev-sdob.device                                                                                                      loaded    active     plugged   /dev/sdob
+  dev-sdob1.device                                                                                                     loaded    active     plugged   /dev/sdob1
+  dev-sdob2.device                                                                                                     loaded    active     plugged   /dev/sdob2
+  dev-sdob3.device                                                                                                     loaded    active     plugged   /dev/sdob3
+  dev-sdoc.device                                                                                                      loaded    active     plugged   /dev/sdoc
+  dev-sdoc1.device                                                                                                     loaded    active     plugged   /dev/sdoc1
+  dev-sdoc2.device                                                                                                     loaded    active     plugged   /dev/sdoc2
+  dev-sdoc3.device                                                                                                     loaded    active     plugged   /dev/sdoc3
+  dev-sdpa.device                                                                                                      loaded    active     plugged   /dev/sdpa
+  dev-sdpa1.device                                                                                                     loaded    active     plugged   /dev/sdpa1
+  dev-sdpa2.device                                                                                                     loaded    active     plugged   /dev/sdpa2
+  dev-sdpa3.device                                                                                                     loaded    active     plugged   /dev/sdpa3
+  dev-sdpb.device                                                                                                      loaded    active     plugged   /dev/sdpb
+  dev-sdpb1.device                                                                                                     loaded    active     plugged   /dev/sdpb1
+  dev-sdpb2.device                                                                                                     loaded    active     plugged   /dev/sdpb2
+  dev-sdpb3.device                                                                                                     loaded    active     plugged   /dev/sdpb3
+  dev-sdpc.device                                                                                                      loaded    active     plugged   /dev/sdpc
+  dev-sdpc1.device                                                                                                     loaded    active     plugged   /dev/sdpc1
+  dev-sdpc2.device                                                                                                     loaded    active     plugged   /dev/sdpc2
+  dev-sdpc3.device                                                                                                     loaded    active     plugged   /dev/sdpc3
+  dev-sdqa.device                                                                                                      loaded    active     plugged   /dev/sdqa
+  dev-sdqa1.device                                                                                                     loaded    active     plugged   /dev/sdqa1
+  dev-sdqa2.device                                                                                                     loaded    active     plugged   /dev/sdqa2
+  dev-sdqa3.device                                                                                                     loaded    active     plugged   /dev/sdqa3
+  dev-sdqb.device                                                                                                      loaded    active     plugged   /dev/sdqb
+  dev-sdqb1.device                                                                                                     loaded    active     plugged   /dev/sdqb1
+  dev-sdqb2.device                                                                                                     loaded    active     plugged   /dev/sdqb2
+  dev-sdqb3.device                                                                                                     loaded    active     plugged   /dev/sdqb3
+  dev-sdqc.device                                                                                                      loaded    active     plugged   /dev/sdqc
+  dev-sdqc1.device                                                                                                     loaded    active     plugged   /dev/sdqc1
+  dev-sdqc2.device                                                                                                     loaded    active     plugged   /dev/sdqc2
+  dev-sdqc3.device                                                                                                     loaded    active     plugged   /dev/sdqc3
+  dev-sdra.device                                                                                                      loaded    active     plugged   /dev/sdra
+  dev-sdra1.device                                                                                                     loaded    active     plugged   /dev/sdra1
+  dev-sdra2.device                                                                                                     loaded    active     plugged   /dev/sdra2
+  dev-sdra3.device                                                                                                     loaded    active     plugged   /dev/sdra3
+  dev-sdrb.device                                                                                                      loaded    active     plugged   /dev/sdrb
+  dev-sdrb1.device                                                                                                     loaded    active     plugged   /dev/sdrb1
+  dev-sdrb2.device                                                                                                     loaded    active     plugged   /dev/sdrb2
+  dev-sdrb3.device                                                                                                     loaded    active     plugged   /dev/sdrb3
+  dev-sdrc.device                                                                                                      loaded    active     plugged   /dev/sdrc
+  dev-sdrc1.device                                                                                                     loaded    active     plugged   /dev/sdrc1
+  dev-sdrc2.device                                                                                                     loaded    active     plugged   /dev/sdrc2
+  dev-sdrc3.device                                                                                                     loaded    active     plugged   /dev/sdrc3
+  dev-sdsa.device                                                                                                      loaded    active     plugged   /dev/sdsa
+  dev-sdsa1.device                                                                                                     loaded    active     plugged   /dev/sdsa1
+  dev-sdsa2.device                                                                                                     loaded    active     plugged   /dev/sdsa2
+  dev-sdsa3.device                                                                                                     loaded    active     plugged   /dev/sdsa3
+  dev-sdsb.device                                                                                                      loaded    active     plugged   /dev/sdsb
+  dev-sdsb1.device                                                                                                     loaded    active     plugged   /dev/sdsb1
+  dev-sdsb2.device                                                                                                     loaded    active     plugged   /dev/sdsb2
+  dev-sdsb3.device                                                                                                     loaded    active     plugged   /dev/sdsb3
+  dev-sdsc.device                                                                                                      loaded    active     plugged   /dev/sdsc
+  dev-sdsc1.device                                                                                                     loaded    active     plugged   /dev/sdsc1
+  dev-sdsc2.device                                                                                                     loaded    active     plugged   /dev/sdsc2
+  dev-sdsc3.device                                                                                                     loaded    active     plugged   /dev/sdsc3
+  dev-sdta.device                                                                                                      loaded    active     plugged   /dev/sdta
+  dev-sdta1.device                                                                                                     loaded    active     plugged   /dev/sdta1
+  dev-sdta2.device                                                                                                     loaded    active     plugged   /dev/sdta2
+  dev-sdta3.device                                                                                                     loaded    active     plugged   /dev/sdta3
+  dev-sdtb.device                                                                                                      loaded    active     plugged   /dev/sdtb
+  dev-sdtb1.device                                                                                                     loaded    active     plugged   /dev/sdtb1
+  dev-sdtb2.device                                                                                                     loaded    active     plugged   /dev/sdtb2
+  dev-sdtb3.device                                                                                                     loaded    active     plugged   /dev/sdtb3
+  dev-sdtc.device                                                                                                      loaded    active     plugged   /dev/sdtc
+  dev-sdtc1.device                                                                                                     loaded    active     plugged   /dev/sdtc1
+  dev-sdtc2.device                                                                                                     loaded    active     plugged   /dev/sdtc2
+  dev-sdtc3.device                                                                                                     loaded    active     plugged   /dev/sdtc3
+  dev-sit0.device                                                                                                      loaded    active     plugged   /dev/sit0
+  dev-synoboot.device                                                                                                  loaded    active     plugged   /dev/synoboot
+  dev-synoboot1.device                                                                                                 loaded    active     plugged   /dev/synoboot1
+  dev-synoboot2.device                                                                                                 loaded    active     plugged   /dev/synoboot2
+  dev-ttyS0.device                                                                                                     loaded    inactive   dead      dev-ttyS0.device
+  dev-zram0.device                                                                                                     loaded    active     plugged   /dev/zram0
+  dev-zram1.device                                                                                                     loaded    active     plugged   /dev/zram1
+  dev-zram2.device                                                                                                     loaded    active     plugged   /dev/zram2
+  dev-zram3.device                                                                                                     loaded    active     plugged   /dev/zram3
+  sys-devices-pci0000:00-0000:00:01.0-0000:01:00.0-net-eth5.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.0/net/eth5
+  sys-devices-pci0000:00-0000:00:01.0-0000:01:00.1-net-eth6.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:01.0/0000:01:00.1/net/eth6
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:0-8:0:0:0-block-sda-sda1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:0/8:0:0:0/block/sda/sda1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:0-8:0:0:0-block-sda-sda2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:0/8:0:0:0/block/sda/sda2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:0-8:0:0:0-block-sda-sda3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:0/8:0:0:0/block/sda/sda3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:0-8:0:0:0-block-sda.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:0/8:0:0:0/block/sda
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:1-8:0:1:0-block-sdb-sdb1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:1/8:0:1:0/block/sdb/sdb1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:1-8:0:1:0-block-sdb-sdb2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:1/8:0:1:0/block/sdb/sdb2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:1-8:0:1:0-block-sdb-sdb3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:1/8:0:1:0/block/sdb/sdb3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:1-8:0:1:0-block-sdb.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:1/8:0:1:0/block/sdb
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:10-8:0:10:0-block-sdk-sdk1.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:10/8:0:10:0/block/sdk/sdk1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:10-8:0:10:0-block-sdk-sdk2.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:10/8:0:10:0/block/sdk/sdk2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:10-8:0:10:0-block-sdk-sdk3.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:10/8:0:10:0/block/sdk/sdk3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:10-8:0:10:0-block-sdk.device                        loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:10/8:0:10:0/block/sdk
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:11-8:0:11:0-block-sdl-sdl1.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:11/8:0:11:0/block/sdl/sdl1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:11-8:0:11:0-block-sdl-sdl2.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:11/8:0:11:0/block/sdl/sdl2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:11-8:0:11:0-block-sdl-sdl3.device                   loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:11/8:0:11:0/block/sdl/sdl3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:11-8:0:11:0-block-sdl.device                        loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:11/8:0:11:0/block/sdl
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:2-8:0:2:0-block-sdc-sdc1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:2/8:0:2:0/block/sdc/sdc1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:2-8:0:2:0-block-sdc-sdc2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:2/8:0:2:0/block/sdc/sdc2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:2-8:0:2:0-block-sdc-sdc3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:2/8:0:2:0/block/sdc/sdc3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:2-8:0:2:0-block-sdc.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:2/8:0:2:0/block/sdc
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:3-8:0:3:0-block-sdd-sdd1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:3/8:0:3:0/block/sdd/sdd1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:3-8:0:3:0-block-sdd-sdd2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:3/8:0:3:0/block/sdd/sdd2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:3-8:0:3:0-block-sdd-sdd3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:3/8:0:3:0/block/sdd/sdd3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:3-8:0:3:0-block-sdd.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:3/8:0:3:0/block/sdd
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:4-8:0:4:0-block-sde-sde1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:4/8:0:4:0/block/sde/sde1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:4-8:0:4:0-block-sde-sde2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:4/8:0:4:0/block/sde/sde2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:4-8:0:4:0-block-sde-sde3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:4/8:0:4:0/block/sde/sde3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:4-8:0:4:0-block-sde.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:4/8:0:4:0/block/sde
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:5-8:0:5:0-block-sdf-sdf1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:5/8:0:5:0/block/sdf/sdf1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:5-8:0:5:0-block-sdf-sdf2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:5/8:0:5:0/block/sdf/sdf2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:5-8:0:5:0-block-sdf-sdf3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:5/8:0:5:0/block/sdf/sdf3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:5-8:0:5:0-block-sdf.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:5/8:0:5:0/block/sdf
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:6-8:0:6:0-block-sdg-sdg1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:6/8:0:6:0/block/sdg/sdg1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:6-8:0:6:0-block-sdg-sdg2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:6/8:0:6:0/block/sdg/sdg2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:6-8:0:6:0-block-sdg-sdg3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:6/8:0:6:0/block/sdg/sdg3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:6-8:0:6:0-block-sdg.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:6/8:0:6:0/block/sdg
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:7-8:0:7:0-block-sdh-sdh1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:7/8:0:7:0/block/sdh/sdh1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:7-8:0:7:0-block-sdh-sdh2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:7/8:0:7:0/block/sdh/sdh2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:7-8:0:7:0-block-sdh-sdh3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:7/8:0:7:0/block/sdh/sdh3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:7-8:0:7:0-block-sdh.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:7/8:0:7:0/block/sdh
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:8-8:0:8:0-block-sdi-sdi1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:8/8:0:8:0/block/sdi/sdi1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:8-8:0:8:0-block-sdi-sdi2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:8/8:0:8:0/block/sdi/sdi2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:8-8:0:8:0-block-sdi-sdi3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:8/8:0:8:0/block/sdi/sdi3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:8-8:0:8:0-block-sdi.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:8/8:0:8:0/block/sdi
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:9-8:0:9:0-block-sdj-sdj1.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:9/8:0:9:0/block/sdj/sdj1
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:9-8:0:9:0-block-sdj-sdj2.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:9/8:0:9:0/block/sdj/sdj2
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:9-8:0:9:0-block-sdj-sdj3.device                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:9/8:0:9:0/block/sdj/sdj3
+  sys-devices-pci0000:00-0000:00:03.0-0000:08:00.0-host8-target8:0:9-8:0:9:0-block-sdj.device                          loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.0/0000:08:00.0/host8/target8:0:9/8:0:9:0/block/sdj
+  sys-devices-pci0000:00-0000:00:03.2-0000:09:00.0-net-eth4.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:03.2/0000:09:00.0/net/eth4
+  sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d3-1\x2d3:1.0-host9-target9:0:0-9:0:0:0-block-synoboot-synoboot1.device loaded    active     plugged   /sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/host9/target9:0:0/9:0:0:0/block/synoboot/synoboot1
+  sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d3-1\x2d3:1.0-host9-target9:0:0-9:0:0:0-block-synoboot-synoboot2.device loaded    active     plugged   /sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/host9/target9:0:0/9:0:0:0/block/synoboot/synoboot2
+  sys-devices-pci0000:00-0000:00:14.0-usb1-1\x2d3-1\x2d3:1.0-host9-target9:0:0-9:0:0:0-block-synoboot.device           loaded    active     plugged   /sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/host9/target9:0:0/9:0:0:0/block/synoboot
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:0:0-0:0:0:0-block-sdma-sdma1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:0:0/0:0:0:0/block/sdma/sdma1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:0:0-0:0:0:0-block-sdma-sdma2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:0:0/0:0:0:0/block/sdma/sdma2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:0:0-0:0:0:0-block-sdma-sdma3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:0:0/0:0:0:0/block/sdma/sdma3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:0:0-0:0:0:0-block-sdma.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:0:0/0:0:0:0/block/sdma
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:1:0-0:1:0:0-block-sdmb-sdmb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:1:0/0:1:0:0/block/sdmb/sdmb1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:1:0-0:1:0:0-block-sdmb-sdmb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:1:0/0:1:0:0/block/sdmb/sdmb2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:1:0-0:1:0:0-block-sdmb-sdmb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:1:0/0:1:0:0/block/sdmb/sdmb3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:1:0-0:1:0:0-block-sdmb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:1:0/0:1:0:0/block/sdmb
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:2:0-0:2:0:0-block-sdmc-sdmc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:2:0/0:2:0:0/block/sdmc/sdmc1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:2:0-0:2:0:0-block-sdmc-sdmc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:2:0/0:2:0:0/block/sdmc/sdmc2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:2:0-0:2:0:0-block-sdmc-sdmc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:2:0/0:2:0:0/block/sdmc/sdmc3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata1-host0-target0:2:0-0:2:0:0-block-sdmc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata1/host0/target0:2:0/0:2:0:0/block/sdmc
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:0:0-1:0:0:0-block-sdna-sdna1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:0:0/1:0:0:0/block/sdna/sdna1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:0:0-1:0:0:0-block-sdna-sdna2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:0:0/1:0:0:0/block/sdna/sdna2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:0:0-1:0:0:0-block-sdna-sdna3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:0:0/1:0:0:0/block/sdna/sdna3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:0:0-1:0:0:0-block-sdna.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:0:0/1:0:0:0/block/sdna
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:1:0-1:1:0:0-block-sdnb-sdnb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:1:0/1:1:0:0/block/sdnb/sdnb1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:1:0-1:1:0:0-block-sdnb-sdnb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:1:0/1:1:0:0/block/sdnb/sdnb2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:1:0-1:1:0:0-block-sdnb-sdnb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:1:0/1:1:0:0/block/sdnb/sdnb3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:1:0-1:1:0:0-block-sdnb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:1:0/1:1:0:0/block/sdnb
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:2:0-1:2:0:0-block-sdnc-sdnc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:2:0/1:2:0:0/block/sdnc/sdnc1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:2:0-1:2:0:0-block-sdnc-sdnc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:2:0/1:2:0:0/block/sdnc/sdnc2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:2:0-1:2:0:0-block-sdnc-sdnc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:2:0/1:2:0:0/block/sdnc/sdnc3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata2-host1-target1:2:0-1:2:0:0-block-sdnc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata2/host1/target1:2:0/1:2:0:0/block/sdnc
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:0:0-2:0:0:0-block-sdoa-sdoa1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:0:0/2:0:0:0/block/sdoa/sdoa1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:0:0-2:0:0:0-block-sdoa-sdoa2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:0:0/2:0:0:0/block/sdoa/sdoa2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:0:0-2:0:0:0-block-sdoa-sdoa3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:0:0/2:0:0:0/block/sdoa/sdoa3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:0:0-2:0:0:0-block-sdoa.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:0:0/2:0:0:0/block/sdoa
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:1:0-2:1:0:0-block-sdob-sdob1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:1:0/2:1:0:0/block/sdob/sdob1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:1:0-2:1:0:0-block-sdob-sdob2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:1:0/2:1:0:0/block/sdob/sdob2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:1:0-2:1:0:0-block-sdob-sdob3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:1:0/2:1:0:0/block/sdob/sdob3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:1:0-2:1:0:0-block-sdob.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:1:0/2:1:0:0/block/sdob
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:2:0-2:2:0:0-block-sdoc-sdoc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:2:0/2:2:0:0/block/sdoc/sdoc1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:2:0-2:2:0:0-block-sdoc-sdoc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:2:0/2:2:0:0/block/sdoc/sdoc2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:2:0-2:2:0:0-block-sdoc-sdoc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:2:0/2:2:0:0/block/sdoc/sdoc3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata3-host2-target2:2:0-2:2:0:0-block-sdoc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata3/host2/target2:2:0/2:2:0:0/block/sdoc
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:0:0-3:0:0:0-block-sdpa-sdpa1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:0:0/3:0:0:0/block/sdpa/sdpa1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:0:0-3:0:0:0-block-sdpa-sdpa2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:0:0/3:0:0:0/block/sdpa/sdpa2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:0:0-3:0:0:0-block-sdpa-sdpa3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:0:0/3:0:0:0/block/sdpa/sdpa3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:0:0-3:0:0:0-block-sdpa.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:0:0/3:0:0:0/block/sdpa
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:1:0-3:1:0:0-block-sdpb-sdpb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:1:0/3:1:0:0/block/sdpb/sdpb1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:1:0-3:1:0:0-block-sdpb-sdpb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:1:0/3:1:0:0/block/sdpb/sdpb2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:1:0-3:1:0:0-block-sdpb-sdpb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:1:0/3:1:0:0/block/sdpb/sdpb3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:1:0-3:1:0:0-block-sdpb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:1:0/3:1:0:0/block/sdpb
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:2:0-3:2:0:0-block-sdpc-sdpc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:2:0/3:2:0:0/block/sdpc/sdpc1
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:2:0-3:2:0:0-block-sdpc-sdpc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:2:0/3:2:0:0/block/sdpc/sdpc2
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:2:0-3:2:0:0-block-sdpc-sdpc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:2:0/3:2:0:0/block/sdpc/sdpc3
+  sys-devices-pci0000:00-0000:00:1c.0-0000:0a:00.0-ata4-host3-target3:2:0-3:2:0:0-block-sdpc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.0/0000:0a:00.0/ata4/host3/target3:2:0/3:2:0:0/block/sdpc
+  sys-devices-pci0000:00-0000:00:1c.2-0000:0b:00.0-net-eth3.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.2/0000:0b:00.0/net/eth3
+  sys-devices-pci0000:00-0000:00:1c.3-0000:0c:00.0-net-eth2.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.3/0000:0c:00.0/net/eth2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:0:0-4:0:0:0-block-sdqa-sdqa1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:0:0/4:0:0:0/block/sdqa/sdqa1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:0:0-4:0:0:0-block-sdqa-sdqa2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:0:0/4:0:0:0/block/sdqa/sdqa2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:0:0-4:0:0:0-block-sdqa-sdqa3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:0:0/4:0:0:0/block/sdqa/sdqa3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:0:0-4:0:0:0-block-sdqa.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:0:0/4:0:0:0/block/sdqa
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:1:0-4:1:0:0-block-sdqb-sdqb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:1:0/4:1:0:0/block/sdqb/sdqb1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:1:0-4:1:0:0-block-sdqb-sdqb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:1:0/4:1:0:0/block/sdqb/sdqb2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:1:0-4:1:0:0-block-sdqb-sdqb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:1:0/4:1:0:0/block/sdqb/sdqb3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:1:0-4:1:0:0-block-sdqb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:1:0/4:1:0:0/block/sdqb
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:2:0-4:2:0:0-block-sdqc-sdqc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:2:0/4:2:0:0/block/sdqc/sdqc1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:2:0-4:2:0:0-block-sdqc-sdqc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:2:0/4:2:0:0/block/sdqc/sdqc2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:2:0-4:2:0:0-block-sdqc-sdqc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:2:0/4:2:0:0/block/sdqc/sdqc3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata5-host4-target4:2:0-4:2:0:0-block-sdqc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata5/host4/target4:2:0/4:2:0:0/block/sdqc
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:0:0-5:0:0:0-block-sdra-sdra1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:0:0/5:0:0:0/block/sdra/sdra1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:0:0-5:0:0:0-block-sdra-sdra2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:0:0/5:0:0:0/block/sdra/sdra2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:0:0-5:0:0:0-block-sdra-sdra3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:0:0/5:0:0:0/block/sdra/sdra3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:0:0-5:0:0:0-block-sdra.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:0:0/5:0:0:0/block/sdra
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:1:0-5:1:0:0-block-sdrb-sdrb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:1:0/5:1:0:0/block/sdrb/sdrb1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:1:0-5:1:0:0-block-sdrb-sdrb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:1:0/5:1:0:0/block/sdrb/sdrb2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:1:0-5:1:0:0-block-sdrb-sdrb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:1:0/5:1:0:0/block/sdrb/sdrb3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:1:0-5:1:0:0-block-sdrb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:1:0/5:1:0:0/block/sdrb
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:2:0-5:2:0:0-block-sdrc-sdrc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:2:0/5:2:0:0/block/sdrc/sdrc1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:2:0-5:2:0:0-block-sdrc-sdrc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:2:0/5:2:0:0/block/sdrc/sdrc2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:2:0-5:2:0:0-block-sdrc-sdrc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:2:0/5:2:0:0/block/sdrc/sdrc3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata6-host5-target5:2:0-5:2:0:0-block-sdrc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata6/host5/target5:2:0/5:2:0:0/block/sdrc
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:0:0-6:0:0:0-block-sdsa-sdsa1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:0:0/6:0:0:0/block/sdsa/sdsa1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:0:0-6:0:0:0-block-sdsa-sdsa2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:0:0/6:0:0:0/block/sdsa/sdsa2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:0:0-6:0:0:0-block-sdsa-sdsa3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:0:0/6:0:0:0/block/sdsa/sdsa3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:0:0-6:0:0:0-block-sdsa.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:0:0/6:0:0:0/block/sdsa
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:1:0-6:1:0:0-block-sdsb-sdsb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:1:0/6:1:0:0/block/sdsb/sdsb1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:1:0-6:1:0:0-block-sdsb-sdsb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:1:0/6:1:0:0/block/sdsb/sdsb2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:1:0-6:1:0:0-block-sdsb-sdsb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:1:0/6:1:0:0/block/sdsb/sdsb3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:1:0-6:1:0:0-block-sdsb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:1:0/6:1:0:0/block/sdsb
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:2:0-6:2:0:0-block-sdsc-sdsc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:2:0/6:2:0:0/block/sdsc/sdsc1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:2:0-6:2:0:0-block-sdsc-sdsc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:2:0/6:2:0:0/block/sdsc/sdsc2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:2:0-6:2:0:0-block-sdsc-sdsc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:2:0/6:2:0:0/block/sdsc/sdsc3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata7-host6-target6:2:0-6:2:0:0-block-sdsc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata7/host6/target6:2:0/6:2:0:0/block/sdsc
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:0:0-7:0:0:0-block-sdta-sdta1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:0:0/7:0:0:0/block/sdta/sdta1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:0:0-7:0:0:0-block-sdta-sdta2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:0:0/7:0:0:0/block/sdta/sdta2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:0:0-7:0:0:0-block-sdta-sdta3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:0:0/7:0:0:0/block/sdta/sdta3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:0:0-7:0:0:0-block-sdta.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:0:0/7:0:0:0/block/sdta
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:1:0-7:1:0:0-block-sdtb-sdtb1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:1:0/7:1:0:0/block/sdtb/sdtb1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:1:0-7:1:0:0-block-sdtb-sdtb2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:1:0/7:1:0:0/block/sdtb/sdtb2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:1:0-7:1:0:0-block-sdtb-sdtb3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:1:0/7:1:0:0/block/sdtb/sdtb3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:1:0-7:1:0:0-block-sdtb.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:1:0/7:1:0:0/block/sdtb
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:2:0-7:2:0:0-block-sdtc-sdtc1.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:2:0/7:2:0:0/block/sdtc/sdtc1
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:2:0-7:2:0:0-block-sdtc-sdtc2.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:2:0/7:2:0:0/block/sdtc/sdtc2
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:2:0-7:2:0:0-block-sdtc-sdtc3.device              loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:2:0/7:2:0:0/block/sdtc/sdtc3
+  sys-devices-pci0000:00-0000:00:1c.4-0000:0d:00.0-ata8-host7-target7:2:0-7:2:0:0-block-sdtc.device                    loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.4/0000:0d:00.0/ata8/host7/target7:2:0/7:2:0:0/block/sdtc
+  sys-devices-pci0000:00-0000:00:1c.6-0000:0e:00.0-net-eth1.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.6/0000:0e:00.0/net/eth1
+  sys-devices-pci0000:00-0000:00:1c.7-0000:0f:00.0-net-eth0.device                                                     loaded    active     plugged   /sys/devices/pci0000:00/0000:00:1c.7/0000:0f:00.0/net/eth0
+  sys-devices-virtual-block-dm\x2d0.device                                                                             loaded    active     plugged   /sys/devices/virtual/block/dm-0
+  sys-devices-virtual-block-dm\x2d1.device                                                                             loaded    active     plugged   /sys/devices/virtual/block/dm-1
+  sys-devices-virtual-block-dm\x2d2.device                                                                             loaded    active     plugged   /sys/devices/virtual/block/dm-2
+  sys-devices-virtual-block-dm\x2d3.device                                                                             loaded    active     plugged   /sys/devices/virtual/block/dm-3
+  sys-devices-virtual-block-loop0.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/loop0
+  sys-devices-virtual-block-loop1.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/loop1
+  sys-devices-virtual-block-md0.device                                                                                 loaded    active     plugged   /sys/devices/virtual/block/md0
+  sys-devices-virtual-block-md1.device                                                                                 loaded    active     plugged   /sys/devices/virtual/block/md1
+  sys-devices-virtual-block-md2.device                                                                                 loaded    active     plugged   /sys/devices/virtual/block/md2
+  sys-devices-virtual-block-md3.device                                                                                 loaded    active     plugged   /sys/devices/virtual/block/md3
+  sys-devices-virtual-block-zram0.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/zram0
+  sys-devices-virtual-block-zram1.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/zram1
+  sys-devices-virtual-block-zram2.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/zram2
+  sys-devices-virtual-block-zram3.device                                                                               loaded    active     plugged   /sys/devices/virtual/block/zram3
+  sys-devices-virtual-net-sit0.device                                                                                  loaded    active     plugged   /sys/devices/virtual/net/sit0
+  sys-module-configfs.device                                                                                           loaded    active     plugged   /sys/module/configfs
+  sys-module-fuse.device                                                                                               loaded    active     plugged   /sys/module/fuse
+  sys-subsystem-net-devices-eth0.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth0
+  sys-subsystem-net-devices-eth1.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth1
+  sys-subsystem-net-devices-eth10.device                                                                               loaded    active     plugged   /sys/subsystem/net/devices/eth10
+  sys-subsystem-net-devices-eth2.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth2
+  sys-subsystem-net-devices-eth3.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth3
+  sys-subsystem-net-devices-eth4.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth4
+  sys-subsystem-net-devices-eth5.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth5
+  sys-subsystem-net-devices-eth6.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/eth6
+  sys-subsystem-net-devices-sit0.device                                                                                loaded    active     plugged   /sys/subsystem/net/devices/sit0
+  -.mount                                                                                                              loaded    active     mounted   /
+  config.mount                                                                                                         loaded    active     mounted   /config
+  proc-bus-usb.mount                                                                                                   loaded    active     mounted   /proc/bus/usb
+  run-user-196791.mount                                                                                                loaded    active     mounted   /run/user/196791
+  sys-fs-fuse-connections.mount                                                                                        loaded    active     mounted   FUSE Control File System
+  sys-kernel-config.mount                                                                                              loaded    active     mounted   Configuration File System
+  sys-kernel-debug.mount                                                                                               loaded    active     mounted   Debug File System
+  tmp-SynologyAuthService.mount                                                                                        loaded    active     mounted   /tmp/SynologyAuthService
+  tmp.mount                                                                                                            loaded    active     mounted   Temporary Directory
+  volume1-\x40accountdb-\x40accountcache.mount                                                                         loaded    active     mounted   /volume1/@accountdb/@accountcache
+  volume1-VM1_NEW_BACKUP_NEW-\x23snapshot.mount                                                                        loaded    active     mounted   /volume1/VM1_NEW_BACKUP_NEW/#snapshot
+  volume1.mount                                                                                                        loaded    active     mounted   /volume1
+  volume2.mount                                                                                                        loaded    active     mounted   /volume2
+  accountdb-cache.service                                                                                              loaded    active     exited    Accountdb cache database
+  apparmor.service                                                                                                     loaded    active     exited    Load AppArmor profiles
+  arp-ignore.service                                                                                                   loaded    active     exited    Set arp ignore
+  atalk.service                                                                                                        loaded    active     running   Apple Filing Protocol Daemon
+  auto-unlock-remote.service                                                                                           loaded    inactive   dead      synology volume encryption auto-unlock get key service (remote)
+  avahi.service                                                                                                        loaded    active     running   Avahi daemon
+  burnin_loader.service                                                                                                loaded    inactive   dead      Burnin Loader
+  bypass-traverse.service                                                                                              loaded    active     exited    Load Bypass Traverse Checking
+  check_host_wide_port_count.service                                                                                   loaded    inactive   dead      Get expansion host wide port count
+  chronyd.service                                                                                                      loaded    active     running   NTP client/server
+  clean-session.service                                                                                                loaded    active     exited    Remove session if the option enabled.
+  configupdate-rootfs.service                                                                                          loaded    inactive   dead      Synology DSM configupdate for root-fs
+  configupdate-share.service                                                                                           loaded    inactive   dead      Synology DSM configupdate for share
+  configupdate-volume.service                                                                                          loaded    inactive   dead      Synology DSM configupdate for volume
+  crond.service                                                                                                        loaded    active     running   Periodic Command Scheduler
+  cups-service-handler.service                                                                                         loaded    inactive   dead      Check if DS has a connected printer. If so, enable cups.
+  dbus-session.service                                                                                                 loaded    active     running   D-Bus Session Message Bus
+  dbus-system.service                                                                                                  loaded    active     running   D-Bus System Message Bus
+  dhclient@eth0.service                                                                                                loaded    active     running   eth0 DHCP Client
+  dhclient@eth2.service                                                                                                loaded    active     running   eth2 DHCP Client
+  dhclient@eth3.service                                                                                                loaded    active     running   eth3 DHCP Client
+  dhclient@eth5.service                                                                                                loaded    active     running   eth5 DHCP Client
+  dhclient@eth6.service                                                                                                loaded    active     running   eth6 DHCP Client
+  dhcp-init.service                                                                                                    loaded    active     exited    DHCP client init
+  emergency.service                                                                                                    loaded    inactive   dead      Emergency Shell
+  esynoscheduler-bootup.service                                                                                        loaded    active     exited    Synology Event-based Task Scheduler Bootup Trigger
+  fandebug.service                                                                                                     loaded    active     exited    Fan debug check
+  findhostd.service                                                                                                    loaded    active     running   findhost daemon
+  get-machine-key.service                                                                                              loaded    active     exited    synology volume encryption get machine key service
+  hibernationdebug.service                                                                                             loaded    inactive   dead      Hibernation debug check
+  hotplugd.service                                                                                                     loaded    active     running   daemon for handle hotplug event
+  ip-conflict-detect.service                                                                                           loaded    active     running   Set IP Conflict Detect
+  irqbalance.service                                                                                                   loaded    active     running   Service for irq balance
+  juniormodedata-apply.service                                                                                         loaded    inactive   dead      Synology JuniorMode-data apply
+● kmip-client.service                                                                                                  masked    inactive   dead      kmip-client.service
+● kmip-server.service                                                                                                  masked    inactive   dead      kmip-server.service
+  mcelog.service                                                                                                       loaded    active     running   Machine Check Exception Logging Daemon
+  nano-configupdate-rootfs.service                                                                                     loaded    active     exited    Synology nano configupdate for root-fs
+  nano-configupdate-share.service                                                                                      loaded    active     exited    Synology nano configupdate for share
+  nano-configupdate-volume.service                                                                                     loaded    active     exited    Synology nano configupdate for volume
+  nginx.service                                                                                                        loaded    active     running   Nginx
+  pgsql-adapter.service                                                                                                loaded    active     exited    PostgreSQL adapter
+  pgsql.service                                                                                                        loaded    active     running   PostgreSQL database server
+  php_timezone_update.service                                                                                          loaded    inactive   dead      Build-in PHP timezone updater
+  pkg-ActiveBackup-agent-authd.service                                                                                 loaded    active     running   Active Backup Agent Authd
+  pkg-ActiveBackup-agent-restored.service                                                                              loaded    active     running   Active Backup Agent Restore Service
+  pkg-ActiveBackup-agent-server.service                                                                                loaded    active     running   Active Backup Agent Server
+  pkg-ActiveBackup-agentless-server.service                                                                            loaded    active     running   Active Backup Agentless Server
+  pkg-ActiveBackup-apid.service                                                                                        loaded    active     running   ActiveBackup for Business apid
+  pkg-ActiveBackup-dsmcached.service                                                                                   loaded    active     running   Active Backup DSM Cache Daemon
+  pkg-ActiveBackup-fused.service                                                                                       loaded    active     running   Active Backup Fuse Daemon
+  pkg-ActiveBackup-hypervisor-server.service                                                                           loaded    active     running   Active Backup vSphere Server Daemon
+  pkg-ActiveBackup-job-queued.service                                                                                  loaded    active     running   Active Backup Job Queue Daemon
+  pkg-ActiveBackup-lo-server.service                                                                                   loaded    active     running   Active Backup Lo Server
+  pkg-ActiveBackup-logd.service                                                                                        loaded    active     running   Active Backup Log Server
+  pkg-ActiveBackup-privileged.service                                                                                  loaded    active     running   Active Backup Privilege Action Service
+  pkg-ActiveBackup-proxyd.service                                                                                      loaded    active     running   Active Backup Proxy Service
+  pkg-ActiveBackup-retention.service                                                                                   loaded    active     running   Active Backup Rotation Daemon
+  pkg-ActiveBackup-smb-agent.service                                                                                   loaded    active     running   smbclient agent daemon
+  pkg-ActiveBackup-synodedup-engined.service                                                                           loaded    active     running   Synology Version Dedup Engine daemon
+  pkg-ActiveBackup-syslog-service.service                                                                              loaded    active     running   Active Backup Syslog Service Daemon
+  pkg-auto-repair.service                                                                                              loaded    active     exited    auto repair packages
+  pkg-builtin-resource-clearer.service                                                                                 loaded    inactive   dead      clear builtin pkg resources after builtin pkg proccessed
+  pkg-failure@ActiveBackup.service                                                                                     loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@ActiveInsight.service                                                                                    loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@AntiVirus.service                                                                                        loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@DhcpServer.service                                                                                       loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@FileStation.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@HybridShare.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@HyperBackup.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@LogCenter.service                                                                                        loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@Node.js_v12.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@Node.js_v18.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@Node.js_v20.service                                                                                      loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@OAuthService.service                                                                                     loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@PDFViewer.service                                                                                        loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@Perl.service                                                                                             loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@PHP7.4.service                                                                                           loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@Python2.service                                                                                          loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@QuickConnect.service                                                                                     loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@ReplicationService.service                                                                               loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@ScsiTarget.service                                                                                       loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SecureSignIn.service                                                                                     loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SMBService.service                                                                                       loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SnapshotReplication.service                                                                              loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@StorageAnalyzer.service                                                                                  loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@StorageManager.service                                                                                   loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SupportService.service                                                                                   loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SynoFinder.service                                                                                       loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SynologyApplicationService.service                                                                       loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@SynologyDrive.service                                                                                    loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@UniversalViewer.service                                                                                  loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-failure@USBCopy.service                                                                                          loaded    inactive   dead      Do rollback actions after pkgctl-XXX
+  pkg-feasibility-config-update.service                                                                                loaded    active     exited    Update all packages' feasibility config
+  pkg-FileStation-thumbd.service                                                                                       loaded    active     running   "FileStation Thumbnail Daemon"
+● pkg-install-high-priority-builtin.service                                                                            not-found inactive   dead      pkg-install-high-priority-builtin.service
+● pkg-install-low-priority-builtin.service                                                                             not-found inactive   dead      pkg-install-low-priority-builtin.service
+  pkg-invoked.service                                                                                                  loaded    active     running   Login Invoke Daemon
+  pkg-iscsi.service                                                                                                    loaded    active     exited    iSCSI Service
+  pkg-LogCenter-syslog.service                                                                                         loaded    active     running   Log Center syslog-ng
+  pkg-mib-backup-uploader.service                                                                                      loaded    active     running   daemon for uploading hyper backup data to active insight
+  pkg-mib-executor.service                                                                                             loaded    active     running   synomibclient python script executor
+  pkg-mib-log-uploader.service                                                                                         loaded    active     running   active insight log uploader daemon
+  pkg-mib-login-uploader.service                                                                                       loaded    active     running   daemon for monitor logs and generate alert
+  pkg-mib-monitor.service                                                                                              loaded    active     running   active insight monitor
+  pkg-mib-online-updater.service                                                                                       loaded    active     running   Active Insight Online Updater
+  pkg-mib-otel-collector.service                                                                                       loaded    active     running   Active Insight OpenTelemetry Collector
+  pkg-mib-resource-monitor.service                                                                                     loaded    active     running   synomibclient resource monitor
+  pkg-mib-server-status-cache-daemon.service                                                                           loaded    active     running   active insight monitor
+  pkg-rclocal.service                                                                                                  loaded    active     exited    Execute packages' scripts during the boot-up
+  pkg-ready.service                                                                                                    loaded    active     exited    hook on all packages ready
+  pkg-ReplicationService-synobtrfsreplicad.service                                                                     loaded    active     running   Replication Service Daemon
+  pkg-root-always-reconfigure.service                                                                                  loaded    active     exited    always preprocess jobs before any package is started
+  pkg-root-onupgrade-reconfigure.service                                                                               loaded    active     exited    preprocess jobs before any package is started when os upgraded
+  pkg-scsi-plugin-server.service                                                                                       loaded    active     running   Synology Storage Console Server
+  pkg-scsit-monitor.service                                                                                            loaded    active     running   SCSI Target Monitor
+  pkg-StorageAnalyzer-GenerateGlobalData.service                                                                       loaded    active     exited    Synology Storage Analyzer Generate Global Data
+  pkg-support-service-online-updater.service                                                                           loaded    active     running   Support Service Online Updater
+  pkg-support-service-remote-action-client.service                                                                     loaded    active     running   Support Service Remote Action Client
+  pkg-SynoFinder-fileindexd.service                                                                                    loaded    active     running   pkg-SynoFinder-fileindexd
+  pkg-SynoFinder-synoelasticd.service                                                                                  loaded    active     running   pkg-SynoFinder-synoelasticd
+  pkg-synoha-bootup-update-package.service                                                                             loaded    active     exited    bootup upgrade sha package
+● pkg-synoha-safemode-after.service                                                                                    not-found inactive   dead      pkg-synoha-safemode-after.service
+  pkg-SynologyApplicationService-notification_send.service                                                             loaded    active     running   Synology Application Service notification send daemon
+  pkg-SynologyApplicationService-pgbouncer.service                                                                     loaded    active     running   Synology Application Service pgbouncer
+  pkg-SynologyApplicationService-VapidSendServer.service                                                               loaded    active     running   Synology Application Service vapid send daemon
+  pkg-synologydrive-apid.service                                                                                       loaded    active     running   Synology Drive apid
+  pkg-synologydrive-authd.service                                                                                      loaded    active     running   Synology Drive authd
+  pkg-synologydrive-clientd.service                                                                                    loaded    active     running   Synology Drive clientd
+  pkg-synologydrive-redis.service                                                                                      loaded    active     running   Synology Drive redis
+  pkg-synologydrive-syncd.service                                                                                      loaded    active     running   Synology Drive syncd
+  pkg-synologydrive-vmtouchd.service                                                                                   loaded    active     running   Synology Drive vmtouchd
+  pkg-synologydrive-workerd.service                                                                                    loaded    active     running   Synology Drive workerd
+  pkg-synorelay-boot-state.service                                                                                     loaded    active     exited    broadcast synorelayd boot state
+  pkg-synorelay-register-region.service                                                                                loaded    active     exited    register ds region by ip
+  pkg-synorelayd-reload-fixed-package-config.service                                                                   loaded    inactive   dead      synorelay daemon reloads configuration for fixed packages
+  pkg-synorelayd-reload-package-config.service                                                                         loaded    inactive   dead      synorelay daemon reloads package configuration
+  pkg-synorelayd.service                                                                                               loaded    inactive   dead      synorelay daemon
+  pkg-synosamba-env-setup.service                                                                                      loaded    active     exited    Samba Environment Setup Unit
+  pkg-synosamba-nmbd.service                                                                                           loaded    active     running   NetBIOS name server
+  pkg-synosamba-smbd.service                                                                                           loaded    active     running   Samba SMB Daemon
+  pkg-synosamba-unlinkd.service                                                                                        loaded    active     running   Samba Unlinkd Daemon
+  pkg-synosamba-winbindd-check-config.service                                                                          loaded    inactive   dead      Winbindd check config
+  pkg-synosamba-winbindd.service                                                                                       loaded    active     running   Winbind
+  pkg-synosamba-wsdiscoveryd.service                                                                                   loaded    active     running   WS-Discovery Server
+  pkg-synosamba-wstransfer-genconf.service                                                                             loaded    active     exited    Entry for WS-Transfer and WS-Discovery Server
+  pkg-synosamba-wstransferd.service                                                                                    loaded    active     running   WS-Transfer Server
+  pkg-synowebrtc.service                                                                                               loaded    inactive   dead      Synology WebRTC
+  pkg-tcmu-runner.service                                                                                              loaded    active     running   LIO Userspace-passthrough daemon(tcmu-runner)
+  pkgctl-ActiveBackup.service                                                                                          loaded    active     exited    ActiveBackup's service unit
+  pkgctl-ActiveInsight.service                                                                                         loaded    active     exited    ActiveInsight's service unit
+  pkgctl-AntiVirus.service                                                                                             loaded    active     exited    AntiVirus's service unit
+● pkgctl-CloudStation.service                                                                                          not-found inactive   dead      pkgctl-CloudStation.service
+● pkgctl-CloudStationClient.service                                                                                    not-found inactive   dead      pkgctl-CloudStationClient.service
+  pkgctl-DhcpServer.service                                                                                            loaded    active     exited    DhcpServer's service unit
+● pkgctl-dsm6-ui-compatible.service                                                                                    not-found inactive   dead      pkgctl-dsm6-ui-compatible.service
+  pkgctl-FileStation.service                                                                                           loaded    active     exited    FileStation's service unit
+  pkgctl-HybridShare.service                                                                                           loaded    active     exited    HybridShare's service unit
+  pkgctl-HyperBackup.service                                                                                           loaded    active     exited    HyperBackup's service unit
+  pkgctl-LogCenter.service                                                                                             loaded    active     exited    LogCenter's service unit
+● pkgctl-Node.js_v12.service                                                                                           loaded    failed     failed    Node.js_v12's service unit
+  pkgctl-Node.js_v18.service                                                                                           loaded    active     exited    Node.js_v18's service unit
+  pkgctl-Node.js_v20.service                                                                                           loaded    active     exited    Node.js_v20's service unit
+● pkgctl-Node.js_v4.service                                                                                            not-found failed     failed    pkgctl-Node.js_v4.service
+● pkgctl-Node.js_v8.service                                                                                            not-found failed     failed    pkgctl-Node.js_v8.service
+  pkgctl-OAuthService.service                                                                                          loaded    active     exited    OAuthService's service unit
+  pkgctl-PDFViewer.service                                                                                             loaded    active     exited    PDFViewer's service unit
+  pkgctl-Perl.service                                                                                                  loaded    active     exited    Perl's service unit
+  pkgctl-PHP7.4.service                                                                                                loaded    active     exited    PHP7.4's service unit
+  pkgctl-Python2.service                                                                                               loaded    active     exited    Python2's service unit
+  pkgctl-QuickConnect.service                                                                                          loaded    active     exited    QuickConnect's service unit
+  pkgctl-ReplicationService.service                                                                                    loaded    active     exited    ReplicationService's service unit
+  pkgctl-ScsiTarget.service                                                                                            loaded    active     exited    ScsiTarget's service unit
+  pkgctl-SecureSignIn.service                                                                                          loaded    active     exited    SecureSignIn's service unit
+  pkgctl-SMBService.service                                                                                            loaded    active     exited    SMBService's service unit
+  pkgctl-SnapshotReplication.service                                                                                   loaded    active     exited    SnapshotReplication's service unit
+  pkgctl-StorageAnalyzer.service                                                                                       loaded    active     exited    StorageAnalyzer's service unit
+  pkgctl-StorageManager.service                                                                                        loaded    active     exited    StorageManager's service unit
+  pkgctl-SupportService.service                                                                                        loaded    active     exited    SupportService's service unit
+  pkgctl-SynoFinder.service                                                                                            loaded    active     exited    SynoFinder's service unit
+  pkgctl-SynologyApplicationService.service                                                                            loaded    active     exited    SynologyApplicationService's service unit
+  pkgctl-SynologyDrive.service                                                                                         loaded    active     exited    SynologyDrive's service unit
+  pkgctl-UniversalViewer.service                                                                                       loaded    active     exited    UniversalViewer's service unit
+  pkgctl-USBCopy.service                                                                                               loaded    active     exited    USBCopy's service unit
+● plymouth-quit-wait.service                                                                                           not-found inactive   dead      plymouth-quit-wait.service
+  policy-route-init.service                                                                                            loaded    active     exited    Set Policy Route
+  pppoe.service                                                                                                        loaded    active     exited    PPPoE
+● rc-local.service                                                                                                     not-found inactive   dead      rc-local.service
+  rc-network.service                                                                                                   loaded    active     exited    rc.network
+  RCPower.service                                                                                                      loaded    active     exited    Control RC power
+  rdgz-check.service                                                                                                   loaded    active     exited    check integrity of rd.gz decompression
+  recyclebind.service                                                                                                  loaded    active     running   Daemon for Recycle Bin
+● rescue.service                                                                                                       not-found inactive   dead      rescue.service
+  rm_sas_fw_fail_list.service                                                                                          loaded    inactive   dead      Remove SAS firmware update fail list
+  s2s_daemon.service                                                                                                   loaded    active     running   Shared Folder Sync Daemon
+  sas_early_initial.service                                                                                            loaded    active     exited    SAS early initial
+  scemd.service                                                                                                        loaded    active     running   daemon for monitor HW/system status
+  scrubbing-auto-scrubbing.service                                                                                     loaded    inactive   dead      Auto scrubbing - Auto data scrubbing and SSD resync after abnormal shutdown, Auto data scrubbing after fsck done
+  scrubbing-conf-migrate.service                                                                                       loaded    inactive   dead      migrate data scrubbing config in active after SHA switch over
+  scrubbing-conf-sync.service                                                                                          loaded    inactive   dead      Sync data scrubbing config
+  scrubbing-sche-run.service                                                                                           loaded    inactive   dead      Run data scrubbing schedule after bootup done
+  securityscan.service                                                                                                 loaded    active     exited    Check and add schedule scan for Security Advisor
+  selfcheck_bootHealth.service                                                                                         loaded    active     exited    DSM Boot Health Check
+  serial-getty@ttyS0.service                                                                                           loaded    active     running   Serial Getty on ttyS0
+  SmartDbCopy.service                                                                                                  loaded    active     exited    Cp smart db to tmp
+  smpkg-custom-install.service                                                                                         loaded    inactive   dead      install storage manager package
+  snmpd.service                                                                                                        loaded    active     running   SNMP Daemon
+  ssdp.service                                                                                                         loaded    active     running   SSDP service
+  syno-before-upgrade-ready.service                                                                                    loaded    active     exited    Before upgrade ready
+  syno-boot-seq-set-rootfs-ready.service                                                                               loaded    active     exited    Set boot sequence config
+  syno-boot-seq-tmp-bootseq.service                                                                                    loaded    active     exited    Set boot sequence config for temporary use
+  syno-bootup-done.service                                                                                             loaded    inactive   dead      Synology Set bootseq to boot done
+  syno-building-tasks-restore.service                                                                                  loaded    active     exited    Synology Building Tasks Restore for Storage Manager
+  syno-cgi-keygen.service                                                                                              loaded    active     exited    syno-cgi-keygen.service
+  syno-check-disk-compatibility.service                                                                                loaded    active     exited    Check disk compatiblity.
+  syno-check-locale.service                                                                                            loaded    active     exited    Synology check locale
+  syno-check-normal-shutdown.service                                                                                   loaded    active     exited    Check normal shutdown or improper shutdown
+  syno-check-service-home.service                                                                                      loaded    active     exited    Keep var services homes existing
+  syno-coredump-store.service                                                                                          loaded    active     exited    Link coredump path to volume if possible
+  syno-customized-configure.service                                                                                    loaded    active     exited    Customized post-install configuration
+  syno-detected-pool-scan.service                                                                                      loaded    inactive   dead      Synology Available Pool Scan for Storage Manager
+  syno-disk-health-db.service                                                                                          loaded    active     exited    Initial Disk Health Database
+  syno-dump-bootup-log.service                                                                                         loaded    active     exited    Synology Dump Bootup Log
+  syno-dump-disk-info.service                                                                                          loaded    inactive   dead      Information dump of SAS disk map and cache slot
+  syno-ew-info.service                                                                                                 loaded    active     exited    Synology Get EW Info Status
+  syno-fan-modules-load.service                                                                                        loaded    active     exited    Load Fan Modules in Kernel Project
+  syno-hostname.service                                                                                                loaded    active     exited    Set hostname
+  syno-HyperBackup-ED-spk-backup.service                                                                               loaded    inactive   dead      HyperBackup-ED spk backup
+  syno-initrd-umount.service                                                                                           loaded    active     exited    Umount initrd
+  syno-installation-id.service                                                                                         loaded    active     exited    DSM Installation ID
+  syno-kernel-modules-load.service                                                                                     loaded    active     exited    Load Kernel Modules in Kernel Project
+  syno-kernel-timezone.service                                                                                         loaded    active     exited    Set time zone information to kernel
+  syno-local-auth-rebuild.service                                                                                      loaded    inactive   dead      rebuild local user and group db
+  syno-log-boot-done.service                                                                                           loaded    active     exited    Synology Log bootup done
+  syno-log-boot-start.service                                                                                          loaded    active     exited    Synology Log bootup start
+  syno-log-boot-time.service                                                                                           loaded    active     exited    Log important service timestamp during boot time
+  syno-log-package-boot-time.service                                                                                   loaded    active     exited    Log syno package service timestamp during boot time
+  syno-login.service                                                                                                   loaded    active     exited    Synology Web console login prepare
+  syno-md-ntb-module-insert.service                                                                                    loaded    active     exited    Load ntb_brd module
+  syno-md-resync-speed-adjust@active.service                                                                           loaded    active     exited    Adjust md resync speed after bootup done
+  syno-mem-single-channel.service                                                                                      loaded    active     exited    Single Memory Channel Action
+  syno-mkcert.service                                                                                                  loaded    inactive   dead      syno-mkcert.service
+  syno-mkdhparam.service                                                                                               loaded    active     exited    syno-mkdhparam.service
+● syno-mlnx-rdma-modules-load.service                                                                                  masked    inactive   dead      syno-mlnx-rdma-modules-load.service
+  syno-mount-efivarfs.service                                                                                          loaded    active     exited    Mount efivarfs
+  syno-mount-usbfs.service                                                                                             loaded    active     exited    Mount usb fs
+  syno-network-check.service                                                                                           loaded    active     exited    Check if network is ready
+● syno-nic-supported-check.service                                                                                     loaded    failed     failed    Check Nic on external slot is synology nic but unprobe
+  syno-notify-bundle-drive-update.service                                                                              loaded    active     exited    Notify bundle drive update after bootup done
+  syno-notify-drop-log-tree.service                                                                                    loaded    active     exited    Notify data volume has been repaired by drop log tree.
+  syno-notify-idle-drive.service                                                                                       loaded    active     exited    Notify all idle drives after bootup done
+  syno-notify-slow-drive.service                                                                                       loaded    active     exited    Notify system is detected with slow drive
+  syno-notify-unsupport-drive.service                                                                                  loaded    active     exited    Notify system is detected for unsupported drive
+  syno-platform-dump.service                                                                                           loaded    active     exited    Dump synoplatform info
+  syno-poweroff-task.service                                                                                           loaded    active     exited    Synology shutdown task
+● syno-qlogic-rdma-modules-load.service                                                                                masked    inactive   dead      syno-qlogic-rdma-modules-load.service
+  syno-quota-migrate.service                                                                                           loaded    active     exited    Migrate all volume and share to quota DB
+  syno-rbd-system-vol-check.service                                                                                    loaded    active     exited    Check synorbd on system volume
+  syno-rclocal.service                                                                                                 loaded    active     exited    Check malware and execute rc.local
+  syno-rolling-group-id.service                                                                                        loaded    active     exited    DSM Release Rolling Group ID
+  syno-service-tmp.service                                                                                             loaded    active     exited    Prepare var service tmp
+  syno-set-eunitseq.service                                                                                            loaded    active     exited    Set Eunit Sequence
+  syno-set-noatime.service                                                                                             loaded    active     exited    set NOATIME flag on /var/run when bootup
+  syno-set-project-var-log.service                                                                                     loaded    inactive   dead      Set project quota ID for /var/log
+  syno-sharesnapshot-check.service                                                                                     loaded    active     exited    Check share snapshot
+  syno-space.service                                                                                                   loaded    active     exited    Synology space service
+  syno-spacetable-update.service                                                                                       loaded    inactive   dead      Synology space table update for Storage Manager
+  syno-ssd-cache-bootup-missing-check.service                                                                          loaded    active     exited    Syno ssd cache bootup missing check
+  syno-storage-task-resume.service                                                                                     loaded    active     exited    Synology task resume for Storage Manager
+  syno-swap.service                                                                                                    loaded    active     exited    Synology swap
+  syno-sync-all-scheduler-and-disks.service                                                                            loaded    active     exited    Sync disk and related smart scheduler.
+  syno-sysctl-conf.service                                                                                             loaded    active     exited    Apply default and user customized sysctl.conf kernel variable.
+  syno-sysctl-kernel-sem.service                                                                                       loaded    active     exited    Apply kernel variable kernel.sem at least 1024
+  syno-sysctl-kernel-shmmni.service                                                                                    loaded    active     exited    Apply kernel variable kernel-shmmni at least 16384
+  syno-sysctl-kswapd-threads.service                                                                                   loaded    active     exited    Apply kernel variable vm.kswapd_threads
+  syno-sysctl-watermarks.service                                                                                       loaded    active     exited    Adjust kernel parameters - vm.min_free_kbytes, vm.watermark_scale_factor, vm.watermark_boost_factor
+  syno-tls-profile.service                                                                                             loaded    active     exited    Synology Default TLS Profile
+  syno-update-disks-firmware-status.service                                                                            loaded    inactive   dead      Update all disks firmware status
+  syno-volume-fsck-check.service                                                                                       loaded    active     exited    Synology filesytem check on bootup
+  syno-volume-fsck.service                                                                                             loaded    active     exited    Synology filesystem check service
+  syno-volume-posthook.service                                                                                         loaded    active     exited    Synology volume mount post hook
+  syno-volume.service                                                                                                  loaded    active     exited    Synology volume service
+  syno-vspace-phase2.service                                                                                           loaded    active     exited    Synology virtual space service phase2
+  syno-vspace.service                                                                                                  loaded    active     exited    Synology virtual space service
+  syno_adjust_serialize_policy.service                                                                                 loaded    active     exited    Syno Raid Feature Adjust Serialize Policy
+  syno_btrfs_quick_balance.service                                                                                     loaded    active     exited    BTRFS quick balance
+  syno_bundle_firmware_upgrade.service                                                                                 loaded    active     exited    Synology firmware DLMC
+  syno_bundle_firmware_upgrade_notify.service                                                                          loaded    active     exited    Notification for firmware upgrade result
+  syno_disk_latency_monitor.service                                                                                    loaded    active     running   Synology daemon for monitoring disk latency.
+  syno_disk_latency_record_writeback.service                                                                           loaded    active     exited    Write back disk latency to DB
+  syno_disk_mib_tool.service                                                                                           loaded    active     exited    Syno Disk MIB tools vmtouch
+  syno_nvme_power_limit_set.service                                                                                    loaded    active     exited    Synology NVMe power limit setting
+  syno_pstore_collect.service                                                                                          loaded    active     exited    Reassemble Pstore log into /var/log/pstore/
+  syno_sed_bootup_action.service                                                                                       loaded    active     exited    SED Bootup Action
+  syno_ssd_bundle_bootup.service                                                                                       loaded    active     exited    Synology Bundle SSD estimate lifespan calculation on bootup
+  syno_update_disk_logs.service                                                                                        loaded    active     exited    Update all disk information in disk log
+  synobackupd.service                                                                                                  loaded    active     running   synobackup daemon
+  synobtrfssnap_deleted_subvol_clean.service                                                                           loaded    active     exited    Syno Data Protection - Btrfs Deleted Subvolume Clean
+  synobtrfssnap_snapcount_sync.service                                                                                 loaded    active     exited    Syno Data Protection - Btrfs Snapshot Count Sync
+  synobtrfssnapusage_clean_undone_task.service                                                                         loaded    active     exited    Syno Data Protection - Btrfs Snapshot Usage Task Clean
+  synocacheadvisord-boot-check.service                                                                                 loaded    active     exited    Synology Cache Advisor Boot Clean Up
+  synocacheadvisord.service                                                                                            loaded    inactive   dead      Synology Cache Advisor Service
+  synocached.service                                                                                                   loaded    active     running   Redis data structure server for webapi
+  synocachepinfiled.service                                                                                            loaded    active     running   SSD Cache Pin File Daemon
+  synocgid.service                                                                                                     loaded    active     running   Synology CGI Auth Daemon
+  synocheckgroup.service                                                                                               loaded    active     exited    Check Synology group info consistency
+  synocheckhotspare-disk-compat.service                                                                                loaded    active     exited    Check Synology HotSpare Config for Disk Compat
+  synocheckhotspare.service                                                                                            loaded    active     exited    Check Synology HotSpare Config
+  synocheckinfo.service                                                                                                loaded    active     exited    Check /etc/synoinfo.conf
+● SynoCheckNtb.service                                                                                                 not-found inactive   dead      SynoCheckNtb.service
+  synocheckshare.service                                                                                               loaded    active     exited    Check Synology shared folders
+  synocheckuser.service                                                                                                loaded    active     exited    Check Synology user info consistency
+  synoconfd.service                                                                                                    loaded    active     running   synoconfd daemon
+  synocontentextract-gen-enable-file.service                                                                           loaded    active     exited    synocontentextract gen INFO file for synoindex
+  synocontentextractd.service                                                                                          loaded    active     running   synoce daemon
+  synocrond.service                                                                                                    loaded    active     running   Synology Cron Daemon
+  synodbud_autoupdate.service                                                                                          loaded    active     exited    Synology Database AutoUpdate
+  synodbud_lock_init.service                                                                                           loaded    active     exited    Synology Database Update
+  SynoDisableFanCheck.service                                                                                          loaded    active     exited    Disabling fan checking flag ...
+  synodrnode.service                                                                                                   loaded    active     exited    synodrnode
+  synodrnode_reset.service                                                                                             loaded    inactive   dead      synodrnode_reset
+  synodsmnotifyqueue.service                                                                                           loaded    active     exited    Send dsmnotify after notification strings of dsm and packages are ready
+  SynoHddUtil.service                                                                                                  loaded    active     exited    Check the disk is ssd/hdd
+  synoindex-checkpackage.service                                                                                       loaded    active     exited    synoindex check if there are any synoindex-related packages
+  synoindex-mediad.service                                                                                             loaded    active     running   synoindex mediad
+  synoindex-mediaserverdb.service                                                                                      loaded    active     exited    check mediaserver database is needed to upgrade
+  synoindex-notifyd.service                                                                                            loaded    active     running   synoindex notifyd
+  synoindex-plugind.service                                                                                            loaded    active     running   synoindex plugind
+  synoindex-scand.service                                                                                              loaded    active     running   synoindex scand
+  synoindex-synoindexdb.service                                                                                        loaded    active     exited    check synoindex database is needed to upgrade
+  synoindex-workerd.service                                                                                            loaded    active     running   synoindex workerd
+  synoindexd.service                                                                                                   loaded    active     running   synoindexd
+  SynoInitEth.service                                                                                                  loaded    active     exited    Adjust NIC sequence
+● SynoLedBrightness.service                                                                                            masked    inactive   dead      SynoLedBrightness.service
+  synolog-linker.service                                                                                               loaded    active     exited    Build DB link for synolog
+  synologand.service                                                                                                   loaded    active     running   daemon for monitor logs and generate alert
+  synologrotated.service                                                                                               loaded    active     running   Log Rotate Daemon
+  SynoMemCheck.service                                                                                                 loaded    active     exited    Memory Rule Check
+  synomkflvd.service                                                                                                   loaded    inactive   dead      synomkflvd
+  synomkthumbd.service                                                                                                 loaded    inactive   dead      synomkthumbd
+  synomount.service                                                                                                    loaded    active     exited    deal with remote/ISO mount during when bootup and poweroff
+  synonetd-wait-online.service                                                                                         loaded    active     exited    Wait for synonetd ready
+  synonetd.service                                                                                                     loaded    active     running   Synology Network Daemon
+  synoneteventd.service                                                                                                loaded    active     running   Synology Network Event Daemon
+  synoperfeventd.service                                                                                               loaded    inactive   dead      Daemon of performance alarm
+  synopkicompatsync.service                                                                                            loaded    active     exited    Preload synopki data to cache
+  synoplugind.service                                                                                                  loaded    active     running   Synology Plugin Daemon
+  synoscgi-socket.service                                                                                              loaded    active     running   Synology SCGI SocketIO
+  synoscgi.service                                                                                                     loaded    active     running   Synology SCGI
+  synoscheduled-vmtouch.service                                                                                        loaded    active     running   Synology Task Scheduler Vmtouch
+  synoscheduled.service                                                                                                loaded    active     running   Synology Schedule Daemon
+  synoscheduler-init.service                                                                                           loaded    active     exited    Synology Task Scheduler Init
+  synosharesnapshot_meta_sync.service                                                                                  loaded    active     exited    Syno Data Protection - Btrfs Snapshot Meta Sync
+  synosharesnaptree_reconstruct.service                                                                                loaded    active     exited    Syno Data Protection - Btrfs Snaptree reconstruct
+  synosmpkgd.service                                                                                                   loaded    active     running   Synology daemon for monitoring smpkg
+  synosnmpcd.service                                                                                                   loaded    active     running   Daemon for Resource Monitor
+  synostoraged.service                                                                                                 loaded    active     running   Synology daemon for monitoring space/disk/cache status
+  synosupportchannelcheck.service                                                                                      loaded    active     exited    Support channel checker
+  SynoSwInitLed.service                                                                                                loaded    active     exited    Software Init Led for support led v2 models
+  synosysnotify.service                                                                                                loaded    active     exited    Prepare notification cache data
+  synosysnotifymigration.service                                                                                       loaded    active     exited    Run sysnotify migration script after mail string and network are ready
+  synotaskmgr.service                                                                                                  loaded    active     running   Synology task manager
+  synotc.service                                                                                                       loaded    active     exited    Traffic Control
+  synotifyd.service                                                                                                    loaded    active     running   synotifyd
+  synotokenmgr.service                                                                                                 loaded    active     running   Synology token manager
+  synotune.service                                                                                                     loaded    active     exited    System Profile Tuning
+  synovpnclient.service                                                                                                loaded    active     exited    VPN Client
+  syslog-acc.service                                                                                                   loaded    active     running   Synology log accounting service
+  syslog-ng.service                                                                                                    loaded    active     running   System Logger Daemon
+  syslog-notify.service                                                                                                loaded    active     exited    Synology log notification service
+  sysnotifyremovepushmail.service                                                                                      loaded    inactive   dead      To send disable push mail and send notify
+● systemd-hwdb-update.service                                                                                          not-found inactive   dead      systemd-hwdb-update.service
+  systemd-journal-flush.service                                                                                        loaded    active     exited    Flush Journal to Persistent Storage
+  systemd-journald.service                                                                                             loaded    active     running   Journal Service
+  systemd-logind.service                                                                                               loaded    active     running   Login Service
+  systemd-modules-load.service                                                                                         loaded    active     exited    Load Kernel Modules
+● systemd-readahead-collect.service                                                                                    not-found inactive   dead      systemd-readahead-collect.service
+● systemd-readahead-replay.service                                                                                     not-found inactive   dead      systemd-readahead-replay.service
+● systemd-remount-fs.service                                                                                           not-found inactive   dead      systemd-remount-fs.service
+  systemd-sysctl.service                                                                                               loaded    active     exited    Apply Kernel Variables
+● systemd-sysusers.service                                                                                             not-found inactive   dead      systemd-sysusers.service
+  systemd-tmpfiles-setup.service                                                                                       loaded    active     exited    Create Volatile Files and Directories
+  systemd-udev-trigger.service                                                                                         loaded    active     exited    udev Coldplug all Devices
+  systemd-udevd.service                                                                                                loaded    active     running   udev Kernel Device Manager
+  systemd-user-sessions.service                                                                                        loaded    inactive   dead      Permit User Sessions
+  taskmanager.service                                                                                                  loaded    active     exited    synodsmnotify
+  unbindUSB.service                                                                                                    loaded    active     exited    unbind USB device
+  update-dir-preference.service                                                                                        loaded    active     exited    move domain or ldap user preference folder to domain or ldap folder.
+  ups-clean-config.service                                                                                             loaded    active     exited    Clean UPS config
+  upsd-restart.service                                                                                                 loaded    active     exited    Restart UPS Daemon after boot done
+  user-preference.service                                                                                              loaded    active     exited    move user preference folder to volume.
+  user@196791.service                                                                                                  loaded    active     running   User Manager for UID 196791
+  WDidle3Dis.service                                                                                                   loaded    active     exited    WD idle3 timer
+  -.slice                                                                                                              loaded    active     active    Root Slice
+  ActiveBackup.slice                                                                                                   loaded    active     active    ActiveBackup's slice
+  ActiveInsight.slice                                                                                                  loaded    active     active    ActiveInsight's slice
+  AntiVirus.slice                                                                                                      loaded    active     active    AntiVirus's slice
+  atalk.slice                                                                                                          loaded    active     active    Apple Filing Protocol Daemon
+  DhcpServer.slice                                                                                                     loaded    active     active    DhcpServer's slice
+  directory_service.slice                                                                                              loaded    active     active    Directory Service Client
+  FileStation.slice                                                                                                    loaded    active     active    FileStation's slice
+  HybridShare.slice                                                                                                    loaded    active     active    HybridShare's slice
+  HyperBackup.slice                                                                                                    loaded    active     active    HyperBackup's slice
+  inetd.slice                                                                                                          loaded    inactive   dead      Internet Service Daemon
+  LogCenter.slice                                                                                                      loaded    active     active    LogCenter's slice
+  nfs_service.slice                                                                                                    loaded    inactive   dead      NFS
+  Node.js_v12.slice                                                                                                    loaded    active     active    Node.js_v12's slice
+  Node.js_v18.slice                                                                                                    loaded    active     active    Node.js_v18's slice
+  Node.js_v20.slice                                                                                                    loaded    active     active    Node.js_v20's slice
+  Node.js_v4.slice                                                                                                     loaded    active     active    Node.js_v4.slice
+  Node.js_v8.slice                                                                                                     loaded    active     active    Node.js_v8.slice
+  OAuthService.slice                                                                                                   loaded    active     active    OAuthService's slice
+  package_center.slice                                                                                                 loaded    active     active    Package Center Slice
+  PDFViewer.slice                                                                                                      loaded    active     active    PDFViewer's slice
+  Perl.slice                                                                                                           loaded    active     active    Perl's slice
+  PHP7.4.slice                                                                                                         loaded    active     active    PHP7.4's slice
+  Python2.slice                                                                                                        loaded    active     active    Python2's slice
+  QuickConnect.slice                                                                                                   loaded    active     active    QuickConnect's slice
+  ReplicationService.slice                                                                                             loaded    active     active    ReplicationService's slice
+  rsyncd.slice                                                                                                         loaded    inactive   dead      rsync daemon
+  s2s_daemon.slice                                                                                                     loaded    active     active    Shared Folder Sync
+  scemd.slice                                                                                                          loaded    active     active    scemd
+  ScsiTarget.slice                                                                                                     loaded    active     active    ScsiTarget's slice
+  SecureSignIn.slice                                                                                                   loaded    active     active    SecureSignIn's slice
+  SecureSignin.slice                                                                                                   loaded    active     active    SecureSignin.slice
+  SMBService.slice                                                                                                     loaded    active     active    SMBService's slice
+  SnapshotReplication.slice                                                                                            loaded    active     active    SnapshotReplication's slice
+  snmp.slice                                                                                                           loaded    active     active    SNMP
+  ssdp.slice                                                                                                           loaded    active     active    SSDP service
+  sshd.slice                                                                                                           loaded    inactive   dead      OpenBSD Secure Shell server
+  StorageAnalyzer.slice                                                                                                loaded    active     active    StorageAnalyzer's slice
+  StorageManager.slice                                                                                                 loaded    active     active    StorageManager's slice
+  SupportService.slice                                                                                                 loaded    active     active    SupportService's slice
+  syno_btrfs_optimization.slice                                                                                        loaded    active     active    BTRFS Optimization
+  syno_btrfs_space_reclaim.slice                                                                                       loaded    active     active    BTRFS Space Reclaim
+  syno_cms_client.slice                                                                                                loaded    inactive   dead      CMS group
+  syno_dsm_desktop.slice                                                                                               loaded    active     active    Synology DSM desktop service
+  syno_dsm_internal.slice                                                                                              loaded    active     active    Synology DSM internal service
+  syno_dsm_storage_manager.slice                                                                                       loaded    active     active    Synology DSM Storage Service
+  syno_flashcache.slice                                                                                                loaded    active     active    Synology Flashcache
+  syno_raid_process.slice                                                                                              loaded    active     active    RAID Resync Process. Including Resync, Repair and Reshape.
+  syno_swap.slice                                                                                                      loaded    active     active    Synology Swap Works
+  synobackupd.slice                                                                                                    loaded    active     active    synobackup daemon slice
+  synobtrfsdedupe.slice                                                                                                loaded    inactive   dead      Synology Btrfs Deduplication
+  synocacheadvisord.slice                                                                                              loaded    active     active    Synology Cache Advisor
+  SynoFinder.slice                                                                                                     loaded    active     active    SynoFinder's slice
+  synoindex.slice                                                                                                      loaded    active     active    Synology Index slice (WAT)
+  SynologyApplicationService.slice                                                                                     loaded    active     active    SynologyApplicationService's slice
+  SynologyDrive.slice                                                                                                  loaded    active     active    SynologyDrive's slice
+  SynoOnlinePack_v2.slice                                                                                              loaded    inactive   dead      SynoOnlinePack_v2's slice
+  synoperfevent.slice                                                                                                  loaded    active     active    Performance alarm
+  system-dhclient.slice                                                                                                loaded    active     active    system-dhclient.slice
+  system-pkg\x2dfailure.slice                                                                                          loaded    active     active    system-pkg\x2dfailure.slice
+  system-serial\x2dgetty.slice                                                                                         loaded    active     active    system-serial\x2dgetty.slice
+  system-syno\x2dmd\x2dresync\x2dspeed\x2dadjust.slice                                                                 loaded    active     active    system-syno\x2dmd\x2dresync\x2dspeed\x2dadjust.slice
+  system.slice                                                                                                         loaded    active     active    System Slice
+  taskscheduler.slice                                                                                                  loaded    active     active    Task Scheduler Group
+  tftp.slice                                                                                                           loaded    inactive   dead      Trivial File Transfer Protocol
+  UniversalViewer.slice                                                                                                loaded    active     active    UniversalViewer's slice
+  USBCopy.slice                                                                                                        loaded    active     active    USBCopy's slice
+  user-196791.slice                                                                                                    loaded    active     active    user-196791.slice
+  user.slice                                                                                                           loaded    active     active    User and Session Slice
+  systemd-journald-audit.socket                                                                                        loaded    active     running   Journal Audit Socket
+  systemd-journald-dev-log.socket                                                                                      loaded    active     running   Journal Socket (/dev/log)
+  systemd-journald.socket                                                                                              loaded    active     running   Journal Socket
+  systemd-udevd-control.socket                                                                                         loaded    active     running   udev Control Socket
+  systemd-udevd-kernel.socket                                                                                          loaded    active     running   udev Kernel Socket
+  dev-md1.swap                                                                                                         loaded    active     active    /dev/md1
+  dev-zram0.swap                                                                                                       loaded    active     active    /dev/zram0
+  dev-zram1.swap                                                                                                       loaded    active     active    /dev/zram1
+  dev-zram2.swap                                                                                                       loaded    active     active    /dev/zram2
+  dev-zram3.swap                                                                                                       loaded    active     active    /dev/zram3
+  basic.target                                                                                                         loaded    active     active    Basic System
+  emergency.target                                                                                                     loaded    inactive   dead      Emergency Mode
+  file-protocol.target                                                                                                 loaded    active     active    Packed In File Protocols
+  getty.target                                                                                                         loaded    active     active    Login Prompts
+  local-fs-pre.target                                                                                                  loaded    inactive   dead      Local File Systems (Pre)
+  local-fs.target                                                                                                      loaded    active     active    Local File Systems
+  multi-user.target                                                                                                    loaded    active     active    Multi-User System
+  network-online.target                                                                                                loaded    active     active    Network is Online
+  network-pre.target                                                                                                   loaded    active     active    Network (Pre)
+  network.target                                                                                                       loaded    active     active    Network
+  nss-user-lookup.target                                                                                               loaded    active     active    User and Group Name Lookups
+  paths.target                                                                                                         loaded    active     active    Paths
+  pgsql-adapter.target                                                                                                 loaded    active     active    PostgreSQL adapter target
+  pkg-root.target                                                                                                      loaded    active     active    Hook on root ready
+  pkg-volume.target                                                                                                    loaded    active     active    Hook on volume ready
+● remote-fs.target                                                                                                     not-found inactive   dead      remote-fs.target
+  rescue.target                                                                                                        loaded    inactive   dead      Rescue Mode
+  shutdown.target                                                                                                      loaded    inactive   dead      Shutdown
+  slices.target                                                                                                        loaded    active     active    Slices
+  smpkg-custom-startup.target                                                                                          loaded    inactive   dead      storage manager package custom startup
+  sockets.target                                                                                                       loaded    active     active    Sockets
+  swap.target                                                                                                          loaded    active     active    Swap
+  syno-bootup-done.target                                                                                              loaded    active     active    Synology bootup done
+  syno-flash-device.target                                                                                             loaded    active     active    Synology synoboot2 done
+  syno-high-priority-packages.target                                                                                   loaded    active     active    High priority packages start up done
+  syno-local-auth-ready.target                                                                                         loaded    active     active    Synology local user and group ready
+  syno-login.target                                                                                                    loaded    active     active    Synology Web console login available
+  syno-low-priority-packages.target                                                                                    loaded    active     active    Low priority packages start up done
+● syno-network.target                                                                                                  not-found inactive   dead      syno-network.target
+  syno-packages.target                                                                                                 loaded    active     active    Packages start up done
+  syno-rootfs-ready.target                                                                                             loaded    active     active    Synology root filesystem (rw) ready
+  syno-share.target                                                                                                    loaded    active     active    Synology shared folders
+  syno-space.target                                                                                                    loaded    active     active    Synology storage pool
+  syno-volume.target                                                                                                   loaded    active     active    Synology data volumes
+  synoindex-startdaemon.target                                                                                         loaded    inactive   dead      "synoindex start daemon target"
+  synoindex-stopdaemon.target                                                                                          loaded    inactive   dead      "synoindex stop daemon target"
+  synoscheduler.target                                                                                                 loaded    active     active    Synology Task Scheduler library functions and tasks ready
+  synosdk-locks.target                                                                                                 loaded    active     active    Create SDK locks directory
+  sysinit.target                                                                                                       loaded    active     active    System Initialization
+● syslog.target                                                                                                        not-found inactive   dead      syslog.target
+  timers.target                                                                                                        loaded    active     active    Timers
+● umount.target                                                                                                        not-found inactive   dead      umount.target
+
+LOAD   = Reflects whether the unit definition was properly loaded.
+ACTIVE = The high-level unit activation state, i.e. generalization of SUB.
+SUB    = The low-level unit activation state, values depend on unit type.
+
+879 loaded units listed.
+To show all installed unit files use 'systemctl list-unit-files'.

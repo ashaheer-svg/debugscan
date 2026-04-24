@@ -1,0 +1,10 @@
+driver: tn40xx
+version: 0.3.6.12.3
+firmware-version: N/A
+expansion-rom-version: 
+bus-info: 0000:09:00.0
+supports-statistics: yes
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+supports-priv-flags: no

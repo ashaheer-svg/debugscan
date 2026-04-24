@@ -1,0 +1,16 @@
+
+[pool_id]
+1=/dev/md2
+2=/dev/vg1
+[ssdcache_id]
+[md_id]
+2=851d2679:e284f7fc:4d06c3ac:691fe969
+3=030b558c:144bd653:14ba53a8:a317f6fe
+[pool_vg_id]
+1=BqebRS-aFGR-VvZM-Oppe-LwkM-JNS9-xova2N
+[single_shr_vg_id]
+[volume_id]
+1=a7e4dd2a-3688-40e4-9631-c134ec62468d
+2=32b26da3-67d3-4ad4-9320-f8026566bcfb
+[shared_cache_vg_id]
+[shared_cache_id]

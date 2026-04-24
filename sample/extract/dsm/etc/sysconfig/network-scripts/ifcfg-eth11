@@ -1,0 +1,3 @@
+DEVICE=eth11
+BOOTPROTO=dhcp
+ONBOOT=yes

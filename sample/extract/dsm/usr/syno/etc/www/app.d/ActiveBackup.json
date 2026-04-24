@@ -1,0 +1,14 @@
+{
+	"version": 2,
+	"application": "Active Backup for Business Portal",
+	"id": "SYNO.SDS.ActiveBackupPortal.Application",
+	"alias": "activebackup",
+	"alternatePort": {
+		"http": 28005,
+		"https": 28006
+	},
+	"injectable": false,
+	"index": "index.cgi",
+	"root": "/usr/syno/synoman",
+	"x-accel": true
+}

@@ -1,0 +1,1 @@
+[{"fs_uuid":"a7e4dd2a-3688-40e4-9631-c134ec62468d","lun":[{"del_time":0,"exist":true,"uuid":"adc4e1b1-670f-45c3-9897-aea1fc4145c9"}],"vol_path":"/volume1"},{"fs_uuid":"32b26da3-67d3-4ad4-9320-f8026566bcfb","lun":[],"vol_path":"/volume2"}]

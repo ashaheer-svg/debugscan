@@ -1,0 +1,11 @@
+ping: SURVEY: Temporary failure in name resolution
+PING SURVEY.LK (10.10.70.15) 56(84) bytes of data.
+64 bytes from addc-server.survey.lk (10.10.70.15): icmp_seq=1 ttl=127 time=175 ms
+64 bytes from addc-server.survey.lk (10.10.70.15): icmp_seq=2 ttl=127 time=21.8 ms
+64 bytes from addc-server.survey.lk (10.10.70.15): icmp_seq=3 ttl=127 time=1.57 ms
+64 bytes from addc-server.survey.lk (10.10.70.15): icmp_seq=4 ttl=127 time=17.8 ms
+64 bytes from addc-server.survey.lk (10.10.70.15): icmp_seq=5 ttl=127 time=74.7 ms
+
+--- SURVEY.LK ping statistics ---
+5 packets transmitted, 5 received, 0% packet loss, time 4006ms
+rtt min/avg/max/mdev = 1.570/58.380/175.821/63.651 ms

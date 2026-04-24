@@ -1,0 +1,332 @@
+
+
+SN: 1790NTN289900, Panic#3 at 2024-05-21T10:57:46+05:30 
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffffa017de92 ffff88046df73e88 ffffffffa017e0d6 0000000000000000
+2024-05-21T11:10:12+05:30   000000000001a340 0000000000000001 ffff88046c3e5200 ffffffffa01820d8
+2024-05-21T11:10:12+05:30   0011665e86f26d63 ffffffffa0182060 ffff88046df73ed0 ffffffff81483272
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   [<ffffffffa017de92>] ? acpi_idle_do_entry+0x22/0x60 [processor]
+2024-05-21T11:10:12+05:30   [<ffffffffa017e0d6>] acpi_idle_enter+0xd6/0x270 [processor]
+2024-05-21T11:10:12+05:30   [<ffffffff81483272>] cpuidle_enter_state+0xf2/0x2b0
+2024-05-21T11:10:12+05:30   [<ffffffff81483462>] cpuidle_enter+0x12/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff810870ef>] cpu_startup_entry+0x29f/0x320
+2024-05-21T11:10:12+05:30   [<ffffffff81030123>] start_secondary+0x133/0x140
+2024-05-21T11:10:12+05:30  Code: ff ff 48 2d f8 3f 00 00 0f 01 c8 49 8b 40 08 a8 08 75 18 8b 05 5b 91 9a 00 85 c0 7e 07 0f 00 2d a8 95 5d 00 89 f0 89 f9 0f 01 c9 <65> 48 8b 04 25 44 48 00 00 48 8d 90 00 c0 ff ff f0 80 a0 0a c0 
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 1
+2024-05-21T11:10:12+05:30  CPU: 1 PID: 5763 Comm: kworker/u17:21 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  Workqueue: tcm_write_wq transport_cmd_defer_exec_work_func [target_core_mod]
+2024-05-21T11:10:12+05:30  task: ffff88003cc70d00 ti: ffff880003a88000 task.ti: ffff880003a88000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b2d5>]  [<ffffffff8108b2d5>] queued_spin_lock_slowpath+0x145/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff880003a8baa0  EFLAGS: 00000202
+2024-05-21T11:10:12+05:30  RAX: 0000000000000101 RBX: ffff880412b28000 RCX: 0000000000000101
+2024-05-21T11:10:12+05:30  RDX: ffff880412b2a430 RSI: 0000000000000001 RDI: 0000000000000101
+2024-05-21T11:10:12+05:30  RBP: ffff880003a8baa8 R08: 0000000000000001 R09: 00000000024080c0
+2024-05-21T11:10:12+05:30  R10: 0000000000000000 R11: 0000000000000000 R12: ffff8802cd00eb80
+2024-05-21T11:10:12+05:30  R13: 000000000002e044 R14: 000000000002e047 R15: 0000000000009fff
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fc40000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 00007ffe14ec1068 CR3: 00000003b5757000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c74b ffff880003a8bad8 ffffffffa125f67b 00000000000003e8
+2024-05-21T11:10:12+05:30   ffff880412b28000 000000000002e044 0000000000000003 ffff880003a8bb40
+2024-05-21T11:10:12+05:30   ffffffffa125f782 000000008107f1d3 ffff88047fc5a340 ffff8803f7114100
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   [<ffffffff8157c74b>] ? _raw_spin_lock+0x1b/0x20
+2024-05-21T11:10:12+05:30   [<ffffffffa125f67b>] epio_relation_segment_trylock+0x4b/0x130 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa125f782>] epio_relation_segment_lock_with_timeout+0x22/0xc0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1266a00>] epio_pull_with_lock+0x40/0x4d0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffff81075908>] ? ttwu_do_activate.constprop.0+0x48/0x60
+2024-05-21T11:10:12+05:30   [<ffffffff810762d4>] ? try_to_wake_up+0x44/0x3f0
+2024-05-21T11:10:12+05:30   [<ffffffffa1267923>] epio_push_to_children+0x43/0x270 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffff81086463>] ? __wake_up_common+0x53/0x90
+2024-05-21T11:10:12+05:30   [<ffffffffa1269010>] epio_local_writev+0x90/0x170 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1103bc1>] ? btrfs_remove_ordered_extent+0x151/0x1f0 [btrfs]
+2024-05-21T11:10:12+05:30   [<ffffffffa12781d0>] plugin_writev+0x10/0x20 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa14f0f23>] ep_execute_rw+0x123/0x230 [target_core_ep]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e4015>] sbc_execute_rw+0x45/0xf0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1015>] transport_defer_exec_cmd+0xf5/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1129>] transport_cmd_defer_exec_work_func+0x19/0x60 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff8106f748>] worker_run_work+0x48/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1110>] ? transport_defer_exec_cmd+0x1f0/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff81066a22>] process_one_work+0x1b2/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d47>] worker_thread+0x37/0x4d0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d10>] ? process_one_work+0x4a0/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bd57>] kthread+0xc7/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157cdff>] ret_from_fork+0x3f/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30  Code: c7 40 08 01 00 00 00 65 ff 0d 54 fb f8 7e c3 b9 01 00 00 00 f0 0f b1 0a 85 c0 0f 85 4f ff ff ff eb e5 83 f9 01 75 04 eb e5 f3 90 <8b> 02 84 c0 75 f8 b8 01 00 00 00 66 89 02 c3 66 2e 0f 1f 84 00 
+2024-05-21T11:10:12+05:30  NMI watchdog: Watchdog detected hard LOCKUP on cpu 0dModules linked in: nf_conntrack x_tables fuse ocs_fc_lio(PO) tcm_qla2xxx(O) qla2xxx(O) libfc scsi_transport_fc vhost_scsi(O) vhost(O) tcm_loop(O) iscsi_target_mod(O) target_core_user(O) target_core_ep(O) target_core_multi_file(O) target_core_file(O) target_core_iblock(O) target_core_mod(O) syno_extent_pool(PO) rodsp_ep(O) udf isofs synoacl_vfs(O) btrfs ecryptfs zstd_decompress zstd_compress xxhash raid456 async_raid6_recov async_memcpy async_pq async_xor xor async_tx raid6_pq 8021q uas usb_storage aesni_intel glue_helper lrw gf128mul ablk_helper zram broadwell_synobios(O) hid_generic usbhid hid adt7475 usblp etxhci_hcd uhci_hcd bnxt_en(O) bnx2x(O) mdio qede(O) qed(O) mlx5_core(O) mlx4_en(O) mlx4_core(O) mlx_compat(O) atlantic(O) tn40xx(O) i40e(O) ixgbe(O) be2net(O) i2c_algo_bit igb(O) dca e1000e(O) dm_crypt sg dm_snapshot dm_bufio crc_itu_t crc_ccitt psnap p8022 llc hfsplus md4 hmac sit tunnel4 ipv6 flashcache_syno(O) fla<4>[4897835.97
+6121] CPU: 0 PID: 32380 Comm: python3 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  task: ffff8803f0722700 ti: ffff88003ffd4000 task.ti: ffff88003ffd4000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b259>]  [<ffffffff8108b259>] queued_spin_lock_slowpath+0xc9/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88003ffd7e80  EFLAGS: 00000046
+2024-05-21T11:10:12+05:30  RAX: 0000000000000000 RBX: ffff88033469db00 RCX: 0000000000000006
+2024-05-21T11:10:12+05:30  RDX: ffff88047fd9a340 RSI: ffff88047fc1ae00 RDI: 0000000000040000
+2024-05-21T11:10:12+05:30  RBP: ffff88003ffd7e88 R08: 0000000000000001 R09: 0000000000000040
+2024-05-21T11:10:12+05:30  R10: ffff88046d091000 R11: ffff88046d658120 R12: ffff88047fd9a340
+2024-05-21T11:10:12+05:30  R13: 0000000000000246 R14: ffff88033469e174 R15: 000000000001a340
+2024-05-21T11:10:12+05:30  FS:  00007fbd8a7c16c0(0000) GS:ffff88047fc00000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 00007fbd8defca98 CR3: 00000002f4821000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c74b ffff88003ffd7ec0 ffffffff810774e6 0000000000000000
+2024-05-21T11:10:12+05:30   ffff88033469db00 0000000000000000 ffff8802280b0800 00000000003d0f00
+2024-05-21T11:10:12+05:30   ffff88003ffd7f38 ffffffff8104d1d1 00007fbd7b7fe6c0 ffff8800ffffffff
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   [<ffffffff8157c74b>] ? _raw_spin_lock+0x1b/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff810774e6>] wake_up_new_task+0xa6/0x1a0
+2024-05-21T11:10:12+05:30   [<ffffffff8104d1d1>] _do_fork+0xe1/0x330
+2024-05-21T11:10:12+05:30   [<ffffffff8105a9bc>] ? sigprocmask+0x7c/0xb0
+2024-05-21T11:10:12+05:30   [<ffffffff8104d4a4>] SyS_clone+0x14/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157ca4a>] entry_SYSCALL_64_fastpath+0x1e/0x93
+2024-05-21T11:10:12+05:30  Code: 46 c1 e9 12 83 e0 03 83 e9 01 48 c1 e0 04 48 63 c9 48 05 00 ae 01 00 48 03 04 cd e0 7a 8d 81 48 89 30 8b 46 08 85 c0 75 1e f3 90 <8b> 46 08 85 c0 74 f7 eb 13 f3 90 8b 32 81 fe 00 01 00 00 74 f4 
+2024-05-21T11:10:12+05:30  Sending NMI to other CPUs:
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 2
+2024-05-21T11:10:12+05:30  CPU: 2 PID: 0 Comm: swapper/2 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  task: ffff88046df49a00 ti: ffff88046df54000 task.ti: ffff88046df54000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b275>]  [<ffffffff8108b275>] queued_spin_lock_slowpath+0xe5/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88047fc83eb8  EFLAGS: 00000002
+2024-05-21T11:10:12+05:30  RAX: 0000000000000000 RBX: 0000000000000246 RCX: 00000000000c0101
+2024-05-21T11:10:12+05:30  RDX: ffffffff8183e040 RSI: ffff88047fc9ae00 RDI: 00000000000c0000
+2024-05-21T11:10:12+05:30  RBP: ffff88047fc83ec8 R08: 0000000000000001 R09: 0000000000000000
+2024-05-21T11:10:12+05:30  R10: 0000000000000001 R11: ffffffff818080c0 R12: ffffffff8183e040
+2024-05-21T11:10:12+05:30  R13: 0000000000000002 R14: ffffffff818080c8 R15: ffff88047fc9b000
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fc80000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 00007f79e00ff4c0 CR3: 00000002e4b93000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c6d7 ffffffff8183e040 ffff88047fc83f28 ffffffff810a177e
+2024-05-21T11:10:12+05:30   ffffffff81081902 ffff88046df49a00 ffff88046df58000 0000000000000000
+2024-05-21T11:10:12+05:30   ffff880400000000 0000000000000100 0000000000000009 0000000000000002
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   <IRQ> d [<ffffffff8157c6d7>] ? _raw_spin_lock_irqsave+0x27/0x30
+2024-05-21T11:10:12+05:30   [<ffffffff810a177e>] rcu_process_callbacks+0xbe/0x5e0
+2024-05-21T11:10:12+05:30   [<ffffffff81081902>] ? run_rebalance_domains+0x142/0x1d0
+2024-05-21T11:10:12+05:30   [<ffffffff81051f5d>] __do_softirq+0xdd/0x330
+2024-05-21T11:10:12+05:30   [<ffffffff810522e3>] irq_exit+0x73/0xa0
+2024-05-21T11:10:12+05:30   [<ffffffff81031dc3>] smp_apic_timer_interrupt+0x43/0x60
+2024-05-21T11:10:12+05:30   [<ffffffff8157d7db>] apic_timer_interrupt+0x9b/0xa0
+2024-05-21T11:10:12+05:30   <EOI> d [<ffffffff814832b5>] ? cpuidle_enter_state+0x135/0x2b0
+2024-05-21T11:10:12+05:30   [<ffffffff81483292>] ? cpuidle_enter_state+0x112/0x2b0
+2024-05-21T11:10:12+05:30   [<ffffffff81483462>] cpuidle_enter+0x12/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff810870ef>] cpu_startup_entry+0x29f/0x320
+2024-05-21T11:10:12+05:30   [<ffffffff81030123>] start_secondary+0x133/0x140
+2024-05-21T11:10:12+05:30  Code: 7a 8d 81 48 89 30 8b 46 08 85 c0 75 1e f3 90 8b 46 08 85 c0 74 f7 eb 13 f3 90 8b 32 81 fe 00 01 00 00 74 f4 e9 2c ff ff ff f3 90 <8b> 0a 66 85 c9 75 f7 41 b8 01 00 00 00 eb 0d 89 c8 f0 44 0f b1 
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 3
+2024-05-21T11:10:12+05:30  CPU: 3 PID: 20028 Comm: kworker/u17:9 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  Workqueue: tcm_write_wq transport_cmd_defer_exec_work_func [target_core_mod]
+2024-05-21T11:10:12+05:30  task: ffff8803108f6800 ti: ffff880343090000 task.ti: ffff880343090000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b2d5>]  [<ffffffff8108b2d5>] queued_spin_lock_slowpath+0x145/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88047fcc3eb8  EFLAGS: 00000002
+2024-05-21T11:10:12+05:30  RAX: 00000000000c0101 RBX: 0000000000000246 RCX: 0000000000000101
+2024-05-21T11:10:12+05:30  RDX: ffffffff8183e040 RSI: 0000000000000001 RDI: 0000000000000101
+2024-05-21T11:10:12+05:30  RBP: ffff88047fcc3ec8 R08: 0000000000000001 R09: 7fffffffffffffff
+2024-05-21T11:10:12+05:30  R10: 000000000000003a R11: ffffffff81808090 R12: ffffffff8183e040
+2024-05-21T11:10:12+05:30  R13: 0000000000000080 R14: ffffffff818080c8 R15: ffff88047fcdb000
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fcc0000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 000055a2f8d51810 CR3: 00000002bac89000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c6d7 ffffffff8183e040 ffff88047fcc3f28 ffffffff810a177e
+2024-05-21T11:10:12+05:30   ffffffff810a5594 ffff8803108f6800 ffff880343094000 0000000000000000
+2024-05-21T11:10:12+05:30   0000000000000000 0000000000000100 0000000000000009 0000000000000080
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   <IRQ> d [<ffffffff8157c6d7>] ? _raw_spin_lock_irqsave+0x27/0x30
+2024-05-21T11:10:12+05:30   [<ffffffff810a177e>] rcu_process_callbacks+0xbe/0x5e0
+2024-05-21T11:10:12+05:30   [<ffffffff810a5594>] ? run_timer_softirq+0x44/0x370
+2024-05-21T11:10:12+05:30   [<ffffffff81051f5d>] __do_softirq+0xdd/0x330
+2024-05-21T11:10:12+05:30   [<ffffffff810522e3>] irq_exit+0x73/0xa0
+2024-05-21T11:10:12+05:30   [<ffffffff81031dc3>] smp_apic_timer_interrupt+0x43/0x60
+2024-05-21T11:10:12+05:30   [<ffffffff8157d7db>] apic_timer_interrupt+0x9b/0xa0
+2024-05-21T11:10:12+05:30   <EOI> d [<ffffffff81293085>] ? common_file_perm+0x25/0x240
+2024-05-21T11:10:12+05:30   [<ffffffff81293343>] apparmor_file_permission+0x13/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8128696e>] security_file_permission+0x3e/0xc0
+2024-05-21T11:10:12+05:30   [<ffffffff8117ab29>] rw_verify_area+0x49/0xd0
+2024-05-21T11:10:12+05:30   [<ffffffff8117ac16>] vfs_read+0x66/0x140
+2024-05-21T11:10:12+05:30   [<ffffffff81181edc>] kernel_read+0x3c/0x50
+2024-05-21T11:10:12+05:30   [<ffffffffa126f933>] epf_read_data_node+0xc3/0x120 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1276bb3>] ? efcn_free+0xf3/0x120 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1276f1e>] efcn_get+0x2ce/0x580 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1277663>] efc_read+0x53/0x170 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa12582d3>] emh_get_em+0x53/0x60 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1266254>] epio_push+0x144/0x8b0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1266a24>] ? epio_pull_with_lock+0x64/0x4d0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1266f0c>] epio_push_to_child_with_lock+0x7c/0xd0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa126797a>] epio_push_to_children+0x9a/0x270 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1268c44>] epio_dealloc_buffered+0x34/0xe0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1268d65>] epio_execute_unmap+0x75/0xf0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1278270>] plugin_unmap+0x10/0x20 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa14ee080>] ep_execute_unmap+0x30/0x70 [target_core_ep]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e475c>] sbc_execute_unmap+0x10c/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1015>] transport_defer_exec_cmd+0xf5/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1129>] transport_cmd_defer_exec_work_func+0x19/0x60 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff8106f748>] worker_run_work+0x48/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1110>] ? transport_defer_exec_cmd+0x1f0/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff81066a22>] process_one_work+0x1b2/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d47>] worker_thread+0x37/0x4d0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d10>] ? process_one_work+0x4a0/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bd57>] kthread+0xc7/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157cdff>] ret_from_fork+0x3f/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30  Code: c7 40 08 01 00 00 00 65 ff 0d 54 fb f8 7e c3 b9 01 00 00 00 f0 0f b1 0a 85 c0 0f 85 4f ff ff ff eb e5 83 f9 01 75 04 eb e5 f3 90 <8b> 02 84 c0 75 f8 b8 01 00 00 00 66 89 02 c3 66 2e 0f 1f 84 00 
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 4
+2024-05-21T11:10:12+05:30  CPU: 4 PID: 7 Comm: rcu_sched Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  task: ffff88046de7ce00 ti: ffff88046df38000 task.ti: ffff88046df38000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b2d7>]  [<ffffffff8108b2d7>] queued_spin_lock_slowpath+0x147/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88046df3bda0  EFLAGS: 00000002
+2024-05-21T11:10:12+05:30  RAX: 0000000000040101 RBX: 0000000000000082 RCX: 0000000000000101
+2024-05-21T11:10:12+05:30  RDX: ffff88047fd9a340 RSI: 0000000000000001 RDI: 0000000000000101
+2024-05-21T11:10:12+05:30  RBP: ffff88046df3bdb0 R08: 0000000000000001 R09: 0000000000000000
+2024-05-21T11:10:12+05:30  R10: 0000000000000000 R11: 0000000000000000 R12: ffffffff8183e040
+2024-05-21T11:10:12+05:30  R13: ffff88047fd9a340 R14: 0000000000000040 R15: 0000000000000006
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fd00000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 00007f79dd6b1000 CR3: 00000003b5757000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c6d7 0000000000000006 ffff88046df3bdd8 ffffffff81075179
+2024-05-21T11:10:12+05:30   ffff88047fd9b000 ffffffff8183e040 0000000000000000 ffff88046df3bdf0
+2024-05-21T11:10:12+05:30   ffffffff8109eea4 ffffffff8183e040 ffff88046df3be48 ffffffff810a0c54
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   [<ffffffff8157c6d7>] ? _raw_spin_lock_irqsave+0x27/0x30
+2024-05-21T11:10:12+05:30   [<ffffffff81075179>] resched_cpu+0x29/0x70
+2024-05-21T11:10:12+05:30   [<ffffffff8109eea4>] rcu_implicit_dynticks_qs+0x104/0x140
+2024-05-21T11:10:12+05:30   [<ffffffff810a0c54>] force_qs_rnp+0xc4/0x170
+2024-05-21T11:10:12+05:30   [<ffffffff8109eda0>] ? print_cpu_stall_info+0x140/0x140
+2024-05-21T11:10:12+05:30   [<ffffffff810a1433>] rcu_gp_kthread+0x633/0x8c0
+2024-05-21T11:10:12+05:30   [<ffffffff81086920>] ? prepare_to_wait_event+0xf0/0xf0
+2024-05-21T11:10:12+05:30   [<ffffffff810a0e00>] ? rcu_note_context_switch+0x100/0x100
+2024-05-21T11:10:12+05:30   [<ffffffff8106bd57>] kthread+0xc7/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157cdff>] ret_from_fork+0x3f/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30  Code: 08 01 00 00 00 65 ff 0d 54 fb f8 7e c3 b9 01 00 00 00 f0 0f b1 0a 85 c0 0f 85 4f ff ff ff eb e5 83 f9 01 75 04 eb e5 f3 90 8b 02 <84> c0 75 f8 b8 01 00 00 00 66 89 02 c3 66 2e 0f 1f 84 00 00 00 
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 5
+2024-05-21T11:10:12+05:30  CPU: 5 PID: 0 Comm: swapper/5 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  task: ffff88046df4c100 ti: ffff88046df60000 task.ti: ffff88046df60000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b277>]  [<ffffffff8108b277>] queued_spin_lock_slowpath+0xe7/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88047fd43e70  EFLAGS: 00000002
+2024-05-21T11:10:12+05:30  RAX: 0000000000000000 RBX: 0000000000000006 RCX: 0000000000040101
+2024-05-21T11:10:12+05:30  RDX: ffff88047fd9a340 RSI: ffff88047fd5ae00 RDI: 0000000000180000
+2024-05-21T11:10:12+05:30  RBP: ffff88047fd43e78 R08: 0000000000000001 R09: 00000000000000ff
+2024-05-21T11:10:12+05:30  R10: 001165e09de21400 R11: 0000000000000000 R12: 0000000000000000
+2024-05-21T11:10:12+05:30  R13: 000000000001a340 R14: ffff88047fd9a340 R15: ffff88047fd5ab38
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fd40000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 00007efddb624000 CR3: 0000000457250000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c74b ffff88047fd43ed0 ffffffff810839cb ffffffff81a063e0
+2024-05-21T11:10:12+05:30   ffffffff81a063f8 0000000100000001 ffff88047fd9a498 ffff88047fd57380
+2024-05-21T11:10:12+05:30   ffff88047fd573c0 ffffffff81083900 ffffffff81a063f8 ffff88047fd57380
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   <IRQ> d [<ffffffff8157c74b>] ? _raw_spin_lock+0x1b/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff810839cb>] sched_rt_period_timer+0xcb/0x2f0
+2024-05-21T11:10:12+05:30   [<ffffffff81083900>] ? task_woken_rt+0x70/0x70
+2024-05-21T11:10:12+05:30   [<ffffffff810a665c>] __hrtimer_run_queues+0xfc/0x260
+2024-05-21T11:10:12+05:30   [<ffffffff810a6af2>] hrtimer_interrupt+0x92/0x160
+2024-05-21T11:10:12+05:30   [<ffffffff8103167a>] local_apic_timer_interrupt+0x3a/0x40
+2024-05-21T11:10:12+05:30   [<ffffffff81031dbe>] smp_apic_timer_interrupt+0x3e/0x60
+2024-05-21T11:10:12+05:30   [<ffffffff8157d7db>] apic_timer_interrupt+0x9b/0xa0
+2024-05-21T11:10:12+05:30   <EOI> d [<ffffffff814832b5>] ? cpuidle_enter_state+0x135/0x2b0
+2024-05-21T11:10:12+05:30   [<ffffffff81483292>] ? cpuidle_enter_state+0x112/0x2b0
+2024-05-21T11:10:12+05:30   [<ffffffff81483462>] cpuidle_enter+0x12/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff810870ef>] cpu_startup_entry+0x29f/0x320
+2024-05-21T11:10:12+05:30   [<ffffffff81030123>] start_secondary+0x133/0x140
+2024-05-21T11:10:12+05:30  Code: 81 48 89 30 8b 46 08 85 c0 75 1e f3 90 8b 46 08 85 c0 74 f7 eb 13 f3 90 8b 32 81 fe 00 01 00 00 74 f4 e9 2c ff ff ff f3 90 8b 0a <66> 85 c9 75 f7 41 b8 01 00 00 00 eb 0d 89 c8 f0 44 0f b1 02 39 
+2024-05-21T11:10:12+05:30  NMI backtrace for cpu 6
+2024-05-21T11:10:12+05:30  CPU: 6 PID: 14436 Comm: kworker/u17:4 Tainted: P      D W  O L  4.4.302+ #69057
+2024-05-21T11:10:12+05:30  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.017 2019/10/16
+2024-05-21T11:10:12+05:30  task: ffff880055771a00 ti: ffff88036e1dc000 task.ti: ffff88036e1dc000
+2024-05-21T11:10:12+05:30  RIP: 0010:[<ffffffff8108b25c>]  [<ffffffff8108b25c>] queued_spin_lock_slowpath+0xcc/0x160
+2024-05-21T11:10:12+05:30  RSP: 0018:ffff88036e1df520  EFLAGS: 00000046
+2024-05-21T11:10:12+05:30  RAX: 0000000000000000 RBX: ffff88047fd9a340 RCX: 0000000000000005
+2024-05-21T11:10:12+05:30  RDX: ffff88047fd9a340 RSI: ffff88047fd9ae00 RDI: 00000000001c0000
+2024-05-21T11:10:12+05:30  RBP: ffff88036e1df528 R08: 0000000000000001 R09: 0000000000000005
+2024-05-21T11:10:12+05:30  R10: 000000000000002c R11: 0000000000000000 R12: ffff88047fd9a340
+2024-05-21T11:10:12+05:30  R13: 0000000000000000 R14: 000000000001a340 R15: ffff880055771a00
+2024-05-21T11:10:12+05:30  FS:  0000000000000000(0000) GS:ffff88047fd80000(0000) knlGS:0000000000000000
+2024-05-21T11:10:12+05:30  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2024-05-21T11:10:12+05:30  CR2: 0000000000000028 CR3: 00000003f26e7000 CR4: 00000000003606f0
+2024-05-21T11:10:12+05:30  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2024-05-21T11:10:12+05:30  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2024-05-21T11:10:12+05:30  Stack:
+2024-05-21T11:10:12+05:30   ffffffff8157c76c ffff88036e1df578 ffffffff81578e5b ffff88036e1df590
+2024-05-21T11:10:12+05:30   ffffffff00000006 ffff880055771a00 ffff88036e1e0000 0000000000000009
+2024-05-21T11:10:12+05:30   0000000000000000 ffffffffffffffd8 ffff880055771a00 ffff88036e1df590
+2024-05-21T11:10:12+05:30  Call Trace:
+2024-05-21T11:10:12+05:30   [<ffffffff8157c76c>] ? _raw_spin_lock_irq+0x1c/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff81578e5b>] __schedule+0x8b/0x820
+2024-05-21T11:10:12+05:30   [<ffffffff81579620>] schedule+0x30/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff81559269>] do_exit.cold+0x67/0x78
+2024-05-21T11:10:12+05:30   [<ffffffff81006d3e>] oops_end+0x9e/0xa0
+2024-05-21T11:10:12+05:30   [<ffffffff8103eb44>] no_context+0x124/0x1d0
+2024-05-21T11:10:12+05:30   [<ffffffff811c2190>] ? fsnotify_destroy_marks+0x20/0xc0
+2024-05-21T11:10:12+05:30   [<ffffffff8103ec76>] __bad_area_nosemaphore+0x86/0x190
+2024-05-21T11:10:12+05:30   [<ffffffff8103ed8e>] bad_area_nosemaphore+0xe/0x10
+2024-05-21T11:10:12+05:30   [<ffffffff8103f43b>] __do_page_fault+0x8b/0x3d0
+2024-05-21T11:10:12+05:30   [<ffffffff8107576e>] ? check_preempt_curr+0x7e/0x90
+2024-05-21T11:10:12+05:30   [<ffffffff8103f78c>] do_page_fault+0xc/0x10
+2024-05-21T11:10:12+05:30   [<ffffffff8157e852>] page_fault+0x22/0x30
+2024-05-21T11:10:12+05:30   [<ffffffff8106c147>] ? kthread_data+0x7/0x10
+2024-05-21T11:10:12+05:30   [<ffffffff810685dc>] ? wq_worker_sleeping+0xc/0x90
+2024-05-21T11:10:12+05:30   [<ffffffff8157923d>] __schedule+0x46d/0x820
+2024-05-21T11:10:12+05:30   [<ffffffff81579620>] schedule+0x30/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff810508db>] do_exit+0x69b/0x960
+2024-05-21T11:10:12+05:30   [<ffffffff81006d3e>] oops_end+0x9e/0xa0
+2024-05-21T11:10:12+05:30   [<ffffffff81555b0d>] die.cold+0x21/0x2a
+2024-05-21T11:10:12+05:30   [<ffffffff81004856>] do_trap+0x66/0xf0
+2024-05-21T11:10:12+05:30   [<ffffffff8106cfdf>] ? notify_die+0x5f/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff81004a52>] do_error_trap+0x82/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffffa125f75b>] ? epio_relation_segment_trylock+0x12b/0x130 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffff810953ea>] ? console_unlock.part.0+0x4ea/0x570
+2024-05-21T11:10:12+05:30   [<ffffffff81095bd3>] ? vprintk_emit+0x263/0x4b0
+2024-05-21T11:10:12+05:30   [<ffffffff81004fbb>] do_invalid_op+0x1b/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157e578>] invalid_op+0x18/0x20
+2024-05-21T11:10:12+05:30   [<ffffffffa125f75b>] ? epio_relation_segment_trylock+0x12b/0x130 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa125f782>] epio_relation_segment_lock_with_timeout+0x22/0xc0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1266a24>] ? epio_pull_with_lock+0x64/0x4d0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffff8107feb2>] ? find_busiest_group+0x122/0x980
+2024-05-21T11:10:12+05:30   [<ffffffffa1266ef3>] epio_push_to_child_with_lock+0x63/0xd0 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa126797a>] epio_push_to_children+0x9a/0x270 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa1269010>] epio_local_writev+0x90/0x170 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffff812e8893>] ? find_next_bit+0x13/0x20
+2024-05-21T11:10:12+05:30   [<ffffffffa12781d0>] plugin_writev+0x10/0x20 [syno_extent_pool]
+2024-05-21T11:10:12+05:30   [<ffffffffa14f0f23>] ep_execute_rw+0x123/0x230 [target_core_ep]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e4015>] sbc_execute_rw+0x45/0xf0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1015>] transport_defer_exec_cmd+0xf5/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1129>] transport_cmd_defer_exec_work_func+0x19/0x60 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff8106f748>] worker_run_work+0x48/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffffa13e1110>] ? transport_defer_exec_cmd+0x1f0/0x1f0 [target_core_mod]
+2024-05-21T11:10:12+05:30   [<ffffffff81066a22>] process_one_work+0x1b2/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d47>] worker_thread+0x37/0x4d0
+2024-05-21T11:10:12+05:30   [<ffffffff81066d10>] ? process_one_work+0x4a0/0x4a0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bd57>] kthread+0xc7/0xe0
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30   [<ffffffff8157cdff>] ret_from_fork+0x3f/0x80
+2024-05-21T11:10:12+05:30   [<ffffffff8106bc90>] ? kthread_parkme+0x20/0x20
+2024-05-21T11:10:12+05:30  Code: 12 83 e0 03 83 e9 01 48 c1 e0 04 48 63 c9 48 05 00 ae 01 00 48 03 04 cd e0 7a 8d 81 48 89 30 8b 46 08 85 c0 75 1e f3 90 8b 46 08 <85> c0 74 f7 eb 13 f3 90 8b 32 81 fe 00 01 00 00 74 f4 e9 2c ff 
+2024-05-21T11:10:12+05:30  Kernel panic - not syncing: Hard LOCKUP
+2024-05-21T11:10:13+05:30  Shutting down cpus with NMI
+2024-05-21T11:10:13+05:30  Kernel Offset: disabled

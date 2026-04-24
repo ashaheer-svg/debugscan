@@ -1,0 +1,604 @@
+
+{
+	"data_version" : "3",
+	"file_statuses" : 
+	{
+		"ACCVRAIZ1.crt" : 
+		{
+			"sha384_digest" : "b8b7859d8883b83a9490fae7714139db2ec58ed4c92bafa6005d84418c9c3562be9fd8b7bba11e82bc71a1cdafd9a951"
+		},
+		"AC_RAIZ_FNMT-RCM.crt" : 
+		{
+			"sha384_digest" : "4aa5c03413e9a01854557e1d30f98ac848399875d8b6e8b8c572178b1d4bbeade6bce9a77ae476cbc4dbdeeeef4ec82c"
+		},
+		"AC_RAIZ_FNMT-RCM_SERVIDORES_SEGUROS.crt" : 
+		{
+			"sha384_digest" : "1cfbf56340fa8b965419688e8543520b57845467f91db883b59dd062388a57f90c6c78cdce15a699809fc8eba3246ee5"
+		},
+		"ANF_Secure_Server_Root_CA.crt" : 
+		{
+			"sha384_digest" : "5047dbbc3e48fd51c61a23fc99b9c3175982710dce5cace3f9e065106384e61915291e70aa7fafd69a97c7cbe90b27b7"
+		},
+		"Actalis_Authentication_Root_CA.crt" : 
+		{
+			"sha384_digest" : "5277de3a4d6bdcfc7d363bbe8ac94512794acde1ae75fa18488251b1a7e4819667a1ad12e07c93833928c0806db7ae4e"
+		},
+		"AffirmTrust_Commercial.crt" : 
+		{
+			"sha384_digest" : "4e9c40ce2d78a23a54a54bbdd98f3ef921976fd5bf88c831386580683ba91b96227c83491899dc216ced0dec8e584ff5"
+		},
+		"AffirmTrust_Networking.crt" : 
+		{
+			"sha384_digest" : "1390e772677f07291ad8a51deea483627fd669973f9b78e38f435eb7f7ba58014470fb4d3a4146f306bf9029803885fc"
+		},
+		"AffirmTrust_Premium.crt" : 
+		{
+			"sha384_digest" : "8cf7e682523a5ad1aaf3013639d90fdb35415ee67cf16cf39f50c9339c2a45d22074ed36d14eda85ef0d53f0150f2646"
+		},
+		"AffirmTrust_Premium_ECC.crt" : 
+		{
+			"sha384_digest" : "a8f33d4c1248f7e0d78f42764b855fdf871c568c380f60e8b10a148c433944cbf410049899a619737d11f1197015785c"
+		},
+		"Amazon_Root_CA_1.crt" : 
+		{
+			"sha384_digest" : "f1caef745976155f1a4ef400169e93c8cdc708dd69cb8eb86b3ac4362f6262e6a109623b1c18e7f7e9cfc598630efaab"
+		},
+		"Amazon_Root_CA_2.crt" : 
+		{
+			"sha384_digest" : "e4336a10bbc4836f2cb00299bd8254fe7353e458c0678045452a5d9448ebfdf74aa614d992620aa39edec4dc22c20fc7"
+		},
+		"Amazon_Root_CA_3.crt" : 
+		{
+			"sha384_digest" : "468b1d65c767e322d89de3a6e70b9db9cb88a1f6816600eb8c9caaba060ac26a772ae153672c9f0a1a05a780bec9628f"
+		},
+		"Amazon_Root_CA_4.crt" : 
+		{
+			"sha384_digest" : "315d89a82a7b9179b88748a7d86c0951571477c61a3d3d89f22f1f12b1131e77658c1caa44292025f3b13e9f215e3a3a"
+		},
+		"Atos_TrustedRoot_2011.crt" : 
+		{
+			"sha384_digest" : "fe0509841d6de5fe770db4ff0c1b3a5ddaa8dd02e423db8e41052db13b8813d7d3c61c23c8c06ea56258a7f68dd95ab0"
+		},
+		"Atos_TrustedRoot_Root_CA_ECC_TLS_2021.crt" : 
+		{
+			"sha384_digest" : "942ae4f5401a92c1be49e75a2337647ad3d974605ac29467c06f62078531d319fdc40bd15f0e5e231bbeaddc8ef9f6b6"
+		},
+		"Atos_TrustedRoot_Root_CA_RSA_TLS_2021.crt" : 
+		{
+			"sha384_digest" : "4d3a978f280a71ac88aa42f33119999897f651f003d66d34ab1dffb87a98eaeaf7d14a669162ff4661c8b9f88affecfc"
+		},
+		"Autoridad_de_Certificacion_Firmaprofesional_CIF_A62634068.crt" : 
+		{
+			"sha384_digest" : "0195b821a82c3c8403e0693b652ea1216d1d128b03d4c40c9fdffa993683ca3eedb89b3dd4f7bfec4ed67a87cfa1c6c0"
+		},
+		"BJCA_Global_Root_CA1.crt" : 
+		{
+			"sha384_digest" : "cd46807780b26f7ed581eaa093cc737f58ab246119293c40897a015982877776264b87d10c5573553b3826753b5642b9"
+		},
+		"BJCA_Global_Root_CA2.crt" : 
+		{
+			"sha384_digest" : "e602056e7e0465740a34330d982f841c21b56de16746b1ab88d734dbdf6e85b887e08455b8294cc17f75875567eccb49"
+		},
+		"Buypass_Class_2_Root_CA.crt" : 
+		{
+			"sha384_digest" : "3daa5890614fb69136560d950b331ea90db5fc0772899b4c658229deda121d1189fb79aa2dbdff23a803e18c0241e66f"
+		},
+		"Buypass_Class_3_Root_CA.crt" : 
+		{
+			"sha384_digest" : "5e8f4a8a26a481b1dbe2dd5177001c4a4aedf3332e0249bc175a147505d00550f714d02fa152921fd42edc77062e0bc1"
+		},
+		"CA_Disig_Root_R2.crt" : 
+		{
+			"sha384_digest" : "a3e9fbeeb6f998208e076006d57edc827589b7376c54255d75e254eb89f3203112692266b2ebe30f492d0b66c3629a81"
+		},
+		"CFCA_EV_ROOT.crt" : 
+		{
+			"sha384_digest" : "f390b7cc0381685ca0b4527f7107b9f04159046ff63ebcb4f902c767d10fac05575d24d8f53e66ab6fae67cd12994cc7"
+		},
+		"COMODO_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "20a2d4c20a39aba847ffeaa389876964ae9701e5b72dc3ed5d72eaded79112422065f3b27edfc22659284cdb4c4c1f68"
+		},
+		"COMODO_ECC_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "4b89bcbcc65e98281f1627f98a9d2210d704b85cc6d3f700ace720f93b5fb0b0635a4555ffc829162206bf80ef0c0ee9"
+		},
+		"COMODO_RSA_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "5bc4e928f72c1ec0233c9007eb03530cd02cd1a3cb4b6972c141ed3b3f2f59186b8940948405e5b9abf49d720c662d8e"
+		},
+		"Certainly_Root_E1.crt" : 
+		{
+			"sha384_digest" : "79edfcb7fb7577d756f7b0f0f4937af3b5a72c1156baec9c827d33d202e4e6e4228461f6ccc284802ffaf007ba29a413"
+		},
+		"Certainly_Root_R1.crt" : 
+		{
+			"sha384_digest" : "61ce381448b8c46978d73a831d5a07dbab7b71abf4891c955f5d5bc32b75dca79f1aee4e15b4184c8571dbccc9da6943"
+		},
+		"Certigna.crt" : 
+		{
+			"sha384_digest" : "687a9c5be74be7a866f92aa321682d3ad8671aded53a7ca6a420e20866600f6ee37e45a21c2f2dc03e2604178aad7f6c"
+		},
+		"Certigna_Root_CA.crt" : 
+		{
+			"sha384_digest" : "a5d432920477bc2ff249e3bb1762e30ac363cd94fcb636912f1d7a9635af340fb37e48e8a3bd8cc22af8e2819a4e5f8a"
+		},
+		"Certum_EC-384_CA.crt" : 
+		{
+			"sha384_digest" : "fa0aef22cf9c3864cfec4b48172b25fe771a6ba0f0e74ae049d36bb1e8431adf12485294aa44ed6ec9eadbc621aaa6a0"
+		},
+		"Certum_Trusted_Network_CA.crt" : 
+		{
+			"sha384_digest" : "feb6159b7a59b349ac03a947f1a0f2dd031bbd585c0bc0bde6595359a652bd2d0d361fda772301462625f3770f19584c"
+		},
+		"Certum_Trusted_Network_CA_2.crt" : 
+		{
+			"sha384_digest" : "3429301eabf37c39aea558307b323112b515b47a52c53abbd676af900420694a13b08a5ff804d5e889dd3276f41b84ab"
+		},
+		"Certum_Trusted_Root_CA.crt" : 
+		{
+			"sha384_digest" : "40e1423b206b5cf04edda3be0da28b98475a42015b5e7fa80ada6347036d94aa9763844010317fc1add230c6dad46789"
+		},
+		"CommScope_Public_Trust_ECC_Root-01.crt" : 
+		{
+			"sha384_digest" : "ea0e897ce064093fc87f22df7e73ab1f12ff9a638ed5c4bb09b9cabfbecf320a31960b0c6c9bc3c922d6e6b27dfa852a"
+		},
+		"CommScope_Public_Trust_ECC_Root-02.crt" : 
+		{
+			"sha384_digest" : "e6e286be7110848a946975888e62f419bb41681ba207bdf17cb9e3cd317195d9073ee74971bad2d40298f9972bcd2675"
+		},
+		"CommScope_Public_Trust_RSA_Root-01.crt" : 
+		{
+			"sha384_digest" : "a97d6e28eaeb0216b91ba3a8de0128adcfa017a99925c4281d4cd7df1d6e9caeb57477f1410c2c9e0ef54b33320d8a95"
+		},
+		"CommScope_Public_Trust_RSA_Root-02.crt" : 
+		{
+			"sha384_digest" : "f2f826b2fb00d5a42f722772e642bd67e54ef400cadeeea4ea186d145e30def30b5878cbd9652ccf282c093d822ee8cf"
+		},
+		"Comodo_AAA_Services_root.crt" : 
+		{
+			"sha384_digest" : "1bc2634c3bfe571e4cbfa5cd1be4e6ca02a7a1cdac6ceca3adb92c1e0377816e25ea98b7aa6c74b19542fc0ccadb72a9"
+		},
+		"D-TRUST_BR_Root_CA_1_2020.crt" : 
+		{
+			"sha384_digest" : "aff552313a58c373341a3994bbf88e9cb4981c5f2d6092639756c95a782b7df7eda16ee64a8a13434f5b925e28149bbf"
+		},
+		"D-TRUST_BR_Root_CA_2_2023.crt" : 
+		{
+			"sha384_digest" : "7564eaf0397e725bb207c92a526e987da40cb2062ad6ed1c8ee4f3a0c9bd5966c66fc209427553be32d7e1e2f1ef2c88"
+		},
+		"D-TRUST_EV_Root_CA_1_2020.crt" : 
+		{
+			"sha384_digest" : "d472c2b4e645773410de98ef62445b1c09b3e7cb58ae06a9b38e320a49171e09e1489af05ea8863f975e2667cc6b257d"
+		},
+		"D-TRUST_EV_Root_CA_2_2023.crt" : 
+		{
+			"sha384_digest" : "595178614c0bd95c265234be245c0c354b87e012870681b6c95816d44f7e2e2cad0404b095374e76f49033279698e096"
+		},
+		"D-TRUST_Root_Class_3_CA_2_2009.crt" : 
+		{
+			"sha384_digest" : "b35082a04f171ff9c67bd053afc251800d299ab03d62db3a200b5c84da594fd0cd255354ae676d4666cc14a7293542d9"
+		},
+		"D-TRUST_Root_Class_3_CA_2_EV_2009.crt" : 
+		{
+			"sha384_digest" : "313d9eb47da1df8edd9cdddbfa9f33f3f907fd6f3b1e02a0d6f23b4f629ce7e103b0a621cafe4475550e4ef161ff0440"
+		},
+		"DigiCert_Assured_ID_Root_CA.crt" : 
+		{
+			"sha384_digest" : "634b88f3a30994b4bcebe2947065e27551210357ec714b9cdc49356d4e0f371f6d570dfb8be854b099bfa95ac903d744"
+		},
+		"DigiCert_Assured_ID_Root_G2.crt" : 
+		{
+			"sha384_digest" : "74e675cb69e8a93dc0d2bffb8b3bea9d3ccee7ae368b2a613dd2099eb78e55c5a91a93be1b1432066844d845f6fe68f9"
+		},
+		"DigiCert_Assured_ID_Root_G3.crt" : 
+		{
+			"sha384_digest" : "de6dd7659525296302c2920c20c73b34055afc0c8c9eb3d8067849cd043fe4e4bf7c2f5cbeb17dd2d0527062a560b952"
+		},
+		"DigiCert_Global_Root_CA.crt" : 
+		{
+			"sha384_digest" : "37fcebd29b8a5d3cee574a22eb8ac053206ae3b0c294e0742a4afaa90c2eadfad7e2c48e642e871e15511a08058cdfa2"
+		},
+		"DigiCert_Global_Root_G2.crt" : 
+		{
+			"sha384_digest" : "8a8e3e0440168e8b6a81dcaae2f4df207d008c4a3c7b7a66151e01ee8d3aad1237f63ddb5e3e5f7e73eb8d4f7e6eaca8"
+		},
+		"DigiCert_Global_Root_G3.crt" : 
+		{
+			"sha384_digest" : "d5f72e6a77285f33e1f45c797f26d927eb20a442d3d94b533e6a012b07311f65c6559e579d3b4a71c4bb9f9ad869281d"
+		},
+		"DigiCert_High_Assurance_EV_Root_CA.crt" : 
+		{
+			"sha384_digest" : "6f45199aa8dcc9dc215f547e568a535ada75eb504fa83d24b4594c3a6c9da46486bc1961f3c0db9af18e76f40b7e4848"
+		},
+		"DigiCert_TLS_ECC_P384_Root_G5.crt" : 
+		{
+			"sha384_digest" : "8cf26cc0479aad406fffffc78e98ef4fe1b6eb4a40555ef38c95c76ce632a5d2886d442fb0383421b881945953024652"
+		},
+		"DigiCert_TLS_RSA4096_Root_G5.crt" : 
+		{
+			"sha384_digest" : "990fe799a6573d8d7dba5194b92bb77c72bcfe6d9d79e25fb0c8079b7d8e896790fcfe863f4a7cba26bf82674ba39e3d"
+		},
+		"DigiCert_Trusted_Root_G4.crt" : 
+		{
+			"sha384_digest" : "615e1432009d7f0864e037b26fa407aee7ceb47ddf179ef1055040e95cc6df04cedaa9f9ff8dacffa09ce437db605170"
+		},
+		"Entrust.net_Premium_2048_Secure_Server_CA.crt" : 
+		{
+			"sha384_digest" : "2f7aebd17e342015adca60afea024353594b2d4c27efb3b0b1642cf5654755db7ec98429be391720b0a1532638d5a1a7"
+		},
+		"Entrust_Root_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "efe37419cd043d47c4b5894789c82326baef26b6c608d464eced0727c1dd720ff227834981738d56e931508222637328"
+		},
+		"Entrust_Root_Certification_Authority_-_EC1.crt" : 
+		{
+			"sha384_digest" : "8d6eac1a4d475e71c8eac3ca2ce5ce3a9904fde1d8a3218e430065b40a4827d275ef0cff10fb5c3fe9ecc29d7b464424"
+		},
+		"Entrust_Root_Certification_Authority_-_G2.crt" : 
+		{
+			"sha384_digest" : "505f79bb46699a35e33b862b913ebf7ecdb7ac959ac157ea70ef3d04c7293849b0fc4028b3a99a2bfee5b11b33a000d9"
+		},
+		"FIRMAPROFESIONAL_CA_ROOT-A_WEB.crt" : 
+		{
+			"sha384_digest" : "63a94b72d3d96e86e11d23254013cce606481f8379d20b101a9621634a553f4b3f152bb47c653609812aa0487974b052"
+		},
+		"GDCA_TrustAUTH_R5_ROOT.crt" : 
+		{
+			"sha384_digest" : "2e0063a9920751fc525a6b4bed236b3448ae3aea95c29e53c4fa5eed038cba0cda774d887812e2dc4742f8ff15ff0ea2"
+		},
+		"GLOBALTRUST_2020.crt" : 
+		{
+			"sha384_digest" : "4c47c909d9513776757c191d03e48ee5807fa2659bf259c769e6168a1a4b84f2b3e7bea2a076255c40be7e57ec29394e"
+		},
+		"GTS_Root_R1.crt" : 
+		{
+			"sha384_digest" : "94ab96d61376260ea5f924acfb56e08ec82f486b9df880967784c17394da70e1d5394c8ad4e345ecbbf3483289be5c0b"
+		},
+		"GTS_Root_R2.crt" : 
+		{
+			"sha384_digest" : "328e488704a6239bd9a0c015cdb7fd8b83c513037810400fc418c6b863373d284d3f1855bf93fd848e2cfc1f76f7d8d4"
+		},
+		"GTS_Root_R3.crt" : 
+		{
+			"sha384_digest" : "bb9870ab1b2d8c7e1452f2e39c9a2c823d70d3d24c0061f22166c896f46cb9c4e5254b72b7abf429ad75f192aba44392"
+		},
+		"GTS_Root_R4.crt" : 
+		{
+			"sha384_digest" : "afcd560f710e3286ce143a1087ee070055ce329f01967f5a0ced3717e38c1b82e34a4a0bfed90403901838aa06897b94"
+		},
+		"GlobalSign_ECC_Root_CA_-_R4.crt" : 
+		{
+			"sha384_digest" : "92e2fc1c87833dd0477d7fbee012f7806e770be6a0006efc06053cf2cdb9541ed5e380c2ce27e8d57adc534278465839"
+		},
+		"GlobalSign_ECC_Root_CA_-_R5.crt" : 
+		{
+			"sha384_digest" : "e5fa2a450efa37b275230c9a72bb69c77752d82474f9e25c9483b7d43da98d687cb30deac8b94da90e84cd0dbc5c0096"
+		},
+		"GlobalSign_Root_CA.crt" : 
+		{
+			"sha384_digest" : "27e6f07e6681a8e0f736b7752a07da1041fef2145975dc96ee4952db79ea353cb1c87b4a5920bb459b2e80af636a266e"
+		},
+		"GlobalSign_Root_CA_-_R3.crt" : 
+		{
+			"sha384_digest" : "ee6a56647fe7e255c2c0a41394e72dee42e7187acdf18f519080a158677b9f364d9612f8526fd345ebadd51268126bf2"
+		},
+		"GlobalSign_Root_CA_-_R6.crt" : 
+		{
+			"sha384_digest" : "f376a99eab239a5f86f3b9e95ef438d793987fbe9c3620a1e92b9d48edfc5814b489c515746c4b473ade0cb6cf2e696e"
+		},
+		"GlobalSign_Root_E46.crt" : 
+		{
+			"sha384_digest" : "117f2c097fcaa0c4eacb8951e56890f1228a7afb7f989b54ac9d87812fc6e4767431fa1a88cc8206776889509b95100b"
+		},
+		"GlobalSign_Root_R46.crt" : 
+		{
+			"sha384_digest" : "082b13fe0737730d577f52a41a475d59ecbe5860f5c6dc552f2c92f407b0257e22e9f19d752a5251e265d991013dbf51"
+		},
+		"Go_Daddy_Class_2_CA.crt" : 
+		{
+			"sha384_digest" : "3d440e9157dc6c9ee1bcbfeb77faee4a242db8613463b3acce621548740da852dc3c56bfd89ab944a69a167d1aaa1049"
+		},
+		"Go_Daddy_Root_Certificate_Authority_-_G2.crt" : 
+		{
+			"sha384_digest" : "5dc69fcfd069436c96b568c8429f030b2dd8cf92c5466869eccced2a8d17170f7949a7aa7b6d31a74bc987ea32f0e863"
+		},
+		"HARICA_TLS_ECC_Root_CA_2021.crt" : 
+		{
+			"sha384_digest" : "4ff09ffe99383d5fdc07c4cfcd8030bd77e2a8c54a02d235016cc0c3a8ffbdf5981af18a321abb6c22631c68502a697d"
+		},
+		"HARICA_TLS_RSA_Root_CA_2021.crt" : 
+		{
+			"sha384_digest" : "e7ce9af4d964797479a47c9de7b3ffe5624df564200214e76e16d3ff07238a95106f9917a67a9824581af65b50bf09ef"
+		},
+		"Hellenic_Academic_and_Research_Institutions_ECC_RootCA_2015.crt" : 
+		{
+			"sha384_digest" : "fb2de74141870d9844c5e2b93f6dd66c65e0a38014ba56dfc6e8cd1fb0c3616474bbc9224d483c6a32b799973a2555d1"
+		},
+		"Hellenic_Academic_and_Research_Institutions_RootCA_2015.crt" : 
+		{
+			"sha384_digest" : "ab6d66539dc8749fdd1afe0c7130bc5dd884237375f55996b0ace05a7348889cb126dba11a81c01ae2646564a20e76a5"
+		},
+		"HiPKI_Root_CA_-_G1.crt" : 
+		{
+			"sha384_digest" : "e8f512300ebacec14d775c69dd4bb64cce6a5ddf3d97689c3eedc3b57315926cb60fcd2dc86d183c780b3ec262e3ed17"
+		},
+		"Hongkong_Post_Root_CA_3.crt" : 
+		{
+			"sha384_digest" : "788dd1ecd4d1d6a8e60cbb3cda34395ca30e256e245cd225ede09684f53bb84120ddfa07fa4be0312394941e7e6b4d61"
+		},
+		"ISRG_Root_X1.crt" : 
+		{
+			"sha384_digest" : "8121ee9b8a833dd578756b7c22b182736b3c1d3024954f234dc679fd1f600c3e9661278a51b7af19e948bef9fb911979"
+		},
+		"ISRG_Root_X2.crt" : 
+		{
+			"sha384_digest" : "3ed8fed22f2bdc9c80598f39c651a0b8e2474c03dcc829b13700f7092eff1d0fbf4a8469a70b4db6032634db064f276c"
+		},
+		"IdenTrust_Commercial_Root_CA_1.crt" : 
+		{
+			"sha384_digest" : "492049044f36f02e8693929a2a65f63d603f9b445cc01e0905ae2e9668dd9a39957307ea93cd702b7914a0acca396723"
+		},
+		"IdenTrust_Public_Sector_Root_CA_1.crt" : 
+		{
+			"sha384_digest" : "7b56d5cd656d66a3a3d31a4b8b8882b6fc823848d5ad69e6167e27691e5625ba3df59e00340e30f4ac87eb44dcc15921"
+		},
+		"Izenpe.com.crt" : 
+		{
+			"sha384_digest" : "383e4976c654e2d2e02b869d86f5934625d7bc88cacd9f16d7232abd9b4839421ea8cf75b3ddb8f50185a56fb5fb0d1e"
+		},
+		"Microsec_e-Szigno_Root_CA_2009.crt" : 
+		{
+			"sha384_digest" : "b8ec413338066ce4dc130d33483aa687264f983383021e71040abd61fe022642894bb78de1124fa7d0a50acb52b882f0"
+		},
+		"Microsoft_ECC_Root_Certificate_Authority_2017.crt" : 
+		{
+			"sha384_digest" : "25a4cfa6bba6818b6e0fa8b2fa680f718daac2fcfa0d5c8c72d69050d8a493d18ea8a75f0b6ac3ef22ceb6d8350ddc74"
+		},
+		"Microsoft_RSA_Root_Certificate_Authority_2017.crt" : 
+		{
+			"sha384_digest" : "4882d4edb998f03d67fbc1b1262165000a8e614970073278fabb8bd71138b633d675c2051e6eb330bd8ba4cf8f108048"
+		},
+		"NAVER_Global_Root_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "409bc7558b5cbb7627e2b9f03893cb54c940bebf3eef45c9824df6100eb71ca8b9283df18c135e45febb833017235892"
+		},
+		"NetLock_Arany_=Class_Gold=_Főtanúsítvány.crt" : 
+		{
+			"sha384_digest" : "726943c4f2f9ff1db49ef69613845d65e68ea043192a7f4a59364a92c36bd712840bb184350448a01149262c36265004"
+		},
+		"OISTE_WISeKey_Global_Root_GB_CA.crt" : 
+		{
+			"sha384_digest" : "78de7ca7f9229d7e9f3319814999f272e506b96b1fb6cfd9df54fcb8543322da05cda0082a95caf5378191104dce5155"
+		},
+		"OISTE_WISeKey_Global_Root_GC_CA.crt" : 
+		{
+			"sha384_digest" : "db0cf880267cc2c9bd1e5ab03e657af08ae0c64f16561345d6ce1cafb823f092e61758587e85ff1604538168cb881602"
+		},
+		"QuoVadis_Root_CA_1_G3.crt" : 
+		{
+			"sha384_digest" : "7d9728f3a2360094fa4ada631f3b7d20a02363c379c1bfa4a0dac761ce5c000edc826ca226a9123c3c4135809a371928"
+		},
+		"QuoVadis_Root_CA_2.crt" : 
+		{
+			"sha384_digest" : "fb8241d5d2ef13b4e32d868b31502101eb197489beae6724883cee94ac92f24afacb6f3b4b3aff1ba32eddf34c4441be"
+		},
+		"QuoVadis_Root_CA_2_G3.crt" : 
+		{
+			"sha384_digest" : "849e705337102cbef0891e504d06770c5f5c8e64c7daff3dc738ce0214db81a413c527639f5ef98953fc52f71ef64574"
+		},
+		"QuoVadis_Root_CA_3.crt" : 
+		{
+			"sha384_digest" : "8fdbc9df4153b29e6a0934bdf4fde192a36e07ca7c768dab4ec44c93155434f0f44d1aa82f90f50568e035dbbea9c793"
+		},
+		"QuoVadis_Root_CA_3_G3.crt" : 
+		{
+			"sha384_digest" : "d69d39816bae7490798653248a6ab9b6f35a1aa4f50efdd754e41e72f9f1b11570dca31cdda6be236436a30ee8a5dbeb"
+		},
+		"SSL.com_EV_Root_Certification_Authority_ECC.crt" : 
+		{
+			"sha384_digest" : "340053a7ac6019bd913f99973df39da09812d5892b017314e23ff5b3c3c803fdc88037eca3edfd7ad30889ba3b840434"
+		},
+		"SSL.com_EV_Root_Certification_Authority_RSA_R2.crt" : 
+		{
+			"sha384_digest" : "31b83ede0c580b845e4e8fe93a27497592d9a0b7178a268e94cd8ee91c857d987e352f46474a153ff4c104f79789d47b"
+		},
+		"SSL.com_Root_Certification_Authority_ECC.crt" : 
+		{
+			"sha384_digest" : "629315ce110ea9092e3d7473bee2fe61060ad44d54efd214c41b7756a4cd88a1e8fdf7d98c5bb410fa6249e2a569f554"
+		},
+		"SSL.com_Root_Certification_Authority_RSA.crt" : 
+		{
+			"sha384_digest" : "8d82c4ee4a650936cca6d304016418c4b581c557ce7edf9c150985be5d9ed35655878c49abbf69964a4f494dbf264567"
+		},
+		"SSL.com_TLS_ECC_Root_CA_2022.crt" : 
+		{
+			"sha384_digest" : "75929ef3a45bf869a39c034bceb3c61c5029cf581fa67da5201e341d06096ed69de96846d856fbe96dc55d9c45b8511c"
+		},
+		"SSL.com_TLS_RSA_Root_CA_2022.crt" : 
+		{
+			"sha384_digest" : "49c036b1ce3ded48ac22ea325bc8e70a40f7683161cdfef7a0f1d56261fd6ccdbe6fb2eaa5c7a1f8dd997f759f4fff53"
+		},
+		"SZAFIR_ROOT_CA2.crt" : 
+		{
+			"sha384_digest" : "3d0e2e876b0b923570831b6e495794f78f3d5ecb982614981c165db3745f8215b63593bad474c488591e408c4960d7c4"
+		},
+		"Sectigo_Public_Server_Authentication_Root_E46.crt" : 
+		{
+			"sha384_digest" : "aea067644d4ab0dcd7e0543120bcef6760ba09e96094362967a5e9a0baf4676d63505643c71278c29b5a32f50824920d"
+		},
+		"Sectigo_Public_Server_Authentication_Root_R46.crt" : 
+		{
+			"sha384_digest" : "efbac61b3777eae98ede8700859fb9587f38e87a0d3dc84378479d90f23996885f225ef80a23739f66c8f907ca663504"
+		},
+		"SecureSign_Root_CA12.crt" : 
+		{
+			"sha384_digest" : "03717b80a155efd189b160b6514dab5bad8f87d1a7b4af5cd695b4f269374f0b5643e3e2b70caebab2f538a1f28f3e68"
+		},
+		"SecureSign_Root_CA14.crt" : 
+		{
+			"sha384_digest" : "bbffa92d8ecbd5233d7740c629c01344248716afb1c04828634c94c9fd96b96b11aa7175339fa9408f1533ff68e52563"
+		},
+		"SecureSign_Root_CA15.crt" : 
+		{
+			"sha384_digest" : "1cbe56be3c1df08eca5b930d86b91698517e4714634f9b4c1e8979b8cb005dca5f35e142977f92e9bbbb89644b465856"
+		},
+		"SecureTrust_CA.crt" : 
+		{
+			"sha384_digest" : "2b6a817a709fbb762ed505ba741fc90cf49b09b6e8f22b528f8f75ecfba57440a00b3d62941847bd72ecbf60606c72e6"
+		},
+		"Secure_Global_CA.crt" : 
+		{
+			"sha384_digest" : "d8f9a024131bbaea4a4604c30ff7f72ee56733fe8bd39ae506c0f688c40170fe0db5e263732229a33d97f8eb5ceef63a"
+		},
+		"Security_Communication_ECC_RootCA1.crt" : 
+		{
+			"sha384_digest" : "e9b371cccd840ad8e6ff87d6b54652b09fe9565dbdc4a5a78db199cb2fe38b2a6ee6a3341671041dced23c27cafb5628"
+		},
+		"Security_Communication_RootCA2.crt" : 
+		{
+			"sha384_digest" : "ab6e9f9c935837f7f834e273ee75d55c408b33caf4f28831424f4e0190af6f6c8a64c0e1e9b5d38f24db0a8cb29fc488"
+		},
+		"Starfield_Class_2_CA.crt" : 
+		{
+			"sha384_digest" : "c1f7a6d6835895a154f8acb9021f11186c04bf3f66f3d2d53ca8f3d9ed44c3eff4e594f1e6d78ecf3dedb9d92e0a9f06"
+		},
+		"Starfield_Root_Certificate_Authority_-_G2.crt" : 
+		{
+			"sha384_digest" : "86c32184ea9e44014a33b9c8d773df64d0b1cf79b5ebbca663eeb77734612c517608ec6e842333eb1aa5ecdfba333b2a"
+		},
+		"Starfield_Services_Root_Certificate_Authority_-_G2.crt" : 
+		{
+			"sha384_digest" : "b890e8b6ff82de8cb13e66137377b2fffc8f928f2f7174443f208f80fe1704f6548c562167925224aea12e80f9e83678"
+		},
+		"SwissSign_Gold_CA_-_G2.crt" : 
+		{
+			"sha384_digest" : "1dacb25df2c744eb94748d8b6ed32be7e7ceded9cea2d485af5a2e92ddefead8e1bf0af79273538b7a5befcd2e4364db"
+		},
+		"T-TeleSec_GlobalRoot_Class_2.crt" : 
+		{
+			"sha384_digest" : "f9d1c4ea9c41e19f655f9ac2b227704d0ce59aa4df1f9f2fe91a587e8310b1b30f26f4ada42413c970c48c62b1fec06b"
+		},
+		"T-TeleSec_GlobalRoot_Class_3.crt" : 
+		{
+			"sha384_digest" : "ec99106a704dcd3012b78a030ce99d414848c0f4dea3d9b170be061cda2e477c77768ef1d166fc5305dcae75d40118f8"
+		},
+		"TUBITAK_Kamu_SM_SSL_Kok_Sertifikasi_-_Surum_1.crt" : 
+		{
+			"sha384_digest" : "c812af133971e67d439ac7cd859423b44b973dab977889f4bc956d3a5b727c81feef999a6aaffb1cf461886c7227ae32"
+		},
+		"TWCA_CYBER_Root_CA.crt" : 
+		{
+			"sha384_digest" : "6c8f9167b30aca208c8f7947805bd5ebe9dd59a3de190600fd8bd9da95e74c845b2537dd9aff44fdf786117a0194dd6e"
+		},
+		"TWCA_Global_Root_CA.crt" : 
+		{
+			"sha384_digest" : "9bd411b7820c498f9c1e3db7310b5aabac7bbe549b6579f85efcbe6e8df266d18fe05eb1b69b7c9baa74f5c25cdd7cd2"
+		},
+		"TWCA_Root_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "00e2703810a382359db6fd4c47e425a5d906f33ead153babbc06f5fb3e8d808ef9f15d2171b081155ab1bce03101a3db"
+		},
+		"Telekom_Security_TLS_ECC_Root_2020.crt" : 
+		{
+			"sha384_digest" : "76b99a8bb0ae9a47d02680d7f160b0a293636456be612942f7e6dee0129042480578155be87df18d2e9544f30ff2c44d"
+		},
+		"Telekom_Security_TLS_RSA_Root_2023.crt" : 
+		{
+			"sha384_digest" : "f6fd8176b73047d3051761fc921bf13531532b8854e6fbfe5f3f26f1288251e715bfd668523b2a560428f90219fae209"
+		},
+		"TeliaSonera_Root_CA_v1.crt" : 
+		{
+			"sha384_digest" : "4853935125efa46bf60d03f88a8d76f133a55fe1f566c88c4cc8d603c63e06643bb0d2706b261c443c17494256795742"
+		},
+		"Telia_Root_CA_v2.crt" : 
+		{
+			"sha384_digest" : "7d7a394e4d64937724bd1867279ee4b4ad6c4843bad5940cdb7ab6913897a34bf9bbf77e8a0535c9416731f8d3d4f186"
+		},
+		"TrustAsia_Global_Root_CA_G3.crt" : 
+		{
+			"sha384_digest" : "adcbd57f81b685783a6d3169b3d9da4ad6e212de9e2d97b4de50edfa6d446639d44e5e65db5940653b1591206133b4b2"
+		},
+		"TrustAsia_Global_Root_CA_G4.crt" : 
+		{
+			"sha384_digest" : "0b9c30caba4a8bae8555f1e0d236f4e213b88e5337daee5ed50ad1c86d43904d00a733cc0b19ea08b9d260d756c84efb"
+		},
+		"Trustwave_Global_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "e82fe38f5cadfc79e2f31fd39fb7080648c5d2cfd3d651076c4a1c5e1e7d25c070eed95eea4267e0bf343bce48ab6f96"
+		},
+		"Trustwave_Global_ECC_P256_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "e86fc48498c19b039d4ccf5a11770e454ceffa9f5ea8532f4a22c52b1e0a21f1653001683d49db40cdc9fa5964a547ad"
+		},
+		"Trustwave_Global_ECC_P384_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "e91bf7d16d41406e1d0778ebb74e952d64ac1406a32c11d22df5c2edf7967558c04ce396ad239da1c353e50b354cff7a"
+		},
+		"TunTrust_Root_CA.crt" : 
+		{
+			"sha384_digest" : "18f59b46093f132fbd7791a875ba5806e1f2ee0c70be61bc37a5f66570b2984ba6a9b44217306df0416f6c7b359b56d7"
+		},
+		"UCA_Extended_Validation_Root.crt" : 
+		{
+			"sha384_digest" : "170c1476d746734f506943058f72aa8e59025056551a8cbad12ed3b631489c4c1633f2963ac693d580301e581093a657"
+		},
+		"UCA_Global_G2_Root.crt" : 
+		{
+			"sha384_digest" : "45e4180377cce5d9702685dcb78d7e6597f2fc695997b81a9f38c28e49b5ff611fefdeb4fbcad8991662bd51cb673cdd"
+		},
+		"USERTrust_ECC_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "cba9ef7d3e12fd12220b5f0d7fc54f873c62d35f7c3d3e53ebeb5622ac8f7f27de9fadd8a2fedd818b0c671b4ea01725"
+		},
+		"USERTrust_RSA_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "a12cf49d91274f85ff84404101095d3afda1a337cf1e2ff6aa5dc4d07d64a39849bb7f32efa20f745d395f7e594a8cc0"
+		},
+		"XRamp_Global_CA_Root.crt" : 
+		{
+			"sha384_digest" : "8e4a16d6e2042fcc98f658a453756415a91eb615bee3b0a3d5caa4a2ba98fd4ed54bdcccdaf0bf82ddeda4a029ad131c"
+		},
+		"certSIGN_ROOT_CA.crt" : 
+		{
+			"sha384_digest" : "8fb6b95d254ec9e50f410d0fd2d823339f1b079ce0976d4ef23464ce8775de85d29615cb1e1f2bab1be1f9f2c46dc612"
+		},
+		"certSIGN_Root_CA_G2.crt" : 
+		{
+			"sha384_digest" : "ee41b014d33fd7e39cdf48978a0f3e474fff0b78ca4c3907d127ef764ed9a4c8970c3755825e171b1e4b1058f35aed36"
+		},
+		"e-Szigno_Root_CA_2017.crt" : 
+		{
+			"sha384_digest" : "6a7f3e8b7b2126072b59639c97dc3472091e4c579530586a9959e22bd32ee81bb49ef13028f93c227651618d1b8720c4"
+		},
+		"ePKI_Root_Certification_Authority.crt" : 
+		{
+			"sha384_digest" : "2abc78101c25621f245be8741e54bc1e4c2000c44f8a5d6ecbcca2fc0ad590533111ebf0f7a81e354d933c79bda55487"
+		},
+		"emSign_ECC_Root_CA_-_C3.crt" : 
+		{
+			"sha384_digest" : "2790713a2e9dc72b9ce352dc8af2032e8e73aa17349d304f5e0c1476201312866583ef4d188432d5cb557ee09a020888"
+		},
+		"emSign_ECC_Root_CA_-_G3.crt" : 
+		{
+			"sha384_digest" : "83ca99f971a5e0eeaba9d5b267c3d7f2fde2bd0484febd9d314592c15c304ac39ee1950527f19e30e2fda36ea800a5ac"
+		},
+		"emSign_Root_CA_-_C1.crt" : 
+		{
+			"sha384_digest" : "5d84296d74edd481cb3dabde5af1cf1563bb93078faeb20f387f57d3d42e942bb78ce182ef0905fb5d13832649962101"
+		},
+		"emSign_Root_CA_-_G1.crt" : 
+		{
+			"sha384_digest" : "7396f57b3abc02938037338fb84e3bd3bda6f45b9e9b42d68dfc3852e325da8bd36683a2173fe520165814880866d31d"
+		},
+		"vTrus_ECC_Root_CA.crt" : 
+		{
+			"sha384_digest" : "80fbe5ba14fd036e90ca440839625d3a95f1643a977f73becbe5def24a821c53fdc1d1f17ad87073fde45c3cf8d0e315"
+		},
+		"vTrus_Root_CA.crt" : 
+		{
+			"sha384_digest" : "0a17806e5e3c741eb3f9bed08e8c42af35dca04c1fb093a64f756eaaba5f3197486998cede76b56f5320eccabf877c8d"
+		}
+	},
+	"last_fetch_time" : 1754447348
+}

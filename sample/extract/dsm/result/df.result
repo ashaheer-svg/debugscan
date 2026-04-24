@@ -1,0 +1,13 @@
+Filesystem               1K-blocks        Used   Available Use% Mounted on
+/dev/md0                   2385528     1681248      585496  75% /
+devtmpfs                   8038664           0     8038664   0% /dev
+tmpfs                      8075656         244     8075412   1% /dev/shm
+tmpfs                      8075656       88472     7987184   2% /run
+tmpfs                      8075656           0     8075656   0% /sys/fs/cgroup
+tmpfs                      8075656       31228     8044428   1% /tmp
+/dev/loop0                   27633         767       24573   4% /tmp/SynologyAuthService
+/dev/mapper/cachedev_0 41144108976 10120647936 31023461040  25% /volume2
+/dev/mapper/cachedev_1 86160499692 74360604272 11799895420  87% /volume1
+/dev/loop1                15591832       64180    15408868   1% /volume1/@accountdb/@accountcache
+tmpfs                      1615132           0     1615132   0% /run/user/196791
+/dev/mapper/cachedev_1 86160499692 74360604272 11799895420  87% /volume1/VM1_NEW_BACKUP_NEW/#snapshot

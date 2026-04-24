@@ -1,0 +1,48 @@
+[bond0-table]
+	source=
+	enable=no
+	id=8
+	source_v6=
+	enable_v6=no
+[eth0-table]
+	source=
+	enable=no
+	id=4
+	source_v6=fe80::211:32ff:fe7e:6f71
+	enable_v6=yes
+[eth1-table]
+	source=
+	enable=no
+	id=5
+	source_v6=fe80::211:32ff:fe7e:6f72
+	enable_v6=yes
+[eth2-table]
+	source=
+	enable=no
+	id=6
+	source_v6=fe80::211:32ff:fe7e:6f73
+	enable_v6=yes
+[eth3-table]
+	source=
+	enable=no
+	id=7
+	source_v6=fe80::211:32ff:fe7e:6f74
+	enable_v6=yes
+[eth4-table]
+	source=172.16.10.100
+	enable=yes
+	id=3
+	source_v6=fe80::211:32ff:fe5b:e4ec
+	enable_v6=yes
+[eth5-table]
+	source=
+	enable=no
+	id=9
+	source_v6=fe80::9209:d0ff:fe64:c431
+	enable_v6=yes
+[static-table]
+	source=all
+	enable=yes
+	id=2
+	source_v6=all
+	enable_v6=yes

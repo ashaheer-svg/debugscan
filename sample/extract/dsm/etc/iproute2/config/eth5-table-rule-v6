@@ -1,0 +1,5 @@
+[eth5_policy_v6_link_1]
+	ip=fe80::9209:d0ff:fe64:c431
+	ifname=eth5
+	gateway=
+	prefix_length=64

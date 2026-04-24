@@ -1,0 +1,2 @@
+/dev/mapper/cachedev_1 /volume1 normal not-building loc-internal cnr-cross
+/dev/mapper/cachedev_0 /volume2 normal not-building loc-internal cnr-eunit

@@ -1,0 +1,4 @@
+-rwxr-xr-x 1 root root  8790 Jun 20  2025 /etc.defaults/synoinfo.conf
+-rw------- 1 root root   106 Mar 12  2011 /etc/ddns.conf
+-rw-r--r-- 1 root root 11757 Mar 19 16:18 /etc/synoinfo.conf
+-rwxr-xr-x 1 root root  1178 Aug  4  2018 /usr/syno/etc/synosms.conf

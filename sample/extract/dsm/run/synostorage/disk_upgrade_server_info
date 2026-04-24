@@ -1,0 +1,25 @@
+{
+   "data" : {
+      "promotion" : {
+         "available" : false
+      },
+      "update" : {
+         "available" : true,
+         "reboot" : "now",
+         "restart" : "some",
+         "type" : "nano",
+         "version" : "DSM 7.2.1-69057 Update 9",
+         "version_details" : {
+            "buildnumber" : 69057,
+            "isSecurityVersion" : true,
+            "major" : 7,
+            "micro" : 1,
+            "minor" : 2,
+            "nano" : 9,
+            "os_name" : "DSM"
+         }
+      }
+   },
+   "httpd_restart" : false,
+   "success" : true
+}

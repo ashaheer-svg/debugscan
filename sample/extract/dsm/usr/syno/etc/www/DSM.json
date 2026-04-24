@@ -1,0 +1,26 @@
+
+{
+	"directAccess" : false,
+	"fqdn" : null,
+	"https" : 
+	{
+		"compression" : false,
+		"hsts" : false
+	},
+	"mainApp" : "DSM",
+	"max_connections" : null,
+	"port" : 5000,
+	"reuseport" : false,
+	"server_tag" : "nginx",
+	"ssl" : 
+	{
+		"certificate" : "/usr/syno/etc/ssl/ssl.chain.crt/server.crt",
+		"key" : "/usr/syno/etc/ssl/ssl.key/server.key",
+		"port" : 5001,
+		"redirect" : false,
+		"spdy" : true
+	},
+	"synorelay" : null,
+	"trust_proxy" : null,
+	"version" : 1
+}

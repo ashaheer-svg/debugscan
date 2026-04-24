@@ -1,0 +1,27 @@
+MAILTO=""
+PATH=/sbin:/bin:/usr/sbin:/usr/bin:/usr/syno/sbin:/usr/syno/bin:/usr/local/sbin:/usr/local/bin
+#minute	hour	mday	month	wday	who	command
+0	10	*	*	0	root	/usr/syno/bin/synoschedtask --run id=19
+0	14	*	*	0	root	/usr/syno/bin/synoschedtask --run id=26
+0	2	*	*	1	root	/usr/syno/bin/synoschedtask --run id=11
+0	8	*	*	0	root	/usr/syno/bin/synoschedtask --run id=4
+0	17	*	*	5	root	/usr/syno/bin/synoschedtask --run id=12
+0	20	*	*	1	root	/usr/syno/bin/synoschedtask --run id=6
+0	0	*	*	*	root	/usr/syno/bin/synoschedtask --run id=8
+41	5	*	*	6	root	/usr/syno/bin/synoschedtask --run id=5
+0	0	4	*	*	root	/usr/syno/bin/synoschedtask --run id=3
+0	9	*	*	0	root	/usr/syno/bin/synoschedtask --run id=23
+0	0	*	*	*	root	/usr/syno/bin/synoschedtask --run id=9
+0	18	*	*	0	root	/usr/syno/bin/synoschedtask --run id=31
+0	15	*	*	0	root	/usr/syno/bin/synoschedtask --run id=27
+0	16	*	*	0	root	/usr/syno/bin/synoschedtask --run id=16
+0	1	*	*	2	root	/usr/syno/bin/synoschedtask --run id=7
+0	0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23	*	*	*	root	/usr/syno/bin/synoschedtask --run id=10
+0	10	*	*	0	root	/usr/syno/bin/synoschedtask --run id=42
+0	11	*	*	0	root	/usr/syno/bin/synoschedtask --run id=45
+17	3	*	*	*	root	/usr/syno/bin/synoschedtask --run id=17
+0	20	*	*	6	root	/usr/syno/bin/synoschedtask --run id=1
+0	8	*	*	0	root	/usr/syno/bin/synoschedtask --run id=13
+0	4	*	*	2	root	/usr/syno/bin/synoschedtask --run id=21
+0	23	*	*	1	root	/usr/syno/bin/synoschedtask --run id=14
+0	19	*	*	0	root	/usr/syno/bin/synoschedtask --run id=33

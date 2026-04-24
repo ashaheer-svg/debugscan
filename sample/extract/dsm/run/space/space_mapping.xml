@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spaces>
+	<space path="/dev/vg1" reference="@storage_pool" uuid="BqebRS-aFGR-VvZM-Oppe-LwkM-JNS9-xova2N" device_type="2" drive_type="0" container_type="4" limited_raidgroup_num="24" space_id="reuse_2" >
+		<device>
+			<lvm path="/dev/vg1" uuid="BqebRS-aFGR-VvZM-Oppe-LwkM-JNS9-xova2N" designed_pv_counts="1" status="normal" total_size="43887854878720" free_size="792723456" pe_size="4194304" expansible="0" max_size="42859236288">
+				<raids>
+					<raid path="/dev/md3" uuid="030b558c:144bd653:14ba53a8:a317f6fe" level="raid5" version="1.2" layout="2">
+					</raid>
+				</raids>
+			</lvm>
+		</device>
+		<reference>
+			<volumes>
+				<volume path="/volume2" dev_path="/dev/vg1/volume_2" uuid="0XPnUz-e8W9-F6jq-PyBx-mB6D-td0D-BJ9nqD" type="btrfs">
+				</volume>
+			</volumes>
+			<iscsitrgs>
+			</iscsitrgs>
+		</reference>
+	</space>
+	<space path="/dev/md2" reference="/volume1" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" device_type="2" drive_type="0" container_type="1" limited_raidgroup_num="24" space_id="reuse_1" >
+		<device>
+			<raid path="/dev/md2" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" level="raid5" version="1.2" layout="2">
+			</raid>
+		</device>
+		<reference>
+			<volume path="/volume1" dev_path="/dev/md2" uuid="851d2679:e284f7fc:4d06c3ac:691fe969" type="btrfs">
+			</volume>
+		</reference>
+	</space>
+</spaces>

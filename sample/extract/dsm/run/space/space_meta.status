@@ -1,0 +1,12 @@
+[/dev/vg1/volume_2]
+	 desc=""
+	 vol_desc=""
+	 reuse_space_id=""
+[/dev/vg1]
+	 desc=""
+	 vol_desc=""
+	 reuse_space_id="reuse_2"
+[/dev/md2]
+	 desc="RAID 5, btrfs"
+	 vol_desc=""
+	 reuse_space_id="reuse_1"

@@ -1,0 +1,30 @@
+[bond0]
+	dns=172.16.10.10
+	gateway=172.16.10.254
+[eth0]
+	dns=172.16.10.10
+	gateway_v6=
+	gateway=172.16.10.254
+	dns_v6=
+[eth1]
+	dns=
+	gateway=
+[eth2]
+	dns=
+	gateway=
+[eth3]
+	dns=
+	gateway_v6=
+	gateway=
+	dns_v6=
+[eth4]
+	dns=172.16.10.10
+	gateway_v6=
+	gateway=172.16.10.254
+	dns_v6=
+[eth5]
+	dns=
+	gateway=
+[eth6]
+	dns=
+	gateway=

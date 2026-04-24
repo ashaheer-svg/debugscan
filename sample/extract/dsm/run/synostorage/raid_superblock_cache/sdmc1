@@ -1,0 +1,10 @@
+
+[raid_superblock]
+hostname=RackStation
+uuid=8473b45d:c2640f77:c69de3af:22ddbed7
+events=59201
+disigned_disk_cnt=12
+slot=1
+version=0.9
+level=raid1
+path=/dev/md0
