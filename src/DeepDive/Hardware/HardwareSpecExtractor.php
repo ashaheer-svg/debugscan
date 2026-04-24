@@ -816,7 +816,8 @@ final class HardwareSpecExtractor
     }
 
     /**
-     * Parse JSON .result file
+     * Parse JSON .result file with error handling
+     * Returns null if file doesn't exist or JSON is invalid
      */
     private function parseJsonResult(string $filename): mixed
     {
@@ -826,7 +827,20 @@ final class HardwareSpecExtractor
         }
 
         $content = (string)@file_get_contents($file);
-        return json_decode($content, associative: true);
+        if (empty($content)) {
+            return null;
+        }
+
+        $decoded = json_decode($content, associative: true);
+
+        // Handle JSON decode errors gracefully
+        if ($decoded === null && json_last_error() !== JSON_ERROR_NONE) {
+            // Log error but don't throw - allow pipeline to continue
+            error_log("JSON decode error in {$filename}: " . json_last_error_msg());
+            return null;
+        }
+
+        return $decoded;
     }
 
     /**
