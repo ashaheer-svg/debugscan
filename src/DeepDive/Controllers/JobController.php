@@ -221,6 +221,44 @@ final class JobController
         return $this->redirect($res, "/deepdive/view/{$jobId}");
     }
 
+    public function delete(ServerRequestInterface $req, ResponseInterface $res, array $args): ResponseInterface
+    {
+        [$tenantId] = $this->currentUser();
+        if (!$tenantId) {
+            return $res->withStatus(401)->withHeader('Content-Type', 'application/json');
+        }
+
+        $jobId = (string)($args['id'] ?? '');
+        if (!$this->validUuid($jobId)) {
+            return $res->withStatus(400)->withHeader('Content-Type', 'application/json');
+        }
+
+        $jobs = new JobRepository($this->pdo);
+        $job = $jobs->findForTenant($jobId, $tenantId);
+        if (!$job) {
+            return $res->withStatus(404)->withHeader('Content-Type', 'application/json');
+        }
+
+        // Delete report files if they exist
+        try {
+            if (!empty($job['report_html_path'])) {
+                @unlink($job['report_html_path']);
+            }
+            if (!empty($job['report_pdf_path'])) {
+                @unlink($job['report_pdf_path']);
+            }
+        } catch (\Throwable $e) {
+            // Log but don't fail if files can't be deleted
+        }
+
+        // Delete the job from database
+        $stmt = $this->pdo->prepare("DELETE FROM deepdive_jobs WHERE id = :id AND tenant_id = :tid");
+        $stmt->execute(['id' => $jobId, 'tid' => $tenantId]);
+
+        $res->getBody()->write(json_encode(['success' => true], JSON_UNESCAPED_SLASHES));
+        return $res->withHeader('Content-Type', 'application/json; charset=utf-8');
+    }
+
     // -------- helpers --------
 
     /** @return array{0:?string,1:string} */

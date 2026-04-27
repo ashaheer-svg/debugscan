@@ -375,6 +375,7 @@
         constructor(jobId, basePath = '') {
             this.jobId = jobId;
             this.basePath = basePath;
+            this.projectUrl = null;
             this.modal = document.getElementById('ddProgressModal');
             this.backdrop = document.getElementById('ddProgressBackdrop');
             this.progressBar = document.getElementById('ddProgressBar');
@@ -437,6 +438,11 @@
         }
 
         updateModal(data) {
+            // Store project URL for navigation
+            if (data.project_url) {
+                this.projectUrl = data.project_url;
+            }
+
             // Update progress bar
             this.progressBar.style.width = data.progress_percent + '%';
             this.percentDisplay.textContent = data.progress_percent + '%';
@@ -514,12 +520,18 @@
 
             this.completionActions.style.display = 'flex';
 
-            // Allow closing modal now
+            // Allow closing modal now - redirect to project page on close
             const closeBtn = document.getElementById('ddClose');
             closeBtn.style.opacity = '1';
             closeBtn.style.cursor = 'pointer';
             closeBtn.onclick = () => {
-                this.backdrop.style.display = 'none';
+                if (this.projectUrl) {
+                    // Redirect to project page
+                    window.location.href = this.projectUrl;
+                } else {
+                    // Fallback: just hide modal if no project URL available
+                    this.backdrop.style.display = 'none';
+                }
             };
         }
 

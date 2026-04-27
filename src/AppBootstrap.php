@@ -382,6 +382,7 @@ class AppBootstrap
             $group->get ('deepdive/report/{id}',               [\App\DeepDive\Controllers\JobController::class, 'report']);
             $group->get ('deepdive/download/{id}/{format}',    [\App\DeepDive\Controllers\JobController::class, 'download']);
             $group->post('deepdive/cancel/{id}',               [\App\DeepDive\Controllers\JobController::class, 'cancel']);
+            $group->post('deepdive/delete/{id}',               [\App\DeepDive\Controllers\JobController::class, 'delete']);
             $group->get ('deepdive/api/job/{id}/status',       [\App\DeepDive\Controllers\JobController::class, 'status']);
             // --- end DeepDive routes ---
         })->add($container->get(ViewDataMiddleware::class))

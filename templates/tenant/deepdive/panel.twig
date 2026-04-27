@@ -27,28 +27,65 @@
       <table style="width:100%;font-size:12px;border-collapse:collapse">
         <thead>
           <tr style="color:#666">
-            <th style="text-align:left;padding:4px 6px">Started</th>
-            <th style="text-align:left;padding:4px 6px">Status</th>
-            <th style="text-align:left;padding:4px 6px">Progress</th>
-            <th style="text-align:right;padding:4px 6px">Report</th>
+            <th style="text-align:left;padding:8px">Started</th>
+            <th style="text-align:left;padding:8px">Status</th>
+            <th style="text-align:left;padding:8px">Progress</th>
+            <th style="text-align:right;padding:8px">Actions</th>
           </tr>
         </thead>
         <tbody>
           {% for h in deepdive_history %}
-            <tr>
-              <td style="padding:4px 6px">{{ h.queued_at|default('—') }}</td>
-              <td style="padding:4px 6px">{{ h.status }}</td>
-              <td style="padding:4px 6px">{{ h.progress_percent|default(0) }}%</td>
-              <td style="padding:4px 6px;text-align:right">
-                {% if h.status == 'completed' %}
-                  <a href="{{ base_path }}/deepdive/report/{{ h.id }}" target="_blank">view</a>
-                  · <a href="{{ base_path }}/deepdive/download/{{ h.id }}/html">html</a>
-                  {% if h.report_pdf_path %}
-                    · <a href="{{ base_path }}/deepdive/download/{{ h.id }}/pdf">pdf</a>
+            <tr style="border-top:1px solid #f0f0f0">
+              <td style="padding:12px 8px;color:#666">{{ h.queued_at|default('—') }}</td>
+              <td style="padding:12px 8px">
+                <span style="display:inline-block;padding:4px 8px;border-radius:4px;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em;
+                  {% if h.status == 'completed' %}background:#d1fae5;color:#047857
+                  {% elseif h.status == 'failed' %}background:#fee2e2;color:#dc2626
+                  {% elseif h.status == 'running' %}background:#dbeafe;color:#0284c7
+                  {% else %}background:#f3f4f6;color:#6b7280
                   {% endif %}
-                {% else %}
-                  <a href="{{ base_path }}/deepdive/view/{{ h.id }}">status</a>
-                {% endif %}
+                ">{{ h.status }}</span>
+              </td>
+              <td style="padding:12px 8px;color:#666">{{ h.progress_percent|default(0) }}%</td>
+              <td style="padding:12px 8px;text-align:right">
+                <div style="display:flex;gap:6px;justify-content:flex-end;align-items:center">
+                  {% if h.status == 'completed' %}
+                    <a href="{{ base_path }}/deepdive/report/{{ h.id }}"
+                       class="btn-action btn-success-alt"
+                       data-tooltip="View Report"
+                       target="_blank"
+                       style="display:inline-flex;align-items:center;justify-content:center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/></svg>
+                    </a>
+                    <a href="{{ base_path }}/deepdive/download/{{ h.id }}/html"
+                       class="btn-action btn-info-alt"
+                       data-tooltip="Download HTML"
+                       style="display:inline-flex;align-items:center;justify-content:center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </a>
+                    {% if h.report_pdf_path %}
+                      <a href="{{ base_path }}/deepdive/download/{{ h.id }}/pdf"
+                         class="btn-action btn-info-alt"
+                         data-tooltip="Download PDF"
+                         style="display:inline-flex;align-items:center;justify-content:center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                      </a>
+                    {% endif %}
+                  {% else %}
+                    <a href="{{ base_path }}/deepdive/view/{{ h.id }}"
+                       class="btn-action btn-info-alt"
+                       data-tooltip="View Status"
+                       style="display:inline-flex;align-items:center;justify-content:center">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </a>
+                  {% endif %}
+                  <button onclick="deleteDeepDive('{{ h.id }}')"
+                          class="btn-action btn-danger-alt"
+                          data-tooltip="Delete Report"
+                          style="display:inline-flex;align-items:center;justify-content:center;border:none;background:none;cursor:pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </div>
               </td>
             </tr>
           {% endfor %}
@@ -56,5 +93,37 @@
       </table>
     </div>
   {% endif %}
+
+  <script>
+    function deleteDeepDive(jobId) {
+      if (!confirm('Permanently delete this Deep Dive analysis report? This cannot be undone.')) {
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('{{ csrf.keys.name }}', '{{ csrf.name }}');
+      formData.append('{{ csrf.keys.value }}', '{{ csrf.value }}');
+
+      fetch(`{{ base_path }}/deepdive/delete/${jobId}`, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          location.reload();
+        } else {
+          alert(data.message || 'Failed to delete report');
+        }
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        alert('An error occurred while deleting the report');
+      });
+    }
+  </script>
 </div>
 {% endif %}

@@ -37,9 +37,10 @@ try {
         $steps = json_decode($row['steps_json'], true) ?: [];
     }
 
-    // Return job status
+    // Return job status with project ID for navigation
     echo json_encode([
         'id' => $row['id'],
+        'project_id' => $row['project_id'],
         'status' => $row['status'],
         'progress_percent' => (int)($row['progress_percent'] ?? 0),
         'progress_stage' => $row['progress_stage'],
@@ -49,6 +50,7 @@ try {
         'report_url' => '/deepdive/report/' . $row['id'],
         'report_html_url' => '/deepdive/download/' . $row['id'] . '/html',
         'report_pdf_url' => '/deepdive/download/' . $row['id'] . '/pdf',
+        'project_url' => '/project/' . $row['project_id'],
     ]);
 
 } catch (Throwable $e) {
