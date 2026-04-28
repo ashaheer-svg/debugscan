@@ -7,17 +7,74 @@ namespace App\Helpers;
 use ZipArchive;
 use RuntimeException;
 
+/**
+ * ZipHelper: Secure extraction of debug bundle archives
+ *
+ * PURPOSE:
+ * Safely extract selective files from Synology debug.dat archives (ZIP format)
+ * Prevent zip bomb and path traversal attacks
+ * Respect size limits during extraction
+ *
+ * SECURITY FEATURES:
+ * 1. Path Traversal Protection:
+ *    - Filter ".." sequences
+ *    - Reject absolute paths (leading /)
+ *    - Verify extracted paths stay within destPath
+ *
+ * 2. Symlink Protection:
+ *    - Detect symbolic links in archive
+ *    - Skip symlinks (prevent escape attacks)
+ *    - Check file attributes from ZIP metadata
+ *
+ * 3. Zip Bomb Protection:
+ *    - Track cumulative uncompressed size
+ *    - Enforce maxAbsoluteBytes limit (default: 2GB)
+ *    - Abort if limit exceeded
+ *    - Prevents malicious expansion attacks
+ *
+ * 4. Selective Extraction:
+ *    - Only extract files matching targets list
+ *    - Targets: exact names or directory prefixes (e.g., "dsm/var/log/")
+ *    - Reduces extracted size vs full archive extraction
+ *
+ * WORKFLOW:
+ * 1. Open ZIP archive
+ * 2. Validate destination path (must be absolute, settledDirectory)
+ * 3. For each file in archive:
+ *    - Check path traversal vulnerability
+ *    - Check symlink status
+ *    - Check if matches target list
+ *    - Verify total size doesn't exceed limit
+ *    - Extract to secure path
+ * 4. Return list of extracted file paths
+ *
+ * @package App\Helpers
+ */
 class ZipHelper
 {
     /**
-     * Safely extract a list of files from a Synology debug .dat archive.
-     * Uses path traversal and symlink protection.
-     * 
-     * @param string $zipPath Path to the zip file
-     * @param array $targets List of files or directory prefixes to extract
-     * @param string $destPath Destination directory
-     * @param int $maxAbsoluteBytes Maximum allowed cumulative uncompressed size
-     * @return array List of extracted files (relative to destPath)
+     * Safely extract selected files from ZIP archive
+     *
+     * SELECTIVE EXTRACTION:
+     * targets: Array of file paths or directory prefixes
+     * - Exact match: "dsm/etc/VERSION" (specific file)
+     * - Directory prefix: "dsm/var/log/" (all files under path)
+     * - Prefix wildcard: "dsm/result." (files starting with prefix)
+     *
+     * SECURITY VALIDATION:
+     * - Pre-validation: Path traversal checks
+     * - Symlink detection: Skip links (check external_attr bits)
+     * - Zip bomb: Total uncompressed size vs limit
+     * - Post-extraction: realpath() verification
+     *
+     * @param string $zipPath Absolute path to .dat archive
+     * @param array<string> $targets Files/directories to extract
+     * @param string $destPath Destination directory (created if missing)
+     * @param int $maxAbsoluteBytes Size limit (default: 2GB)
+     *
+     * @return array<string> Extracted file paths (relative to destPath)
+     *
+     * @throws RuntimeException If ZIP cannot open, limit exceeded, or validation fails
      */
     public static function extractSelected(string $zipPath, array $targets, string $destPath, int $maxAbsoluteBytes = 2147483648): array
     {

@@ -4,6 +4,38 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * BtrfsScrubParser: Btrfs filesystem scrub results and corruption analysis
+ *
+ * PURPOSE:
+ * Analyzes btrfs filesystem scrub operations to detect data corruption,
+ * checksum errors, and filesystem health issues. Extracts completion status,
+ * errors found, and recovery status for each btrfs volume.
+ *
+ * SCRUB ANALYSIS:
+ * - completion_status: Completed|in_progress|failed
+ * - errors_found: Number of corrupted blocks detected
+ * - data_sectors_fixed: Blocks recovered/repaired
+ * - unrecoverable: Blocks that cannot be recovered
+ * - runtime: Duration of scrub operation
+ *
+ * CORRUPTION TYPES:
+ * - Checksum errors: Data doesn't match stored checksum
+ * - Corrupt metadata: Filesystem structure damaged
+ * - IO errors: Cannot read/write data
+ * - RAID degradation: Insufficient copies for recovery
+ *
+ * DATA SOURCE:
+ * btrfs scrub output, completion logs, /proc/btrfs info
+ *
+ * SEVERITY:
+ * Found errors: Filesystem has corruption present
+ * Unrecoverable errors: Data loss has occurred
+ * Regular scrubs: Healthy filesystem recovering errors
+ * Failed scrubs: Indicate serious issues (failing drives)
+ *
+ * @package App\Parsers
+ */
 class BtrfsScrubParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

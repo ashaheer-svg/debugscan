@@ -4,6 +4,22 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * DfResultParser: Filesystem disk usage statistics
+ *
+ * PURPOSE:
+ * Parses df output to extract per-filesystem usage statistics. Complements
+ * VolumeParser with detailed breakdown of each mount point's capacity and usage.
+ *
+ * OUTPUT PER FILESYSTEM:
+ * - filesystem: Device or path
+ * - mount_point: Where mounted
+ * - total_kb, used_kb, available_kb: Capacity metrics
+ * - usage_percent: Utilization percentage
+ * - inodes_total, inodes_used, inodes_percent: File count limits
+ *
+ * @package App\Parsers
+ */
 class DfResultParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

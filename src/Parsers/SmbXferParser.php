@@ -7,7 +7,40 @@ namespace App\Parsers;
 use App\Helpers\SqliteReader;
 
 /**
- * SmbXferParser - Mines file-transfer audit logs from .SMBXFERDB (or SMBXFERDB)
+ * SmbXferParser: SMB file transfer operation tracking and analysis
+ *
+ * PURPOSE:
+ * Analyzes SMB file transfer operations (CREATE, DELETE, READ, WRITE) from
+ * forensic databases. Extracts file operations with user, IP, path, and
+ * timestamp. Detects unusual access patterns, bulk transfers, and potential
+ * data exfiltration or unauthorized access.
+ *
+ * OPERATIONS TRACKED:
+ * - CREATE: File or directory created
+ * - DELETE: File or directory deleted
+ * - READ: File read operation
+ * - WRITE: File write operation
+ * - RENAME: File or directory renamed
+ * - COPY: File copied
+ * - MOVE: File moved
+ *
+ * METADATA EXTRACTED:
+ * - timestamp: When operation occurred
+ * - user: Which user performed operation
+ * - source_ip: Client IP address
+ * - file_path: Full file path accessed
+ * - file_size: Size of file (if read/written)
+ * - operation: What operation performed
+ * - success: Did operation succeed
+ *
+ * ANOMALY DETECTION:
+ * Detects: Bulk file deletions, after-hours access, unusual IPs,
+ * sensitive path access, large file transfers, failed access attempts.
+ *
+ * DATA SOURCE:
+ * .SMBXFERDB or SMBXFERDB: SQLite forensic database with transfer logs
+ *
+ * @package App\Parsers
  */
 class SmbXferParser implements ParserInterface
 {

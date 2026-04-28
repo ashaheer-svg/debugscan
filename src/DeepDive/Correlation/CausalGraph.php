@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\DeepDive\Correlation;
 
 /**
+ * CausalGraph: Static rule causality knowledge graph
+ *
+ * PURPOSE:
  * Static knowledge graph of "rule X is typically caused by rule Y".
  * Intentionally hand-curated — this is the one place where engineering
  * judgement about Synology DSM failure modes lives in code. The

@@ -4,6 +4,39 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * VolumeParser: Logical volume configuration and capacity analysis
+ *
+ * PURPOSE:
+ * Extracts logical volume information from Synology storage subsystem.
+ * Analyzes mount points, filesystem types, total capacity, used space,
+ * and free space percentage. Detects volumes approaching capacity.
+ *
+ * DATA SOURCE:
+ * volume_status.cache: Status cache with volume configuration and usage
+ * Fallback: /proc/mounts for mount point information
+ *
+ * OUTPUT PER VOLUME:
+ * - name: Volume identifier (volume1, volume2, etc.)
+ * - mount_point: Where volume is mounted (/volume1, etc.)
+ * - fs_type: Filesystem type (btrfs, ext4, etc.)
+ * - total_gb: Total capacity
+ * - used_gb: Currently used space
+ * - free_gb: Available space
+ * - usage_percent: Utilization percentage
+ * - status: online|offline|degraded
+ *
+ * CAPACITY DETECTION:
+ * Identifies volumes near capacity (>90% usage), completely full (100%),
+ * with insufficient free space for operations. Detects capacity issues
+ * that may cause service failures or performance degradation.
+ *
+ * FILESYSTEM ANALYSIS:
+ * Reports filesystem type and health status. Btrfs vs ext4 have different
+ * resilience and recovery characteristics that affect risk assessment.
+ *
+ * @package App\Parsers
+ */
 class VolumeParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

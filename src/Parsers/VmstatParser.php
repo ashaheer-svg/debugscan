@@ -4,6 +4,39 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * VmstatParser: Virtual memory pressure and swap analysis
+ *
+ * PURPOSE:
+ * Analyzes virtual memory statistics from /proc/vmstat to detect memory
+ * pressure, swap thrashing, OOM events, and page cache problems. Identifies
+ * systems approaching memory limits.
+ *
+ * METRICS EXTRACTED:
+ * - swap_in, swap_out: Pages swapped per second (swap thrashing indicator)
+ * - page_in, page_out: Page cache activity
+ * - oom_kills: Out-of-memory killer invocations
+ * - pgfault, pgmajfault: Page fault rate and major faults
+ * - pgscan_direct: Direct page reclaim (memory pressure)
+ * - kswapd_wake: Kswapd daemon wakeups (active reclamation)
+ *
+ * MEMORY PRESSURE SIGNALS:
+ * - Swap activity: Indicates memory shortage
+ * - Direct reclaim: Kernel struggling to free memory
+ * - Kswapd activity: Background memory pressure
+ * - OOM kills: System out of memory, killing processes
+ * - Page faults: High rates indicate thrashing
+ *
+ * PERFORMANCE IMPACT:
+ * - Swap thrashing: Swap I/O drowns out real work (severe performance hit)
+ * - Direct reclaim: Processes blocked on memory allocation
+ * - Page cache eviction: Hot data pushed out, re-faulted constantly
+ *
+ * DATA SOURCE:
+ * /proc/vmstat: Kernel virtual memory statistics (system-wide)
+ *
+ * @package App\Parsers
+ */
 class VmstatParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

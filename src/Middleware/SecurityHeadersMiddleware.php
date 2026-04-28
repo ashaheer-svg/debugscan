@@ -9,8 +9,36 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as Handler;
 
+/**
+ * SecurityHeadersMiddleware: Apply HTTP security headers to all responses
+ *
+ * PURPOSE:
+ * Mitigate browser-level attacks (XSS, clickjacking, MIME sniffing, etc.)
+ * Added automatically to all responses (applied in routing/middleware stack)
+ *
+ * HEADERS:
+ * - X-Frame-Options: Prevent clickjacking (SAMEORIGIN only)
+ * - X-Content-Type-Options: Prevent MIME sniffing
+ * - X-XSS-Protection: Browser XSS filter (fallback for older browsers)
+ * - Referrer-Policy: Limit referrer leakage
+ * - Content-Security-Policy: Restrict script/style/font sources
+ * - Strict-Transport-Security: Force HTTPS (1 year)
+ *
+ * @package App\Middleware
+ */
 class SecurityHeadersMiddleware implements MiddlewareInterface
 {
+    /**
+     * Add security headers to outgoing response
+     *
+     * Applied to all responses in routing order
+     * Headers persist through response chain
+     *
+     * @param Request $request HTTP request
+     * @param Handler $handler Next handler in chain
+     *
+     * @return Response HTTP response with security headers added
+     */
     public function process(Request $request, Handler $handler): Response
     {
         $response = $handler->handle($request);

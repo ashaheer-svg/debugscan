@@ -21,10 +21,127 @@ use PDO;
 use Psr\Log\LoggerInterface;
 
 /**
- * Long-running daemon: polls deepdive_jobs, runs the pipeline, sleeps.
- * Completely separate from workers/scan_worker.php — different PID,
- * different queue table. A crash here cannot affect the existing scan
- * worker.
+ * Daemon: Long-running background worker for DeepDive analysis jobs
+ *
+ * PURPOSE:
+ * Infinite-loop daemon process that continuously polls deepdive_jobs for
+ * queued analysis jobs. Claims jobs, runs complete pipeline (validate →
+ * decompress → parse → evaluate → correlate → narrate → render → cleanup),
+ * updates progress in real-time, persists results to database.
+ * Completely isolated from existing ScanService worker (different process,
+ * different queue, different storage).
+ *
+ * EXECUTION MODEL:
+ * 1. Start daemon (typically via supervisor or cron)
+ * 2. Enter infinite loop: poll for jobs, sleep when idle
+ * 3. JobRepository::claimNext() atomically locks oldest queued job
+ * 4. Run entire Pipeline on claimed job (see Pipeline class)
+ * 5. Update job status and progress throughout pipeline
+ * 6. Repeat until restart conditions (memory, job count) met
+ *
+ * STARTUP:
+ * - Log worker ID (hostname:pid)
+ * - Call rescueOnBoot() to claim stuck jobs from previous crashes
+ * - Begin main loop
+ *
+ * POLLING LOOP:
+ * run(once=false): Infinite loop
+ * - claimNext(workerId, leaseSeconds): Attempts to lock job
+ * - Returns null if no jobs available
+ * - On null: sleep(idleSleepSeconds=3) and retry
+ * - On job: call processJob() to run full pipeline
+ * - Check restart conditions (memory, job count)
+ * - If restart needed: return (supervisor restarts process)
+ *
+ * ONCE MODE:
+ * run(once=true): Process at most one job then exit
+ * Used for testing, cron-based execution (alternative to daemon).
+ * - Claim one job
+ * - If none: log and exit immediately
+ * - If one: process it and exit (no restart conditions checked)
+ *
+ * JOB PROCESSING:
+ * processJob(row): Execute complete pipeline on single job
+ * - Create PipelineContext from job record
+ * - Instantiate all 8 pipeline steps
+ * - Create Pipeline orchestrator
+ * - Pipeline.run() executes steps sequentially
+ * - On success: markDone() updates status and progress
+ * - On exception: markFailed() logs error, updates status
+ *
+ * PIPELINE STEPS:
+ * 1. ValidateStep: Check file integrity, format
+ * 2. DecompressStep: Decompress .xz files
+ * 3. ExtractStep: Unzip bundles with security checks
+ * 4. ParseStep: Extract data via BundleLocator + parsers
+ * 5. EvaluateStep: Run all rules against parsed data
+ * 6. CorrelateStep: Group findings into incidents (union-find)
+ * 7. NarrateStep: AI-generate textual analysis (optional, Groq)
+ * 8. RenderStep: Generate HTML report
+ * 9. CleanupStep: Remove artifacts, finalize
+ *
+ * RESTART CONDITIONS:
+ * After each job completion, check:
+ * - processed >= restartAfterJobs (default: 25)
+ * - memory_get_usage >= restartAfterMemoryMb (default: 256)
+ * If any condition met: return (supervisor/parent handles restart)
+ * Benefits:
+ * - Prevents memory leaks from accumulating over long runs
+ * - Allows fresh PHP execution state
+ * - Supervisor can rotate process safely
+ *
+ * MEMORY MANAGEMENT:
+ * Each job extracts bundles (potentially large), processes, then cleans up.
+ * PHP garbage collection may not release memory back to OS immediately.
+ * Restart threshold (256MB) ensures process doesn't bloat indefinitely.
+ * Supervisor (e.g. systemd, supervisord) restarts daemon automatically.
+ *
+ * WORKER ID:
+ * workerId = hostname:pid (e.g. "deepdive-01:12345")
+ * Used for:
+ * - Job claim tracking (database lease_until records which worker)
+ * - Logging context (identify which worker processed which job)
+ * - Timeout detection (if worker dies, lease expires after timeout)
+ *
+ * STALE JOB RECOVERY:
+ * rescueOnBoot(): On daemon start, look for jobs with expired leases
+ * - Worker crashed without cleaning up (network failure, OOM kill, segfault)
+ * - Job stuck in 'claimed' status with old worker_id
+ * - Lease timeout (e.g. 15 min) has elapsed
+ * - rescueOnBoot() marks these 'queued' again (back to polling)
+ * - Prevents permanent job loss on worker crash
+ *
+ * ERROR HANDLING:
+ * Pipeline exceptions caught by processJob():
+ * - Pipeline throws: not all steps return gracefully
+ * - Catch: call markFailed() with exception message
+ * - Log: full stack trace to worker logs
+ * - Continue: move to next job (exception doesn't crash daemon)
+ * - Job status: 'failed', error_message has details
+ *
+ * ISOLATION FROM SCAN WORKER:
+ * - Different process (can't conflict for resources)
+ * - Different queue table (deepdive_jobs vs scans)
+ * - Different storage (storage/deepdive vs storage/extracted)
+ * - Crash in DeepDive worker cannot affect scans
+ *
+ * INTEGRATION WITH CONTROLLER:
+ * - Controller calls JobRepository::enqueue() to create job
+ * - Controller polls JobRepository::progress() for frontend updates
+ * - Daemon processes job independently
+ * - Both use same JobRepository for safe concurrent access
+ *
+ * TYPICAL DEPLOYMENT:
+ * supervisord config:
+ * [program:deepdive-worker]
+ * command = php /app/workers/deepdive_worker.php
+ * autostart = true
+ * autorestart = true
+ * numprocs = 2
+ * stdout_logfile = /var/log/deepdive-worker.log
+ * stderr_logfile = /var/log/deepdive-worker.log
+ *
+ * @package App\DeepDive\Worker
  */
 final class Daemon
 {

@@ -12,23 +12,75 @@ use App\DeepDive\Rules\Matchers\SqliteMatcher;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
- * Runs the catalogue against a SourceRegistry and produces FindingRecords.
+ * Evaluator: Execute rule catalogue against evidence sources
  *
- * Contract:
- *   - Per-rule evaluation is wrapped in try/catch — one malformed rule
- *     must never kill the whole run. Errors go into $errors for the report
- *     appendix and a (caller-provided) logger.
- *   - Per-rule findings are capped (default 50) to keep the report bounded
- *     on noisy bundles. Authors can override via `signature.max_findings`.
+ * PURPOSE:
+ * Applies all rules from catalogue to data in SourceRegistry
+ * Produces FindingRecord objects for each rule match
+ * Enforces per-rule finding limits to keep reports bounded
+ * Captures rule evaluation errors without failing pipeline
+ *
+ * RULE EXECUTION:
+ * For each rule in catalogue:
+ * 1. Find matcher for rule's signature type (regex, sqlite, aggregate, absence)
+ * 2. Set finding limit (default 50, configurable via rule.signature.max_findings)
+ * 3. Call matcher->evaluate() to find all matches
+ * 4. Collect findings or capture errors
+ * 5. Return all findings across all rules
+ *
+ * MATCHER TYPES:
+ * - RegexMatcher: Pattern matching against log files
+ * - SqliteMatcher: SQL queries against database files
+ * - AggregateMatcher: Multi-step queries with context
+ * - AbsenceMatcher: Evidence NOT present (negative matches)
+ * Each matcher implements MatcherInterface with type() and evaluate()
+ *
+ * FINDING LIMITS:
+ * - Default: 50 findings per rule (prevents noise on large bundles)
+ * - Clamped: Between 1 and 500 (safety bounds)
+ * - Override: Via rule.signature.max_findings field
+ * - Purpose: Keep reports bounded even on verbose bundles
+ *
+ * ERROR HANDLING:
+ * Per-rule failures caught and logged, don't block other rules:
+ * - Unknown matcher type: Logged as error
+ * - Matcher evaluation exception: Caught, logged, continues
+ * - All errors collected in $errors array for report appendix
+ * - Pipeline never fails due to individual rule errors
+ *
+ * REPORTING:
+ * errors() method provides list of failed rules:
+ * - rule_id: Which rule failed
+ * - error: Human-readable error message
+ * Used in RenderStep appendix for transparency
+ *
+ * @package App\DeepDive\Rules
  */
 final class Evaluator
 {
-    /** @var array<string,MatcherInterface> */
+    /** @var array<string,MatcherInterface> Map of matcher type -> matcher instance */
     private array $matchers;
 
-    /** @var list<array{rule_id:string,error:string}> */
+    /** @var list<array{rule_id:string,error:string}> Evaluation errors for report */
     private array $errors = [];
 
+    /**
+     * Constructor: Initialize with matchers for rule evaluation
+     *
+     * DEFAULT MATCHERS:
+     * - RegexMatcher: Pattern matching (logs, text files)
+     * - SqliteMatcher: SQL queries (databases)
+     * - AggregateMatcher: Multi-source correlation
+     * - AbsenceMatcher: Negative matches (absence detection)
+     *
+     * CUSTOM MATCHERS:
+     * Pass array to use alternative matcher implementations
+     * All must implement MatcherInterface
+     *
+     * @param ?array $matchers Optional custom matcher instances
+     *
+     * @throws InvalidArgumentException If matcher doesn't implement MatcherInterface
+     */
     public function __construct(?array $matchers = null)
     {
         if ($matchers === null) {
@@ -44,7 +96,32 @@ final class Evaluator
     }
 
     /**
-     * @return list<FindingRecord>
+     * Evaluate all rules in catalogue against data sources
+     *
+     * FLOW:
+     * 1. Reset error array
+     * 2. For each rule in catalogue:
+     *    a. Find matcher for signature type
+     *    b. Determine finding limit
+     *    c. Call matcher->evaluate()
+     *    d. Collect results or capture error
+     * 3. Return all findings
+     *
+     * FINDING LIMITS:
+     * Default 50 per rule, clamped to 1-500 range
+     * Rules can override via signature.max_findings field
+     *
+     * ERROR RECOVERY:
+     * Missing matcher or evaluation error:
+     * - Logged to errors[] array
+     * - Pipeline continues with other rules
+     * - Error details preserved for report
+     *
+     * @param RuleCatalogue $cat All rules to evaluate
+     * @param SourceRegistry $reg Evidence sources (logs, databases)
+     * @param int $defaultLimit Default findings per rule (default 50)
+     *
+     * @return list<FindingRecord> All findings from all rules
      */
     public function evaluate(RuleCatalogue $cat, SourceRegistry $reg, int $defaultLimit = 50): array
     {

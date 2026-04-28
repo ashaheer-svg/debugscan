@@ -4,6 +4,22 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * HardwareParser: Extract hardware identity and system specifications
+ *
+ * PURPOSE:
+ * Reads /proc/* files and synoinfo.conf to build hardware profile:
+ * - CPU: Model, cores, frequency
+ * - RAM: Total, available memory
+ * - Device: Model, serial number
+ * - Uptime: System uptime in seconds
+ * - Expansion units: Detected via bay information
+ *
+ * Depends on context['majorversion'] from VersionParser (DSM 6 vs 7 file paths).
+ * Sets context for downstream parsers (hardware profile available to all).
+ *
+ * Output: {cpu, ram, model, serial, uptime, bays, expansion_units}
+ */
 class HardwareParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

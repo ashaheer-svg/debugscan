@@ -11,22 +11,54 @@ use App\DeepDive\Support\Engine;
 use App\DeepDive\Visualization\BayLayoutRenderer;
 
 /**
- * Produces the single-file HTML DeepDive report. Kept deliberately free
- * of external CSS/JS and inline-only so the same artifact renders
- * identically in a browser and can be piped through mPDF in Sprint 4
- * without chasing missing assets.
+ * ReportRenderer: Generate comprehensive HTML analysis reports
  *
- * Design notes:
- *   - Incidents are grouped first by actionability (what the user does
- *     about it), then by priority. This reflects how a NAS admin actually
- *     reads the report: "what do I need to fix myself?" is the first
- *     question, not "what's the highest priority?".
- *   - Evidence is always shown — never hidden behind an expander. If a
- *     finding claims something is broken, the user should see the log
- *     line that says so.
- *   - Narratives are used when present (Sprint 3b), else we fall back to
- *     the rule's own description + remediation text. Both paths produce
- *     a valid report.
+ * PURPOSE:
+ * Converts incident analysis results into professional HTML report
+ * Produces single-file HTML with embedded CSS (no external assets)
+ * Compatible with mPDF for PDF export (Sprint 4)
+ *
+ * REPORT DESIGN PHILOSOPHY:
+ * - User-centric organization: Group by actionability first (user fixable, upgrade, vendor issue)
+ * - Evidence-driven: Always show log lines and data supporting findings
+ * - Narrative-rich: Use AI-generated narratives when available, fallback to rule text
+ * - Professional: Color-coded sections, clear hierarchy, appendix with metadata
+ *
+ * REPORT SECTIONS:
+ * 1. Header: Job ID, timestamp, system info
+ * 2. Hardware Configuration: Device specs, drive inventory, RAID status
+ * 3. Summary: Quick statistics (findings by priority)
+ * 4. Grouped Incidents:
+ *    - What you can fix yourself (user-actionable)
+ *    - Hardware upgrades recommended (expansion needed)
+ *    - Possible vendor/firmware issues (out of control)
+ *    - Informational (FYI)
+ * 5. Appendix: Bundle details, rule versions, evaluation errors
+ *
+ * INCIDENT GROUPING:
+ * Primary: By actionability (reflects how admins read reports)
+ * Secondary: By priority (P1/P2/P3/P4)
+ * Each group color-coded for visual scanning
+ *
+ * NARRATIVE OVERLAY:
+ * Narratives (from NarrateStep) preferred when available
+ * Fallback to rule's built-in description + remediation
+ * Both paths produce complete, valid reports
+ *
+ * SELF-CONTAINED HTML:
+ * All CSS inlined in <style> tag
+ * No external JavaScript or stylesheets
+ * Images as data: URIs (base64)
+ * Renders identically in browsers and mPDF
+ *
+ * OUTPUT FORMAT:
+ * Returns HTML5 document string ready for:
+ * - Direct browser display
+ * - File download
+ * - mPDF conversion to PDF
+ * - Archival and email distribution
+ *
+ * @package App\DeepDive\Report
  */
 final class ReportRenderer
 {
@@ -45,8 +77,47 @@ final class ReportRenderer
     ];
 
     /**
-     * @param list<Incident>        $incidents
-     * @param array<string,mixed>   $context  job_id, tenant_id, project_id, generated_at, engine_version, catalogue_version, bundles[], evaluator_errors[]
+     * Render incidents into comprehensive HTML report
+     *
+     * FLOW:
+     * 1. Generate inline CSS styles
+     * 2. Render header block (job info, metadata)
+     * 3. Render hardware configuration block
+     * 4. Generate summary statistics
+     * 5. Group incidents by actionability
+     * 6. Render grouped incident sections
+     * 7. Render appendix (bundles, versions, errors)
+     * 8. Assemble HTML5 document
+     * 9. Return complete HTML string
+     *
+     * PARAMETERS:
+     * - $incidents: List of Incident objects from CorrelateStep
+     * - $context: Metadata for report:
+     *   - job_id: Unique job identifier
+     *   - tenant_id: Tenant context
+     *   - project_id: Project context
+     *   - generated_at: Timestamp
+     *   - engine_version: DeepDive version
+     *   - catalogue_version: Rule catalogue version
+     *   - bundles[]: List of processed bundles with metadata
+     *   - evaluator_errors[]: Rule evaluation failures
+     * - $catalogue: Optional RuleCatalogue for rule descriptions
+     *
+     * OUTPUT:
+     * Returns complete HTML5 document as string
+     * Single-file, no external assets
+     * CSS inlined in <style> tag
+     * Ready for browser display or mPDF conversion
+     *
+     * EMPTY REPORT:
+     * If no incidents: Shows "No issues detected" message
+     * Suggests checking bundle completeness
+     *
+     * @param list<Incident> $incidents Analyzed incidents to report
+     * @param array<string,mixed> $context Job metadata and configuration
+     * @param ?RuleCatalogue $catalogue Rule catalogue for descriptions
+     *
+     * @return string Complete HTML5 document ready for display/export
      */
     public function render(array $incidents, array $context, ?RuleCatalogue $catalogue = null): string
     {

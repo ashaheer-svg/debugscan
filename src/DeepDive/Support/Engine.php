@@ -7,6 +7,25 @@ namespace App\DeepDive\Support;
 use App\DeepDive\Rules\RuleCatalogue;
 use App\DeepDive\Rules\RuleLoader;
 
+/**
+ * Engine: DeepDive configuration and initialization
+ *
+ * PURPOSE:
+ * Centralized configuration for DeepDive analysis engine
+ * Environment-based overrides for testing and deployment
+ * Rule loading and versioning
+ *
+ * CONFIGURATION:
+ * - DEEPDIVE_WITHIN_DAYS: Age filter for findings (default: 365 days)
+ * - DEEPDIVE_RULES_DIR: Path to rule definitions (default: config/deepdive/rules)
+ *
+ * VERSIONING:
+ * - Engine VERSION: DeepDive engine version
+ * - RULE_CATALOGUE_VERSION_FALLBACK: Legacy fallback version string
+ * - Rule catalogue version tracked on every job (reproducibility)
+ *
+ * @package App\DeepDive\Support
+ */
 final class Engine
 {
     public const VERSION = 'deepdive-0.1';

@@ -9,19 +9,53 @@ use RuntimeException;
 use Exception;
 
 /**
- * Secure, read-only wrapper for Synology's internal SQLite databases.
- * Includes safety caps for row results to prevent memory exhaustion.
+ * SqliteReader: Secure read-only SQLite access with memory bounds
+ *
+ * PURPOSE:
+ * Access Synology forensic databases (SYNOSYSDB, SYNODISKHEALTHDB, etc.)
+ * Read-only mode prevents accidental modifications
+ * Row limits prevent memory exhaustion attacks
+ *
+ * SAFETY FEATURES:
+ * - SQLITE3_OPEN_READONLY: Prevent write operations
+ * - Mandatory row limit: Enforce LIMIT clause
+ * - Querycheck: Ensure query doesn't contain ; (multi-statement prevention)
+ * - Error handling: Graceful failure with meaningful messages
+ * - Decompression: Auto-inflate .xz-compressed SQLite files
+ *
+ * @package App\Helpers
  */
 class SqliteReader
 {
     /**
-     * Executes a query on a specified database file with a mandatory row limit.
-     * 
-     * @param string $dbPath Absolute path to the .db file
-     * @param string $query  SQL query to execute
-     * @param int    $limit  Maximum number of rows to return
-     * @return array List of associative arrays for each row
-     * @throws RuntimeException
+     * Execute read-only SQL query with mandatory row limit
+     *
+     * WORKFLOW:
+     * 1. Check database file exists
+     * 2. Open in read-only mode
+     * 3. Append LIMIT if not present
+     * 4. Execute query (or throw on error)
+     * 5. Fetch rows up to limit
+     * 6. Return associative array list
+     *
+     * ROW LIMIT:
+     * Mandatory: Prevents memory exhaustion from large result sets
+     * Auto-appended if query doesn't have LIMIT clause
+     * Default: 1000 rows
+     * Respects extraction config limits (ExtractionConfigService)
+     *
+     * SAFETY:
+     * Read-only: SQLite3_OPEN_READONLY
+     * No multi-statement: Query must not contain ;
+     * Parameterized queries: Use bound parameters to prevent SQL injection
+     *
+     * @param string $dbPath Absolute path to database file
+     * @param string $query SQL query (select-only, no modifications)
+     * @param int $limit Maximum rows to return (default: 1000)
+     *
+     * @return array<array<string,mixed>> List of row arrays (associative)
+     *
+     * @throws RuntimeException If file not found, query fails, or multi-statement detected
      */
     public static function queryWithLimit(string $dbPath, string $query, int $limit = 1000): array
     {

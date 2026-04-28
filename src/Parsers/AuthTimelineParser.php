@@ -7,7 +7,38 @@ namespace App\Parsers;
 use App\Helpers\SqliteReader;
 
 /**
- * AuthTimelineParser - Reconstructs user authentication history from .SYNOCONNDB
+ * AuthTimelineParser: User authentication event extraction and analysis
+ *
+ * PURPOSE:
+ * Reconstructs user authentication history from forensic databases
+ * (SYNOCONNDB, auth logs). Extracts SMB, SSH, SNMP authentication events
+ * with timestamps, usernames, source IPs, protocols, and results. Detects
+ * brute force attempts, successful/failed logins, and access anomalies.
+ *
+ * DATA SOURCES:
+ * - SYNOCONNDB: SQLite database with connection events
+ * - /var/log/auth.log: System authentication log
+ * - /var/log/scemd.log: Service-specific logs
+ *
+ * EVENTS EXTRACTED:
+ * - timestamp: When authentication occurred
+ * - user: Username attempting login
+ * - source_ip: Remote IP address
+ * - protocol: SMB, SSH, SNMP, HTTP
+ * - method: Password, key, token, anonymous
+ * - result: success|failed|error
+ * - failure_reason: Invalid password, user not found, etc.
+ *
+ * SECURITY ANALYSIS:
+ * Detects: Brute force attempts, successful backdoor access, unusual IPs,
+ * after-hours access, service account abuse, multiple failed attempts.
+ *
+ * OUTPUT:
+ * - summary: Total logins, failed attempts, unique IPs/users
+ * - timeline: Chronological auth events with context
+ * - anomalies: Suspicious patterns (multiple failures, unusual IPs)
+ *
+ * @package App\Parsers
  */
 class AuthTimelineParser implements ParserInterface
 {

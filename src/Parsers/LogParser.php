@@ -4,6 +4,37 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * LogParser: System log filtering and anomaly detection
+ *
+ * PURPOSE:
+ * Filters system logs for error, warning, and critical messages. Extracts
+ * relevant log entries indicating system problems, failures, and anomalies.
+ * Reduces noise by focusing on actionable log lines.
+ *
+ * KEYWORD FILTERING:
+ * Searches logs for keywords: error, fail, critical, panic, warn, degraded,
+ * unhealthy. Extracts matching lines with context (timestamp, process, message).
+ *
+ * OUTPUT PER MATCH:
+ * - log_file: Source log file (messages, kern.log, etc.)
+ * - line_number: Position in log
+ * - timestamp: When error occurred
+ * - message: Matched log line text
+ * - severity: Inferred from keywords (error/fail/critical etc.)
+ *
+ * LOG SOURCES:
+ * - /var/log/messages: General system log
+ * - /var/log/kern.log: Kernel log
+ * - /var/log/dmesg: Kernel ring buffer
+ * - Custom app logs
+ *
+ * NOISE REDUCTION:
+ * Focuses analyst on significant events, filtering out routine operations.
+ * Each match represents likely issue worth investigating.
+ *
+ * @package App\Parsers
+ */
 class LogParser implements ParserInterface
 {
     private array $keywords = ['error', 'fail', 'critical', 'panic', 'warn', 'degraded', 'unhealthy'];

@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * VersionParser: Extract DSM version information
+ *
+ * PURPOSE:
+ * Reads VERSION files to get DSM major version, product version, and build number.
+ * Sets context for downstream parsers (HardwareParser depends on majorversion for file path selection).
+ * First parser executed (dependency for others).
+ *
+ * Output: {major, product, build, build_date}
+ */
 class VersionParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

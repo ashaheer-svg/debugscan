@@ -5,19 +5,120 @@ declare(strict_types=1);
 namespace App\DeepDive\Hardware;
 
 /**
- * Independent hardware specification extractor.
+ * HardwareSpecExtractor: Comprehensive hardware specification analysis
  *
- * Extracts comprehensive hardware specs with DSM 6/7 compatibility.
- * Uses multi-source fallback chains - if primary source unavailable,
- * falls back to alternatives. All extractions include citations.
+ * PURPOSE:
+ * Extracts complete hardware configuration from Synology debug bundles
+ * Analyzes device identity, CPU, RAM, storage, RAID, volumes, expansion
+ * Detects hardware failures and degradation patterns
+ * Produces completeness scoring and missing field analysis
  *
- * NOT dependent on parsers or other infrastructure.
- * Can be called standalone: new HardwareSpecExtractor()->extract($path)
+ * DESIGN:
+ * Standalone, independent module - no parser dependencies
+ * Can be instantiated and called directly: extract($bundlePath)
+ * Multi-source fallback chains for robustness
+ * All data includes source citations (file + timestamp)
+ *
+ * DSM COMPATIBILITY:
+ * Supports DSM 6.x and DSM 7.x versions
+ * Handles different directory layouts and file formats
+ * Graceful degradation for missing or incomplete data
+ *
+ * EXTRACTION CATEGORIES:
+ * Device Identity: Model, serial, location
+ * CPU & RAM: Processor specs, memory size and type
+ * Uptime: System uptime in days
+ * Storage:
+ *   - Drive Bays: Total bays, occupied/available
+ *   - Drives: Physical drives with model, serial, health
+ *   - Drive History: All drives ever seen (hot-swap record)
+ * RAID:
+ *   - RAID Config: Array setup, status, member drives
+ *   - RAID Failures: Detected failures from logs
+ *   - Failure Patterns: Patterns indicating issues
+ * Volumes: Logical volumes with usage and health
+ * Expansion: External expansion units with stats
+ *
+ * FAILURE DETECTION:
+ * Analyzes logs for:
+ * - Drive failures and hot-swaps
+ * - RAID degradation and rebuilds
+ * - Expansion unit failures
+ * - Power issues and recovery
+ * Correlates with current snapshot for failure classification
+ *
+ * COMPLETENESS SCORING:
+ * Rates data completeness 0-100%:
+ * - 11 categories assessed (device, cpu, ram, uptime, drives, etc.)
+ * - Each category 0-100 based on extracted fields
+ * - Overall = average of all categories
+ * - Assessment: Complete/Good/Partial/Incomplete
+ *
+ * CITATIONS:
+ * Every extracted field includes:
+ * - Source file path (e.g., dsm/proc/meminfo)
+ * - Extraction timestamp
+ * Enables audit trail and reproducibility
+ *
+ * ERROR HANDLING:
+ * Silent failures for missing sources
+ * Fallback chains ensure robustness
+ * Partial data acceptable (graceful degradation)
+ * No exceptions thrown; always returns HardwareSpec
+ *
+ * PERFORMANCE:
+ * Single-pass extraction through bundle
+ * File reading cached where possible
+ * Suitable for large bundles
+ *
+ * @package App\DeepDive\Hardware
  */
 final class HardwareSpecExtractor
 {
+    /** @var string Path to extracted debug bundle directory */
     private string $extractedPath = '';
 
+    /**
+     * Extract complete hardware specification from debug bundle
+     *
+     * FLOW:
+     * 1. Initialize extraction path and HardwareSpec object
+     * 2. Extract device identity (model, serial, location)
+     * 3. Extract CPU specifications
+     * 4. Extract RAM specifications
+     * 5. Extract system uptime
+     * 6. Extract storage:
+     *    - Drive bays configuration
+     *    - Physical drives with SMART data
+     *    - Historical drive changes
+     * 7. Extract RAID configuration and status
+     * 8. Extract logical volumes
+     * 9. Extract expansion units
+     * 10. Analyze failure logs and patterns
+     * 11. Correlate failures with snapshot
+     * 12. Return complete HardwareSpec object
+     *
+     * CITATIONS:
+     * All extracted data tagged with source file and timestamp
+     * Enables traceability and reproducibility
+     *
+     * FAILURE ANALYSIS:
+     * Parses RAID failure logs for:
+     * - Drive failures and removals
+     * - Expansion unit failures
+     * - Power and environmental issues
+     * Correlates with current state to classify failures
+     *
+     * ROBUSTNESS:
+     * Uses multi-source fallback chains
+     * Missing sources don't block extraction
+     * Partial data accepted (graceful degradation)
+     *
+     * @param string $extractedPath Path to extracted bundle directory
+     *
+     * @return HardwareSpec Complete hardware specification object
+     *                        with citations and completeness scores
+     */
     public function extract(string $extractedPath): HardwareSpec
     {
         $this->extractedPath = rtrim($extractedPath, '/\\');

@@ -4,6 +4,43 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * DiskParser: Physical disk configuration and health analysis
+ *
+ * PURPOSE:
+ * Extracts comprehensive disk information from Synology debug bundles including
+ * physical disk properties, SMART health metrics, temperature, error counters,
+ * and firmware versions. Detects current failures and degradation patterns.
+ * Analyzes both main chassis and expansion unit disks.
+ *
+ * DATA SOURCES:
+ * - load_info.result: JSON snapshot (authoritative, real-time system state)
+ * - /proc/diskstats: Kernel I/O statistics and error counters
+ * - SYNODISKHEALTHDB: Persistent health history database
+ * - SMART dumps: Raw SMART attribute data if available
+ *
+ * OUTPUT PER DISK:
+ * - model, serial, firmware: Disk identity
+ * - capacity_gb, used_gb: Storage capacity metrics
+ * - temperature, power_on_hours: Health metrics
+ * - smart_status, bad_sectors: Fault indicators
+ * - read_errors, write_errors, seek_errors: Error counters
+ * - location: Physical bay or expansion unit slot
+ * - container: "Main Unit" or "Expansion Unit N"
+ *
+ * FAILURE DETECTION:
+ * Analyzes for: SMART failures, temperature warnings, error rate spikes,
+ * power-on hours excessive, multiple issues on same disk. Produces findings
+ * for disks approaching end-of-life or showing active degradation.
+ *
+ * MULTI-SOURCE STRATEGY:
+ * Primary: load_info.result (authoritative snapshot)
+ * Fallback 1: SYNODISKHEALTHDB (persistent history)
+ * Fallback 2: /proc/diskstats (kernel statistics)
+ * Graceful degradation if sources missing.
+ *
+ * @package App\Parsers
+ */
 class DiskParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

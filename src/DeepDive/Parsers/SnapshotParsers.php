@@ -8,18 +8,58 @@ use App\DeepDive\Rules\LogRecord;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
- * Converts Synology debug-bundle snapshot files into synthetic
- * event streams. Each parser emits one LogRecord per logical event so the
- * existing regex/aggregate matchers can address them uniformly.
+ * SnapshotParsers: Convert /proc snapshots to synthetic log streams
  *
- * Naming:
- *   mdstat       → one LogRecord per array, text begins "array=<name> state=<state> ..."
- *   df           → one LogRecord per mount, text "mount=<mnt> use=<pct>%"
- *   vmstat       → one LogRecord per sampled row
- *   btrfs_result → one LogRecord per status line
- *   top_snapshot → one LogRecord per top-N row
+ * PURPOSE:
+ * Adapts point-in-time system snapshots (mdstat, df, vmstat, top, btrfs) into
+ * synthetic log record streams. This allows regex and aggregate matchers to
+ * address fact snapshots uniformly using the same interface as time-series
+ * logs. Rule authors write rules against "mdstat" without knowing whether
+ * they're processing 100 log lines or a single /proc/mdstat snapshot.
  *
- * Rule authors address these by the source names above.
+ * MOTIVATION:
+ * Logs have natural record boundaries (one line = one event). Snapshots don't:
+ * /proc/mdstat is one multi-line file. SnapshotParsers assigns logical record
+ * boundaries (e.g. one LogRecord per md array) and normalizes output to match
+ * LogRecord structure {file, lineNumber, timestamp, text, extra}.
+ *
+ * SNAPSHOT SOURCES AND OUTPUT:
+ * 1. mdstat:      One LogRecord per RAID array (header line and status details)
+ *                 Text: "array=md2 state=clean level=raid5 devices=[sda3,sdb3,sdc3]"
+ * 2. df:          One LogRecord per mounted filesystem (parsed from df output)
+ *                 Text: "mount=/volume1 used=500GB total=1000GB usage=50%"
+ * 3. vmstat:      One LogRecord per data row (memory page activity summary)
+ *                 Text: "page_in=1000 page_out=500 swap_in=10 swap_out=5"
+ * 4. btrfs_result: One LogRecord per btrfs filesystem status line
+ *                 Text: "filesystem=btrfs1 status=ok errors=0"
+ * 5. top_snapshot: One LogRecord per top process row (load averages and top processes)
+ *                 Text: "load1=0.5 load5=0.3 load15=0.2 process=systemd cpu=0.1 mem=1.2"
+ *
+ * REGISTRATION:
+ * Each parser checks for its input file in multiple locations (DSM 6 vs 7
+ * path variations). If found, creates a SynthSource object and registers it
+ * in SourceRegistry. Missing snapshots are silently skipped (not all bundles
+ * contain all snapshots).
+ *
+ * LOG RECORD STRUCTURE:
+ * Each synthetic record mimics real logs:
+ * - file: "mdstat", "df", "vmstat", etc. (for citation purposes)
+ * - lineNumber: Logical record number (1-indexed)
+ * - timestamp: null (snapshots are point-in-time, not timestamped)
+ * - text: Normalized key=value text for matchers
+ * - extra: Parser-specific metadata (e.g. {device: "md2", state: "clean"})
+ *
+ * SYNTHETIC SOURCE CONTAINER:
+ * SynthSource is a FileLogSource that holds pre-parsed LogRecord[] instead of
+ * reading from disk. Allows rules to reference snapshot data exactly like
+ * log data. Matchers iterate through synthetic records without knowing origin.
+ *
+ * NORMALIZATION:
+ * Snapshot formats vary by DSM version and tool. Parsers normalize to
+ * consistent key=value format for rule matching: "key1=val1 key2=val2 ..."
+ * This allows rules to use regex patterns like /usage=(\d+)%/ or /state=degraded/
+ *
+ * @package App\DeepDive\Parsers
  */
 final class SnapshotParsers
 {

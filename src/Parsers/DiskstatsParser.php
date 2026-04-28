@@ -4,6 +4,20 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * DiskstatsParser: Disk I/O latency and performance metrics
+ *
+ * PURPOSE:
+ * Parses /proc/diskstats to calculate disk I/O latency per disk.
+ * Detects slow disks, bottlenecks, and I/O subsystem problems.
+ *
+ * METRICS:
+ * - read_latency_ms, write_latency_ms: Operation timing
+ * - iops_read, iops_write: Operations per second
+ * - throughput_mb: Data transfer rate
+ *
+ * @package App\Parsers
+ */
 class DiskstatsParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

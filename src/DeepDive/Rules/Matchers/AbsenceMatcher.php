@@ -9,18 +9,62 @@ use App\DeepDive\Rules\Rule;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
- * "Expected line never appeared" detector. Fires if a source exists but
- * contains zero matches for the signature pattern — useful for catching
- * subsystems that never successfully started.
+ * AbsenceMatcher: Negative matching (detect missing expected behavior)
  *
- * Signature shape:
- *   type: absence
- *   source: messages
- *   pattern: 'synoscgi: Successful login'
- *   min_records_to_assert: 1000   (optional — avoid false positives on tiny bundles)
+ * PURPOSE:
+ * Detects abnormal absence of expected events. Complements RegexMatcher
+ * (which fires on presence). Examples: web server never started (no "listening"
+ * message), authentication subsystem never logged a success (possible lockout),
+ * scheduled backup never ran (no completion entry).
  *
- * The citation points at the first and last records of the source to give
- * the analyst an anchor.
+ * USE CASES:
+ * 1. Subsystem failure: "synoscgi service never logged startup message"
+ * 2. Lockout detection: "SSH subsystem never logged successful login"
+ * 3. Scheduled task failure: "Backup scheduler never logged job completion"
+ * 4. Missing logs: "Expected security audit never logged"
+ * 5. Configuration issue: "RAID monitor never reported array status"
+ *
+ * CORE LOGIC:
+ * 1. Find source (e.g. "messages" log)
+ * 2. Iterate through ALL records in source
+ * 3. If ANY record matches pattern → rule does NOT fire (absence disproven)
+ * 4. If NO record matches AND record count >= min_records_to_assert → fire
+ * 5. If record count < min_records_to_assert → return [] (insufficient evidence)
+ *
+ * SIGNATURE CONFIGURATION:
+ * - type: "absence" (required)
+ * - source: Log source name (e.g. "messages", "auth.log") (required)
+ * - pattern: Regex for expected event (required)
+ * - min_records_to_assert: Minimum records to confidently call absence (default: 1)
+ *
+ * MIN_RECORDS_TO_ASSERT (False Positive Prevention):
+ * If bundle only contains 50 log lines but expected event typically happens
+ * in first 10 lines on normal systems, don't fire on empty bundle. Set
+ * min_records_to_assert to 1000 to require substantial evidence of absence.
+ * Example: startup messages come in first 100 lines; require 1000+ records
+ * before claiming "startup never happened" (implies we have full log).
+ *
+ * FINDINGS STRUCTURE:
+ * Creates single FindingRecord with:
+ * - detail: "Expected pattern not found in source"
+ * - entities: Rule-defined + {observed_records, span_from, span_to}
+ * - citations: [first_record, last_record] to show time span covered
+ *
+ * CITATION STRATEGY:
+ * Cites first and last log records (with timestamps) to show time window.
+ * Analysis can then reason: "No event in logs covering Apr 1-15, system
+ * was running, so absence is evidence of failure."
+ *
+ * TIMESTAMP CONTEXT:
+ * Uses first/last record timestamps to report covered time period.
+ * Timestamps help validate: if span is only 1 hour, maybe insufficient time
+ * for expected event to occur. Analysts make final judgment.
+ *
+ * OUTPUT:
+ * Returns [FindingRecord] if absence confirmed, [] otherwise.
+ * Maximum 1 finding per rule (absence is binary: present or absent).
+ *
+ * @package App\DeepDive\Rules\Matchers
  */
 final class AbsenceMatcher implements MatcherInterface
 {

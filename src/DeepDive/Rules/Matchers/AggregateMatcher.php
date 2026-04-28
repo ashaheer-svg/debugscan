@@ -10,18 +10,62 @@ use App\DeepDive\Rules\Sources\SourceRegistry;
 use App\DeepDive\Support\Engine;
 
 /**
- * Fires when a (sub-)regex hits >= threshold times on a source — optionally
- * within a rolling window of N seconds. Used for "flapping" / "burst"
- * style patterns where a single match is uninteresting but many are.
+ * AggregateMatcher: Statistical detection (threshold-based windowed counting)
  *
- * Signature shape:
- *   type: aggregate
- *   source: kern.log
- *   pattern: 'link down'
- *   threshold: 10
- *   window_seconds: 300            (optional — omit for lifetime count)
- *   group_by: interface            (optional — count per named-capture group)
- *   pattern_group_extract: '...'   (optional — smaller regex to pull group_by if pattern is broad)
+ * PURPOSE:
+ * Detects patterns that are uninteresting as isolated events but concerning
+ * when they occur repeatedly. Examples: link flapping (10+ down/up in 5 min),
+ * disk errors (5+ errors in 1 hour), OOM killings (3+ in 24 hours).
+ * Fires when event count meets or exceeds threshold, optionally within a
+ * rolling time window.
+ *
+ * USE CASES:
+ * 1. Flapping: "link down" event repeated 10+ times in 5 minutes
+ * 2. Degradation: "read error" logged 5+ times in 1 hour (threshold for SMART failure)
+ * 3. Saturation: "out of memory" killed processes 3+ times in 24 hours (swap pressure)
+ * 4. Per-device counting: Separate thresholds for different interfaces or disks
+ *
+ * SIGNATURE CONFIGURATION:
+ * - type: "aggregate" (required)
+ * - source: Log source name (e.g. "messages", "kern.log", "dmesg") (required)
+ * - pattern: Regex to match individual events (required)
+ * - threshold: Number of matches required to trigger (default: 2)
+ * - window_seconds: Rolling window duration in seconds (optional, omit for lifetime)
+ * - group_by: Named capture group for per-group counting (optional)
+ * - within_days: Override global finding age filter (optional)
+ * - pattern_group_extract: Alternative regex to extract group_by if main pattern is broad (optional)
+ *
+ * WINDOWING:
+ * If window_seconds is set (e.g. 300 for 5 minutes), only count matches
+ * within rolling window. Allows rules like "flapping in last 5 min" or
+ * "sustained errors over 24 hours". Without window, counts lifetime matches.
+ *
+ * PER-GROUP COUNTING:
+ * If group_by is set (e.g. "interface"), counts matches separately per
+ * named capture group value. Example:
+ * - Rule matches "link down on eth0" and "link down on eth1"
+ * - With group_by="interface", counted separately (eth0: 1, eth1: 1)
+ * - Each group independently compared to threshold
+ * - Without group_by, counted together (total: 2)
+ *
+ * FINDINGS GENERATION:
+ * Creates one FindingRecord per group that exceeds threshold:
+ * - detail: "Detected X occurrences within Y seconds"
+ * - entities: Includes group_by value if present (for Correlator)
+ * - citations: References all matching log lines (chronological order)
+ *
+ * TIMESTAMP FILTERING:
+ * Respects finding age limits:
+ * - Rule-level override: signature.within_days
+ * - Global default: Engine::withinDays() (365 days)
+ * - Matches older than cutoff dropped before counting
+ * - Null timestamps passed through (safer over-inclusion)
+ *
+ * OUTPUT LIMITING:
+ * Returns max $limit findings (enforced by MatcherInterface).
+ * If multiple groups exceed threshold, all returned (prioritized by count).
+ *
+ * @package App\DeepDive\Rules\Matchers
  */
 final class AggregateMatcher implements MatcherInterface
 {

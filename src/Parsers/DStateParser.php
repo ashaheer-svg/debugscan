@@ -4,6 +4,44 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * DStateParser: Uninterruptible sleep process detection
+ *
+ * PURPOSE:
+ * Detects processes in D-state (uninterruptible sleep), which indicates
+ * kernel I/O operations are blocking process execution. D-state processes
+ * cannot be killed and typically indicate serious I/O subsystem problems.
+ *
+ * D-STATE MEANING:
+ * Process waiting for I/O operation that cannot be interrupted by signals.
+ * Normal for I/O-bound processes briefly, but persistent D-state indicates:
+ * - Hung I/O subsystem
+ * - Unresponsive storage device
+ * - NFS/network filesystem timeout
+ * - Kernel deadlock
+ * - Device driver bug
+ *
+ * DETECTION:
+ * Scans /proc/*/stat files for 'D' state flag. Extracts:
+ * - process_name: Command name
+ * - pid: Process ID
+ * - wait_channel: Kernel function where blocked
+ * - duration: How long in D-state
+ * - stack_trace: Kernel call stack (from dmesg or /proc stack)
+ *
+ * SEVERITY:
+ * Single D-state process: Likely temporary, may recover
+ * Multiple D-state processes: Indicates real I/O problem
+ * Growing D-state count: Problem escalating
+ * D-state + hung tasks warnings: Kernel detecting deadlock
+ *
+ * DATA SOURCES:
+ * /proc/*/stat: Process state information
+ * /proc/*/wchan: Where process is waiting
+ * dmesg: Kernel messages about stuck processes
+ *
+ * @package App\Parsers
+ */
 class DStateParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

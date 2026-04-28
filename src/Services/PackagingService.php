@@ -4,10 +4,50 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+/**
+ * PackagingService: Format diagnostic data for AI analysis
+ *
+ * PURPOSE:
+ * Transform raw/structured data into optimized formats for LLM consumption
+ * Mix of markdown tables, JSON, and tiered text representations
+ * Reduce token consumption while preserving key information
+ *
+ * FORMATTING PATTERNS:
+ * - Format A (JSON): For dense data (disk health, load profiles) — machine-friendly
+ * - Format B (Markdown Table): For event streams (system events) — readable
+ * - Format C (Tiered): For complex logs (connections, disk events) — summary + detail
+ * - Format D (Markdown): For state data (btrfs scrub) — free-form
+ * - Format E (JSON): For multi-section data (load profile) — structured
+ *
+ * TOKEN OPTIMIZATION:
+ * Markdown tables: 30-50% more efficient than JSON for columnar data
+ * Summaries before details: LLM gets context before drowning in logs
+ * Pipe character escaping: Prevents markdown table corruption
+ * Limited row counts in formatters: Controlled by caller (ExtractionConfigService)
+ *
+ * INTEGRATION:
+ * Called by database parsers (DatabaseParser, DiskstatsParser, etc.)
+ * Receives raw parser output (arrays, timestamps, counts)
+ * Returns pre-formatted string for inclusion in AI prompt
+ * Enables consistent formatting across all data sources
+ *
+ * @package App\Services
+ */
 class PackagingService
 {
     /**
-     * Convert Unix timestamp to readable string.
+     * Format Unix timestamp to readable datetime string
+     *
+     * FORMAT:
+     * Y-m-d H:i:s (e.g., "2025-04-28 14:30:15")
+     * ISO-8601 compatible, human-readable for AI analysis
+     *
+     * USED BY:
+     * All format*() methods when adding timestamps to output
+     *
+     * @param int $unix Unix timestamp (seconds since epoch)
+     *
+     * @return string Formatted datetime string
      */
     private function ts(int $unix): string
     {
@@ -15,7 +55,26 @@ class PackagingService
     }
 
     /**
-     * Format B: Markdown Table for System Events.
+     * Format system events as markdown table with summary
+     *
+     * INPUT:
+     * {
+     *   'summary': {'total': 500, 'errs': 50, 'warns': 100},
+     *   'rows': [{time, level, username, msg}, ...]
+     * }
+     *
+     * OUTPUT:
+     * Markdown section with summary line and table
+     * Pipe characters in messages escaped (\|)
+     * Messages truncated to 500 chars
+     *
+     * USAGE:
+     * DatabaseParser output for SYNOSYSDB events
+     * AI analysis of recent system state changes
+     *
+     * @param array<string,mixed> $data Summary + rows array
+     *
+     * @return string Markdown-formatted table
      */
     public function formatSystemEvents(array $data): string
     {
@@ -44,7 +103,15 @@ class PackagingService
     }
 
     /**
-     * Format A: Raw JSON for Disk Health.
+     * Format disk health data as structured JSON
+     *
+     * Contains SMART error counters and failure prediction scores
+     * Source: SYNODISKHEALTHDB (lifetime drive health tracking)
+     * Most direct evidence of physical drive failure risk
+     *
+     * @param array<string,mixed> $data {disk_error: [...], prediction: [...]}
+     *
+     * @return string Prettified JSON
      */
     public function formatDiskHealth(array $data): string
     {
@@ -57,7 +124,15 @@ class PackagingService
     }
 
     /**
-     * Format C: Tiered for Connections.
+     * Format connection logs with tiered analysis (summary + detail)
+     *
+     * Includes: summary by protocol/level, brute-force clusters, critical events
+     * Brute-force detection: IP + username + failure count + time range
+     * Critical events: Detailed table of security-relevant log entries
+     *
+     * @param array<string,mixed> $data {summary_groups, brute_force, critical_events}
+     *
+     * @return string Markdown with tiered sections
      */
     public function formatConnections(array $data): string
     {
@@ -96,7 +171,15 @@ class PackagingService
     }
 
     /**
-     * Format C: Tiered for Disk Events.
+     * Format disk events with summary + detailed table
+     *
+     * Drive error summary: per-drive event counts by level
+     * Detailed logs: timestamp, slot, serial, error type, info
+     * Source: SYNODISKDB (per-drive event history)
+     *
+     * @param array<string,mixed> $data {drive_summary, events}
+     *
+     * @return string Markdown with summary + detail table
      */
     public function formatDiskEvents(array $data): string
     {
@@ -127,7 +210,15 @@ class PackagingService
     }
 
     /**
-     * Format D: Btrfs Scrub History & Data Integrity.
+     * Format btrfs scrub history and data integrity status
+     *
+     * Shows per-volume scrub completion dates and status
+     * Gracefully handles missing/disabled scrub data
+     * Identifies volumes with stale or failed scrubs
+     *
+     * @param array<string,mixed> $data {volume => {last_status, last_finished, detail}}
+     *
+     * @return string Markdown section
      */
     public function formatBtrfsScrub(array $data): string
     {
@@ -148,7 +239,18 @@ class PackagingService
     }
 
     /**
-     * Format E: High-Density IO & Load Profile.
+     * Format system load profile as JSON
+     *
+     * Combines three high-value system metrics:
+     * - system_load: Load averages (1/5/15 min), CPU breakdown
+     * - disk_io: Average latency per device
+     * - memory_util: Swap, OOM risk, pressure metrics
+     *
+     * Dense data: best as JSON for LLM parsing
+     *
+     * @param array<string,mixed> $data {system_load, disk_io, memory_util}
+     *
+     * @return string Prettified JSON
      */
     public function formatLoadProfile(array $data): string
     {
@@ -159,4 +261,3 @@ class PackagingService
         ], JSON_PRETTY_PRINT);
     }
 }
-// Final Sync - Corrected Namespace

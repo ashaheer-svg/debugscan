@@ -9,19 +9,73 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Thin mPDF adapter. Converts a completed DeepDive HTML report into a PDF.
+ * PdfExporter: HTML → PDF conversion using mPDF
  *
- * Design:
- *   - mPDF is optional. If the vendor class is missing or throws, we log a
- *     warning and return false. The HTML report is always the source of
- *     truth; PDF is a convenience.
- *   - All per-job state (tmp + font cache) lives under storage/deepdive/tmp
- *     so it's cleaned up with the rest of the job working set. No shared
- *     cache between runs — we prioritised isolation over speed here.
- *   - We feed mPDF the HTML as-is. The ReportRenderer's CSS was written
- *     with that in mind: no external fonts, no flex layouts that mPDF
- *     can't handle, no color-mix() outside the priority chips (those
- *     degrade to solid fill in PDF, which is fine).
+ * PURPOSE:
+ * Converts completed DeepDive analysis HTML report into PDF file for
+ * download/archive. Uses mPDF (HTML to PDF converter) as optional soft
+ * dependency. If mPDF unavailable or rendering fails, logs warning and
+ * gracefully falls back (HTML report remains accessible).
+ *
+ * DESIGN PHILOSOPHY:
+ * PDF is convenience, not critical. HTML is source of truth and always
+ * available. PDF failure doesn't block job completion or report access.
+ * This trade-off avoids external dependencies blocking core functionality.
+ *
+ * SOFT DEPENDENCY:
+ * mPDF is installed via Composer only if explicitly included in project.
+ * isAvailable() check before rendering. Missing library → skip PDF silently.
+ * Example use:
+ * - Enterprise deployments: install mPDF, get PDF reports
+ * - Minimal deployments: omit mPDF, HTML reports only
+ *
+ * ISOLATION STRATEGY:
+ * Each job gets isolated temp directory (storage/deepdive/tmp/{job_id}/mpdf/)
+ * containing mPDF font cache and working files. This enables:
+ * - Parallel PDF rendering (no shared cache lock contention)
+ * - Complete cleanup (remove job dir, everything goes with it)
+ * - No leaking resources between jobs
+ * Trade-off: slower than shared cache but safer and simpler.
+ *
+ * HTML COMPATIBILITY:
+ * mPDF's HTML/CSS support is limited compared to modern browsers:
+ * - No flexbox or grid (ReportRenderer uses CSS Grid, mPDF falls back to tables)
+ * - No external fonts (all fonts embedded)
+ * - No color-mix() (uses fallback colors)
+ * - No async loading (inline all CSS, no external stylesheets)
+ * ReportRenderer's CSS written with mPDF limitations in mind.
+ * CSS handles graceful degradation: modern browsers get full layout,
+ * mPDF gets readable (if unstyled) output.
+ *
+ * RENDERING:
+ * 1. Create isolated temp directory for this job
+ * 2. Instantiate mPDF with UTF-8 mode, A4 page size, 14-16pt margins
+ * 3. Set metadata (title, author)
+ * 4. Add footer (page numbers)
+ * 5. WriteHTML() processes full HTML document (style tags included)
+ * 6. Output to file
+ * 7. Verify file exists and has size > 0
+ *
+ * CONFIGURATION:
+ * - mode: utf-8 (supports non-ASCII characters in report)
+ * - format: A4 (standard document size)
+ * - margins: 14-16pt (balanced readability and content)
+ * - header/footer: page numbers and metadata
+ * - tempDir: job-specific (no cache sharing)
+ * - default_font: DejaVu Sans (widely available, no external dependency)
+ * - curlAllowUnsafeSslRequests: false (no remote asset fetching)
+ *
+ * ERROR HANDLING:
+ * Try/catch on all mPDF operations. Any exception:
+ * - Logs error with context
+ * - Returns false (caller handles gracefully)
+ * - Does NOT throw (allows report completion without PDF)
+ *
+ * OUTPUT:
+ * File written to RenderStep-provided path in storage/deepdive/reports/{job_id}/
+ * File includes full DeepDive report content (findings, incidents, hardware, recommendations)
+ *
+ * @package App\DeepDive\Report
  */
 final class PdfExporter
 {

@@ -12,13 +12,60 @@ use Psr\Http\Message\ServerRequestInterface;
 use Twig\Environment;
 
 /**
- * Thin controller for the DeepDive feature. Every action checks:
- *   1) session user
- *   2) tenants.deepdive_enabled for the tenant
- *   3) tenant owns the project / job
+ * JobController: DeepDive analysis orchestration and result retrieval
  *
- * All routes live under /deepdive/* — no route in the existing app uses
- * that prefix, so this cannot collide.
+ * PURPOSE:
+ * HTTP endpoint controller for DeepDive analysis jobs. Orchestrates:
+ * 1. Job submission: validate files, check quotas, create job record
+ * 2. Progress polling: return current step progress for real-time UI
+ * 3. Result retrieval: serve HTML reports and associated artifacts
+ * 4. Lifecycle management: delete jobs, clean up artifacts
+ *
+ * SECURITY:
+ * Every endpoint enforces three-layer authorization:
+ * 1. Session check: Valid logged-in user required (redirect to /login if missing)
+ * 2. Feature flag: tenants.deepdive_enabled must be true for tenant
+ * 3. Ownership: User must own the project or job (RLS via row-level security)
+ *
+ * This prevents:
+ * - Anonymous access (not logged in)
+ * - Cross-tenant access (different tenant's project)
+ * - Feature access for disabled tenants (beta access control)
+ * - User accessing another user's jobs
+ *
+ * ROUTES (All /deepdive/* prefix):
+ * - POST   /deepdive/start/{projectId}         → start() (create job)
+ * - GET    /deepdive/progress/{jobId}          → progress() (real-time updates)
+ * - GET    /deepdive/results/{jobId}           → results() (HTML report)
+ * - GET    /deepdive/results/{jobId}.pdf       → download PDF report
+ * - DELETE /deepdive/job/{jobId}               → delete() (cleanup)
+ * - GET    /deepdive/artifacts/{jobId}         → artifacts() (debug files)
+ *
+ * PREFIX ISOLATION:
+ * All DeepDive routes use /deepdive/* prefix. No existing routes use this
+ * prefix, so no collision with main app routing. DeepDive is beta feature
+ * and isolated by design.
+ *
+ * JOB LIFECYCLE:
+ * 1. start(): Validate files, check quotas, create deepdive_jobs record (status=pending)
+ * 2. Background async worker picks up job, runs Pipeline through all steps
+ * 3. progress(): Frontend polls every 500ms for step completion status
+ * 4. results(): After pipeline completes, fetch generated HTML/PDF report
+ * 5. delete(): User can delete job and cleanup artifacts (after retention period)
+ *
+ * ERROR HANDLING:
+ * - Authorization failures: 403 Forbidden
+ * - Resource not found: 404 Not Found
+ * - Invalid input: 400 Bad Request with error message
+ * - Internal errors: 500 Internal Server Error (logged)
+ *
+ * DEPENDENCIES:
+ * - JobRepository: Database access to deepdive_jobs table
+ * - Paths: File system path management for artifacts
+ * - Twig: HTML template rendering for UI pages
+ * - PDO: Raw database access for authorization checks
+ *
+ * @package App\DeepDive\Controllers
  */
 final class JobController
 {

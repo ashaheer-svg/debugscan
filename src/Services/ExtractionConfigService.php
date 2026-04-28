@@ -6,13 +6,73 @@ namespace App\Services;
 
 use PDO;
 
+/**
+ * ExtractionConfigService: Control what data is extracted and analyzed
+ *
+ * PURPOSE:
+ * Define extraction "profiles" — which diagnostic sections to collect and analyze
+ * Balance comprehensiveness vs token consumption (LLM cost)
+ * Provide UI metadata (descriptions, impact levels, parser names)
+ * Store per-plan configuration in database
+ *
+ * EXTRACTION SECTIONS (19 total):
+ * Organized in 4 groups:
+ * 1. Core Identity (always enabled): hardware, version
+ * 2. Storage Subsystem: disks, raid, volumes, btrfs, storage_util, disk_io
+ * 3. System Health: logs, dstate, system_load, memory_util, network, network_hardware
+ * 4. SQLite Forensic Databases: db_system_events, db_disk_health, db_connection_logs, db_disk_events
+ *
+ * CONFIGURATION MODEL:
+ * Each section has:
+ * - is_enabled: Boolean (extract or skip)
+ * - max_rows: Optional limit (for large data sources)
+ * - impact: LOW|MEDIUM|HIGH (token cost indicator)
+ * - has_limit: Whether max_rows applies
+ * - always_on: Cannot be disabled (hardware, version)
+ *
+ * IMPACT LEVELS:
+ * - LOW: < 5% token budget (safe to enable all)
+ * - MEDIUM: 5-15% token budget (be selective)
+ * - HIGH: 15-50% token budget (significantly affects prompt size)
+ *
+ * WORKFLOW:
+ * 1. Admin configures plan: which sections to extract + max_rows per section
+ * 2. Parser loads runtime config (section_key => {is_enabled, max_rows})
+ * 3. Parser respects settings during data extraction (skips disabled, limits rows)
+ * 4. Frontend loads full config for UI (includes descriptions, impact, metadata)
+ * 5. User adjusts settings, saves back to database
+ *
+ * DATABASE:
+ * extraction_config table: (report_plan_id, section_key, is_enabled, max_rows, updated_at)
+ * One row per (plan, section) pair
+ * Seeded from template plan when new plan created
+ * Can be overridden per plan
+ *
+ * @package App\Services
+ */
 class ExtractionConfigService
 {
     private PDO $pdo;
 
     /**
-     * Hardcoded metadata for each extraction section.
-     * This drives the UI labels, descriptions, and token impact badges.
+     * SECTION_METADATA: Hardcoded UI and functional metadata
+     *
+     * METADATA STRUCTURE:
+     * group: Section category (display grouping)
+     * label: Short display name for UI
+     * parser: Parser class that processes this section
+     * description: Long-form explanation (shows in UI help text)
+     * impact: Token consumption level (LOW|MEDIUM|HIGH)
+     * has_limit: Whether max_rows applies
+     * limit_label: Label for max_rows field (e.g., "Max Events", "Max Rows")
+     * always_on: Cannot be disabled by user (required for functionality)
+     *
+     * SEMANTIC NOTE:
+     * This metadata is static and authoritative
+     * Database values (is_enabled, max_rows) are runtime overrides
+     * getConfig() merges both sources
+     *
+     * @const array<string,array<string,mixed>> Section metadata catalog
      */
     public const SECTION_METADATA = [
         // Group 1: Core Identity
@@ -191,20 +251,61 @@ class ExtractionConfigService
         ],
     ];
 
+    /**
+     * Constructor: Dependency injection
+     *
+     * @param PDO $pdo Database connection for extraction_config table
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Load all extraction config rows from DB for a specific plan and merge with metadata.
-     * Returns a keyed array: section_key => [metadata + db values]
+     * Load full extraction configuration for UI display
+     *
+     * MERGE LOGIC:
+     * 1. Fetch all extraction_config rows from database for plan
+     * 2. For each section in SECTION_METADATA:
+     *    - If DB row exists: use is_enabled and max_rows from DB
+     *    - If no DB row: default is_enabled=true, max_rows=null
+     * 3. Merge DB values + metadata
+     * 4. Return: section_key => {metadata + DB values}
+     *
+     * RESULT STRUCTURE:
+     * {
+     *   'hardware': {
+     *     'group': 'Core Identity',
+     *     'label': 'Hardware Identity',
+     *     'parser': 'HardwareParser',
+     *     'description': '...',
+     *     'impact': 'LOW',
+     *     'is_enabled': true,
+     *     'max_rows': null,
+     *     'updated_at': '2026-04-28 10:30:00'
+     *   },
+     *   ...
+     * }
+     *
+     * USE CASE:
+     * Frontend configuration UI
+     * Shows all sections with current settings
+     * Includes descriptions and impact levels
+     * Admin adjusts toggles and max_rows, saves back
+     *
+     * DEFAULT VALUES:
+     * For sections not in database: is_enabled defaults to true
+     * This allows new sections to auto-enable without explicit DB entries
+     *
+     * @param string $planId Report plan UUID
+     *
+     * @return array<string,array<string,mixed>> Config merged with metadata
      */
     public function getConfig(string $planId): array
     {
         $stmt = $this->pdo->prepare("SELECT section_key, is_enabled, max_rows, updated_at FROM extraction_config WHERE report_plan_id = :pid ORDER BY section_key");
         $stmt->execute(['pid' => $planId]);
-        
+
         $dbRows = [];
         foreach ($stmt->fetchAll() as $row) {
             $dbRows[$row['section_key']] = $row;
@@ -225,8 +326,37 @@ class ExtractionConfigService
     }
 
     /**
-     * Returns only the runtime config (key => [is_enabled, max_rows]) for the scanner.
-     * @param string $planId The UUID of the report plan
+     * Get lightweight runtime configuration for parser execution
+     *
+     * MINIMAL STRUCTURE:
+     * Returns only section_key => {is_enabled, max_rows}
+     * No metadata, descriptions, or UI information
+     * Optimized for parser performance (minimal data)
+     *
+     * RESULT FORMAT:
+     * {
+     *   'hardware': {'is_enabled': true, 'max_rows': null},
+     *   'logs': {'is_enabled': true, 'max_rows': 100},
+     *   'dstate': {'is_enabled': false, 'max_rows': null},
+     *   ...
+     * }
+     *
+     * PARSER USAGE:
+     * Parsers call this during job execution
+     * Check is_enabled before extracting section
+     * Respect max_rows limit when iterating results
+     * Examples:
+     *   - Skip logs parser if is_enabled=false
+     *   - Limit SQL query to max_rows if set
+     *
+     * TYPE CASTING:
+     * is_enabled: Explicit (bool) cast
+     * max_rows: Converted to (int) or null
+     * Ensures parser receives correct types (not strings from DB)
+     *
+     * @param string $planId Report plan UUID
+     *
+     * @return array<string,array{is_enabled:bool,max_rows:int|null}> Minimal config
      */
     public function getRuntimeConfig(string $planId): array
     {
@@ -243,7 +373,30 @@ class ExtractionConfigService
     }
 
     /**
-     * Save a single section's settings for a specific report plan.
+     * Save configuration for a single extraction section
+     *
+     * UPSERT PATTERN:
+     * INSERT ... ON CONFLICT ... DO UPDATE
+     * Creates new row if (section_key, plan_id) doesn't exist
+     * Updates existing row if conflict occurs
+     * Atomically updates: is_enabled, max_rows, updated_at
+     *
+     * TYPE CONVERSION:
+     * enabled: Converted to int (1 or 0) for database boolean
+     * maxRows: Stored as integer (can be null)
+     * updated_at: Set to NOW() for audit trail
+     *
+     * USE CASE:
+     * Admin adjusts single section setting in UI
+     * AJAX endpoint calls this for real-time updates
+     * One section at a time
+     *
+     * @param string $key Section key (e.g., 'logs', 'hardware')
+     * @param string $planId Report plan UUID
+     * @param bool $enabled Whether to extract this section
+     * @param int|null $maxRows Optional row limit (null if not applicable)
+     *
+     * @return void
      */
     public function saveSection(string $key, string $planId, bool $enabled, ?int $maxRows): void
     {
@@ -264,8 +417,35 @@ class ExtractionConfigService
     }
 
     /**
-     * Save all sections from a bulk POST payload for a specific plan.
-     * $data: [section_key => ['enabled' => '1', 'max_rows' => '75']]
+     * Save bulk extraction configuration from form submission
+     *
+     * FORM PAYLOAD:
+     * HTML form submits extraction settings:
+     * [section_key => ['enabled' => '1' or '0', 'max_rows' => '75']]
+     * String values from form input (not integers yet)
+     *
+     * PROCESSING:
+     * 1. Iterate through SECTION_METADATA keys
+     * 2. Skip always_on sections (hardware, version)
+     * 3. Extract enabled checkbox ('1' or '0')
+     * 4. Parse max_rows if section has has_limit=true
+     * 5. Enforce minimum max_rows=1 (prevents 0 or negative)
+     * 6. Call saveSection for each
+     *
+     * FORM SAFETY:
+     * Validates numeric max_rows (is_numeric check)
+     * Defaults missing fields to: enabled=false, max_rows=null
+     * Ignores unknown section keys (only iterates metadata)
+     *
+     * USE CASE:
+     * Admin submits extraction settings form
+     * Bulk save all sections at once
+     * Atomic across all sections
+     *
+     * @param string $planId Report plan UUID
+     * @param array<string,array<string,string>> $data Form data from POST
+     *
+     * @return void
      */
     public function saveAll(string $planId, array $data): void
     {

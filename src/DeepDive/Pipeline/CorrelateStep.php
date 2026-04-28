@@ -8,39 +8,127 @@ use App\DeepDive\Correlation\Correlator;
 use App\DeepDive\Services\IncidentRepository;
 
 /**
- * Turns a flat list of FindingRecords into a ranked list of Incidents.
- * Persists them immediately so the report renderer (and a future retry
- * that skips straight to render) can rely on the DB as source of truth.
+ * Correlate Step: Transform findings into ranked incidents
+ *
+ * PURPOSE:
+ * Converts flat list of individual findings into grouped, ranked incidents.
+ * Incidents represent root-cause events that generate multiple symptoms (findings).
+ * Performs causal analysis to build incident chains and calculate impact scores.
+ *
+ * SEQUENCE:
+ * Executes after EvaluateStep (receives findings), before NarrateStep
+ *
+ * INPUT:
+ * $ctx->bag['findings']: Array of FindingRecord objects from evaluate step
+ *   Each finding: {rule, severity, timestamp, evidence, ...}
+ *
+ * PROCESSING:
+ * 1. Extract findings from context
+ * 2. Skip if no findings (soft skip, not failure)
+ * 3. Call Correlator::correlate() to group findings into incidents
+ * 4. Rank incidents by impact and relevance
+ * 5. Persist incidents to database immediately (not deferred)
+ * 6. Store in context for downstream steps
+ *
+ * OUTPUT:
+ * $ctx->bag['incidents']: Array of Incident objects
+ *   Each incident: {root_cause, findings[], severity, impact_score, ...}
+ *
+ * DATABASE PERSISTENCE:
+ * Persists incidents immediately to database for:
+ * - Report renderer to query without context round-tripping
+ * - Future pipeline retries to skip straight to render step
+ * - Audit trail and incident tracking
+ * - Future UI for incident browsing
+ *
+ * SOFT FAILURE HANDLING:
+ * If DB persist fails but correlator succeeded:
+ * - Still returns incidents in context (for render step)
+ * - Records soft failure (not blocking)
+ * - Allows render step to use in-memory incidents
+ * - Incident data not persisted, but analysis not lost
+ *
+ * OPTIMIZATION:
+ * Database persistence happens here (not deferred to render) to separate
+ * concerns: render step focuses on HTML/PDF generation, not data ops
+ *
+ * @package App\DeepDive\Pipeline
  */
 final class CorrelateStep implements StepInterface
 {
-    public function id(): string { return 'correlate'; }
+    /**
+     * Get step identifier
+     *
+     * @return string 'correlate'
+     */
+    public function id(): string
+    {
+        return 'correlate';
+    }
 
+    /**
+     * Correlate findings into ranked incidents and persist to database
+     *
+     * FLOW:
+     * 1. Record step start
+     * 2. Extract findings from previous step
+     * 3. If empty: skip this step (soft skip)
+     * 4. Create correlator and analyze findings
+     * 5. Persist results to database
+     * 6. Store in context for downstream
+     * 7. Record completion with statistics
+     *
+     * SKIP CONDITION:
+     * Soft-skip if evaluate step produced no findings
+     * This is normal for clean systems with no issues
+     *
+     * SOFT FAIL CONDITION:
+     * If correlator succeeded but database persist fails:
+     * - Still returns incidents in context
+     * - Allows render step to use in-memory data
+     * - Logs soft failure message
+     *
+     * @param PipelineContext $ctx Shared pipeline context
+     *
+     * @return void Populates $ctx->bag['incidents'], persists to DB
+     */
     public function run(PipelineContext $ctx): void
     {
+        // Record step start
         $ctx->startStep($this->id());
 
+        // === Extract findings from evaluate step ===
         $findings = $ctx->bag['findings'] ?? [];
+
+        // === Soft skip if no findings ===
+        // Empty findings list is normal for systems with no issues
         if (!is_array($findings) || $findings === []) {
             $ctx->bag['incidents'] = [];
             $ctx->skipStep($this->id(), 'No findings produced by evaluate step');
             return;
         }
 
+        // === Correlate findings into incidents ===
+        // Analyzes causal relationships and groups related findings
         $correlator = new Correlator();
         $incidents  = $correlator->correlate($findings);
 
-        // Persist now so the render step & downstream tools can read them
-        // from Postgres without round-tripping the bag.
+        // === Persist incidents to database ===
+        // Save immediately so report renderer & downstream tools can read from DB
+        // rather than context round-tripping. Enables pipeline retry strategies.
         try {
             $repo = new IncidentRepository($ctx->pdo);
             $written = $repo->persist($ctx->jobId, $ctx->tenantId, $incidents);
         } catch (\Throwable $e) {
+            // Database persist failed but correlator succeeded:
+            // Still store incidents in context for render step to use
             $ctx->bag['incidents'] = $incidents;
+            // Soft failure: allow pipeline to continue with in-memory incidents
             $ctx->softFailStep($this->id(), 'Correlator ran but DB persist failed: ' . $e->getMessage());
             return;
         }
 
+        // === Success: store incidents and record completion ===
         $ctx->bag['incidents'] = $incidents;
         $ctx->stepDetail($this->id(), sprintf(
             '%d incident(s) from %d finding(s), %d rows written',

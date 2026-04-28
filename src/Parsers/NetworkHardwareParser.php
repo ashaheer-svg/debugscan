@@ -5,7 +5,27 @@ declare(strict_types=1);
 namespace App\Parsers;
 
 /**
- * NetworkHardwareParser - Extracts physical network hardware health metrics
+ * NetworkHardwareParser: Network interface hardware status and diagnostics
+ *
+ * PURPOSE:
+ * Analyzes ethtool output and network interface hardware status. Detects
+ * link problems, transceiver issues, CRC errors, and physical cable issues.
+ *
+ * METRICS:
+ * - link_status: up|down
+ * - link_speed: Speed in Mbps/Gbps
+ * - duplex: full|half
+ * - crc_errors, frame_errors: Hardware errors
+ * - transceiver_type: SFP/RJ45/etc
+ * - transceiver_status: ok|fault|disconnected
+ *
+ * ERROR DETECTION:
+ * CRC errors indicate cable issues or bad connectors.
+ * Frame errors suggest duplex mismatch or network congestion.
+ * Transceiver faults indicate hardware failure.
+ *
+ * DATA SOURCE:
+ * ethtool output and /proc/net/dev statistics
  *
  * Analyzes ethtool output, network statistics, and connection state
  * to detect link issues, negotiation failures, and error conditions.

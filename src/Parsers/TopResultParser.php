@@ -4,6 +4,37 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * TopResultParser: System load and process resource metrics
+ *
+ * PURPOSE:
+ * Parses top command output to extract system-wide metrics including load
+ * averages (1/5/15 min), CPU breakdown (user/system/iowait), memory usage,
+ * and top processes. Identifies resource saturation and runaway processes.
+ *
+ * METRICS EXTRACTED:
+ * - load_avg_1min, load_avg_5min, load_avg_15min: System load
+ * - cpu_user, cpu_system, cpu_iowait, cpu_idle: CPU breakdown percentage
+ * - mem_total, mem_used, mem_free: Memory usage in MB/GB
+ * - swap_total, swap_used, swap_free: Swap usage
+ * - zombie_processes: Count of zombie/defunct processes
+ *
+ * TOP PROCESSES:
+ * Extracts top N processes by CPU and memory usage:
+ * - process_name, pid, user, cpu_percent, memory_percent, memory_mb
+ *
+ * SATURATION DETECTION:
+ * High load with low CPU usage → I/O bound (disk saturation)
+ * High load with high CPU usage → CPU bound (compute saturation)
+ * High iowait → Disk I/O bottleneck
+ * High zombie count → Process cleanup problem
+ * Memory pressure → Swapping, OOM risk
+ *
+ * DATA SOURCE:
+ * top.out snapshot or /proc/stat and /proc/meminfo parsed data
+ *
+ * @package App\Parsers
+ */
 class TopResultParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

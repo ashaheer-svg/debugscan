@@ -4,6 +4,35 @@ declare(strict_types=1);
 
 namespace App\Parsers;
 
+/**
+ * NetworkParser: Network interface configuration and connectivity analysis
+ *
+ * PURPOSE:
+ * Extracts network interface configuration including IP addresses, netmasks,
+ * default gateways, link status, and hardware identifiers. Detects network
+ * misconfigurations, connectivity issues, and unusual network states.
+ *
+ * DATA SOURCES:
+ * - /proc/net/route: Routing table and default gateway
+ * - /proc/net/dev: Interface statistics
+ * - ifconfig output: Interface configuration details
+ * - ip addr output: IP address and netmask information
+ *
+ * OUTPUT PER INTERFACE:
+ * - interface: Name (eth0, eth1, bond0, etc.)
+ * - ip_address: IPv4 address if configured
+ * - netmask: Subnet mask
+ * - gateway: Default gateway IP
+ * - mac_address: Hardware address
+ * - link_status: up|down
+ * - speed: Link speed (if available)
+ *
+ * CONFIGURATION ANALYSIS:
+ * Detects missing IPs (unconfigured interfaces), missing gateway (no connectivity),
+ * unusual netmasks (misconfiguration), bonding issues (link aggregation problems).
+ *
+ * @package App\Parsers
+ */
 class NetworkParser implements ParserInterface
 {
     public function parse(string $extractedPath, array &$context): array

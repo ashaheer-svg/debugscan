@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\DeepDive\Narrator;
 
 /**
+ * PiiRedactor: Sensitive data masking for LLM processing
+ *
+ * PURPOSE:
  * Scrubs obvious PII from evidence excerpts before they go to an external
  * LLM. We replace consistently: the same IP gets the same placeholder, so
  * the model can still reason about "the same host appearing in two logs"

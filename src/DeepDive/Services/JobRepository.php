@@ -10,8 +10,101 @@ use PDO;
 use Ramsey\Uuid\Uuid;
 
 /**
- * All read/write access to deepdive_jobs goes through this class.
- * Keeps SQL in one place and keeps the worker/controllers thin.
+ * JobRepository: Data access layer for DeepDive job records
+ *
+ * PURPOSE:
+ * Centralizes all database access to deepdive_jobs table. Keeps SQL queries
+ * in one place, abstracts persistence layer from controllers and workers.
+ * Simplifies testing (can mock repository), enables future migrations
+ * (PostgreSQL → MySQL → other databases).
+ *
+ * RESPONSIBILITIES:
+ * - Job creation: enqueue() inserts new job record
+ * - Job claiming: claimNext() for worker process polling
+ * - Job updates: updateProgress() for real-time UI updates
+ * - Job retrieval: getById(), forTenant(), listByProject()
+ * - Completion handling: markDone(), markFailed()
+ *
+ * JOB LIFECYCLE:
+ * 1. Controller calls enqueue() with file IDs + project
+ * 2. Job created with status='queued' + initial steps + timestamp
+ * 3. Worker calls claimNext() to fetch and lock oldest queued job
+ * 4. Worker updates progress via updateProgress() during pipeline
+ * 5. Worker calls markDone() or markFailed() at end
+ * 6. Controller retrieves results via getById()
+ *
+ * DATABASE TABLE: deepdive_jobs
+ * Columns:
+ * - id (uuid): Primary key, unique identifier
+ * - tenant_id (uuid): Row-level security (RLS) filter
+ * - project_id (uuid): Project this job analyzes
+ * - debug_file_ids (uuid[]): Array of uploaded debug files to process
+ * - status (enum): 'queued' | 'claimed' | 'running' | 'done' | 'failed'
+ * - engine_version (string): DeepDive version for reproducibility
+ * - rule_catalogue_ver (string): Rule catalogue version/hash
+ * - steps_json (json): [{id, label, status, ...}] checkpoint array
+ * - progress_json (json): {'html_path', 'pdf_path'} after completion
+ * - started_at (timestamp): When worker claimed job
+ * - queued_at (timestamp): When job created (default now())
+ * - completed_at (timestamp): When job finished (all steps done/failed)
+ * - error_message (text): Failure reason if status='failed'
+ * - worker_id (uuid): Which worker is processing
+ * - debug_mode (bool): Preserve intermediate artifacts for debugging
+ * - lease_until (timestamp): Job lock expiration (for stale detection)
+ *
+ * CONCURRENCY:
+ * Uses PostgreSQL FOR UPDATE SKIP LOCKED for optimistic locking:
+ * - Only one worker claims each job
+ * - "SKIP LOCKED" prevents thundering herd (many workers contending)
+ * - Lease timeout allows re-claiming stuck jobs after timeout
+ * - No explicit lock management (database handles it)
+ *
+ * ENQUEUE:
+ * enqueue($tenantId, $projectId, $fileIds, $debugMode) → jobId
+ * - Generates UUID v4 for job ID
+ * - Validates file IDs are UUIDs (prevent SQL injection)
+ * - Creates PostgreSQL array literal {uuid1,uuid2,...} for fileIds
+ * - Inserts with initial step checkpoints
+ * - Returns new jobId for immediate polling
+ *
+ * CLAIMING:
+ * claimNext($workerId, $leaseSeconds) → job record or null
+ * - Fetches oldest 'queued' job
+ * - FOR UPDATE SKIP LOCKED: acquires exclusive lock
+ * - Updates status='claimed', worker_id, lease_until timestamp
+ * - Transaction isolation prevents race conditions
+ * - Returns null if no jobs available
+ * - Lease timeout (default 15 min): stuck jobs re-claimed after timeout
+ *
+ * PROGRESS UPDATES:
+ * updateProgress($jobId, $stepsJson)
+ * - Called during pipeline after each step completes
+ * - Updates steps_json in database
+ * - Enables frontend to poll and show real-time progress
+ * - No full transaction (fast write, safe for frequent updates)
+ *
+ * COMPLETION:
+ * markDone($jobId, $progressJson) → updates status='done', progress_json
+ * markFailed($jobId, $error) → updates status='failed', error_message
+ * Both called by worker at pipeline end (success or failure path)
+ *
+ * RETRIEVAL:
+ * getById($jobId) → full job record (not RLS filtered)
+ * forTenant($tenantId) → all jobs for tenant (with RLS)
+ * listByProject($projectId, $tenantId) → jobs for project
+ *
+ * SECURITY (RLS):
+ * All queries filter by tenant_id (row-level security). Controllers
+ * must pass tenantId from session. Application enforces authorization
+ * layer on top (middleware can't be spoofed).
+ *
+ * ERROR HANDLING:
+ * - enqueue(): throws if SQL fails or file ID invalid
+ * - claimNext(): returns null if no jobs (safe fallback)
+ * - getById(): returns null if not found (controller handles gracefully)
+ * - updateProgress(): throws on SQL error (prevents progress loss)
+ *
+ * @package App\DeepDive\Services
  */
 final class JobRepository
 {

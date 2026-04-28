@@ -8,26 +8,49 @@ use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Yaml\Exception\ParseException;
 
 /**
- * Parses one YAML rule file into a Rule DTO. Tolerant of shallow authoring
- * mistakes (missing optional fields), strict about the required ones.
+ * RuleLoader: YAML rule file parser and validator
  *
- * File format:
- *   id: raid.kicked_disk
- *   version: 1
- *   title: "RAID array kicked a disk"
- *   severity: high                # info|warn|high|critical
- *   actionability: upgrade_recommended
- *   category: storage
- *   description: "..."            # optional
- *   remediation: "..."            # optional
- *   tags: [raid, md]              # optional
- *   signature:
- *     type: regex                 # regex|sqlite|aggregate|absence
- *     source: messages
- *     pattern: 'md/raid:md\d+ Disk failure on (?P<disk>\S+)'
+ * PURPOSE:
+ * Parses individual YAML rule files into immutable Rule DTOs. Performs three
+ * validation passes: file existence, YAML syntax, required field presence.
+ * Enables rule authoring to be forgiving (missing optional fields) while strict
+ * about core forensic metadata (severity, actionability, signature type).
+ *
+ * RULE FILE FORMAT (YAML):
+ *   id: storage.raid_degraded              # Required: unique identifier
+ *   version: 1                             # Required: rule version (integer)
+ *   title: "RAID Array Degraded"           # Required: human-readable name
+ *   severity: high                         # Required: info|warn|high|critical
+ *   actionability: upgrade_recommended     # Required: user_fixable|upgrade|vendor|informational
+ *   category: storage                      # Required: classification (storage, network, memory, security)
+ *   description: "Long explanation..."     # Optional: detailed issue description
+ *   remediation: "Fix by resyncing..."     # Optional: user-facing instructions
+ *   tags: [raid, md, degraded]             # Optional: keyword tags for filtering
+ *   signature:                             # Required: matcher-specific detection config
+ *     type: regex                          # Required: regex|sqlite|aggregate|absence
+ *     source: messages                     # Source log file or database
+ *     pattern: 'raid.*degraded'            # Type-specific configuration (varies by matcher)
  *     min_hits: 1
- *   entities:
- *     disk: "$match.disk"
+ *   entities:                              # Optional: extraction templates for Correlator
+ *     disk: "$match.disk"                  # {key: "$match.field"} format
+ *
+ * VALIDATION TIERS:
+ * Tier 1 - File existence: File must be readable, not empty, valid YAML
+ * Tier 2 - Required fields: All 7 required keys must be present
+ * Tier 3 - Type validation: Signature must be array with 'type' key (Rule::assertValid)
+ * Tier 4 - Semantic validation: Rule::assertValid() checks enum values (severity, etc.)
+ *
+ * ERROR HANDLING:
+ * Throws RuntimeException on any validation failure with detailed message including
+ * file path and field name. This prevents invalid rules from entering production.
+ * YAML parse errors wrapped with context (file path, line number from Symfony).
+ *
+ * USAGE:
+ * Instantiated fresh in RuleCatalogue::loadDirectory(). Foreach rule YAML file,
+ * call loadFile($path) to get a validated Rule object. Multiple loaders can exist
+ * (stateless) or single loader can parse multiple files (thread-safe).
+ *
+ * @package App\DeepDive\Rules
  */
 final class RuleLoader
 {

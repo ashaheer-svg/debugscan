@@ -10,19 +10,137 @@ use App\DeepDive\Rules\Sources\SourceRegistry;
 use App\DeepDive\Support\Engine;
 
 /**
- * Matches a single regex over a logical log source. Captures (named groups)
- * are bound into entities via the "$match.<name>" substitution syntax.
+ * RegexMatcher: Pattern matching against log files with entity extraction
  *
- * Signature shape:
- *   type: regex
- *   source: messages
- *   pattern: 'md/raid:md\d+ Disk failure on (?P<disk>\S+)'
- *   min_hits: 1               (optional, default 1 — floor for triggering)
- *   exclude_pattern: '...'    (optional — skip records matching this)
- *   dedupe_by: disk           (optional — aggregate hits with identical entity
- *                              value into ONE finding with occurrenceCount)
- *   within_days: 365          (optional — skip records older than this many days;
- *                              defaults to Engine::withinDays(); 0 = disable)
+ * PURPOSE:
+ * Fundamental matcher for log-based forensics. Evaluates regex patterns
+ * against log sources (messages, kern.log, auth.log, etc.) to detect
+ * system issues. Extracts contextual data via named capture groups
+ * (disk name, process ID, user, etc.). Supports deduplication to group
+ * related findings by extracted value.
+ *
+ * USE CASES:
+ * 1. RAID failure detection: "md/raid: disk failure" → extract disk name
+ * 2. OOM killer: "Out of memory" → group by process PID
+ * 3. Auth failures: "authentication failure" → group by user
+ * 4. Disk errors: "I/O error" → group by device name
+ * 5. Network issues: "link down" → group by interface
+ *
+ * RULE SIGNATURE (YAML):
+ * type: regex
+ * source: messages                           # Log source name
+ * pattern: 'kernel:.*disk failure.*(?P<disk>\S+)'  # Regex with named captures
+ * min_hits: 1                                # Minimum matches to fire (default: 1)
+ * exclude_pattern: 'test.*ignore'            # Optional: skip lines matching this
+ * dedupe_by: disk                            # Optional: group by capture group name
+ * within_days: 365                           # Optional: find age cutoff (default: global)
+ *
+ * NAMED CAPTURE GROUPS:
+ * Pattern: 'RAID disk (?P<device>\S+) failed code (?P<code>\d+)'
+ * Captures: {device: "sda", code: "12345"}
+ * Entity binding: {"disk": "$match.device", "error": "$match.code"}
+ * Result entities: {disk: "sda", error: "12345"}
+ *
+ * ENTITY SUBSTITUTION:
+ * "$match.<name>" replaced with captured value:
+ * - "$match.device" → "sda3"
+ * - "$match.user" → "admin"
+ * - "$match.pid" → "1234"
+ * Used by Correlator to group findings by entity value.
+ * Same device appearing in multiple findings → same incident cluster.
+ *
+ * DEDUPLICATION STRATEGY:
+ * Two modes:
+ *
+ * 1. WITH dedupe_by="device":
+ *    - Multiple matches for same device → 1 finding
+ *    - Occurrences counted and included in detail
+ *    - Citations include all matching log lines
+ *    - Useful: "5 errors on same disk" vs "1 error on disk A, 1 on B"
+ *
+ * 2. WITHOUT dedupe_by:
+ *    - Each match → separate finding
+ *    - All findings emitted (up to limit)
+ *    - No grouping by value
+ *    - Useful: "authentication failures from 3 users" (need separate findings)
+ *
+ * FLOW:
+ * 1. Registry lookup: Get log source by name ("messages", "kern.log")
+ * 2. Source missing: Return [] (no findings)
+ * 3. Pattern compilation: Validate regex syntax
+ * 4. Record iteration: Foreach record in source
+ * 5. Exclusion: Skip if exclude_pattern matches (if configured)
+ * 6. Regex test: Try to match pattern
+ * 7. No match: Continue to next record
+ * 8. Match: Extract named capture groups
+ * 9. Timestamp: Skip if older than within_days cutoff
+ * 10. Dedup: If dedupe_by, accumulate in group[entityValue]
+ * 11. Output: Build FindingRecord(s), return up to limit
+ *
+ * TIMESTAMP FILTERING:
+ * - within_days: Age filter (config override per rule)
+ * - Default: Engine::withinDays() (system default, typically 365 days)
+ * - Value 0: Disable age filtering (include all records)
+ * - Matches older than cutoff: silently dropped before dedup
+ * - Null timestamps: Always included (safer over-inclusion)
+ *
+ * FINDINGS OUTPUT:
+ * With dedupe_by:
+ *   FindingRecord {
+ *     entities: {disk: "sda"},
+ *     occurrenceCount: 5,
+ *     citations: [{line1}, {line2}, {line3}, {line4}, {line5}]
+ *   }
+ *
+ * Without dedupe_by:
+ *   FindingRecord[] × 5 (one per match, separate findings)
+ *
+ * CITATIONS:
+ * Each citation includes:
+ * - file: Log file path
+ * - line_number: Line number in file
+ * - timestamp: Parsed ISO-8601 timestamp (or null)
+ * - excerpt: First 400 chars of matching line
+ * Used by Narrator and Report to show evidence.
+ *
+ * ERROR HANDLING:
+ * - Missing source: Return [] (not fatal)
+ * - Invalid regex: Throws RuntimeException (rule problem, logged)
+ * - Timestamp parse error: null timestamp (passes through)
+ * - Match group not found: Missing entity keys (Correlator handles)
+ *
+ * PERFORMANCE:
+ * - Early exclusion: exclude_pattern checked before regex (cheaper)
+ * - Lazy evaluation: Records iterated on-demand (safe for large logs)
+ * - Regex caching: Pattern compiled once per evaluate() call
+ * - Limit enforcement: Stop processing after reaching limit
+ *
+ * LIMITS:
+ * - min_hits: Minimum matching records to emit finding (default: 1)
+ * - General limit: Maximum findings returned (enforced by MatcherInterface)
+ * - dedupe: If grouping by entity, max 1 finding per unique entity value
+ *
+ * TYPICAL RULES:
+ * 1. SMART error detection:
+ *    - source: messages
+ *    - pattern: "SMART failure (?P<disk>sd[a-z])"
+ *    - dedupe_by: disk
+ *    - min_hits: 1
+ *
+ * 2. OOM killer events:
+ *    - source: kern.log
+ *    - pattern: "Out of memory: Kill process (?P<pid>\d+)"
+ *    - dedupe_by: pid
+ *    - min_hits: 1
+ *
+ * 3. SSH brute force:
+ *    - source: auth.log
+ *    - pattern: "Failed password for (?P<user>\S+) from (?P<ip>\S+)"
+ *    - exclude_pattern: "root|admin"
+ *    - min_hits: 5
+ *    - dedupe_by: user
+ *
+ * @package App\DeepDive\Rules\Matchers
  */
 final class RegexMatcher implements MatcherInterface
 {

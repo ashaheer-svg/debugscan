@@ -5,14 +5,86 @@ declare(strict_types=1);
 namespace App\DeepDive\Visualization;
 
 /**
- * Renders drive bay layout diagrams as SVG
- * Supports various NAS models with different bay configurations
- * Color-codes by health status and shows replacement history
+ * BayLayoutRenderer: Visualize drive bay layout and health status
+ *
+ * PURPOSE:
+ * Generates visual SVG diagrams of drive bay layout for NAS units
+ * Shows physical location, drive model, health status, history
+ * Color-codes bays by drive health (healthy, warning, failed)
+ * Indicates replacement patterns and problem slots
+ *
+ * VISUALIZATION:
+ * - Grid layout of drive bays (customizable rows/columns)
+ * - Color-coded by health: green=healthy, yellow=warning, red=failed
+ * - Icons: operational status indicators
+ * - Labels: Drive serial, model, health status
+ * - Borders: Orange for recent replacement, red for problem slot
+ *
+ * HEALTH INDICATORS:
+ * - Color: Based on health_status field and bad sector count
+ * - Green: Operational, 0 bad sectors
+ * - Yellow: Warning (bad sectors detected)
+ * - Red: Failed or critically problematic
+ *
+ * REPLACEMENT TRACKING:
+ * - Shows replacement history per drive
+ * - Orange border: Recently replaced (< 6 months)
+ * - Red border: Problem slot (3+ replacements)
+ * - Indicates chronic issues in specific bays
+ *
+ * CONTAINER SUPPORT:
+ * - Main NAS unit
+ * - Expansion units with varying bay counts
+ * - Customizable bay count and grid layout
+ *
+ * OUTPUT:
+ * SVG string suitable for:
+ * - Embedding in HTML reports
+ * - Display in browser
+ * - Conversion to other formats (PNG, PDF via mPDF)
+ * - Direct export to file
+ *
+ * @package App\DeepDive\Visualization
  */
 final class BayLayoutRenderer
 {
     /**
-     * Render bay layout for a container/unit
+     * Render complete bay layout diagram
+     *
+     * PURPOSE:
+     * Generates SVG diagram showing physical drive layout
+     * Color-codes bays by drive health status
+     * Shows replacement history and problem indicators
+     *
+     * LAYOUT:
+     * - Grid: Rows and columns configurable (default: 4 per row)
+     * - Sizing: Automatic based on bay count
+     * - Each bay shows: Number, drive info, health status
+     * - Legends and color indicators in SVG styles
+     *
+     * DRIVES INPUT:
+     * Array of drive objects with:
+     * - bay: Physical bay number (1-N)
+     * - serial: Drive serial number
+     * - model: Drive model name
+     * - health_status: healthy/warning/failed/unknown
+     * - bad_sectors: Count of bad sectors (0 = healthy)
+     * - installation_date: When installed
+     * - replacement_count: Number of times replaced
+     *
+     * RENDERING:
+     * - Container title and statistics
+     * - Grid of bay rectangles
+     * - Occupied bays show drive info
+     * - Empty bays show number only
+     * - Color and borders indicate health/history
+     *
+     * @param string $containerName Display name (main unit, expansion 1, etc.)
+     * @param array $drives List of installed drives with metadata
+     * @param int $totalBays Total bay count for container
+     * @param int $columnsPerRow Grid columns (default 4)
+     *
+     * @return string SVG document string ready for embedding/display
      */
     public function renderBayLayout(
         string $containerName,

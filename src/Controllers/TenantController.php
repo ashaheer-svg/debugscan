@@ -14,23 +14,132 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 
+/**
+ * TenantController: Tenant-specific operations and analysis workflows
+ *
+ * PURPOSE:
+ * Handles all tenant-facing functionality for analyzing debug bundles
+ * Manages projects, file uploads, scans, and report generation
+ * Provides dashboard, scan history, and file management interfaces
+ * Integrates with analysis pipeline services (Parse, Scan, File)
+ *
+ * RESPONSIBILITIES:
+ * - Project Management: Create, update, delete analysis projects
+ * - File Management: Upload, organize, and manage debug bundles
+ * - Scan Operations: Initiate and monitor analysis jobs
+ * - Report Access: Download reports and analysis results
+ * - Dashboard: Real-time metrics on scans, projects, token usage
+ * - Token Management: Track and manage AI token consumption
+ *
+ * TENANT ISOLATION:
+ * All methods use request->getAttribute('tenant_id') for multi-tenant safety
+ * Database queries filtered by tenant_id to prevent cross-tenant data access
+ * Reports and files only accessible to owning tenant
+ *
+ * DEPENDENCIES:
+ * - Environment $view : Twig template rendering
+ * - PDO $pdo : PostgreSQL database connection
+ * - FileService : File upload, storage, and cleanup
+ * - ScanService : Analysis job orchestration
+ * - ParseService : Debug bundle parsing and extraction
+ * - MailService : Email notifications
+ * - ReportPlanService : Report template management
+ *
+ * METHODS:
+ * Dashboard & Monitoring:
+ * - dashboard() : Tenant overview with KPIs
+ * - scans() : Full scan history and status
+ * - projects() : Project list and metadata
+ *
+ * Project Management:
+ * - createProject() : Create analysis project
+ * - updateProject() : Modify project details
+ * - deleteProject() : Remove project and associated data
+ *
+ * File Management:
+ * - uploadFile() : Accept debug bundle upload
+ * - deleteFile() : Remove uploaded file
+ * - listFiles() : Show all uploaded files
+ *
+ * Scan Operations:
+ * - startScan() : Initiate analysis job
+ * - getScanStatus() : Real-time job progress
+ * - downloadReport() : Retrieve analysis results
+ *
+ * Token Management:
+ * - getTokenBalance() : Check available tokens
+ * - requestTokens() : Submit token purchase request
+ *
+ * SECURITY:
+ * - Tenant isolation enforced at controller and database level
+ * - All database operations use prepared statements
+ * - File access validated to owning tenant
+ * - Token operations require authentication
+ *
+ * DATABASE TABLES:
+ * - projects : Analysis project definitions
+ * - debug_files : Uploaded debug bundles
+ * - scan_jobs : Analysis job records
+ * - users : Tenant account and token balance
+ *
+ * @package App\Controllers
+ */
 class TenantController
 {
+    /** @var Environment Twig template engine for rendering tenant views */
     private Environment $view;
+
+    /** @var PDO PostgreSQL database connection (tenant-isolated) */
     private PDO $pdo;
+
+    /** @var FileService File upload and storage management */
     private FileService $fileService;
+
+    /** @var ScanService Analysis job orchestration service */
     private ScanService $scanService;
+
+    /** @var ParseService Debug bundle parsing and extraction */
     private ParseService $parseService;
+
+    /** @var string Application base path for URL generation */
     private string $basePath;
+
+    /** @var MailService Email notifications for uploads and scans */
     private MailService $mailService;
+
+    /** @var \App\Services\ReportPlanService Report template and plan management */
     private \App\Services\ReportPlanService $reportPlanService;
 
+    /**
+     * Constructor: Dependency injection of controller dependencies
+     *
+     * DEPENDENCIES:
+     * - $view : Twig environment for rendering tenant templates
+     * - $pdo : PostgreSQL connection with RLS for tenant isolation
+     * - $fileService : Handles file uploads and storage operations
+     * - $scanService : Orchestrates analysis jobs
+     * - $parseService : Extracts and parses debug bundles
+     * - $basePath : Web root path for URL generation (e.g., '/tenant')
+     * - $mailService : Sends notifications (upload confirmation, scan results)
+     * - $reportPlanService : Manages report templates
+     *
+     * All dependencies injected by container for testability and loose coupling.
+     *
+     * @param Environment $view Twig template engine
+     * @param PDO $pdo Database connection
+     * @param FileService $fileService File management
+     * @param ScanService $scanService Analysis service
+     * @param ParseService $parseService Parsing service
+     * @param string $basePath Application base path
+     * @param MailService $mailService Email sender
+     * @param \App\Services\ReportPlanService $reportPlanService Report service
+     */
     public function __construct(
-        Environment $view, 
-        PDO $pdo, 
-        FileService $fileService, 
-        ScanService $scanService, 
-        ParseService $parseService, 
+        Environment $view,
+        PDO $pdo,
+        FileService $fileService,
+        ScanService $scanService,
+        ParseService $parseService,
         string $basePath,
         MailService $mailService,
         \App\Services\ReportPlanService $reportPlanService
@@ -45,26 +154,84 @@ class TenantController
         $this->reportPlanService = $reportPlanService;
     }
 
+    /**
+     * Display tenant dashboard with KPIs and recent activity
+     *
+     * PURPOSE:
+     * Shows tenant organization key metrics and recent analysis history
+     * Provides at-a-glance view of projects, scans, and token balance
+     * Motivates action (create new project, check recent results)
+     *
+     * METRICS DISPLAYED:
+     * - Project count: Total analysis projects created
+     * - Completed scans: Total successful analyses
+     * - Available tokens: Remaining AI processing budget
+     * - Recent scans: Last 5 completed analyses with results
+     *
+     * MULTI-TENANT ISOLATION:
+     * Extracted from request attribute: $request->getAttribute('tenant_id')
+     * All queries filtered by tenant_id to ensure data isolation
+     * Prevents tenant from seeing other tenants' data
+     *
+     * DATA SOURCES:
+     * - projects table: Count for KPI
+     * - scan_jobs table: Completed scans KPI, recent history
+     * - users table: Token balance from current tenant account
+     *
+     * RECENT SCANS:
+     * Shows last 5 completed scans with:
+     * - Scan ID for drill-down
+     * - Associated project name
+     * - Completion status
+     * - Health score (if generated)
+     * - Completion timestamp
+     *
+     * ERROR HANDLING:
+     * - Missing token balance defaults to 0
+     * - No scans returns empty recent list
+     * - Database errors propagate (fatal)
+     *
+     * TEMPLATE:
+     * Renders tenant/dashboard.twig with pre-computed metrics
+     * Metrics cast to int for type safety
+     * User name from $_SESSION for personalization
+     *
+     * @param Request $request HTTP request with tenant_id attribute
+     * @param Response $response HTTP response to write
+     *
+     * @return Response HTML response with rendered dashboard
+     */
     public function dashboard(Request $request, Response $response): Response
     {
+        // === Extract tenant from request context ===
+        // Multi-tenant isolation: only show this tenant's data
         $tenantId = $request->getAttribute('tenant_id');
 
-        // Fetch KPIs
+        // === Fetch KPIs ===
+        // Count of analysis projects created by this tenant
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM projects WHERE tenant_id = :tid");
         $stmt->execute(['tid' => $tenantId]);
         $projectCount = $stmt->fetchColumn();
 
+        // Count of completed analysis jobs
+        // Only counts 'completed' status (excludes running, failed, queued)
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM scan_jobs WHERE tenant_id = :tid AND status = 'completed'");
         $stmt->execute(['tid' => $tenantId]);
         $scanCount = $stmt->fetchColumn();
 
+        // Available AI tokens for this tenant
+        // Decrements with each analysis job
+        // Nil coalesce to 0 if column is NULL
         $stmt = $this->pdo->prepare("SELECT tokens_available FROM users WHERE id = :tid");
         $stmt->execute(['tid' => $tenantId]);
         $tokensAvailable = $stmt->fetchColumn() ?: 0;
 
-        // Recent Scans
+        // === Fetch recent scans ===
+        // Show last 5 completed analyses for quick access
+        // Join with projects to show project name
+        // Order by creation time (most recent first)
         $stmt = $this->pdo->prepare("
-            SELECT s.id, s.project_id, p.name as project_name, s.status, s.health_score, s.completed_at 
+            SELECT s.id, s.project_id, p.name as project_name, s.status, s.health_score, s.completed_at
             FROM scan_jobs s
             JOIN projects p ON s.project_id = p.id
             WHERE s.tenant_id = :tid
@@ -74,6 +241,9 @@ class TenantController
         $stmt->execute(['tid' => $tenantId]);
         $recentScans = $stmt->fetchAll();
 
+        // === Render dashboard template ===
+        // Pre-cast metrics to int for type consistency
+        // Include user name from session for personalization
         $body = $this->view->render('tenant/dashboard.twig', [
             'project_count' => (int)$projectCount,
             'scan_count' => (int)$scanCount,
@@ -85,13 +255,34 @@ class TenantController
         return $response;
     }
 
+    /**
+     * Display complete scan history for tenant
+     *
+     * PURPOSE:
+     * Shows all analysis jobs with full history and results
+     * Allows filtering and sorting of scans
+     * Provides access to download reports
+     *
+     * TENANT ISOLATION:
+     * Filters by tenant_id to show only this tenant's scans
+     *
+     * DISPLAYS:
+     * Full scan_jobs record with project name
+     * Ordered by creation date (newest first)
+     *
+     * @param Request $request HTTP request with tenant_id attribute
+     * @param Response $response HTTP response
+     *
+     * @return Response Rendered scans list
+     */
     public function scans(Request $request, Response $response): Response
     {
         $tenantId = $request->getAttribute('tenant_id');
 
-        // Fetch ALL jobs for this tenant
+        // === Fetch all jobs for this tenant ===
+        // Include project name via join
         $stmt = $this->pdo->prepare("
-            SELECT s.*, p.name as project_name 
+            SELECT s.*, p.name as project_name
             FROM scan_jobs s
             JOIN projects p ON s.project_id = p.id
             WHERE s.tenant_id = :tid
@@ -108,10 +299,26 @@ class TenantController
         return $response;
     }
 
+    /**
+     * List all analysis projects
+     *
+     * PURPOSE:
+     * Shows tenant's analysis projects for navigation and management
+     * Allows creation and deletion of projects
+     *
+     * TENANT ISOLATION:
+     * Shows only projects owned by this tenant
+     *
+     * @param Request $request HTTP request with tenant_id attribute
+     * @param Response $response HTTP response
+     *
+     * @return Response Rendered projects list
+     */
     public function projects(Request $request, Response $response): Response
     {
         $tenantId = $request->getAttribute('tenant_id');
 
+        // === Fetch all projects for this tenant ===
         $stmt = $this->pdo->prepare("SELECT * FROM projects WHERE tenant_id = :tid ORDER BY created_at DESC");
         $stmt->execute(['tid' => $tenantId]);
         $projects = $stmt->fetchAll();
@@ -123,11 +330,31 @@ class TenantController
         return $response;
     }
 
+    /**
+     * Create new analysis project
+     *
+     * PURPOSE:
+     * Organizes uploads and scans into logical groupings
+     * Allows tenant to categorize debug bundles
+     *
+     * FORM INPUTS:
+     * - name : Project name (defaults to 'New Project')
+     * - notes : Optional project description
+     *
+     * DATABASE:
+     * Inserts to projects table with tenant_id for isolation
+     *
+     * @param Request $request HTTP request with tenant_id and form data
+     * @param Response $response HTTP response (redirect)
+     *
+     * @return Response Redirect to projects page
+     */
     public function createProject(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
         $tenantId = $request->getAttribute('tenant_id');
 
+        // === Create project with tenant association ===
         $stmt = $this->pdo->prepare("INSERT INTO projects (tenant_id, name, notes) VALUES (:tid, :name, :notes)");
         $stmt->execute([
             'tid' => $tenantId,
@@ -138,12 +365,30 @@ class TenantController
         return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
     }
 
+    /**
+     * Delete analysis project
+     *
+     * PURPOSE:
+     * Removes project and associated data
+     * Cleans up storage for deleted bundles
+     *
+     * TENANT ISOLATION:
+     * Verifies tenant ownership before deletion
+     * Prevents deletion of other tenant's projects
+     *
+     * @param Request $request HTTP request with tenant_id
+     * @param Response $response HTTP response (redirect)
+     * @param array $args Route arguments: { id: project_id }
+     *
+     * @return Response Redirect to projects page
+     */
     public function deleteProject(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
         $tenantId = $request->getAttribute('tenant_id');
 
-        // 1. Verify existence and ownership
+        // === Verify project exists and is owned by tenant ===
+        // Prevents unauthorized deletion
         $stmt = $this->pdo->prepare("SELECT id FROM projects WHERE id = :id AND tenant_id = :tid");
         $stmt->execute(['id' => $id, 'tid' => $tenantId]);
         $project = $stmt->fetch();
@@ -173,6 +418,15 @@ class TenantController
         return $response->withHeader('Location', $this->basePath . '/projects')->withStatus(302);
     }
 
+    /**
+     * View single project with associated files
+     *
+     * @param Request $request HTTP request
+     * @param Response $response HTTP response
+     * @param array $args Route args: { id: project_id }
+     *
+     * @return Response Rendered project view
+     */
     public function viewProject(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
@@ -745,14 +999,31 @@ class TenantController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Get real-time scan job status and progress (AJAX endpoint)
+     *
+     * PURPOSE:
+     * Returns JSON with current job progress for frontend polling
+     * Updates progress bar and stage indicator in real-time
+     *
+     * RESPONSE:
+     * { id, status, progress_percent, progress_stage, debug_file_ids, result_summary, checkpoints }
+     *
+     * @param Request $request HTTP request
+     * @param Response $response HTTP response
+     * @param array $args Route args: { id: job_id }
+     *
+     * @return Response JSON response with job status
+     */
     public function getScanStatus(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
         $tenantId = $request->getAttribute('tenant_id');
 
+        // === Fetch job status ===
         $stmt = $this->pdo->prepare("
             SELECT id, status, progress_percent, progress_stage, debug_file_ids, result_summary, checkpoints
-            FROM scan_jobs 
+            FROM scan_jobs
             WHERE id = :id AND tenant_id = :tid
         ");
         $stmt->execute(['id' => $id, 'tid' => $tenantId]);
@@ -762,7 +1033,8 @@ class TenantController
             return $response->withStatus(404);
         }
 
-        // Parse PostgreSQL array string to PHP array for JSON response
+        // === Parse PostgreSQL array to PHP array ===
+        // PostgreSQL arrays stored as strings; convert for JSON response
         if (isset($job['debug_file_ids']) && is_string($job['debug_file_ids'])) {
             $job['debug_file_ids'] = explode(',', trim($job['debug_file_ids'], '{}'));
         }
@@ -772,11 +1044,21 @@ class TenantController
         return $response->withHeader('Content-Type', 'application/json');
     }
 
+    /**
+     * Delete analysis job record
+     *
+     * @param Request $request HTTP request
+     * @param Response $response HTTP response
+     * @param array $args Route args: { id: job_id }
+     *
+     * @return Response Redirect or JSON success response
+     */
     public function deleteScan(Request $request, Response $response, array $args): Response
     {
         $id = $args['id'];
         $tenantId = $request->getAttribute('tenant_id');
 
+        // === Delete job record ===
         $stmt = $this->pdo->prepare("DELETE FROM scan_jobs WHERE id = :id AND tenant_id = :tid");
         $stmt->execute(['id' => $id, 'tid' => $tenantId]);
 

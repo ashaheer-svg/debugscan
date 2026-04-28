@@ -7,6 +7,41 @@ namespace App\Parsers;
 use PDO;
 use Exception;
 
+/**
+ * DatabaseParser: SQLite forensic database query and analysis
+ *
+ * PURPOSE:
+ * Provides interface to query SQLite forensic databases embedded in Synology
+ * debug bundles (SYNOSYSDB, SYNODISKHEALTHDB, etc.). Executes SQL queries
+ * to extract structured data beyond what log-based parsers can provide.
+ *
+ * DATABASES:
+ * - SYNOSYSDB: System events, thermal, fan, power
+ * - SYNODISKHEALTHDB: SMART health history, error counts
+ * - SYNOCONNDB: Connection and session tracking
+ * - SYNODISKDB: Disk inventory and physical info
+ * - scemd.db: Storage and thermal events
+ *
+ * QUERY EXECUTION:
+ * Accepts SQL queries with parameter binding. Prevents SQL injection via
+ * prepared statements. Returns results as associative arrays (rows).
+ *
+ * OUTPUT:
+ * - rows: Array of query results
+ * - row_count: Number of rows returned
+ * - columns: Column names from result set
+ *
+ * USE CASES:
+ * - Aggregate analysis: COUNT, SUM, GROUP BY operations
+ * - Time series: Historical data analysis
+ * - Correlation: Cross-table relationship discovery
+ * - Threshold detection: Conditional aggregates (COUNT(*) > 5)
+ *
+ * DATA SOURCE:
+ * SQLite files in bundle, accessed via PDO read-only connection
+ *
+ * @package App\Parsers
+ */
 class DatabaseParser implements ParserInterface
 {
     const TARGET_DBS = [

@@ -7,11 +7,54 @@ namespace App\Services;
 use PDO;
 use RuntimeException;
 
+/**
+ * ScanService: Orchestrate analysis job lifecycle
+ *
+ * PURPOSE:
+ * Queue and manage analysis jobs (scans) for tenants
+ * Validates preconditions: token balance, plan authorization, file access
+ * Tracks job progress through pipeline execution
+ *
+ * JOB LIFECYCLE:
+ * 1. queueScan(): Validate and queue new job
+ * 2. getJobStatus(): Monitor execution progress
+ * 3. Check plan authorization and tenant token balance
+ * 4. Return job ID for frontend polling
+ *
+ * SECURITY:
+ * - Tenant isolation: Filter by tenant_id
+ * - Plan authorization: Check tenant has access to plan
+ * - Token validation: Verify sufficient tokens before queueing
+ * - File validation: UUID format validation
+ *
+ * CHECKPOINT SYSTEM:
+ * Jobs track progress via checkpoint array:
+ * - JSON array of execution milestones
+ * - Each checkpoint: stage, status, timestamp, metadata
+ * - Used for real-time progress display
+ *
+ * ERROR HANDLING:
+ * - Invalid plan: RuntimeException
+ * - Unauthorized: RuntimeException with FORBIDDEN
+ * - Insufficient tokens: RuntimeException with INSUFFICIENT_TOKENS:current:required
+ * - Invalid file ID: UUID format validation
+ *
+ * @package App\Services
+ */
 class ScanService
 {
+    /** @var PDO Database connection for job storage */
     private PDO $pdo;
+
+    /** @var ReportPlanService Report template and plan access */
     private ReportPlanService $reportPlanService;
 
+    /**
+     * Constructor: Dependency injection
+     *
+     * @param PDO $pdo Database connection
+     * @param ReportPlanService $reportPlanService Plan manager
+     */
     public function __construct(PDO $pdo, ReportPlanService $reportPlanService)
     {
         $this->pdo = $pdo;
@@ -19,7 +62,33 @@ class ScanService
     }
 
     /**
-     * Queue a new scan job.
+     * Queue new analysis job with validation
+     *
+     * FLOW:
+     * 1. Fetch and validate report plan
+     * 2. Check tenant authorization for plan
+     * 3. Verify token balance >= required tokens
+     * 4. Validate file IDs (UUID format)
+     * 5. Create scan_jobs record with initial checkpoint
+     * 6. Return job ID
+     *
+     * PRECONDITIONS:
+     * - Plan exists and is authorized for tenant
+     * - Tenant has sufficient tokens
+     * - All file IDs are valid UUIDs
+     *
+     * CHECKPOINT:
+     * Initial checkpoint records job confirmation
+     * Used for job status tracking and progress display
+     *
+     * @param string $tenantId Tenant organization ID
+     * @param string $projectId Project within tenant
+     * @param array $fileIds Debug file IDs to analyze (UUID format)
+     * @param string $reportPlanId Report template ID
+     *
+     * @return string New job ID (UUID)
+     *
+     * @throws RuntimeException On validation failure
      */
     public function queueScan(string $tenantId, string $projectId, array $fileIds, string $reportPlanId): string
     {
@@ -95,7 +164,38 @@ class ScanService
     }
 
     /**
-     * Get the current status and progress of a scan job.
+     * Retrieve current status and progress metrics for a scan job
+     *
+     * FLOW:
+     * 1. Query scan_jobs table by job ID
+     * 2. Optionally filter by tenant_id (access control)
+     * 3. Return job record with status and progress fields
+     *
+     * STATUS FIELDS:
+     * - id: Job UUID
+     * - status: Job state (queued|processing|completed|failed)
+     * - health_score: System health metric (0-100)
+     * - findings_count: Count of rule matches found
+     * - error_message: Error details if failed (nullable)
+     * - progress_percent: Completion percentage (0-100)
+     * - progress_stage: Current pipeline stage name (validate, parse, evaluate, etc.)
+     *
+     * TENANT ISOLATION:
+     * Optional tenantId parameter adds WHERE clause
+     * Prevents cross-tenant access (404s or access denied if ID not owned by tenant)
+     * If tenantId omitted, any job ID returns data (use only for internal queries)
+     *
+     * FRONTEND POLLING:
+     * Designed for repeated frontend status checks during job execution
+     * Lightweight query returns minimal fields for UI refresh
+     * Supports ETag or polling interval optimization
+     *
+     * @param string $jobId Job UUID to look up
+     * @param string|null $tenantId Optional tenant owner (for access control)
+     *
+     * @return array Job record: {id, status, health_score, findings_count, error_message, progress_percent, progress_stage}
+     *
+     * @throws RuntimeException If job not found or tenant doesn't own job
      */
     public function getJobStatus(string $jobId, ?string $tenantId = null): array
     {

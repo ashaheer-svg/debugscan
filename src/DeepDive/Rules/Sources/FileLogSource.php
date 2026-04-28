@@ -8,14 +8,55 @@ use App\DeepDive\Parsers\TimestampParser;
 use App\DeepDive\Rules\LogRecord;
 
 /**
- * Thin SourceStream backed by one or more plaintext log files.
+ * FileLogSource: SourceStream backed by plaintext log files
  *
- * Per-file year anchor: before yielding a file's records we scan its
- * head for an ISO-8601 timestamp (authoritative year) and fall back to
- * the file's mtime year otherwise. The TimestampParser is then reset
- * to that anchor so RFC3164 lines stamp with a plausible year instead
- * of `date('Y')`, which would otherwise make all historical events
- * look like they happened today.
+ * PURPOSE:
+ * Streams LogRecord objects from one or more plaintext log files. Used by
+ * BundleLocator to wrap bundled logs ("messages", "auth.log", "kern.log", etc.).
+ * Handles file I/O, line parsing, timestamp extraction, and multi-file rotation
+ * consolidation seamlessly.
+ *
+ * MULTI-FILE SUPPORT (Log Rotation):
+ * Handles rotated logs transparently: ["messages", "messages.1", "messages.2"]
+ * are passed as single FileLogSource. Iterator processes files in order,
+ * emitting records chronologically (oldest in messages.2, newest in messages).
+ * Allows rules to match across rotation boundaries without special handling.
+ *
+ * TIMESTAMP ANCHORING (Year Inference):
+ * Log timestamps often lack year (e.g. syslog: "Apr 28 10:23:45"). Without
+ * year context, same timestamp could be parsed as today or 30 years ago.
+ * FileLogSource infers year per-file:
+ * 1. Scans first 500 lines for ISO-8601 date (authoritative year)
+ * 2. Falls back to file mtime year (last modified timestamp)
+ * 3. Final fallback to current year
+ * Then resets TimestampParser to inferred year, so RFC3164 lines parse correctly.
+ *
+ * RECORD EMISSION:
+ * Yields LogRecord for each non-empty line:
+ * - file: Absolute path to log file
+ * - lineNumber: 1-indexed line number in file
+ * - timestamp: ISO-8601 string from TimestampParser, or null if unparseable
+ * - text: Line content (trailing newlines stripped)
+ * - extra: {} (empty, FileLogSource doesn't parse syslog structure)
+ *
+ * ERROR HANDLING:
+ * Graceful degradation:
+ * - Missing file: skipped (continue to next)
+ * - Unreadable file: skipped with warning
+ * - Read error mid-file: exception caught, file closed, continue
+ * - Malformed lines: passed through as-is, timestamp might be null
+ *
+ * PERFORMANCE:
+ * Lazy evaluation: records() returns Iterator, doesn't load entire file.
+ * Files processed one at a time, lines streamed one by one. Matchers can
+ * break early, stopping file I/O. Safe for large (GB) log files.
+ *
+ * USAGE:
+ * Created by BundleLocator for each logical log source. Registered in
+ * SourceRegistry. Matchers retrieve via reg.log("messages") and iterate
+ * to collect matching records. Matcher only knows about SourceStream interface.
+ *
+ * @package App\DeepDive\Rules\Sources
  */
 final class FileLogSource implements SourceStream
 {

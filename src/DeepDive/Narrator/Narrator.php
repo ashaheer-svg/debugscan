@@ -11,25 +11,55 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * Narrator: asks an LLM to produce a user-facing narrative and a set of
- * concrete recommended actions for a single incident, grounded in the
- * rule+citation evidence already gathered by DeepDive.
+ * Narrator: Generate AI-powered narratives and actions for incidents
  *
- * Contract:
- *   - The model is given only: rule metadata (id, title, severity,
- *     actionability, description, remediation) + redacted citation
- *     excerpts + entity values. Never raw bundle content.
- *   - The response must be JSON with exactly two keys: "narrative"
- *     (string) and "recommended_actions" (list of strings). Any other
- *     shape is treated as failure and the pipeline falls back to the
- *     rule's own description/remediation text.
- *   - Each call is idempotent and bounded: one HTTP request per incident,
- *     soft-fails on error (doesn't abort the pipeline).
- *   - PII is redacted before anything leaves the worker.
+ * PURPOSE:
+ * Uses LLM (Groq API) to produce human-readable narratives for incidents
+ * Generates concrete, actionable remediation steps for each incident
+ * Grounds responses in rule metadata and redacted evidence
  *
- * This service is DeepDive-private. Do not wire it into the existing scan
- * pipeline — we want the "rip out DeepDive and nothing else breaks"
- * property to stay true.
+ * INTEGRATION:
+ * Called by NarrateStep during pipeline execution
+ * Optional and graceful (soft failures don't block pipeline)
+ * Results persisted to deepdive_incidents table
+ * Applied as overlay in RenderStep for richer reports
+ *
+ * SAFETY DESIGN:
+ * PII redaction before sending to LLM
+ * Only rule metadata and redacted excerpts sent (no raw bundle content)
+ * Redaction map maintained for potential de-redaction
+ *
+ * RESPONSE FORMAT:
+ * Expected JSON:
+ * {
+ *   "narrative": "Human-readable explanation",
+ *   "recommended_actions": ["Action 1", "Action 2", ...],
+ *   "tokens_used": 1234
+ * }
+ * Any other format treated as failure (fallback to rule text)
+ *
+ * MODEL & PROVIDER:
+ * Default model: llama-3.3-70b-versatile via Groq API
+ * Configurable via constructor
+ * API key required (env: GROQ_API_KEY)
+ * 30-second timeout per incident
+ *
+ * ERROR HANDLING:
+ * Network failures: Logged, returns null
+ * Malformed responses: Logged, returns null
+ * Missing API key: isConfigured() returns false, skips narration
+ * Per-incident failures don't block other incidents
+ *
+ * BOUNDS:
+ * Max 6 citations per incident (prevent huge prompts)
+ * 280-char excerpt limit per citation
+ * Prevents token explosion on verbose bundles
+ *
+ * INDEPENDENCE:
+ * DeepDive-private service (not wired into main scan pipeline)
+ * Can be ripped out without breaking other systems
+ *
+ * @package App\DeepDive\Narrator
  */
 final class Narrator
 {

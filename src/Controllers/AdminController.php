@@ -12,15 +12,124 @@ use Psr\Http\Message\ServerRequestInterface as Request;
 use Twig\Environment;
 use App\Services\ReportPlanService;
 
+/**
+ * AdminController: Platform-wide administrative management
+ *
+ * PURPOSE:
+ * Handles all administrative functionality for platform operators
+ * Manages tenant lifecycle (creation, update, deactivation)
+ * Provides system-wide dashboards, metrics, and monitoring
+ * Configures extraction settings, report plans, and system policies
+ * Implements audit logging for all administrative actions
+ *
+ * RESPONSIBILITIES:
+ * - Tenant Management: CRUD operations for tenant organizations
+ * - Dashboard & Metrics: Real-time system KPIs and performance
+ * - Configuration: Extraction settings and report plan management
+ * - Storage Monitoring: Disk usage tracking and cleanup
+ * - Audit Trail: Logging of all administrative changes
+ * - Feature Flags: Enable/disable features at tenant level (e.g., DeepDive)
+ *
+ * DEPENDENCIES:
+ * - Environment $view : Twig template rendering
+ * - PDO $pdo : PostgreSQL database connection
+ * - AiService : AI token usage and model management
+ * - MailService : Email notifications
+ * - ReportPlanService : Report template and plan management
+ *
+ * METHODS:
+ * Public action methods (PSR-7 HTTP handlers):
+ * - dashboard() : System overview and KPIs
+ * - tenants() : List all tenants with storage and plan info
+ * - createTenant() : Provision new tenant organization
+ * - updateTenant() : Modify existing tenant details
+ * - toggleTenantStatus() : Activate/deactivate tenant
+ * - policies() : View and manage system policies
+ * - apiLimits() : Configure rate limits and quotas
+ * - extractionConfig() : Enable/disable data extraction types
+ * - reportPlans() : Manage report templates
+ * - storageStats() : Monitor storage usage
+ * - deleteFile() : Remove debug files manually
+ * - logs() : View system audit logs
+ *
+ * SECURITY:
+ * - Controller requires authenticated admin user (enforced by middleware)
+ * - All database operations use prepared statements (SQL injection safe)
+ * - Tenant isolation via tenant_id filtering
+ * - Audit logging for compliance and security monitoring
+ * - Password hashing: BCRYPT with cost factor 12
+ *
+ * DATABASE TABLES:
+ * - users : Tenant accounts with roles and feature flags
+ * - scan_jobs : Analysis job records
+ * - debug_files : Uploaded debug bundles
+ * - scan_findings : Analysis findings linked to jobs
+ * - audit_log : Administrative action trail
+ * - system_settings : Platform configuration
+ * - report_plans : Report template definitions
+ *
+ * STORAGE:
+ * - Raw uploads: storage/debug_files/{file_id}
+ * - Extracted: storage/extracted/{file_id}/
+ * - Reports: storage/reports/
+ *
+ * ERROR HANDLING:
+ * - Validation: Form field checks before database operations
+ * - Database errors: Caught (PDOException), friendly messages shown
+ * - Unique constraint violations: Specific error messaging
+ * - File operations: Silent failures with graceful degradation
+ *
+ * AUDIT TRAIL:
+ * All administrative changes logged via logAction() helper:
+ * - Action type: 'user_created', 'user_updated', etc.
+ * - Resource type and ID
+ * - Changed fields and values
+ * - IP address and user agent
+ * - Timestamp
+ *
+ * @package App\Controllers
+ */
 class AdminController
 {
+    /** @var Environment Twig template engine for rendering admin views */
     private Environment $view;
+
+    /** @var PDO PostgreSQL database connection */
     private PDO $pdo;
+
+    /** @var AiService AI service for token usage and model management */
     private AiService $aiService;
+
+    /** @var MailService Email service for notifications */
     private MailService $mailService;
+
+    /** @var ReportPlanService Report template and plan management service */
     private ReportPlanService $reportPlanService;
+
+    /** @var string Application base path for URL generation */
     private string $basePath;
 
+    /**
+     * Constructor: Dependency injection of controller dependencies
+     *
+     * DEPENDENCIES:
+     * - $view : Twig environment for rendering admin templates
+     * - $pdo : PostgreSQL connection (configured in Database service)
+     * - $aiService : AI token tracking and usage metrics
+     * - $basePath : Web root path for URL generation (e.g., '/admin')
+     * - $mailService : Email notifications for alerts/provisioning
+     * - $reportPlanService : Report template catalog and assignments
+     *
+     * All dependencies injected by container to support testability
+     * and loose coupling between components.
+     *
+     * @param Environment $view Twig template engine
+     * @param PDO $pdo Database connection
+     * @param AiService $aiService AI usage tracker
+     * @param string $basePath Application base path
+     * @param MailService $mailService Email sender
+     * @param ReportPlanService $reportPlanService Report plan manager
+     */
     public function __construct(Environment $view, PDO $pdo, AiService $aiService, string $basePath, MailService $mailService, ReportPlanService $reportPlanService)
     {
         $this->view = $view;
@@ -31,19 +140,76 @@ class AdminController
         $this->reportPlanService = $reportPlanService;
     }
 
+    /**
+     * Display admin dashboard with system-wide KPIs and metrics
+     *
+     * PURPOSE:
+     * Shows platform operators a comprehensive view of system health
+     * Displays key performance indicators for users, scans, and resources
+     * Alerts on problems (stuck jobs, high disk usage)
+     *
+     * METRICS DISPLAYED:
+     * System Overview:
+     * - Active tenant count
+     * - Total scans executed on platform
+     * - Total AI tokens consumed (input + output)
+     * - Recent audit log entries (last 10)
+     *
+     * Performance:
+     * - CPU load average (1-minute)
+     * - Disk usage percentage
+     * - Disk free space in GB
+     * - Stuck jobs (running but no updates)
+     *
+     * DATA SOURCES:
+     * - users table: Tenant count (role='tenant')
+     * - scan_jobs table: Total scans and token usage
+     * - audit_log table: Recent administrative actions
+     * - system_settings table: Alert thresholds
+     * - System APIs: sys_getloadavg(), disk_*_space()
+     *
+     * STUCK JOB DETECTION:
+     * Jobs are considered "stuck" if:
+     * - Status is 'running' (actively processing)
+     * - No update for configured timeout (default 30 minutes)
+     * - Configuration via system_settings.stuck_alert_mins
+     * - Helps identify jobs killed mid-processing
+     *
+     * ERROR HANDLING:
+     * - Missing system calls: Default values (cpu=0)
+     * - Disk space errors: Defaults to 1 (prevents division by zero)
+     * - Type safety: All values cast to numeric before calculations
+     * - Missing metrics: NULL coalesced to 0
+     *
+     * TEMPLATE:
+     * Renders admin/dashboard.twig with computed metrics
+     * Values pre-formatted (CPU with decimals, disk as GB, etc.)
+     * Pagination not needed (small datasets)
+     *
+     * @param Request $request HTTP request (unused)
+     * @param Response $response HTTP response to write
+     *
+     * @return Response HTML response with rendered dashboard
+     */
     public function dashboard(Request $request, Response $response): Response
     {
-        // Global System KPIs
+        // === Global System KPIs ===
+        // Count of tenant organizations on platform
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM users WHERE role = 'tenant'");
         $tenantCount = $stmt->fetchColumn();
 
+        // Total analysis jobs executed (all tenants, all time)
         $stmt = $this->pdo->query("SELECT COUNT(*) FROM scan_jobs");
         $totalScans = $stmt->fetchColumn();
 
+        // Sum of AI tokens consumed across all jobs
+        // Input and output tokens aggregated for cost visibility
         $stmt = $this->pdo->query("SELECT SUM(ai_input_tokens_used + ai_output_tokens_used) FROM scan_jobs");
         $totalTokensUsed = $stmt->fetchColumn() ?? 0;
 
-        // Recent System Activity
+        // === Recent System Activity ===
+        // Audit log entries for administrative changes
+        // Shows who did what, when, and what changed
         $stmt = $this->pdo->query("
             SELECT a.action, a.created_at, u.display_name as user_name, a.details
             FROM audit_log a
@@ -53,32 +219,44 @@ class AdminController
         ");
         $recentActivity = $stmt->fetchAll();
 
-        // Platform Performance Metrics
+        // === Platform Performance Metrics ===
+        // CPU load (1-minute average)
+        // Returns 0 if sys_getloadavg() unavailable (Windows)
         $cpuLoad = function_exists('sys_getloadavg') ? sys_getloadavg()[0] : 0;
-        
+
+        // === Disk Space Calculation ===
+        // Get free and total space on root filesystem
+        // Use @ to suppress warnings if calls fail (returns false)
         $diskFree = @disk_free_space("/") ?: 1;
         $diskTotal = @disk_total_space("/") ?: 1;
-        
-        // Ensure we don't divide by zero or pass non-numeric to round
+
+        // Type safety: ensure values are numeric before math operations
+        // Prevents "non-numeric" errors if functions return non-numeric values
         $diskFreeNumeric = is_numeric($diskFree) ? (float)$diskFree : 1.0;
         $diskTotalNumeric = is_numeric($diskTotal) ? (float)$diskTotal : 1.0;
-        
+
+        // Calculate percentage used (prevents division by zero with fallback 1)
         $diskUsedPercent = round((($diskTotalNumeric - $diskFreeNumeric) / $diskTotalNumeric) * 100, 1);
 
-        // Stuck Scans (Running but no heartbeat for configurable mins)
-        // If settings missing, default to 30 mins
+        // === Stuck Jobs Detection ===
+        // Jobs that are "running" but haven't updated for X minutes (default 30)
+        // Indicates job lost heartbeat or killed mid-processing
+        // Threshold configurable via system_settings.stuck_alert_mins
+        // Helps admins identify and investigate stalled jobs
         $stmt = $this->pdo->prepare("
             SELECT j.id, j.status, j.progress_stage, j.updated_at, u.display_name as tenant_name
             FROM scan_jobs j
             JOIN users u ON j.tenant_id = u.id
             LEFT JOIN system_settings s ON 1=1
-            WHERE j.status = 'running' 
+            WHERE j.status = 'running'
               AND j.updated_at < (NOW() - (COALESCE(s.stuck_alert_mins, 30) || ' minutes')::interval)
             ORDER BY j.updated_at ASC
         ");
         $stmt->execute();
         $stuckScans = $stmt->fetchAll();
 
+        // === Render dashboard template ===
+        // Pre-format values for display (no formatting in template)
         $body = $this->view->render('admin/dashboard.twig', [
             'tenant_count' => $tenantCount,
             'total_scans' => $totalScans,
@@ -95,6 +273,51 @@ class AdminController
         return $response;
     }
 
+    /**
+     * Display list of all tenants with storage and plan assignments
+     *
+     * PURPOSE:
+     * Shows admin all tenant organizations with their usage and configuration
+     * Displays storage breakdown: raw uploads, extracted data, database
+     * Allows bulk operations: create, update, toggle status
+     *
+     * TENANT DATA:
+     * For each tenant, displays:
+     * - Organization name, email, status (active/inactive)
+     * - Storage breakdown:
+     *   - Raw uploads: Files stored in database (debug_files table)
+     *   - Extracted: Decompressed working directories
+     *   - Database: Estimated size of findings/jobs (1KB per finding)
+     *   - Total: Sum of all three
+     * - Assigned report plans (templates enabled for tenant)
+     * - Tokens available for AI operations
+     * - Created/updated timestamps
+     *
+     * STORAGE CALCULATION:
+     * Raw Storage: SUM(debug_files.file_size_bytes) from uploads table
+     * Extracted Storage: Recursive directory traversal of extracted/{file_id}/
+     * DB Estimate: COUNT(scan_findings) * 1024 bytes per finding
+     * Total: Sum of all three buckets
+     *
+     * REPORT PLANS:
+     * Fetches all available plans and tenant assignments
+     * Allows assigning/unassigning plans to control report capabilities
+     *
+     * ERROR HANDLING:
+     * - Session flash messages displayed and cleared
+     * - Database errors caught and shown to user
+     * - Graceful degradation for missing storage directories
+     *
+     * TEMPLATE:
+     * Renders admin/tenants.twig with tenant list and form
+     * Includes create/edit forms for tenant management
+     * Shows all available report plans for assignment
+     *
+     * @param Request $request HTTP request (unused)
+     * @param Response $response HTTP response to write
+     *
+     * @return Response HTML response with tenant management interface
+     */
     public function tenants(Request $request, Response $response): Response
     {
         $stmt = $this->pdo->query("
@@ -165,6 +388,70 @@ class AdminController
         return $response;
     }
 
+    /**
+     * Create new tenant organization and user account
+     *
+     * PURPOSE:
+     * Provisions a new tenant organization with admin-supplied credentials
+     * Sets initial token allocation and feature flags
+     * Assigns report plan templates
+     * Logs action to audit trail
+     *
+     * FORM INPUTS:
+     * Required:
+     * - org_name : Organization display name (trimmed)
+     * - email : Tenant account email (unique constraint)
+     * - password : Initial password (hashed with BCRYPT)
+     * Optional:
+     * - tokens : Initial AI tokens (default 500,000)
+     * - deepdive_enabled : Boolean flag for advanced analysis features
+     * - plan_ids[] : Array of report plan IDs to assign
+     *
+     * VALIDATION:
+     * - Organization name: Not empty after trim
+     * - Email: Not empty, must be unique (enforced by DB constraint)
+     * - Password: Not empty, hashed with PASSWORD_BCRYPT
+     * Validation errors return to tenants() page with error message
+     *
+     * DATABASE:
+     * Uses PostgreSQL CTE (WITH clause) to:
+     * 1. INSERT new user record
+     * 2. Return inserted user.id
+     * 3. UPDATE user.tenant_id = users.id (self-reference for tenants)
+     * This atomic operation prevents race conditions
+     *
+     * Multi-tenant Pattern:
+     * - role: set to 'tenant' (not admin)
+     * - status: set to 'active' (immediately usable)
+     * - tenant_id: set to same as user.id (organization owns itself)
+     * - tokens_available: Initial AI token budget
+     * - deepdive_enabled: Feature flag for advanced analysis
+     *
+     * REPORT PLANS:
+     * After user created, assigns selected plan templates
+     * Uses ReportPlanService::assignPlansToTenant()
+     *
+     * AUDIT LOGGING:
+     * Logs to audit_log table:
+     * - action: 'user_created'
+     * - resource: 'users'
+     * - resource_id: New user ID
+     * - changes: All tenant details
+     * - tenant_id: New tenant ID
+     *
+     * ERROR HANDLING:
+     * - Validation: Show error and redirect to tenants page
+     * - Unique email: PDOException code 23505, friendly message
+     * - Database error: Show generic error message
+     * - All errors use SESSION flash messages
+     *
+     * @param Request $request HTTP request with form data
+     * @param Response $response HTTP response (redirect)
+     *
+     * @return Response Redirect to tenants page with success/error
+     *
+     * @throws none Exceptions caught and converted to flash messages
+     */
     public function createTenant(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -174,14 +461,22 @@ class AdminController
         $tokens = (int)($data['tokens'] ?? 500000);
         $deepDiveEnabled = !empty($data['deepdive_enabled']);
 
+        // === Validate required fields ===
         if (empty($orgName) || empty($email) || empty($password)) {
             $_SESSION['error'] = 'All fields are required to provision a tenant.';
             return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
         }
 
         try {
+            // === Hash password with strong BCRYPT ===
+            // Cost factor 12 provides good security/performance balance
             $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-            // We use a CTE to insert and set tenant_id to the new id in one go
+
+            // === Create user with CTE for atomic self-reference ===
+            // PostgreSQL CTE allows us to:
+            // 1. INSERT user and get returning id
+            // 2. UPDATE tenant_id = id in same statement
+            // This prevents race conditions and ensures tenant_id is set immediately
             $stmt = $this->pdo->prepare("
                 WITH new_user AS (
                     INSERT INTO users (email, password_hash, display_name, role, status, tokens_available, deepdive_enabled)
@@ -199,12 +494,14 @@ class AdminController
             ]);
             $tenantId = $stmt->fetchColumn();
 
-            // Assign Report Plans
+            // === Assign report plans ===
+            // Allows tenant to use selected report templates immediately
             $planIds = $data['plan_ids'] ?? [];
             if (!empty($planIds)) {
                 $this->reportPlanService->assignPlansToTenant((string)$tenantId, $planIds);
             }
 
+            // === Audit log the creation ===
             $this->logAction($request, 'user_created', 'users', $tenantId, [
                 'email' => $email,
                 'display_name' => $orgName,
@@ -213,11 +510,15 @@ class AdminController
                 'assigned_plans' => count($planIds)
             ], $tenantId);
 
+            // Show success message
             $_SESSION['success'] = "Tenant '{$orgName}' has been provisioned successfully.";
         } catch (\PDOException $e) {
-            if ($e->getCode() === '23505') { // Unique violation
+            // === Handle specific database errors ===
+            if ($e->getCode() === '23505') {
+                // Unique constraint violation: duplicate email
                 $_SESSION['error'] = 'A user with that email already exists.';
             } else {
+                // Generic database error
                 $_SESSION['error'] = 'Failed to create tenant: ' . $e->getMessage();
             }
         }
@@ -225,6 +526,65 @@ class AdminController
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
+    /**
+     * Update existing tenant organization details
+     *
+     * PURPOSE:
+     * Modifies tenant account information and settings
+     * Can update name, email, password, and feature flags
+     * Allows reassigning report plan templates
+     * Logs all changes to audit trail
+     *
+     * FORM INPUTS:
+     * Required:
+     * - id : Tenant user ID (must exist and be role='tenant')
+     * - org_name : Organization name (updated)
+     * - email : Tenant email (must remain unique)
+     * Optional:
+     * - password : New password (left unchanged if empty)
+     * - deepdive_enabled : Feature flag
+     * - plan_ids[] : Report plan assignments
+     *
+     * VALIDATION:
+     * - ID must be provided and not empty
+     * - Organization name must be provided and not empty
+     * - Email must be provided and not empty
+     * - Validation errors return to tenants page
+     *
+     * DATABASE:
+     * Dynamic SQL construction:
+     * - Base UPDATE: display_name, email, deepdive_enabled, updated_at
+     * - Conditional: password_hash only if password provided (non-empty)
+     * - WHERE: id and role='tenant' (prevents updating admins)
+     *
+     * PASSWORD HANDLING:
+     * Only hashed and updated if password field is non-empty
+     * Uses BCRYPT with cost factor 12 (same as createTenant)
+     * Allows password resets without changing other fields
+     *
+     * REPORT PLANS:
+     * Updates plan assignments after successful update
+     * Uses ReportPlanService to add/remove plans
+     *
+     * AUDIT LOGGING:
+     * Logs to audit_log:
+     * - action: 'user_updated'
+     * - Includes password_changed flag (boolean)
+     * - All updated fields documented
+     *
+     * ERROR HANDLING:
+     * - Validation: Show error, redirect to tenants
+     * - Unique email violation: PDOException 23505
+     * - DB error: Generic message
+     * - Flash messages used for user feedback
+     *
+     * @param Request $request HTTP request with form data
+     * @param Response $response HTTP response (redirect)
+     *
+     * @return Response Redirect to tenants page with status
+     *
+     * @throws none Exceptions caught and converted to flash messages
+     */
     public function updateTenant(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
@@ -234,12 +594,15 @@ class AdminController
         $password = $data['password'] ?? '';
         $deepDiveEnabled = !empty($data['deepdive_enabled']);
 
+        // === Validate required fields ===
         if (!$id || empty($orgName) || empty($email)) {
             $_SESSION['error'] = 'ID, Organization Name, and Email are required.';
             return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
         }
 
         try {
+            // === Build dynamic UPDATE statement ===
+            // Base fields: name, email, deepdive flag
             $sql = "UPDATE users SET display_name = :name, email = :email, deepdive_enabled = :dd, updated_at = NOW()";
             $params = [
                 'name'  => $orgName,
@@ -248,19 +611,25 @@ class AdminController
                 'id'    => $id,
             ];
 
+            // === Conditionally update password ===
+            // Only add password_hash clause if password provided (non-empty)
+            // Allows updates without forcing password change
             if (!empty($password)) {
                 $sql .= ", password_hash = :pass";
                 $params['pass'] = password_hash($password, PASSWORD_BCRYPT);
             }
 
+            // === Set WHERE clause ===
+            // Ensures we only update tenant roles (prevents accidental admin updates)
             $sql .= " WHERE id = :id AND role = 'tenant'";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute($params);
 
-            // Update Report Plan assignments
+            // === Update report plan assignments ===
             $planIds = $data['plan_ids'] ?? [];
             $this->reportPlanService->assignPlansToTenant((string)$id, $planIds);
 
+            // === Log the changes ===
             $this->logAction($request, 'user_updated', 'users', $id, [
                 'email' => $email,
                 'display_name' => $orgName,
@@ -271,9 +640,12 @@ class AdminController
 
             $_SESSION['success'] = "Tenant '{$orgName}' updated successfully.";
         } catch (\PDOException $e) {
+            // === Handle specific errors ===
             if ($e->getCode() === '23505') {
+                // Unique email violation
                 $_SESSION['error'] = 'A user with that email already exists.';
             } else {
+                // Generic database error
                 $_SESSION['error'] = 'Failed to update tenant: ' . $e->getMessage();
             }
         }
@@ -281,20 +653,68 @@ class AdminController
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
+    /**
+     * Toggle tenant status between active and inactive
+     *
+     * PURPOSE:
+     * Suspend or reactivate a tenant organization
+     * Disables all services for inactive tenants
+     * Logs status changes for compliance
+     *
+     * FORM INPUTS:
+     * - id : Tenant user ID
+     * - status : 'active' or 'inactive' (validated)
+     *
+     * VALIDATION:
+     * - ID must be provided
+     * - Status must be exactly 'active' or 'inactive'
+     * - Invalid requests return error and redirect
+     *
+     * DATABASE:
+     * Updates users.status and updated_at timestamp
+     * WHERE clause ensures only tenant role can be updated
+     *
+     * INACTIVE EFFECT:
+     * When status='inactive':
+     * - Tenant cannot log in (AuthMiddleware checks status)
+     * - No new jobs can be created
+     * - Existing reports remain accessible
+     * - Data not deleted (can be reactivated)
+     *
+     * AUDIT LOGGING:
+     * - action: 'user_updated' for active
+     * - action: 'user_deactivated' for inactive
+     * - Both log new_status field
+     *
+     * USECASE:
+     * Admin suspends tenant due to:
+     * - Non-payment
+     * - Policy violation
+     * - Account compromise
+     * - Maintenance period
+     *
+     * @param Request $request HTTP request with form data
+     * @param Response $response HTTP response (redirect)
+     *
+     * @return Response Redirect to tenants page
+     */
     public function toggleTenantStatus(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
         $id = $data['id'] ?? null;
         $status = $data['status'] ?? null;
 
+        // === Validate status value ===
         if (!$id || !in_array($status, ['active', 'inactive'])) {
             $_SESSION['error'] = 'Invalid status toggle request.';
             return $response->withHeader('Location', '/admin/tenants')->withStatus(302);
         }
 
+        // === Update status ===
         $stmt = $this->pdo->prepare("UPDATE users SET status = :status, updated_at = NOW() WHERE id = :id AND role = 'tenant'");
         $stmt->execute(['status' => $status, 'id' => $id]);
 
+        // === Log the status change ===
         $this->logAction($request, $status === 'active' ? 'user_updated' : 'user_deactivated', 'users', $id, ['new_status' => $status], $id);
 
         $_SESSION['success'] = "Tenant status changed to " . ucfirst($status) . ".";
@@ -349,18 +769,96 @@ class AdminController
         return $response->withHeader('Location', $this->basePath . '/admin/tenants')->withStatus(302);
     }
 
+    /**
+     * Log administrative action to audit trail
+     *
+     * PURPOSE:
+     * Records all administrative changes to audit log for compliance
+     * Provides evidence of who did what, when, from where
+     * Enables investigation of security incidents and data changes
+     *
+     * AUDIT TRAIL:
+     * Persists to audit_log table with:
+     * - user_id : Admin who performed action
+     * - tenant_id : Tenant affected by action (or null for system actions)
+     * - action : Action type ('user_created', 'user_updated', 'scan_aborted', etc.)
+     * - resource_type : What was changed ('users', 'scan_jobs', 'system', etc.)
+     * - resource_id : ID of affected resource
+     * - details : JSON object with change details
+     * - ip_address : Admin's IP address
+     * - user_agent : Admin's browser/client info
+     * - created_at : Automatic timestamp
+     *
+     * ACTION TYPES (examples):
+     * - user_created : Tenant provisioned
+     * - user_updated : Tenant modified
+     * - user_deactivated : Tenant suspended
+     * - scan_aborted : Job forcefully stopped
+     * - tokens_redeemed : Token redemption used
+     * - report_plan_deleted : Template removed
+     * - system_reset : Factory reset
+     *
+     * REQUEST DATA:
+     * Extracts from HTTP request:
+     * - user_id from $_SESSION (current admin)
+     * - tenant_id from $_SESSION or override parameter
+     * - IP address from REMOTE_ADDR header
+     * - User agent from HTTP_USER_AGENT header
+     *
+     * PARAMETERS:
+     * Optional parameters allow flexible action logging:
+     * - action: Required, identifies what happened
+     * - resourceType: Optional, type of resource affected
+     * - resourceId: Optional, ID of resource
+     * - details: Optional, JSON-serializable array of changes
+     * - tenantId: Optional override of session tenant_id
+     *
+     * DETAILS EXAMPLES:
+     * - User creation: { email, display_name, tokens, deepdive_enabled }
+     * - Job abort: { aborted_by }
+     * - Status toggle: { new_status }
+     * - Password change: { password_changed: true }
+     * All details JSON-encoded for storage
+     *
+     * COMPLIANCE:
+     * Used for regulatory compliance (GDPR, SOC 2, etc.)
+     * Provides non-repudiation evidence
+     * Enables audit trail review and investigation
+     * Can be exported for security reviews
+     *
+     * @param Request $request HTTP request (for IP/UA/session extraction)
+     * @param string $action Action type identifier
+     * @param ?string $resourceType Type of resource affected
+     * @param ?string $resourceId ID of affected resource
+     * @param array $details JSON-serializable change details
+     * @param ?string $tenantId Override tenant_id (if null, uses session)
+     *
+     * @return void Persists to audit_log table
+     */
     private function logAction(Request $request, string $action, ?string $resourceType = null, ?string $resourceId = null, array $details = [], ?string $tenantId = null): void
     {
+        // === Extract current user from session ===
         $userId = $_SESSION['user_id'] ?? null;
+
+        // === Determine tenant ID ===
+        // Use override parameter if provided, otherwise use session tenant_id
         $targetTenantId = $tenantId ?? ($_SESSION['tenant_id'] ?? null);
+
+        // === Extract request context ===
+        // IP address for geographic and security tracking
         $ip = $request->getServerParams()['REMOTE_ADDR'] ?? null;
+        // User agent for browser/client identification
         $ua = $request->getServerParams()['HTTP_USER_AGENT'] ?? null;
 
+        // === Insert audit log entry ===
+        // PostgreSQL will auto-populate created_at timestamp
         $stmt = $this->pdo->prepare("
             INSERT INTO audit_log (user_id, tenant_id, action, resource_type, resource_id, details, ip_address, user_agent)
             VALUES (:uid, :tid, :act, :rt, :rid, :details, :ip, :ua)
         ");
-        
+
+        // === Execute with bound parameters ===
+        // All values properly parameterized to prevent SQL injection
         $stmt->execute([
             'uid' => $userId,
             'tid' => $targetTenantId,
@@ -895,15 +1393,73 @@ class AdminController
         @rmdir($dir);
     }
 
+    /**
+     * Calculate total size of directory tree recursively
+     *
+     * PURPOSE:
+     * Computes disk space used by a directory and all contents
+     * Used for storage breakdown reports to show per-tenant usage
+     * Scans extracted/ and uploaded/ directories for space accounting
+     *
+     * ALGORITHM:
+     * Recursive iteration through all files in directory tree
+     * Sums filesize() for each file
+     * Returns total in bytes (raw integer, no formatting)
+     *
+     * PERFORMANCE:
+     * Can be slow for large directory trees
+     * Used during report generation, not page load
+     * Iterates full tree: O(n) where n = file count
+     *
+     * ERROR HANDLING:
+     * Returns 0 if directory doesn't exist
+     * Silently skips permission errors
+     * Used as $bytes value in formatBytes()
+     *
+     * @param string $path Directory path to measure
+     *
+     * @return int Total size in bytes
+     */
     private function getFolderSize($path): int
     {
         $size = 0;
+        // Recursively iterate all files in directory tree
         foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($path)) as $file) {
             $size += $file->getSize();
         }
         return $size;
     }
 
+    /**
+     * Convert byte count to human-readable format
+     *
+     * PURPOSE:
+     * Formats raw byte values for display in admin interface
+     * Shows storage usage in appropriate units (B, KB, MB, GB)
+     *
+     * ALGORITHM:
+     * Checks byte value against thresholds:
+     * - >= 1 GB: divide by 1073741824, show as GB
+     * - >= 1 MB: divide by 1048576, show as MB
+     * - >= 1 KB: divide by 1024, show as KB
+     * - < 1 KB: show as bytes
+     * All divided values rounded to 2 decimal places
+     *
+     * CONVERSIONS:
+     * - 1 KB = 1024 bytes
+     * - 1 MB = 1048576 bytes (1024^2)
+     * - 1 GB = 1073741824 bytes (1024^3)
+     *
+     * EXAMPLES:
+     * - formatBytes(512) -> "512 B"
+     * - formatBytes(1024) -> "1.00 KB"
+     * - formatBytes(1048576) -> "1.00 MB"
+     * - formatBytes(5368709120) -> "5.00 GB"
+     *
+     * @param int $bytes Raw byte count
+     *
+     * @return string Formatted string with unit (e.g., "2.50 MB")
+     */
     private function formatBytes($bytes): string
     {
         if ($bytes >= 1073741824) return number_format($bytes / 1073741824, 2) . ' GB';

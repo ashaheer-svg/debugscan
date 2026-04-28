@@ -8,18 +8,57 @@ use App\DeepDive\Rules\FindingRecord;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Groups FindingRecords into Incidents using two signals:
+ * Correlator: Group findings into coherent incidents via correlation analysis
  *
- *   (1) Shared entity values — findings mentioning the same disk, md array,
- *       mount, or interface clearly relate to the same issue even if they
- *       came from different rules.
+ * PURPOSE:
+ * Transforms flat list of rule findings into grouped incidents
+ * Uses shared entities and causal relationships to detect related findings
+ * Produces prioritized incidents with root causes and remediation context
  *
- *   (2) Causal graph — within an entity cluster, CausalGraph decides which
- *       rule is the root cause. Findings that don't share an entity with
- *       anything but match a direct causal edge also merge.
+ * CORRELATION ALGORITHM:
+ * Two-phase approach combining entity clustering and causal analysis:
  *
- * Findings that share nothing with anyone become singleton incidents —
- * we'd rather over-report than silently drop a lone critical.
+ * Phase 1: Entity-based clustering (Union-Find)
+ * - Links findings mentioning same entities (disk, array, interface, mount)
+ * - Entity keys checked in specificity order for best matching
+ * - All findings with shared entity value merged into cluster
+ *
+ * Phase 2: Causal edge merging
+ * - Checks if findings have direct causal relationship (CausalGraph)
+ * - Merges causally-related findings if they share ANY entity value
+ * - Prevents unrelated findings from being swept together
+ *
+ * Phase 3: Incident building
+ * - For each cluster: builds Incident object
+ * - Derives priority from findings and actionability
+ * - Identifies root cause in causal chain
+ * - Sorts by priority for report presentation
+ *
+ * SHARED ENTITIES:
+ * Findings linked by common objects:
+ * - disk/device: Physical drive references
+ * - array: RAID array identifier
+ * - interface: Network interface
+ * - iface: Alternative interface name
+ * - mount: Filesystem mount point
+ * - process: Process name/PID
+ * Checked in priority order for specificity
+ *
+ * SINGLETON INCIDENTS:
+ * Findings with no shared entities become singleton incidents
+ * Philosophy: Better to over-report critical than silently drop
+ *
+ * INCIDENT PRIORITY:
+ * Automatic calculation from findings:
+ * - P1: Critical + any actionability
+ * - P2: High + user_fixable
+ * - P3: High + other, or warning
+ * - P4: Informational
+ *
+ * INCIDENT SORTING:
+ * By priority (P1→P4), then title (deterministic ordering)
+ *
+ * @package App\DeepDive\Correlation
  */
 final class Correlator
 {

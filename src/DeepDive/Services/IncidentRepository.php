@@ -10,13 +10,98 @@ use PDO;
 use Ramsey\Uuid\Uuid;
 
 /**
- * Persists incidents and findings for a DeepDive job. Both tables share
- * tenant_id + deepdive_job_id — RLS policies installed in migration 017
- * keep tenants isolated at the row level.
+ * IncidentRepository: Data access layer for incidents and findings
  *
- * All writes go through a single transaction per persist() call so a
- * mid-way failure (unlikely — schema is tight) leaves the report tables
- * in a consistent state with the job status.
+ * PURPOSE:
+ * Persists correlated incidents and their constituent findings to database
+ * after pipeline evaluation. Handles incident/finding linking, transaction
+ * management, and row-level security (RLS) enforcement via tenant_id.
+ * Transforms in-memory Incident objects into database records.
+ *
+ * DATA MODEL:
+ * Two tables with referential integrity:
+ * 1. deepdive_incidents: Root cause clusters
+ *    - id: UUID primary key
+ *    - deepdive_job_id: Job this incident belongs to
+ *    - tenant_id: Row-level security filter (which tenant owns)
+ *    - priority: Urgency (high/medium/low)
+ *    - actionability: User ability to fix (user_fixable/upgrade/vendor/info)
+ *    - title: Short summary ("RAID Array Degraded")
+ *    - summary: Longer explanation
+ *    - narrative: AI-generated analysis (populated by Narrator)
+ *    - recommended_actions: User-facing remediation steps
+ *    - root_cause_finding_id: FK to findings(id), which finding is root
+ *
+ * 2. deepdive_findings: Individual rule matches
+ *    - id: UUID primary key
+ *    - deepdive_job_id: Job this finding belongs to
+ *    - incident_id: FK to incidents (which cluster this belongs to)
+ *    - tenant_id: Row-level security filter
+ *    - rule_id: Rule that fired ("storage.raid_degraded")
+ *    - rule_version: Rule version (for reproducibility)
+ *    - severity: Impact (info/warn/high/critical)
+ *    - confidence: Match quality (0-100%)
+ *    - actionability: User action (same enum as incident)
+ *    - title: Rule-derived title
+ *    - entities: {device: "md2", ...} for Correlator grouping
+ *    - citations: [{file, line, excerpt, ...}] evidence from logs
+ *    - cause_chain_refs: [finding_id, ...] causal precedents
+ *
+ * INCIDENT→FINDINGS RELATIONSHIP:
+ * One incident contains many findings (typically 1-5):
+ * - Findings are individual rule matches (facts)
+ * - Incident is correlation result (hypothesis of root cause)
+ * - rootCause field points to finding designated root cause
+ * - cause_chain_refs allow tracing fault propagation:
+ *   "storage.smart_pending_sectors → storage.raid_kicked_disk → storage.raid_degraded"
+ *
+ * PERSISTENCE:
+ * persist($jobId, $tenantId, $incidents) → count of rows written
+ * Called after Correlator completes, before Narrator starts.
+ * Atomic transaction: all incidents+findings succeed or all fail.
+ * No partial writes: if one finding insert fails, rollback everything.
+ *
+ * TRANSACTION STRATEGY:
+ * 1. Begin transaction
+ * 2. For each incident:
+ *    a. Generate UUIDs for all findings
+ *    b. Track rootCause finding's UUID
+ *    c. Insert incident row (with root_cause_finding_id)
+ *    d. For each finding, insert row (with incident_id)
+ * 3. Commit transaction (all-or-nothing)
+ * 4. Return total rows written (for logging)
+ *
+ * RLS SECURITY:
+ * Both tables have tenant_id column. PostgreSQL RLS policies ensure:
+ * - Only rows with session_user's tenant_id are visible
+ * - Session-level variable set by middleware
+ * - Application cannot bypass RLS (enforced at database level)
+ * - persist() must provide jobId and tenantId (come from request context)
+ *
+ * TIMING:
+ * persist() called by CorrelateStep after unions are complete.
+ * Does NOT populate narrative or recommended_actions (null values).
+ * Narrator step runs next, queries findings, generates narrative.
+ * RenderStep then fetches incidents+findings for HTML report generation.
+ *
+ * ERROR HANDLING:
+ * Throws exception on SQL error (transaction rollback):
+ * - FK violation: jobId or tenantId mismatches
+ * - Unique constraint: rule_id/severity combination already in table
+ * - Serialization conflict: concurrent updates (rare)
+ * Pipeline catches exception, marks job failed, stops processing.
+ *
+ * IDEMPOTENCY:
+ * NOT idempotent. Calling persist twice creates duplicate rows.
+ * Pipeline ensures single call per job (CorrelateStep → persist → Narrator).
+ * If re-running job, must delete old incident/finding rows first.
+ *
+ * QUERY (After Persistence):
+ * ReportRenderer calls forIncident(incidentId) to fetch findings for report.
+ * IncidentRepository (or separate QueryRepository) provides read access.
+ * Reads can be cached (findings immutable after persist).
+ *
+ * @package App\DeepDive\Services
  */
 final class IncidentRepository
 {

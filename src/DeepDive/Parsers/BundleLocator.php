@@ -9,22 +9,56 @@ use App\DeepDive\Rules\Sources\PdoSqliteSource;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
- * Walks an extracted Synology debug bundle and registers every known
- * logical source into the SourceRegistry so rules can address them by
- * stable name regardless of DSM version quirks or path layout changes.
+ * BundleLocator: Intelligent registry of all data sources in extracted bundle
  *
- * Conventions:
- *   - Rotated log files ("messages", "messages.1", "messages.2", ...) are
- *     collected under a single logical name, ordered oldest → newest so
- *     records appear in chronological order.
- *   - Gzip-compressed rotations (messages.2.gz) are expected to have been
- *     decompressed by DecompressStep; we still try to auto-skip .gz files
- *     here for safety.
- *   - Fact snapshots (/proc/mdstat, df, top) are surfaced via synthetic
- *     streams in SnapshotParsers.
+ * PURPOSE:
+ * Walks extracted Synology debug bundle directory tree and inventories all
+ * available data sources (logs, SQLite databases, /proc snapshots). Registers
+ * sources in a SourceRegistry keyed by stable logical names so rule matchers
+ * can reference sources without knowing DSM version specifics or directory
+ * layout variations.
  *
- * The locator is intentionally defensive: missing files are ignored rather
- * than fatal — most bundles only carry a subset of DSM subsystems.
+ * PROBLEM SOLVED:
+ * Synology bundles have inconsistent layouts:
+ * - DSM 6 vs 7 use different log paths
+ * - Bundles may be nested (dbg_info/{serial}/{timestamp}/var/log/...)
+ * - Rotated logs have version suffixes (.1, .2, .3 or .gz variants)
+ * - Not all subsystems present in every bundle
+ * BundleLocator abstracts these details: rules reference "messages" without
+ * caring where it actually lives or how many rotations exist.
+ *
+ * LOCATOR FUNCTIONS:
+ * 1. Detect all possible filesystem roots (any dir with "var" or "proc")
+ * 2. For each log type in LOG_GLOBS, find all matches across all roots
+ * 3. Collect rotations under single logical name (e.g. "messages.1", "messages.2" → "messages")
+ * 4. Sort rotations chronologically (oldest first) so regex matchers see records in order
+ * 5. Register FileLogSource and PdoSqliteSource objects in central registry
+ * 6. Return populated SourceRegistry for rule evaluation
+ *
+ * LOG SOURCE CONSOLIDATION:
+ * Messages from "messages", "messages.1", "messages.2" are merged into single
+ * logical "messages" source. Rotations are reordered newest→oldest then reversed
+ * to chronological order (oldest first). This allows rules to match across log
+ * rotations seamlessly: "find all disk failures regardless of rotation boundary"
+ *
+ * SQLITE DATABASES:
+ * Located via glob patterns for forensic databases:
+ * - scemd.db: Event logs (fan, thermal, power events)
+ * - synocrond: Scheduled task logs
+ * - smart.db: SMART health and error counters
+ * Each database registered separately, accessible by logical name.
+ *
+ * SNAPSHOT PARSING:
+ * /proc-like files (mdstat, uptime, cpuinfo) are NOT directly registered.
+ * Instead, SnapshotParsers creates synthetic FileLogSource objects that
+ * present fact snapshots as "log records" so matchers work uniformly.
+ *
+ * DEFENSIVE DESIGN:
+ * Missing files don't cause failure - they're simply not registered.
+ * This handles incomplete bundles (missing auth.log, missing SMART db, etc.)
+ * gracefully. Rule matchers handle empty sources (0 matches) without error.
+ *
+ * @package App\DeepDive\Parsers
  */
 final class BundleLocator
 {

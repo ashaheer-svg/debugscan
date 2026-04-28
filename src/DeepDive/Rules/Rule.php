@@ -5,9 +5,54 @@ declare(strict_types=1);
 namespace App\DeepDive\Rules;
 
 /**
- * A single rule loaded from YAML. Rules are pure data — matchers interpret
- * them at evaluation time. Keeping this immutable and array-backed lets us
- * serialise rules into the report for auditability ("what triggered this?").
+ * Rule: Immutable forensic detection rule definition
+ *
+ * PURPOSE:
+ * Represents a single forensic rule loaded from YAML rule files. Rules are pure
+ * data structures - the Evaluator and various matchers interpret them at runtime.
+ * Each rule encodes a forensic hypothesis: "IF evidence matches this pattern,
+ * THEN a system fault exists with this severity and actionability."
+ *
+ * RULE STRUCTURE:
+ * - id: Unique identifier (e.g. "storage.raid_degraded"), used in correlate graph
+ * - version: Integer for rule versioning (allows backwards-compatible updates)
+ * - title: Human-readable rule name ("RAID Array Degraded")
+ * - category: Classification (storage, network, memory, security)
+ * - severity: Impact level (info, warn, high, critical)
+ * - actionability: User ability to fix (user_fixable, upgrade_recommended, vendor_issue, informational)
+ * - signature: Matcher-specific detection logic (regex, sqlite, aggregate, absence)
+ * - entities: Entity extraction templates (e.g. {disk: "$match.disk"} for Correlator)
+ * - description: Long-form explanation of the issue
+ * - remediation: User-facing fix instructions
+ * - tags: Array of keywords for categorization
+ *
+ * SIGNATURE TYPES:
+ * - regex: Pattern matching against log files with named capture groups
+ * - sqlite: SQL query against forensic SQLite databases
+ * - aggregate: Statistical matching (threshold-based windowed counts)
+ * - absence: Negative matching (detect missing expected data)
+ * Each type has specific config in signature{} block interpreted by corresponding matcher.
+ *
+ * ENTITIES (Correlator Input):
+ * Templates like {disk: "$match.disk"} extract facts from match results.
+ * Correlator uses entity values to group findings into incident clusters.
+ * Example: two rules matching with same disk value are clustered together.
+ *
+ * IMMUTABILITY:
+ * Rules are read-only after construction. This enables:
+ * - Safe serialization into reports (evidence of what rules matched)
+ * - Content hashing for rule catalogue versioning (SHA256 of all rules)
+ * - Thread-safe caching in RuleCatalogue
+ *
+ * VALIDATION:
+ * assertValid() called by RuleLoader after construction. Checks:
+ * - ID format (lowercase, digits, dots, underscores only)
+ * - Version >= 1
+ * - Severity in allowed set
+ * - Actionability in allowed set
+ * - Signature type in SIG_TYPES
+ *
+ * @package App\DeepDive\Rules
  */
 final class Rule
 {

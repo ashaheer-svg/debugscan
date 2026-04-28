@@ -5,27 +5,79 @@ declare(strict_types=1);
 namespace App\DeepDive\Rules;
 
 /**
- * Loads every *.yaml / *.yml rule from a directory (recursively) into an
- * addressable catalogue. Duplicate ids are fatal — that's almost always an
- * authoring mistake, and silently preferring one over the other would make
- * rule evaluation nondeterministic.
+ * RuleCatalogue: Load and manage analysis rules from YAML files
  *
- * The catalogue's `version()` is a content hash — two catalogues with
- * identical rule files produce the same string, which we persist on every
- * deepdive_jobs row so a report can be reproduced later.
+ * PURPOSE:
+ * Loads all rule definitions from a directory tree
+ * Provides addressable rule catalogue for evaluation
+ * Maintains version hash for report reproducibility
+ *
+ * RULE LOADING:
+ * Recursively scans directory for *.yaml and *.yml files
+ * Loads each rule via RuleLoader
+ * Enforces unique rule IDs (duplicates are fatal errors)
+ * Maintains alphabetical order for deterministic processing
+ *
+ * DUPLICATE DETECTION:
+ * Same ID in multiple files → RuntimeException
+ * Philosophy: Authoring mistakes must not silently fail
+ * Prevents nondeterministic evaluation
+ *
+ * VERSIONING:
+ * Content hash (SHA256) computed from:
+ * - Rule IDs and versions
+ * - File MD5 checksums
+ * Result: "cat-" + first 12 hex chars
+ *
+ * REPRODUCIBILITY:
+ * Version persisted on every job record
+ * Enables later report reproduction with same rules
+ * If rules change, version changes (breaks reproducibility)
+ *
+ * API:
+ * - all(): Get all Rule objects
+ * - byId(): Fetch single rule
+ * - origin(): Get file path of rule
+ * - count(): Rule count
+ * - version(): Content hash for audit trail
+ *
+ * @package App\DeepDive\Rules
  */
 final class RuleCatalogue
 {
-    /** @var array<string,Rule> */
+    /** @var array<string,Rule> Loaded rules indexed by ID */
     private array $rules = [];
 
-    /** @var array<string,string> id => source file path */
+    /** @var array<string,string> Rule ID -> source file path mapping */
     private array $origins = [];
 
+    /** @var string Content hash for version tracking */
     private string $version = '';
 
+    /**
+     * Constructor: Initialize catalogue with RuleLoader dependency
+     *
+     * @param RuleLoader $loader YAML rule file parser
+     */
     public function __construct(private readonly RuleLoader $loader) {}
 
+    /**
+     * Load all rules from directory tree
+     *
+     * ALGORITHM:
+     * 1. Recursively scan directory for *.yaml / *.yml files
+     * 2. Sort files alphabetically (deterministic order)
+     * 3. For each file:
+     *    - Load rule via RuleLoader
+     *    - Check for duplicate ID (fatal)
+     *    - Store rule and origin path
+     *    - Update hash context
+     * 4. Finalize version hash
+     *
+     * @param string $dir Root directory to scan
+     *
+     * @throws RuntimeException If directory not found or duplicate rule ID
+     */
     public function loadDirectory(string $dir): void
     {
         if (!is_dir($dir)) {

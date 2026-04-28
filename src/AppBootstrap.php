@@ -2,6 +2,39 @@
 
 declare(strict_types=1);
 
+/**
+ * =============================================================================
+ * APPLICATION BOOTSTRAP & CONFIGURATION
+ * =============================================================================
+ *
+ * File: AppBootstrap.php
+ * Purpose: Central application initialization and dependency injection setup
+ *
+ * Responsibilities:
+ * - Load environment configuration from .env file
+ * - Build dependency injection container with all services and controllers
+ * - Configure Slim microframework with middleware stack
+ * - Register all application routes
+ * - Setup system environment (timezone, sessions, storage)
+ * - Initialize database connections and third-party services
+ *
+ * Usage:
+ *   $app = AppBootstrap::create();
+ *   $app->run();
+ *
+ * Key Integrations:
+ * - DI Container (PHP-DI) for dependency management
+ * - Slim Framework for HTTP routing and middleware
+ * - Twig for template rendering
+ * - PDO for database access
+ * - Redis for rate limiting and session management
+ * - DeepDive subsystem (isolated beta feature)
+ *
+ * Architecture Note:
+ * All service definitions follow "constructor injection" pattern - dependencies
+ * are resolved at container build time, making testing and composition explicit.
+ */
+
 namespace App;
 
 use DI\ContainerBuilder;
@@ -34,6 +67,23 @@ use Psr\Http\Message\ResponseFactoryInterface;
 use Slim\Psr7\Factory\ResponseFactory;
 use Psr\Container\ContainerInterface;
 
+/**
+ * AppBootstrap: Central Application Factory
+ *
+ * Static factory class responsible for assembling the complete application.
+ * Orchestrates initialization of all subsystems in dependency order:
+ * 1. Configuration loading (.env)
+ * 2. Dependency container building
+ * 3. Framework initialization
+ * 4. System environment setup
+ * 5. Middleware configuration
+ * 6. Storage directory creation
+ * 7. Route registration
+ *
+ * All methods are static to maintain singleton-like bootstrap behavior.
+ * The `create()` method is the only entry point; it returns a fully-configured
+ * Slim\App instance ready to handle requests.
+ */
 class AppBootstrap
 {
     public static function create(): App

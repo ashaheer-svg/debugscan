@@ -10,65 +10,146 @@ use App\DeepDive\Parsers\TimestampParser;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
- * Walks each extracted bundle, identifies known DSM logical sources
- * (messages, kern.log, scemd, mdstat, df, sqlite artefacts, …) and registers
- * them into a SourceRegistry for the rule evaluator.
+ * Parse Step: Locate data sources and extract hardware specifications
  *
- * Every bundle contributes its sources to the *same* registry so rules can
- * address the whole job's evidence uniformly. This matches how a human
- * analyst reads multiple snapshot files side-by-side.
+ * PURPOSE:
+ * Walks each decompressed debug bundle, identifies known DSM logical sources
+ * (system logs, kernel logs, sqlite databases, etc.) and registers them into
+ * a unified SourceRegistry for rules to query. Also extracts hardware specs.
  *
- * Also emits coarse per-bundle `facts` for the report's "bundles processed"
- * section, preserving the Sprint 1 behaviour.
+ * SEQUENCE:
+ * Executes after DecompressStep (receives decompressed bundles), before EvaluateStep
+ *
+ * DATA SOURCE DISCOVERY:
+ * BundleLocator scans each bundle directory for known file patterns:
+ * - System logs: /var/log/messages, kern.log, scemd, mdstat
+ * - Configuration files: DSM configs, network settings
+ * - Database files: sqlite artefacts
+ * - Hardware info: /proc files, system info
+ *
+ * UNIFIED REGISTRY:
+ * All bundles contribute to the SAME SourceRegistry:
+ * - Enables cross-bundle rule evaluation
+ * - Rules can correlate evidence across multiple snapshot files
+ * - Mimics how analyst reads multiple files side-by-side
+ * - Single registry passed to EvaluateStep
+ *
+ * HARDWARE EXTRACTION:
+ * HardwareSpecExtractor runs on each bundle:
+ * - Extracts CPU, RAM, drives, RAID config, etc.
+ * - Calculates completeness score
+ * - Stores in bundle metadata for report
+ *
+ * BUNDLE FACTS:
+ * For each bundle, generates metadata for report:
+ * - File count, total size, top-level directory listing
+ * - List of data sources found
+ * - Used by report for "bundles processed" section
+ *
+ * @package App\DeepDive\Pipeline
  */
 final class ParseStep implements StepInterface
 {
-    public function id(): string { return 'parse'; }
+    /**
+     * Get step identifier
+     *
+     * @return string 'parse'
+     */
+    public function id(): string
+    {
+        return 'parse';
+    }
 
+    /**
+     * Parse bundles and build unified source registry
+     *
+     * FLOW:
+     * 1. Initialize BundleLocator (identifies known file patterns)
+     * 2. Initialize empty SourceRegistry (will be populated)
+     * 3. For each bundle:
+     *    a. Locate data sources (logs, databases, etc.)
+     *    b. Register all sources into shared registry
+     *    c. Extract hardware specifications
+     *    d. Generate metadata facts for report
+     * 4. Store complete registry for EvaluateStep
+     * 5. Record statistics and complete step
+     *
+     * UNIFIED REGISTRY:
+     * Single SourceRegistry shared across all bundles
+     * Allows rules to correlate across multiple snapshots
+     *
+     * HARDWARE EXTRACTION:
+     * HardwareSpecExtractor analyzes each bundle independently:
+     * - Calculates data completeness scores
+     * - Extracts hardware configuration
+     * - Generates missing/extracted fields lists
+     *
+     * @param PipelineContext $ctx Shared pipeline context
+     *
+     * @return void Populates $ctx->bag['source_registry'] and facts
+     */
     public function run(PipelineContext $ctx): void
     {
         $ctx->startStep($this->id());
 
-        $year     = (int)date('Y');
+        // Initialize parsers and data structures
+        $year     = (int)date('Y'); // Current year for timestamp parsing
         $locator  = new BundleLocator(new TimestampParser($year));
-        $registry = new SourceRegistry();
-        $facts    = [];
+        $registry = new SourceRegistry(); // Unified registry for all bundles
+        $facts    = [];                    // Per-bundle metadata for report
         $hwExtractor = new HardwareSpecExtractor();
 
+        // === Process each bundle ===
         foreach ($ctx->bag['bundles'] as &$bundle) {
+            // Get extracted bundle directory
             $base = $bundle['extracted_path'] ?? null;
             if (!$base || !is_dir($base)) continue;
 
-            // Fold this bundle's sources into the shared registry.
+            // === Locate and register data sources ===
+            // BundleLocator identifies known file patterns (logs, sqlite, etc.)
             $bundleReg = $locator->locate($base);
-            foreach ($bundleReg->allLogs()    as $src) $registry->registerLog($src);
-            foreach ($bundleReg->allSqlite()  as $src) $registry->registerSqlite($src);
 
-            // Extract comprehensive hardware specifications
+            // Add all found logs to unified registry
+            foreach ($bundleReg->allLogs() as $src) {
+                $registry->registerLog($src);
+            }
+
+            // Add all found sqlite databases to unified registry
+            foreach ($bundleReg->allSqlite() as $src) {
+                $registry->registerSqlite($src);
+            }
+
+            // === Extract hardware specifications ===
+            // Analyzes system information in bundle
             $hardwareSpec = $hwExtractor->extract($base);
             $bundle['hardware_spec'] = $hardwareSpec;
+
+            // Store completeness metrics in bundle metadata
             $bundle['data_completeness'] = [
-                'hardware_score' => $hardwareSpec->completenessScore(),
+                'hardware_score'      => $hardwareSpec->completenessScore(),
                 'hardware_assessment' => $hardwareSpec->completenessAssessment(),
-                'extracted_fields' => $hardwareSpec->extractedFields(),
-                'missing_fields' => $hardwareSpec->missingFields(),
+                'extracted_fields'    => $hardwareSpec->extractedFields(),
+                'missing_fields'      => $hardwareSpec->missingFields(),
             ];
 
+            // === Generate per-bundle facts for report ===
             $facts[] = [
-                'debug_file_id'  => $bundle['debug_file_id'],
-                'root'           => basename($base),
-                'file_count'     => $this->countFiles($base),
-                'size_bytes'     => $this->dirSize($base),
-                'top_level'      => $this->topLevel($base),
-                'sources_log'    => array_keys($bundleReg->allLogs()),
-                'sources_sqlite' => array_keys($bundleReg->allSqlite()),
+                'debug_file_id'  => $bundle['debug_file_id'],           // For tracking
+                'root'           => basename($base),                     // Bundle directory name
+                'file_count'     => $this->countFiles($base),            // Total files in bundle
+                'size_bytes'     => $this->dirSize($base),               // Total size
+                'top_level'      => $this->topLevel($base),              // First 20 items in root
+                'sources_log'    => array_keys($bundleReg->allLogs()),   // Log files found
+                'sources_sqlite' => array_keys($bundleReg->allSqlite()), // Databases found
             ];
         }
-        unset($bundle);
+        unset($bundle); // Unset reference to avoid side effects
 
+        // Store results in context for downstream steps
         $ctx->bag['facts']           = $facts;
         $ctx->bag['source_registry'] = $registry;
 
+        // Report step completion with statistics
         $detail = sprintf(
             '%d bundle(s), %d log source(s), %d sqlite source(s)',
             count($facts),
@@ -79,39 +160,84 @@ final class ParseStep implements StepInterface
         $ctx->completeStep($this->id());
     }
 
+    /**
+     * Internal helper: Count total files in directory tree
+     *
+     * ALGORITHM:
+     * Recursively iterates directory tree, counts regular files
+     * Silently catches permission errors (returns partial count)
+     *
+     * @param string $dir Directory path
+     *
+     * @return int Total file count (0 if directory doesn't exist or inaccessible)
+     */
     private function countFiles(string $dir): int
     {
         $n = 0;
         try {
+            // Recursively iterate all files in directory tree
             $iter = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
             );
-            foreach ($iter as $f) if ($f->isFile()) $n++;
-        } catch (\Throwable) { /* swallow */ }
+            foreach ($iter as $f) {
+                if ($f->isFile()) $n++;
+            }
+        } catch (\Throwable) {
+            // Permission error or other issue: return partial count
+        }
         return $n;
     }
 
+    /**
+     * Internal helper: Calculate total directory size
+     *
+     * ALGORITHM:
+     * Recursively iterates all files, sums their sizes
+     * Silently catches permission errors (returns partial size)
+     *
+     * @param string $dir Directory path
+     *
+     * @return int Total size in bytes (0 if directory doesn't exist)
+     */
     private function dirSize(string $dir): int
     {
         $n = 0;
         try {
+            // Recursively iterate all files in directory tree
             $iter = new \RecursiveIteratorIterator(
                 new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS)
             );
             foreach ($iter as $f) {
                 /** @var \SplFileInfo $f */
-                if ($f->isFile()) $n += $f->getSize();
+                if ($f->isFile()) {
+                    $n += $f->getSize();
+                }
             }
-        } catch (\Throwable) { /* swallow */ }
+        } catch (\Throwable) {
+            // Permission error: return partial size
+        }
         return $n;
     }
 
+    /**
+     * Internal helper: Get top-level directory listing
+     *
+     * LIMIT:
+     * Returns first 20 items only (for summary display, not exhaustive)
+     *
+     * @param string $dir Directory path
+     *
+     * @return array Array of top-level item names (files and subdirs)
+     */
     private function topLevel(string $dir): array
     {
         $items = [];
+        // Scan directory (safely handles missing directory with ?:)
         foreach (scandir($dir) ?: [] as $name) {
+            // Skip . and ..
             if ($name === '.' || $name === '..') continue;
             $items[] = $name;
+            // Stop at 20 items (prevents huge listings in reports)
             if (count($items) >= 20) break;
         }
         return $items;

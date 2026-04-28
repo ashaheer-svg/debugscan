@@ -11,12 +11,44 @@ use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface as Handler;
 use Slim\Psr7\Response as SlimResponse;
 
+/**
+ * RateLimitMiddleware: Prevent API abuse via request throttling
+ *
+ * PURPOSE:
+ * Limit requests per IP address within time window
+ * Use Redis for distributed rate limit tracking
+ * Admin users bypass limits (trusted)
+ *
+ * CONFIGURATION:
+ * limit: Max requests per window (default: 60)
+ * window: Time window in seconds (default: 60)
+ *
+ * WORKFLOW:
+ * 1. Extract client IP from REMOTE_ADDR
+ * 2. Check if admin (bypass)
+ * 3. Get counter from Redis (key: "ratelimit:{md5(ip)}")
+ * 4. If counter >= limit: return 429 Too Many Requests
+ * 5. Increment counter, set expiry to window duration
+ * 6. Pass to next handler
+ *
+ * RESPONSE:
+ * 429 status code
+ * JSON body with retry_after (seconds)
+ * Allows client to back off intelligently
+ */
 class RateLimitMiddleware implements MiddlewareInterface
 {
     private RedisClient $redis;
     private int $limit;
     private int $window;
 
+    /**
+     * Constructor: Initialize with Redis client and limits
+     *
+     * @param RedisClient $redis Redis connection
+     * @param int $limit Max requests per window (default: 60)
+     * @param int $window Window duration in seconds (default: 60)
+     */
     public function __construct(RedisClient $redis, int $limit = 60, int $window = 60)
     {
         $this->redis = $redis;
