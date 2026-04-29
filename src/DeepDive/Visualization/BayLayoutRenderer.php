@@ -5,110 +5,84 @@ declare(strict_types=1);
 namespace App\DeepDive\Visualization;
 
 /**
- * BayLayoutRenderer: Visualize drive bay layout and health status
+ * BayLayoutRenderer: Modernized drive bay layout visualization
  *
  * PURPOSE:
- * Generates visual SVG diagrams of drive bay layout for NAS units
- * Shows physical location, drive model, health status, history
- * Color-codes bays by drive health (healthy, warning, failed)
- * Indicates replacement patterns and problem slots
+ * Generates modern SVG diagrams of drive bay layout with:
+ * - Responsive grid layout (adapts to screen width)
+ * - Contemporary visual design (gradients, shadows, modern colors)
+ * - Rich interactive tooltips with detailed drive information
+ * - Enhanced health status indicators and replacement tracking
  *
- * VISUALIZATION:
- * - Grid layout of drive bays (customizable rows/columns)
- * - Color-coded by health: green=healthy, yellow=warning, red=failed
- * - Icons: operational status indicators
- * - Labels: Drive serial, model, health status
- * - Borders: Orange for recent replacement, red for problem slot
+ * VISUALIZATION FEATURES:
+ * - Modern color palette with gradient backgrounds
+ * - Soft shadows and depth effects for visual hierarchy
+ * - Responsive grid (auto-adjust columns based on total bays)
+ * - Enhanced tooltips showing full drive details
+ * - Visual replacement history indicators
+ * - Problem slot highlighting (3+ replacements)
+ * - Health status badges with modern icons
  *
  * HEALTH INDICATORS:
- * - Color: Based on health_status field and bad sector count
- * - Green: Operational, 0 bad sectors
- * - Yellow: Warning (bad sectors detected)
- * - Red: Failed or critically problematic
+ * - Healthy (Green): Operational, 0 bad sectors
+ * - Caution (Amber): Minor issues, 10-50 bad sectors
+ * - Warning (Orange): Moderate issues, 50+ bad sectors
+ * - Critical (Red): Failed or 100+ bad sectors
  *
- * REPLACEMENT TRACKING:
- * - Shows replacement history per drive
- * - Orange border: Recently replaced (< 6 months)
- * - Red border: Problem slot (3+ replacements)
- * - Indicates chronic issues in specific bays
- *
- * CONTAINER SUPPORT:
- * - Main NAS unit
- * - Expansion units with varying bay counts
- * - Customizable bay count and grid layout
- *
- * OUTPUT:
- * SVG string suitable for:
- * - Embedding in HTML reports
- * - Display in browser
- * - Conversion to other formats (PNG, PDF via mPDF)
- * - Direct export to file
+ * INTERACTIVE ELEMENTS:
+ * - Hover: Lift effect with shadow, text emphasis
+ * - Tooltips: Comprehensive drive info on hover
+ * - Color-coded replacement history border
+ * - Problem slot indicator (3+ replacements)
  *
  * @package App\DeepDive\Visualization
  */
 final class BayLayoutRenderer
 {
     /**
-     * Render complete bay layout diagram
+     * Render complete bay layout diagram with modern design
      *
-     * PURPOSE:
-     * Generates SVG diagram showing physical drive layout
-     * Color-codes bays by drive health status
-     * Shows replacement history and problem indicators
-     *
-     * LAYOUT:
-     * - Grid: Rows and columns configurable (default: 4 per row)
-     * - Sizing: Automatic based on bay count
-     * - Each bay shows: Number, drive info, health status
-     * - Legends and color indicators in SVG styles
-     *
-     * DRIVES INPUT:
-     * Array of drive objects with:
-     * - bay: Physical bay number (1-N)
-     * - serial: Drive serial number
-     * - model: Drive model name
-     * - health_status: healthy/warning/failed/unknown
-     * - bad_sectors: Count of bad sectors (0 = healthy)
-     * - installation_date: When installed
-     * - replacement_count: Number of times replaced
-     *
-     * RENDERING:
-     * - Container title and statistics
-     * - Grid of bay rectangles
-     * - Occupied bays show drive info
-     * - Empty bays show number only
-     * - Color and borders indicate health/history
-     *
-     * @param string $containerName Display name (main unit, expansion 1, etc.)
+     * @param string $containerName Display name (main unit, expansion, etc.)
      * @param array $drives List of installed drives with metadata
      * @param int $totalBays Total bay count for container
-     * @param int $columnsPerRow Grid columns (default 4)
+     * @param int $columnsPerRow Grid columns (auto-calculated if 0)
      *
-     * @return string SVG document string ready for embedding/display
+     * @return string SVG document string ready for embedding
      */
     public function renderBayLayout(
         string $containerName,
         array $drives,
         int $totalBays = 12,
-        int $columnsPerRow = 4
+        int $columnsPerRow = 0
     ): string {
-        // Escape containerName for SVG context
         $containerName = htmlspecialchars($containerName, ENT_QUOTES, 'UTF-8');
 
-        $rows = (int)ceil($totalBays / $columnsPerRow);
-        $width = 420;
-        $height = 80 + ($rows * 70);
-        $svgWidth = $width;
-        $svgHeight = $height;
+        // Auto-calculate columns based on bay count for responsiveness
+        if ($columnsPerRow <= 0) {
+            $columnsPerRow = $this->getResponsiveColumns($totalBays);
+        }
 
-        $svg = "<svg viewBox=\"0 0 $svgWidth $svgHeight\" xmlns=\"http://www.w3.org/2000/svg\" class=\"bay-layout\">\n";
+        $rows = (int)ceil($totalBays / $columnsPerRow);
+        $width = 450;
+        $height = 100 + ($rows * 85); // Increased spacing for modern look
+
+        $svg = "<svg viewBox=\"0 0 $width $height\" xmlns=\"http://www.w3.org/2000/svg\" class=\"bay-layout\" style=\"max-width:100%;height:auto;\">\n";
+        $svg .= "<defs>\n";
+        $svg .= $this->getGradientDefinitions();
+        $svg .= $this->getFilterDefinitions();
+        $svg .= "</defs>\n";
         $svg .= "<style>\n";
-        $svg .= $this->getStyles();
+        $svg .= $this->getModernStyles();
         $svg .= "</style>\n";
 
-        // Title
-        $svg .= "<text x=\"15\" y=\"25\" class=\"bay-title\">{$containerName}</text>\n";
-        $svg .= "<text x=\"15\" y=\"45\" class=\"bay-subtitle\">$totalBays Bays - " . count($drives) . " occupied</text>\n";
+        // Background
+        $svg .= "<rect width=\"$width\" height=\"$height\" fill=\"url(#bg-gradient)\" />\n";
+
+        // Title section with modern styling
+        $svg .= "<g class=\"bay-header\">\n";
+        $svg .= "  <text x=\"25\" y=\"35\" class=\"bay-title\">{$containerName}</text>\n";
+        $svg .= "  <text x=\"25\" y=\"55\" class=\"bay-subtitle\">{$totalBays} Bays · " . count($drives) . " occupied</text>\n";
+        $svg .= "</g>\n";
 
         // Create drive mapping
         $driveMap = [];
@@ -116,14 +90,15 @@ final class BayLayoutRenderer
             $driveMap[$drive['bay']] = $drive;
         }
 
-        // Render bays - sleeker compact design
-        $xStart = 20;
-        $yStart = 55;
-        $bayWidth = 85;
-        $bayHeight = 60;
-        $xGap = 12;
-        $yGap = 15;
+        // Render bays with modern spacing
+        $xStart = 25;
+        $yStart = 75;
+        $bayWidth = 95;
+        $bayHeight = 75;
+        $xGap = 15;
+        $yGap = 20;
 
+        $svg .= "<g class=\"bays-grid\">\n";
         for ($bay = 1; $bay <= $totalBays; $bay++) {
             $row = (int)floor(($bay - 1) / $columnsPerRow);
             $col = ($bay - 1) % $columnsPerRow;
@@ -132,11 +107,15 @@ final class BayLayoutRenderer
             $y = $yStart + ($row * ($bayHeight + $yGap));
 
             if (isset($driveMap[$bay])) {
-                $svg .= $this->renderBay($driveMap[$bay], $x, $y, $bayWidth, $bayHeight);
+                $svg .= $this->renderBayModern($driveMap[$bay], $x, $y, $bayWidth, $bayHeight);
             } else {
-                $svg .= $this->renderEmptyBay($bay, $x, $y, $bayWidth, $bayHeight);
+                $svg .= $this->renderEmptyBayModern($bay, $x, $y, $bayWidth, $bayHeight);
             }
         }
+        $svg .= "</g>\n";
+
+        // Modern legend section
+        $svg .= $this->renderLegendModern();
 
         $svg .= "</svg>\n";
 
@@ -144,10 +123,22 @@ final class BayLayoutRenderer
     }
 
     /**
-     * Render a single occupied bay
+     * Auto-calculate responsive column count based on bay count
      */
-    private function renderBay(array $drive, float $x, float $y, float $w, float $h): string {
-        // Type-safe extraction with escaping
+    private function getResponsiveColumns(int $totalBays): int
+    {
+        if ($totalBays <= 4) return 2;
+        if ($totalBays <= 6) return 3;
+        if ($totalBays <= 12) return 4;
+        if ($totalBays <= 16) return 4;
+        return 5;
+    }
+
+    /**
+     * Render modern occupied bay with enhanced styling
+     */
+    private function renderBayModern(array $drive, float $x, float $y, float $w, float $h): string
+    {
         $bay = (int)($drive['bay'] ?? 0);
         $serial = htmlspecialchars((string)($drive['serial'] ?? 'Unknown'), ENT_QUOTES, 'UTF-8');
         $model = htmlspecialchars((string)($drive['model'] ?? ''), ENT_QUOTES, 'UTF-8');
@@ -155,86 +146,360 @@ final class BayLayoutRenderer
         $badSectors = (int)($drive['bad_sectors'] ?? 0);
         $installed = (string)($drive['installation_date'] ?? 'Unknown');
         $replacementCount = (int)($drive['replacement_count'] ?? 0);
+        $isSsd = (bool)($drive['is_ssd'] ?? false);
+        $capacity = (float)($drive['capacity_gb'] ?? 0);
 
-        // Determine color and icon based on health
         $colorClass = $this->getHealthColorClass($healthStatus, $badSectors);
         $icon = $this->getHealthIcon($healthStatus, $badSectors);
 
-        // Check if recently replaced (< 6 months)
-        $recentReplacementBorder = '';
-        if ($replacementCount > 0 && $this->isRecentlyReplaced($installed)) {
-            $recentReplacementBorder = " stroke=\"#FF9800\" stroke-width=\"2\"";
-        }
-
-        // Check if problematic slot (3+ replacements)
-        $problemSlotBorder = '';
+        // Replacement indicators
+        $borderStroke = '';
         if ($replacementCount >= 3) {
-            $problemSlotBorder = " stroke=\"#F44336\" stroke-width=\"1.5\"";
+            $borderStroke = " stroke=\"#dc2626\" stroke-width=\"2.5\" filter=\"url(#problem-shadow)\"";
+        } elseif ($replacementCount > 0 && $this->isRecentlyReplaced($installed)) {
+            $borderStroke = " stroke=\"#f59e0b\" stroke-width=\"2\"";
         }
 
-        $svg = "<g class=\"bay-item\">\n";
+        $svg = "<g class=\"bay-item\" data-bay=\"$bay\" data-health=\"$healthStatus\">\n";
 
-        // Background rectangle
-        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" class=\"bay-bg $colorClass\"{$recentReplacementBorder}{$problemSlotBorder} />\n";
+        // Main background with shadow
+        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" class=\"bay-bg $colorClass\" rx=\"8\" ry=\"8\" filter=\"url(#bay-shadow)\"{$borderStroke} />\n";
 
-        // Bay number (top-left)
-        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 14) . "\" class=\"bay-number\">Slot {$bay}</text>\n";
+        // Bay number badge (top-left)
+        $svg .= "  <rect x=\"" . ($x + 6) . "\" y=\"" . ($y + 6) . "\" width=\"22\" height=\"20\" rx=\"4\" class=\"bay-number-bg\" />\n";
+        $svg .= "  <text x=\"" . ($x + 17) . "\" y=\"" . ($y + 18) . "\" class=\"bay-number\" text-anchor=\"middle\">{$bay}</text>\n";
 
         // Health icon (top-right)
-        $svg .= "  <text x=\"" . ($x + $w - 10) . "\" y=\"" . ($y + 15) . "\" class=\"health-icon\">$icon</text>\n";
+        $svg .= "  <text x=\"" . ($x + $w - 10) . "\" y=\"" . ($y + 18) . "\" class=\"health-icon\" text-anchor=\"end\">{$icon}</text>\n";
 
-        // Serial (middle) - shorter for compact display
-        $shortSerial = strlen($serial) > 10 ? substr($serial, 0, 10) : $serial;
-        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 33) . "\" class=\"bay-serial\">$shortSerial</text>\n";
+        // Drive type indicator
+        $typeLabel = $isSsd ? 'SSD' : 'HDD';
+        $svg .= "  <text x=\"" . ($x + 6) . "\" y=\"" . ($y + 40) . "\" class=\"bay-type\">{$typeLabel}</text>\n";
 
-        // Model (below serial)
-        $shortModel = strlen($model) > 10 ? substr($model, 0, 8) . '...' : $model;
-        $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 45) . "\" class=\"bay-model\">$shortModel</text>\n";
+        // Serial (middle - truncated for space)
+        $shortSerial = strlen($serial) > 11 ? substr($serial, 0, 11) : $serial;
+        $svg .= "  <text x=\"" . ($x + 6) . "\" y=\"" . ($y + 52) . "\" class=\"bay-serial\">{$shortSerial}</text>\n";
 
-        // Bad sectors count if any
+        // Model (smaller text)
+        $shortModel = strlen($model) > 10 ? substr($model, 0, 9) . '…' : $model;
+        $svg .= "  <text x=\"" . ($x + 6) . "\" y=\"" . ($y + 62) . "\" class=\"bay-model\">{$shortModel}</text>\n";
+
+        // Bad sectors indicator if present
         if ($badSectors > 0) {
-            $svg .= "  <text x=\"" . ($x + 5) . "\" y=\"" . ($y + 56) . "\" class=\"bay-sectors\">$badSectors s</text>\n";
+            $badSectorLabel = $badSectors > 99 ? '99+' : (string)$badSectors;
+            $svg .= "  <circle cx=\"" . ($x + $w - 12) . "\" cy=\"" . ($y + $h - 10) . "\" r=\"8\" class=\"bay-sector-badge\" />\n";
+            $svg .= "  <text x=\"" . ($x + $w - 12) . "\" y=\"" . ($y + $h - 6) . "\" class=\"bay-sector-count\" text-anchor=\"middle\">{$badSectorLabel}</text>\n";
         }
 
-        // Tooltip (SVG title for hover) - proper component-level escaping
-        $tooltipParts = [
-            "Slot {$bay}",
-            $serial,
-            $model,
-            "Status: {$healthStatus}",
-            "Installed: {$installed}"
-        ];
+        // Replacement count indicator if applicable
         if ($replacementCount > 0) {
-            $tooltipParts[] = "Replacements: {$replacementCount}";
+            $svg .= "  <text x=\"" . ($x + 6) . "\" y=\"" . ($y + $h - 4) . "\" class=\"replacement-badge\">↻ {$replacementCount}</text>\n";
+        }
+
+        // Rich tooltip with detailed information
+        $tooltipText = "Slot {$bay}\n{$serial}\n{$model} ({$capacity}GB)\n";
+        $tooltipText .= "Status: " . ucfirst($healthStatus) . "\n";
+        $tooltipText .= "Installed: {$installed}\n";
+        if ($replacementCount > 0) {
+            $tooltipText .= "Replaced: {$replacementCount}x\n";
         }
         if ($badSectors > 0) {
-            $tooltipParts[] = "Bad Sectors: {$badSectors}";
+            $tooltipText .= "Bad Sectors: {$badSectors}\n";
         }
-        $tooltip = implode("\n", $tooltipParts);
-        $svg .= "  <title>{$tooltip}</title>\n";
+        $tooltipText .= "Type: {$typeLabel}";
 
+        $svg .= "  <title>{$tooltipText}</title>\n";
         $svg .= "</g>\n";
 
         return $svg;
     }
 
     /**
-     * Render an empty bay
+     * Render modern empty bay
      */
-    private function renderEmptyBay(int $bay, float $x, float $y, float $w, float $h): string {
-        $svg = "<g class=\"bay-item\">\n";
-        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" class=\"bay-bg bay-empty\" stroke=\"#999\" stroke-dasharray=\"5,5\" />\n";
-        $svg .= "  <text x=\"" . ($x + 8) . "\" y=\"" . ($y + 18) . "\" class=\"bay-number\">Slot $bay</text>\n";
-        $svg .= "  <text x=\"" . ($x + 20) . "\" y=\"" . ($y + 40) . "\" class=\"bay-empty-text\">Empty</text>\n";
-        $svg .= "  <title>Bay $bay - Empty</title>\n";
+    private function renderEmptyBayModern(int $bay, float $x, float $y, float $w, float $h): string
+    {
+        $svg = "<g class=\"bay-item empty\" data-bay=\"$bay\">\n";
+        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" class=\"bay-bg bay-empty\" rx=\"8\" ry=\"8\" filter=\"url(#bay-shadow)\" />\n";
+
+        // Bay number
+        $svg .= "  <rect x=\"" . ($x + 6) . "\" y=\"" . ($y + 6) . "\" width=\"22\" height=\"20\" rx=\"4\" class=\"bay-number-bg-empty\" />\n";
+        $svg .= "  <text x=\"" . ($x + 17) . "\" y=\"" . ($y + 18) . "\" class=\"bay-number-empty\" text-anchor=\"middle\">{$bay}</text>\n";
+
+        // Empty indicator
+        $svg .= "  <text x=\"" . ($x + $w / 2) . "\" y=\"" . ($y + $h / 2 + 5) . "\" class=\"bay-empty-text\" text-anchor=\"middle\">Empty</text>\n";
+        $svg .= "  <title>Bay {$bay} - Empty</title>\n";
         $svg .= "</g>\n";
+
         return $svg;
     }
 
     /**
-     * Get CSS color class based on health status
+     * Render modern legend section
      */
-    private function getHealthColorClass(string $status, int $badSectors): string {
+    private function renderLegendModern(): string
+    {
+        return <<<'SVG'
+<g class="legend" transform="translate(25, 0)">
+  <text x="0" y="-10" class="legend-title">Health Status</text>
+  <g transform="translate(0, 0)">
+    <rect x="0" y="0" width="14" height="14" rx="2" fill="url(#grad-healthy)" />
+    <text x="20" y="12" class="legend-item">Healthy</text>
+  </g>
+  <g transform="translate(120, 0)">
+    <rect x="0" y="0" width="14" height="14" rx="2" fill="url(#grad-caution)" />
+    <text x="20" y="12" class="legend-item">Caution</text>
+  </g>
+  <g transform="translate(240, 0)">
+    <rect x="0" y="0" width="14" height="14" rx="2" fill="url(#grad-warning)" />
+    <text x="20" y="12" class="legend-item">Warning</text>
+  </g>
+  <g transform="translate(350, 0)">
+    <rect x="0" y="0" width="14" height="14" rx="2" fill="url(#grad-critical)" />
+    <text x="20" y="12" class="legend-item">Critical</text>
+  </g>
+</g>
+SVG;
+    }
+
+    /**
+     * SVG gradient definitions for modern look
+     */
+    private function getGradientDefinitions(): string
+    {
+        return <<<'SVG'
+<linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+  <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+  <stop offset="100%" style="stop-color:#f1f5f9;stop-opacity:1" />
+</linearGradient>
+<linearGradient id="grad-healthy" x1="0%" y1="0%" x2="0%" y2="100%">
+  <stop offset="0%" style="stop-color:#10b981;stop-opacity:1" />
+  <stop offset="100%" style="stop-color:#059669;stop-opacity:1" />
+</linearGradient>
+<linearGradient id="grad-caution" x1="0%" y1="0%" x2="0%" y2="100%">
+  <stop offset="0%" style="stop-color:#fcd34d;stop-opacity:1" />
+  <stop offset="100%" style="stop-color:#f59e0b;stop-opacity:1" />
+</linearGradient>
+<linearGradient id="grad-warning" x1="0%" y1="0%" x2="0%" y2="100%">
+  <stop offset="0%" style="stop-color:#fb923c;stop-opacity:1" />
+  <stop offset="100%" style="stop-color:#ea580c;stop-opacity:1" />
+</linearGradient>
+<linearGradient id="grad-critical" x1="0%" y1="0%" x2="0%" y2="100%">
+  <stop offset="0%" style="stop-color:#f87171;stop-opacity:1" />
+  <stop offset="100%" style="stop-color:#dc2626;stop-opacity:1" />
+</linearGradient>
+SVG;
+    }
+
+    /**
+     * SVG filter definitions for shadows and effects
+     */
+    private function getFilterDefinitions(): string
+    {
+        return <<<'SVG'
+<filter id="bay-shadow" x="-50%" y="-50%" width="200%" height="200%">
+  <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12" flood-color="#000" />
+</filter>
+<filter id="problem-shadow" x="-50%" y="-50%" width="200%" height="200%">
+  <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.2" flood-color="#dc2626" />
+</filter>
+SVG;
+    }
+
+    /**
+     * Get modern CSS styles
+     */
+    private function getModernStyles(): string
+    {
+        return <<<'CSS'
+.bay-layout {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.bay-header {
+    pointer-events: none;
+}
+
+.bay-title {
+    font-size: 18px;
+    font-weight: 700;
+    fill: #1e293b;
+    letter-spacing: -0.3px;
+}
+
+.bay-subtitle {
+    font-size: 12px;
+    fill: #64748b;
+    font-weight: 500;
+    letter-spacing: -0.1px;
+}
+
+.bays-grid {
+    pointer-events: auto;
+}
+
+.bay-item {
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bay-item:hover {
+    transform: translateY(-2px);
+}
+
+.bay-item:hover .bay-bg {
+    opacity: 0.95;
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.15)) !important;
+}
+
+.bay-item:hover .bay-number,
+.bay-item:hover .bay-serial,
+.bay-item:hover .bay-model {
+    font-weight: 700;
+}
+
+.bay-bg {
+    stroke-width: 1.5;
+    transition: all 0.3s ease;
+}
+
+.bay-healthy {
+    fill: url(#grad-healthy);
+    stroke: #059669;
+}
+
+.bay-caution {
+    fill: url(#grad-caution);
+    stroke: #d97706;
+}
+
+.bay-warning {
+    fill: url(#grad-warning);
+    stroke: #c2410c;
+}
+
+.bay-critical {
+    fill: url(#grad-critical);
+    stroke: #991b1b;
+}
+
+.bay-empty {
+    fill: #e2e8f0;
+    stroke: #cbd5e1;
+    stroke-dasharray: 4,3;
+}
+
+.bay-number-bg {
+    fill: rgba(255, 255, 255, 0.25);
+    stroke: rgba(255, 255, 255, 0.4);
+    stroke-width: 0.5;
+}
+
+.bay-number-bg-empty {
+    fill: rgba(0, 0, 0, 0.05);
+    stroke: rgba(0, 0, 0, 0.1);
+    stroke-width: 0.5;
+}
+
+.bay-number {
+    font-size: 11px;
+    font-weight: 700;
+    fill: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.bay-number-empty {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #64748b;
+    text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+}
+
+.bay-type {
+    font-size: 8px;
+    fill: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    opacity: 0.85;
+}
+
+.bay-serial {
+    font-size: 9px;
+    fill: white;
+    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+    letter-spacing: -0.2px;
+}
+
+.bay-model {
+    font-size: 8px;
+    fill: white;
+    font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.bay-sector-badge {
+    fill: rgba(0, 0, 0, 0.2);
+    stroke: rgba(255, 255, 255, 0.3);
+    stroke-width: 0.5;
+}
+
+.bay-sector-count {
+    font-size: 10px;
+    fill: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.replacement-badge {
+    font-size: 8px;
+    fill: white;
+    font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.bay-empty-text {
+    font-size: 13px;
+    fill: #94a3b8;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+}
+
+.health-icon {
+    font-size: 16px;
+    fill: white;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    font-weight: 700;
+}
+
+.legend {
+    font-size: 11px;
+    fill: #475569;
+    font-weight: 500;
+}
+
+.legend-title {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #1e293b;
+    letter-spacing: -0.2px;
+}
+
+.legend-item {
+    font-size: 10px;
+    fill: #475569;
+    font-weight: 500;
+}
+
+CSS;
+    }
+
+    /**
+     * Get health color class
+     */
+    private function getHealthColorClass(string $status, int $badSectors): string
+    {
         if ($status === 'critical' || $badSectors > 100) {
             return 'bay-critical';
         } elseif ($status === 'warning' || $badSectors > 50) {
@@ -246,15 +511,16 @@ final class BayLayoutRenderer
     }
 
     /**
-     * Get health icon/emoji based on status
+     * Get modern health icon
      */
-    private function getHealthIcon(string $status, int $badSectors): string {
+    private function getHealthIcon(string $status, int $badSectors): string
+    {
         if ($status === 'critical' || $badSectors > 100) {
             return '✕';
         } elseif ($status === 'warning' || $badSectors > 50) {
             return '⚠';
         } elseif ($status === 'caution' || $badSectors > 10) {
-            return '⚠';
+            return '!';
         }
         return '✓';
     }
@@ -262,7 +528,8 @@ final class BayLayoutRenderer
     /**
      * Check if drive was installed recently (< 6 months)
      */
-    private function isRecentlyReplaced(string $dateStr): bool {
+    private function isRecentlyReplaced(string $dateStr): bool
+    {
         if (!$dateStr || $dateStr === 'Unknown') {
             return false;
         }
@@ -278,107 +545,5 @@ final class BayLayoutRenderer
         } catch (\Throwable $e) {
             return false;
         }
-    }
-
-    /**
-     * Get CSS styles for bay layout
-     */
-    private function getStyles(): string {
-        return <<<'CSS'
-.bay-layout {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    padding: 10px;
-}
-
-.bay-title {
-    font-size: 18px;
-    font-weight: bold;
-    fill: #333;
-}
-
-.bay-subtitle {
-    font-size: 12px;
-    fill: #666;
-}
-
-.bay-item {
-    cursor: pointer;
-    transition: opacity 0.2s;
-}
-
-.bay-item:hover rect {
-    opacity: 0.8;
-}
-
-.bay-bg {
-    rx: 4;
-    ry: 4;
-}
-
-.bay-healthy {
-    fill: #4CAF50;
-    stroke: #2E7D32;
-    stroke-width: 1;
-}
-
-.bay-caution {
-    fill: #FFC107;
-    stroke: #F57F17;
-    stroke-width: 1;
-}
-
-.bay-warning {
-    fill: #FF9800;
-    stroke: #E65100;
-    stroke-width: 2;
-}
-
-.bay-critical {
-    fill: #F44336;
-    stroke: #B71C1C;
-    stroke-width: 2;
-}
-
-.bay-empty {
-    fill: #EEEEEE;
-    stroke: #999;
-}
-
-.bay-number {
-    font-size: 10px;
-    font-weight: bold;
-    fill: white;
-}
-
-.bay-serial {
-    font-size: 9px;
-    fill: white;
-    font-family: monospace;
-}
-
-.bay-model {
-    font-size: 8px;
-    fill: white;
-}
-
-.bay-sectors {
-    font-size: 8px;
-    fill: white;
-    font-weight: bold;
-}
-
-.bay-empty-text {
-    font-size: 12px;
-    fill: #999;
-    font-weight: bold;
-}
-
-.health-icon {
-    font-size: 18px;
-    fill: white;
-}
-
-CSS;
     }
 }

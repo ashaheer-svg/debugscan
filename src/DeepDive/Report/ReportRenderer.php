@@ -1307,6 +1307,14 @@ h4{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;ma
 .hw-status-healthy{background:#d1fae5;color:#047857}
 .hw-status-warning{background:#fef3c7;color:#b45309}
 .hw-status-critical{background:#fee2e2;color:#dc2626}
+.bay-layout-container{margin:20px 0;padding:15px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0}
+.bay-layout-legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-top:20px;padding:15px;background:#fff;border-radius:8px;border:1px solid #e2e8f0}
+.bay-legend-item{display:flex;gap:12px;align-items:flex-start;padding:10px;background:#f9fafb;border-radius:6px;border:1px solid #f1f5f9;transition:all .2s ease}
+.bay-legend-item:hover{background:#f1f5f9;border-color:#e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+.bay-legend-color{width:40px;height:40px;border-radius:6px;flex-shrink:0;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+.bay-legend-item div:last-child{flex:1}
+.bay-legend-item strong{display:block;color:#1e293b;font-size:13px;margin-bottom:2px}
+.bay-legend-item p{margin:0;color:#64748b;font-size:11px;line-height:1.4}
 CSS;
     }
 
@@ -1377,14 +1385,12 @@ CSS;
 
         $html .= '</div>';
 
-        // Add legend
-        $html .= '<div style="margin-top: 15px; padding: 10px; background: #f9fafb; border-radius: 4px; font-size: 12px;">';
-        $html .= '<strong>Bay Status Legend:</strong><br>';
-        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #4CAF50; border-radius: 2px; margin-right: 5px;"></span>Healthy</span>';
-        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #FFC107; border-radius: 2px; margin-right: 5px;"></span>Caution (10-50 sectors)</span>';
-        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #FF9800; border-radius: 2px; margin-right: 5px;"></span>Warning (50+ sectors)</span>';
-        $html .= '<span style="display: inline-block; margin-right: 15px;"><span style="display: inline-block; width: 15px; height: 15px; background: #F44336; border-radius: 2px; margin-right: 5px;"></span>Critical (100+ sectors)</span>';
-        $html .= '<span style="display: inline-block;"><span style="display: inline-block; width: 15px; height: 15px; background: #EEEEEE; border: 1px dashed #999; border-radius: 2px; margin-right: 5px;"></span>Empty Bay</span>';
+        // Modern legend with better visual design
+        $html .= '<div class="bay-layout-legend">';
+        $html .= '<div class="bay-legend-item"><div class="bay-legend-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div><div><strong>Healthy</strong><p>Operational, 0 bad sectors</p></div></div>';
+        $html .= '<div class="bay-legend-item"><div class="bay-legend-color" style="background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);"></div><div><strong>Caution</strong><p>Minor issues, 10-50 sectors</p></div></div>';
+        $html .= '<div class="bay-legend-item"><div class="bay-legend-color" style="background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);"></div><div><strong>Warning</strong><p>Moderate issues, 50+ sectors</p></div></div>';
+        $html .= '<div class="bay-legend-item"><div class="bay-legend-color" style="background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);"></div><div><strong>Critical</strong><p>Failed or 100+ sectors</p></div></div>';
         $html .= '</div>';
 
         return $html;
