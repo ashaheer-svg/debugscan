@@ -268,7 +268,7 @@ final class ReportAISettingsController
                 <div style="margin-bottom: 20px;">
                     <label><strong>Token Budget Per Bundle</strong></label>
                     <input type="number" name="token_budget"
-                           value="<?php echo htmlspecialchars($settings['token_budget']); ?>"
+                           value="<?php echo htmlspecialchars((string)$settings['token_budget']); ?>"
                            min="5000" max="15000" step="1000"
                            style="width: 150px; padding: 8px; margin-top: 5px;">
                     <p style="color: #666; font-size: 13px; margin: 5px 0 0 0;">
@@ -327,7 +327,7 @@ final class ReportAISettingsController
                 <div style="margin-bottom: 20px;">
                     <label><strong>Minimum Confidence for Display</strong></label>
                     <input type="number" name="min_confidence"
-                           value="<?php echo htmlspecialchars($settings['min_confidence']); ?>"
+                           value="<?php echo htmlspecialchars((string)$settings['min_confidence']); ?>"
                            min="0" max="1" step="0.05"
                            style="width: 100px; padding: 8px; margin-top: 5px;">
                     <p style="color: #666; font-size: 13px; margin: 5px 0 0 0;">
