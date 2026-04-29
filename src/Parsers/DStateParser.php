@@ -22,7 +22,7 @@ namespace App\Parsers;
  * - Device driver bug
  *
  * DETECTION:
- * Scans /proc/*/stat files - looks for processes in D-state. Extracts:
+ * Scans /proc/{pid}/stat files - looks for processes in D-state. Extracts:
  * - process_name: Command name
  * - pid: Process ID
  * - wait_channel: Kernel function where blocked
@@ -36,8 +36,8 @@ namespace App\Parsers;
  * D-state + hung tasks warnings: Kernel detecting deadlock
  *
  * DATA SOURCES:
- * /proc/*/stat: Process state information
- * /proc/*/wchan: Where process is waiting
+ * /proc/{pid}/stat: Process state information
+ * /proc/{pid}/wchan: Where process is waiting
  * dmesg: Kernel messages about stuck processes
  *
  * @package App\Parsers
