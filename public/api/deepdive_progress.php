@@ -1,5 +1,8 @@
 <?php
 
+use App\Database;
+use App\DeepDive\Services\JobRepository;
+
 header('Content-Type: application/json');
 
 try {
@@ -14,9 +17,6 @@ try {
 
     // Load app
     require __DIR__ . '/../../vendor/autoload.php';
-
-    use App\Database;
-    use App\DeepDive\Services\JobRepository;
 
     // Get database connection
     $pdo = Database::getConnection();

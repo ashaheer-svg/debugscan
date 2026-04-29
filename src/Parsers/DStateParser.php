@@ -22,7 +22,7 @@ namespace App\Parsers;
  * - Device driver bug
  *
  * DETECTION:
- * Scans /proc/*/stat files for 'D' state flag. Extracts:
+ * Scans /proc/*/stat files - looks for processes in D-state. Extracts:
  * - process_name: Command name
  * - pid: Process ID
  * - wait_channel: Kernel function where blocked
