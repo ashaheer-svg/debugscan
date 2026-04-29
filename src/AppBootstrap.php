@@ -426,6 +426,12 @@ class AppBootstrap
             $group->post('admin/report-plans/save', [AdminController::class, 'saveReportPlan']);
             $group->post('admin/report-plans/delete', [AdminController::class, 'deleteReportPlan']);
 
+            // DeepDive Report AI Settings
+            $group->get('admin/deepdive-report-ai', [AdminController::class, 'deepdiveReportAiSettings']);
+            $group->post('admin/api/deepdive-report-ai/settings', [AdminController::class, 'updateDeepDiveReportAiSettings']);
+            $group->get('admin/api/deepdive-report-ai/models', [AdminController::class, 'getDeepDiveModels']);
+            $group->post('admin/api/deepdive-report-ai/test-zai', [AdminController::class, 'testDeepDiveZaiConnection']);
+
             // --- DeepDive routes (isolated; remove this block to disable feature) ---
             $group->post('deepdive/start/{projectId}',         [\App\DeepDive\Controllers\JobController::class, 'start']);
             $group->get ('deepdive/view/{id}',                 [\App\DeepDive\Controllers\JobController::class, 'view']);

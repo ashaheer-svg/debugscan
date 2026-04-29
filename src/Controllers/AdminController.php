@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Services\AiService;
 use App\Services\MailService;
+use App\DeepDive\Admin\ReportAISettingsController;
 use PDO;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -1041,6 +1042,100 @@ class AdminController
         }
 
         return $response->withHeader('Location', $this->basePath . '/admin/settings')->withStatus(302);
+    }
+
+    /**
+     * DeepDive Report AI Settings Admin Interface
+     *
+     * PURPOSE:
+     * Provides admin access to configure DeepDive report AI analysis settings
+     * Manages token budget, model selection, Z.ai integration, and confidence thresholds
+     * Separate from general system settings (isolated configuration)
+     *
+     * FEATURES:
+     * - Enable/disable AI analysis
+     * - Configure token budget (5K-15K per bundle)
+     * - Select Z.ai API and model
+     * - Test Z.ai connection
+     * - Configure confidence thresholds
+     * - Set error handling policy
+     *
+     * @param Request $request HTTP request
+     * @param Response $response HTTP response
+     *
+     * @return Response HTML response with settings interface
+     */
+    public function deepdiveReportAiSettings(Request $request, Response $response): Response
+    {
+        // Get tenant ID from session (for multi-tenant context)
+        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $logger = null;
+
+        // Initialize the settings controller
+        $controller = new ReportAISettingsController($this->pdo, $tenantId, $logger);
+
+        // Render the admin HTML directly
+        $html = $controller->getAdminHTML();
+
+        // Wrap in admin layout template
+        $body = $this->view->render('admin/deepdive_ai_settings.twig', [
+            'settings_html' => $html,
+            'active_page' => 'admin_deepdive_ai'
+        ]);
+
+        $response->getBody()->write($body);
+        return $response;
+    }
+
+    /**
+     * API: Update DeepDive Report AI Settings
+     *
+     * POST endpoint for updating settings via admin panel
+     */
+    public function updateDeepDiveReportAiSettings(Request $request, Response $response): Response
+    {
+        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $logger = null;
+
+        $controller = new ReportAISettingsController($this->pdo, $tenantId, $logger);
+        $result = $controller->updateSettings($request->getParsedBody());
+
+        // Log the change
+        $this->logAction($request, 'deepdive_ai_settings_updated', 'deepdive_report_ai_settings', null, [
+            'ai_enabled' => $result['settings']['ai_enabled'] ?? null,
+            'token_budget' => $result['settings']['token_budget'] ?? null,
+            'model' => $result['settings']['model'] ?? null,
+            'use_zai' => $result['settings']['use_zai'] ?? null,
+        ], $tenantId);
+
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * API: Get available Z.ai models
+     */
+    public function getDeepDiveModels(Request $request, Response $response): Response
+    {
+        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $controller = new ReportAISettingsController($this->pdo, $tenantId, null);
+        $result = $controller->getAvailableModels();
+
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
+
+    /**
+     * API: Test Z.ai connection
+     */
+    public function testDeepDiveZaiConnection(Request $request, Response $response): Response
+    {
+        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $controller = new ReportAISettingsController($this->pdo, $tenantId, null);
+        $result = $controller->testZaiConnection();
+
+        $response->getBody()->write(json_encode($result));
+        return $response->withHeader('Content-Type', 'application/json');
     }
 
     public function scans(Request $request, Response $response): Response
