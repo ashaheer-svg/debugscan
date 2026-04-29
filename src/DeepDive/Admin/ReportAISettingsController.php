@@ -415,7 +415,10 @@ final class ReportAISettingsController
                         return;
                     }
 
-                    const headers = {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken};
+                    // Add CSRF token to the request body (Slim's CSRF Guard checks this for JSON)
+                    data.__csrf = csrfToken;
+
+                    const headers = {'Content-Type': 'application/json'};
 
                     const response = await fetch('/admin/api/deepdive-report-ai/settings', {
                         method: 'POST',
