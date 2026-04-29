@@ -24,12 +24,17 @@
 
 <script>
 // Inject CSRF token directly (from Twig global)
+// Slim expects BOTH the token name field AND the token value field
 window.CSRF_TOKEN = {
-    name: '{{ csrf.keys.name|default('__csrf') }}',
-    value: '{{ csrf.value|default('') }}'
+    nameField: '{{ csrf.keys.name|default('csrf_name') }}',     // Field name for the token name (e.g., 'csrf_name')
+    nameValue: '{{ csrf.name|default('') }}',                     // Actual token name value
+    valueField: '{{ csrf.keys.value|default('csrf_value') }}',   // Field name for the token value (e.g., 'csrf_value')
+    value: '{{ csrf.value|default('') }}'                         // Actual token value
 };
 console.log('CSRF Token loaded:', {
-    name: window.CSRF_TOKEN.name,
+    nameField: window.CSRF_TOKEN.nameField,
+    nameValue: window.CSRF_TOKEN.nameValue ? window.CSRF_TOKEN.nameValue.substring(0, 10) + '...' : 'EMPTY',
+    valueField: window.CSRF_TOKEN.valueField,
     value: window.CSRF_TOKEN.value ? window.CSRF_TOKEN.value.substring(0, 10) + '...' : 'EMPTY'
 });
 </script>

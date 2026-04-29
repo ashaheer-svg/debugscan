@@ -407,18 +407,17 @@ final class ReportAISettingsController
                 status.textContent = 'Saving...';
 
                 try {
-                    const csrfToken = getCsrfToken();
-                    if (!csrfToken) {
+                    // Slim's CSRF Guard expects BOTH fields: token name and token value
+                    if (!window.CSRF_TOKEN || !window.CSRF_TOKEN.value) {
                         status.textContent = '✗ Error: CSRF token not found';
                         status.style.color = '#ef4444';
                         console.error('CSRF token not found in page');
                         return;
                     }
 
-                    // Add CSRF token to the request body using the correct field name
-                    // The field name comes from window.CSRF_TOKEN.name (e.g., 'csrf_name')
-                    const csrfFieldName = window.CSRF_TOKEN?.name || 'csrf_name';
-                    data[csrfFieldName] = csrfToken;
+                    // Add both CSRF fields (Slim requires both)
+                    data[window.CSRF_TOKEN.nameField] = window.CSRF_TOKEN.nameValue;
+                    data[window.CSRF_TOKEN.valueField] = window.CSRF_TOKEN.value;
 
                     const headers = {'Content-Type': 'application/json'};
 
@@ -455,11 +454,11 @@ final class ReportAISettingsController
                 btn.disabled = true;
                 btn.textContent = 'Testing...';
                 try {
-                    const csrfToken = getCsrfToken();
-                    const csrfFieldName = window.CSRF_TOKEN?.name || 'csrf_name';
+                    // Send both CSRF fields
                     const body = {};
-                    if (csrfToken) {
-                        body[csrfFieldName] = csrfToken;
+                    if (window.CSRF_TOKEN && window.CSRF_TOKEN.value) {
+                        body[window.CSRF_TOKEN.nameField] = window.CSRF_TOKEN.nameValue;
+                        body[window.CSRF_TOKEN.valueField] = window.CSRF_TOKEN.value;
                     }
 
                     const response = await fetch('/admin/api/deepdive-report-ai/test-zai', {
