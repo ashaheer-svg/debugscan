@@ -1,6 +1,0 @@
-Filename				Type		Size	Used	Priority
-/dev/md1                                partition	2097084	0	-1
-/dev/zram0                              partition	2427900	33876	1
-/dev/zram1                              partition	2427900	33812	1
-/dev/zram2                              partition	2427900	33940	1
-/dev/zram3                              partition	2427900	33968	1

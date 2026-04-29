@@ -1,9 +1,0 @@
-Filesystem       1K-blocks        Used  Available Use% Mounted on
-/dev/md0           2385528     1212532    1054212  54% /
-none               8054508           0    8054508   0% /dev
-/tmp               8091892         812    8091080   1% /tmp
-/run               8091892        4828    8087064   1% /run
-/dev/shm           8091892           4    8091888   1% /dev/shm
-none                     4           0          4   0% /sys/fs/cgroup
-cgmfs                  100           0        100   0% /run/cgmanager/fs
-/dev/md2       14984434732 12283318904 2701115828  82% /volume1

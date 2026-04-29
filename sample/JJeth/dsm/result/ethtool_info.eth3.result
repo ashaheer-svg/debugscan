@@ -1,9 +1,0 @@
-driver: igb
-version: 5.3.5.3
-firmware-version: 3.25, 0x800005cf
-bus-info: 0000:09:00.0
-supports-statistics: yes
-supports-test: yes
-supports-eeprom-access: yes
-supports-register-dump: yes
-supports-priv-flags: no

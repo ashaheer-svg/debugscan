@@ -1,1 +1,0 @@
-root=/dev/md0 ihd_num=0 netif_num=4 ahci_remap=0>12:12>0:1>13:13>1:2>14:14>2:3>15:15>3:4>16:16>4:5>17:17>5:6>18:18>6:7>19:19>7 mv14xx_remap=0>0 opt_pci_slot=000000032,000000010 acpi_enforce_resources=lax syno_hw_version=RS3617rpxs vender_format_version=2 sn=1780NTN143500 macs=0011327b7421,0011327b7422,0011327b7423,0011327b7424
