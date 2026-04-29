@@ -129,11 +129,13 @@ final class ReportAISettings
         $this->ensureTableExists();
 
         try {
+            // PostgreSQL syntax for upsert
             $stmt = $this->pdo->prepare("
                 INSERT INTO deepdive_report_ai_settings
                 (tenant_id, setting_name, setting_value, updated_at)
                 VALUES (:tenant_id, :setting_name, :setting_value, NOW())
-                ON DUPLICATE KEY UPDATE
+                ON CONFLICT (tenant_id, setting_name)
+                DO UPDATE SET
                     setting_value = :setting_value,
                     updated_at = NOW()
             ");
@@ -274,17 +276,19 @@ final class ReportAISettings
     private function ensureTableExists(): void
     {
         try {
+            // PostgreSQL syntax
             $this->pdo->exec("
                 CREATE TABLE IF NOT EXISTS deepdive_report_ai_settings (
-                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    id SERIAL PRIMARY KEY,
                     tenant_id VARCHAR(255) NOT NULL,
                     setting_name VARCHAR(255) NOT NULL,
-                    setting_value LONGTEXT NOT NULL,
+                    setting_value TEXT NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                    UNIQUE KEY unique_tenant_setting (tenant_id, setting_name),
-                    KEY idx_tenant (tenant_id)
-                )
+                    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE (tenant_id, setting_name)
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_tenant ON deepdive_report_ai_settings(tenant_id);
             ");
         } catch (\Throwable $e) {
             $this->log('warning', 'Failed to ensure table exists: ' . $e->getMessage());
