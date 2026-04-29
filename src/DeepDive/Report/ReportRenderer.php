@@ -129,6 +129,16 @@ final class ReportRenderer
 
         $summary = $this->summaryBlock($incidents);
 
+        // Add volume cards section after summary
+        $volumeCards = '';
+        foreach (($context['bundles'] ?? []) as $b) {
+            $hw = $b['hardware_spec'] ?? null;
+            if ($hw !== null) {
+                $volumeCards = $this->renderVolumeCards($hw);
+                break; // Use first bundle's volumes
+            }
+        }
+
         $grouped = $this->groupByActionability($incidents);
         $body    = '';
         foreach (self::ACTIONABILITY_ORDER as $key => $meta) {
@@ -156,6 +166,7 @@ final class ReportRenderer
 {$head}
 {$hardware}
 {$summary}
+{$volumeCards}
 {$body}
 {$appendix}
 </main>
@@ -223,7 +234,24 @@ HTML;
             ? "Showing events from the last {$days} days only. Older events are excluded from this report."
             : "Showing all events regardless of age (date filter disabled).";
         $window = htmlspecialchars($window, ENT_QUOTES);
-        return <<<HTML
+
+        // Status indicator at top
+        $statusIcon = $total === 0 ? '✓' : '⚠';
+        $statusClass = $total === 0 ? 'status-icon' : 'status-icon critical';
+        $statusTitle = $total === 0 ? 'Healthy' : ($byPri['P1'] > 0 ? 'Critical' : 'Warning');
+        $statusText = $total === 0 ? 'System is healthy.' : "Found {$total} {$totalLabel} that need attention.";
+
+        $statusHtml = <<<STATUS
+<div class="status-card">
+  <div class="{$statusClass}">{$statusIcon}</div>
+  <div class="status-content">
+    <h3>{$statusTitle}</h3>
+    <p>{$statusText}</p>
+  </div>
+</div>
+STATUS;
+
+        return $statusHtml . <<<HTML
 <section class="summary">
   <h2>Executive summary</h2>
   <div class="summary-row">
@@ -425,7 +453,58 @@ HTML;
 
     /** @param array<string,mixed> $c */
     /**
-     * TIER 1: Volume and RAID detail tables
+     * TIER 1: Volume usage cards (main report section)
+     */
+    private function renderVolumeCards(object $hwSpec): string
+    {
+        $volumes = $hwSpec->volumes ?? [];
+        if (empty($volumes)) {
+            return '';
+        }
+
+        $cards = '';
+        $count = 0;
+        foreach ($volumes as $vol) {
+            if ($count >= 4) break; // Show max 4 volumes in main report
+            $count++;
+
+            $name = htmlspecialchars((string)($vol['name'] ?? ''), ENT_QUOTES);
+            $pool = htmlspecialchars((string)($vol['pool_id'] ?? 'Storage Pool 1'), ENT_QUOTES);
+            $total = (float)($vol['total_gb'] ?? 0);
+            $used = (float)($vol['used_gb'] ?? 0);
+            $pct = (int)($vol['usage_percent'] ?? 0);
+
+            $cards .= <<<CARD
+<div class="volume-card">
+  <div class="volume-icon">📦</div>
+  <div class="volume-info">
+    <div class="volume-info-title">{$name}</div>
+    <div class="volume-info-pool">{$pool}</div>
+  </div>
+  <div style="flex:1"></div>
+  <div style="min-width:80px">
+    <div class="volume-progress">
+      <div class="volume-progress-bar" style="width:{$pct}%"></div>
+    </div>
+  </div>
+  <div class="volume-stats">
+    <div class="volume-stats-usage">{$used}GB / {$total}GB</div>
+    <div class="volume-stats-text">{$pct}%</div>
+  </div>
+</div>
+CARD;
+        }
+
+        return <<<HTML
+<section class="volume-usage">
+  <h4>Volume Usage</h4>
+  <div class="volume-grid">{$cards}</div>
+</section>
+HTML;
+    }
+
+    /**
+     * TIER 1: Volume detail table for appendix
      */
     private function renderVolumeDetailsTable(object $hwSpec): string
     {
@@ -438,7 +517,6 @@ HTML;
         foreach ($volumes as $vol) {
             $name = htmlspecialchars((string)($vol['name'] ?? ''), ENT_QUOTES);
             $mount = htmlspecialchars((string)($vol['mount_point'] ?? ''), ENT_QUOTES);
-            // Check both 'filesystem' and 'fs_type' field names
             $fsValue = $vol['filesystem'] ?? $vol['fs_type'] ?? 'unknown';
             $fs = htmlspecialchars((string)$fsValue, ENT_QUOTES);
             $total = (float)($vol['total_gb'] ?? 0);
@@ -1243,8 +1321,8 @@ HTML;
     {
         return <<<CSS
 *{box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2937;background:#f3f4f6;margin:0;padding:24px 16px;font-size:14px;line-height:1.55}
-.report{max-width:1000px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.1)}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#1f2937;background:#f8fafc;margin:0;padding:24px 16px;font-size:14px;line-height:1.55}
+.report{max-width:1200px;margin:0 auto;background:#fff;border-radius:8px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.08)}
 .hdr{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid #e5e7eb;padding-bottom:24px;margin-bottom:32px;gap:24px;flex-wrap:wrap}
 .hdr-brand{font-size:20px;font-weight:700;letter-spacing:-0.02em;color:#111827}
 .hdr-sub{color:#6b7280;font-size:12px;margin-top:4px}
@@ -1302,6 +1380,26 @@ h4{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;f
 .hw-drive-table th,.hw-raid-table th,.hw-volume-table th,.hw-expansion-table th,.hw-failure-table th,.hw-pattern-table th{background:#f9fafb;padding:10px 8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:700;font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.03em}
 .hw-drive-table td,.hw-raid-table td,.hw-volume-table td,.hw-expansion-table td,.hw-failure-table td,.hw-pattern-table td{padding:8px;border-bottom:1px solid #f3f4f6;color:#4b5563}
 .hw-status-badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;background:#f3f4f6;color:#374151}
+.status-card{display:flex;align-items:center;gap:16px;background:#f0fdf4;border:1px solid #dcfce7;border-radius:8px;padding:16px;margin:20px 0}
+.status-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;border-radius:50%;background:#10b981;color:#fff;font-size:24px;font-weight:700;flex-shrink:0}
+.status-icon.critical{background:#dc2626}
+.status-icon.warning{background:#f59e0b}
+.status-content h3{margin:0;font-size:16px;font-weight:700;color:#1f2937}
+.status-content p{margin:4px 0 0;font-size:13px;color:#6b7280}
+.volume-usage{margin:20px 0}
+.volume-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.volume-card{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;display:flex;align-items:center;gap:14px;transition:all 0.2s ease}
+.volume-card:hover{background:#f3f4f6;border-color:#d1d5db}
+.volume-icon{display:flex;align-items:center;justify-content:center;width:48px;height:48px;background:#dbeafe;border-radius:8px;color:#0369a1;font-size:20px;flex-shrink:0;position:relative}
+.volume-icon::after{content:'✓';position:absolute;bottom:-4px;right:-4px;width:20px;height:20px;background:#10b981;border-radius:50%;color:#fff;font-size:12px;display:flex;align-items:center;justify-content:center}
+.volume-info{flex:1}
+.volume-info-title{font-weight:700;color:#1f2937;font-size:14px;margin:0}
+.volume-info-pool{color:#6b7280;font-size:12px;margin:2px 0 0}
+.volume-progress{width:120px;height:6px;background:#e5e7eb;border-radius:3px;margin:8px 0;overflow:hidden}
+.volume-progress-bar{height:100%;background:#3b82f6;border-radius:3px}
+.volume-stats{text-align:right}
+.volume-stats-usage{color:#0369a1;font-weight:700;font-size:13px;margin:0}
+.volume-stats-text{color:#6b7280;font-size:12px;margin:2px 0 0}
 CSS;
     }
 
