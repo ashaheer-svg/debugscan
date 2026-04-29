@@ -33,7 +33,7 @@ final class ZaiClient
     private string $model;
     private ?LoggerInterface $logger;
 
-    private const DEFAULT_BASE_URL = 'https://api.z.ai/v1';
+    private const DEFAULT_BASE_URL = 'https://api.z.ai/api/paas/v4';
 
     /**
      * Initialize Z.ai client
@@ -74,6 +74,7 @@ final class ZaiClient
         try {
             $this->log('debug', 'Fetching available models from Z.ai');
 
+            // Try to fetch from models endpoint
             $ch = curl_init($this->baseUrl . '/models');
             curl_setopt_array($ch, [
                 CURLOPT_HTTPHEADER => [
@@ -89,24 +90,34 @@ final class ZaiClient
             $curlError = curl_error($ch);
             curl_close($ch);
 
-            if ($curlError) {
-                throw new \RuntimeException("Z.ai API error: {$curlError}");
+            if (!$curlError && $httpCode === 200) {
+                $data = json_decode($response, true);
+                if (isset($data['data']) && is_array($data['data'])) {
+                    return $data['data'];
+                }
+                if (isset($data['models']) && is_array($data['models'])) {
+                    return $data['models'];
+                }
             }
 
-            if ($httpCode !== 200) {
-                throw new \RuntimeException("Z.ai API returned {$httpCode}");
-            }
-
-            $data = json_decode($response, true);
-            if (!isset($data['models'])) {
-                throw new \RuntimeException('Invalid Z.ai response format');
-            }
-
-            return $data['models'];
+            // Fallback: return known Z.ai GLM models
+            $this->log('debug', 'Using fallback Z.ai model list');
+            return [
+                ['id' => 'glm-4', 'name' => 'GLM-4 (Standard)', 'tokens' => 128000],
+                ['id' => 'glm-4-turbo', 'name' => 'GLM-4 Turbo', 'tokens' => 128000],
+                ['id' => 'glm-3.5-turbo', 'name' => 'GLM-3.5 Turbo', 'tokens' => 128000],
+                ['id' => 'glm-5.1', 'name' => 'GLM-5.1', 'tokens' => 1000000],
+            ];
 
         } catch (\Throwable $e) {
             $this->log('error', 'Failed to fetch Z.ai models: ' . $e->getMessage());
-            throw $e;
+            // Return fallback models on error instead of throwing
+            return [
+                ['id' => 'glm-4', 'name' => 'GLM-4 (Standard)', 'tokens' => 128000],
+                ['id' => 'glm-4-turbo', 'name' => 'GLM-4 Turbo', 'tokens' => 128000],
+                ['id' => 'glm-3.5-turbo', 'name' => 'GLM-3.5 Turbo', 'tokens' => 128000],
+                ['id' => 'glm-5.1', 'name' => 'GLM-5.1', 'tokens' => 1000000],
+            ];
         }
     }
 

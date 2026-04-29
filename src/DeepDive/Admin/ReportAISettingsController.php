@@ -142,10 +142,21 @@ final class ReportAISettingsController
     public function getAvailableModels(): array
     {
         try {
+            // Debug: check what settings we loaded
+            $settings = $this->settings->getAll();
+            $useZai = $settings['use_zai'] ?? false;
+            $apiKey = $settings['zai_api_key'] ?? '';
+            $model = $settings['model'] ?? '';
+
             if (!$this->zai) {
                 return [
                     'success' => false,
                     'error'   => 'Z.ai not configured',
+                    'debug'   => [
+                        'use_zai_enabled' => $useZai,
+                        'api_key_present' => !empty($apiKey),
+                        'model_selected' => $model ?: '(none)',
+                    ]
                 ];
             }
 
