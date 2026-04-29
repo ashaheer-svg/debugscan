@@ -140,7 +140,7 @@ final class ReportRenderer
             $body .= '<section class="empty"><h2>No issues detected</h2><p>The rule catalogue ran against this bundle and found nothing of concern. This is either excellent news or an indicator that the bundle is missing expected log sources — check the "bundles processed" table in the appendix.</p></section>';
         }
 
-        $appendix = $this->appendixBlock($context);
+        $appendix = $this->appendixBlock($context, $incidents);
 
         $title = htmlspecialchars('DeepDive Report — ' . ($context['job_id'] ?? ''), ENT_QUOTES);
         return <<<HTML
@@ -424,10 +424,230 @@ HTML;
     }
 
     /** @param array<string,mixed> $c */
-    private function appendixBlock(array $c): string
+    /**
+     * TIER 1: Volume and RAID detail tables
+     */
+    private function renderVolumeDetailsTable(object $hwSpec): string
+    {
+        $volumes = $hwSpec->volumes ?? [];
+        if (empty($volumes)) {
+            return '';
+        }
+
+        $rows = '';
+        foreach ($volumes as $vol) {
+            $name = htmlspecialchars((string)($vol['name'] ?? ''), ENT_QUOTES);
+            $mount = htmlspecialchars((string)($vol['mount_point'] ?? ''), ENT_QUOTES);
+            $fs = htmlspecialchars((string)($vol['filesystem'] ?? 'unknown'), ENT_QUOTES);
+            $total = (float)($vol['total_gb'] ?? 0);
+            $used = (float)($vol['used_gb'] ?? 0);
+            $avail = (float)($vol['available_gb'] ?? 0);
+            $pct = (int)($vol['usage_percent'] ?? 0);
+
+            $pctColor = match(true) {
+                $pct >= 90 => '#dc2626',
+                $pct >= 75 => '#ea580c',
+                $pct >= 50 => '#ca8a04',
+                default => '#16a34a',
+            };
+
+            $rows .= "<tr><td>{$name}</td><td class=\"mono\">{$mount}</td><td>{$fs}</td><td>{$total}</td><td>{$used}</td><td>{$avail}</td><td style=\"background-color:{$pctColor};color:white;font-weight:600\">{$pct}%</td></tr>";
+        }
+
+        return <<<HTML
+<div class="apx-block">
+  <h3>Storage Volumes - Detailed</h3>
+  <table class="apx-table">
+    <thead><tr><th>Volume</th><th>Mount Point</th><th>Filesystem</th><th>Total GB</th><th>Used GB</th><th>Available GB</th><th>Usage %</th></tr></thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+HTML;
+    }
+
+    /**
+     * TIER 1: RAID arrays detail table
+     */
+    private function renderRaidDetailsTable(object $hwSpec): string
+    {
+        $config = $hwSpec->raidConfig ?? [];
+        $arrays = $config['arrays'] ?? [];
+        if (empty($arrays)) {
+            return '';
+        }
+
+        $rows = '';
+        foreach ($arrays as $arr) {
+            $name = htmlspecialchars((string)($arr['name'] ?? ''), ENT_QUOTES);
+            $level = htmlspecialchars((string)($arr['level'] ?? ''), ENT_QUOTES);
+            $state = htmlspecialchars((string)($arr['state'] ?? ''), ENT_QUOTES);
+            $type = htmlspecialchars((string)($arr['type'] ?? ''), ENT_QUOTES);
+            $members = (int)($arr['members'] ?? 0);
+            $healthy = (int)($arr['healthy_members'] ?? 0);
+            $missing = (int)($arr['missing_members'] ?? 0);
+            $progress = $arr['rebuild_progress'] !== null ? round((float)($arr['rebuild_progress']), 1) : '-';
+            $action = htmlspecialchars((string)($arr['sync_action'] ?? 'idle'), ENT_QUOTES);
+            $devices = htmlspecialchars(implode(', ', (array)($arr['devices'] ?? [])), ENT_QUOTES);
+
+            $stateColor = match($state) {
+                'degraded' => '#dc2626',
+                'recovering' => '#f59e0b',
+                default => '#16a34a',
+            };
+
+            $rows .= "<tr><td><strong>{$name}</strong><br><small>{$type}</small></td><td>{$level}</td><td style=\"color:{$stateColor};font-weight:600\">{$state}</td><td>{$members}</td><td>{$healthy}</td><td>{$missing}</td><td>{$progress}%</td><td>{$action}</td><td class=\"mono\"><small>{$devices}</small></td></tr>";
+        }
+
+        return <<<HTML
+<div class="apx-block">
+  <h3>RAID Arrays - Detailed</h3>
+  <table class="apx-table">
+    <thead><tr><th>Array</th><th>Level</th><th>State</th><th>Members</th><th>Healthy</th><th>Missing</th><th>Rebuild %</th><th>Sync Action</th><th>Devices</th></tr></thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+HTML;
+    }
+
+    /**
+     * TIER 2: Citation index from findings
+     * @param list<Incident> $incidents
+     */
+    private function renderCitationIndex(array $incidents): string
+    {
+        $citations = [];
+
+        // Aggregate all citations from all findings in all incidents
+        foreach ($incidents as $incident) {
+            foreach ($incident->findings as $finding) {
+                foreach ($finding->citations as $cite) {
+                    $file = (string)($cite['file'] ?? 'unknown');
+                    if (!isset($citations[$file])) {
+                        $citations[$file] = [];
+                    }
+                    $citations[$file][] = [
+                        'rule_id' => $finding->ruleId,
+                        'line_number' => $cite['line_number'] ?? null,
+                        'excerpt' => $cite['excerpt'] ?? null,
+                    ];
+                }
+            }
+        }
+
+        if (empty($citations)) {
+            return '';
+        }
+
+        ksort($citations); // Sort by filename
+
+        $rows = '';
+        foreach ($citations as $file => $cites) {
+            $fileEsc = htmlspecialchars($file, ENT_QUOTES);
+            $ruleRefs = [];
+            $lineRefs = [];
+
+            foreach ($cites as $c) {
+                if (!in_array($c['rule_id'], $ruleRefs, true)) {
+                    $ruleRefs[] = $c['rule_id'];
+                }
+                if ($c['line_number'] !== null && !in_array($c['line_number'], $lineRefs, true)) {
+                    $lineRefs[] = $c['line_number'];
+                }
+            }
+
+            sort($lineRefs);
+            $ruleList = htmlspecialchars(implode(', ', $ruleRefs), ENT_QUOTES);
+            $lineList = !empty($lineRefs) ? htmlspecialchars(implode(', ', array_slice($lineRefs, 0, 5)), ENT_QUOTES) : 'various';
+            $lineExtra = count($lineRefs) > 5 ? ' (+' . (count($lineRefs) - 5) . ' more)' : '';
+
+            $rows .= "<tr><td class=\"mono\">{$fileEsc}</td><td>{$ruleList}</td><td class=\"mono\"><small>{$lineList}{$lineExtra}</small></td></tr>";
+        }
+
+        return <<<HTML
+<div class="apx-block">
+  <h3>Evidence Citations Index</h3>
+  <p>This table shows which evidence files contributed to rule findings.</p>
+  <table class="apx-table">
+    <thead><tr><th>Evidence File</th><th>Rules Referenced</th><th>Lines</th></tr></thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+HTML;
+    }
+
+    /**
+     * TIER 3: Event timeline from findings
+     * @param list<Incident> $incidents
+     */
+    private function renderEventTimeline(array $incidents): string
+    {
+        $events = [];
+
+        // Extract timestamped events from citations
+        foreach ($incidents as $incident) {
+            foreach ($incident->findings as $finding) {
+                foreach ($finding->citations as $cite) {
+                    if (!empty($cite['timestamp'])) {
+                        $events[] = [
+                            'timestamp' => $cite['timestamp'],
+                            'rule_id' => $finding->ruleId,
+                            'severity' => $finding->severity,
+                            'file' => $cite['file'] ?? 'unknown',
+                            'line' => $cite['line_number'] ?? null,
+                            'excerpt' => $cite['excerpt'] ?? null,
+                        ];
+                    }
+                }
+            }
+        }
+
+        if (empty($events)) {
+            return '';
+        }
+
+        // Sort by timestamp (newest first)
+        usort($events, static fn($a, $b) => strcmp($b['timestamp'], $a['timestamp']));
+
+        $rows = '';
+        $maxEvents = min(50, count($events)); // Show up to 50 most recent events
+        for ($i = 0; $i < $maxEvents; $i++) {
+            $evt = $events[$i];
+            $ts = htmlspecialchars($evt['timestamp'], ENT_QUOTES);
+            $rule = htmlspecialchars($evt['rule_id'], ENT_QUOTES);
+            $severity = htmlspecialchars($evt['severity'], ENT_QUOTES);
+            $file = htmlspecialchars($evt['file'], ENT_QUOTES);
+            $line = $evt['line'] !== null ? htmlspecialchars((string)($evt['line']), ENT_QUOTES) : '—';
+
+            $severityColor = match($evt['severity']) {
+                'critical' => '#dc2626',
+                'high' => '#ea580c',
+                'warning' => '#f59e0b',
+                default => '#06b6d4',
+            };
+
+            $rows .= "<tr><td class=\"mono\">{$ts}</td><td style=\"color:{$severityColor};font-weight:600\">{$severity}</td><td class=\"mono\">{$rule}</td><td class=\"mono\"><small>{$file}:{$line}</small></td></tr>";
+        }
+
+        $totalMsg = count($events) > $maxEvents ? " (showing {$maxEvents} of " . count($events) . ' events)' : '';
+
+        return <<<HTML
+<div class="apx-block">
+  <h3>Event Timeline{$totalMsg}</h3>
+  <p>Chronological view of log events that triggered rule matches (newest first).</p>
+  <table class="apx-table">
+    <thead><tr><th>Timestamp</th><th>Severity</th><th>Rule ID</th><th>File:Line</th></tr></thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+HTML;
+    }
+
+    private function appendixBlock(array $c, array $incidents = []): string
     {
         // Bundle metadata
         $bundleRows = '';
+        $hwSpecs = []; // Collect hardware specs from bundles for TIER 1
+
         foreach (($c['bundles'] ?? []) as $b) {
             $id    = htmlspecialchars((string)($b['debug_file_id'] ?? ''), ENT_QUOTES);
             $root  = htmlspecialchars((string)($b['root'] ?? ''), ENT_QUOTES);
@@ -436,6 +656,11 @@ HTML;
             $log   = htmlspecialchars(implode(', ', (array)($b['sources_log']    ?? [])), ENT_QUOTES);
             $sql   = htmlspecialchars(implode(', ', (array)($b['sources_sqlite'] ?? [])), ENT_QUOTES);
             $bundleRows .= "<tr><td class=\"mono\">{$id}</td><td class=\"mono\">{$root}</td><td>{$nfi}</td><td>{$size}</td><td class=\"mono\">{$log}</td><td class=\"mono\">{$sql}</td></tr>";
+
+            // Collect hardware spec for TIER 1 tables
+            if (isset($b['hardware_spec'])) {
+                $hwSpecs[] = $b['hardware_spec'];
+            }
         }
         $bundleRows = $bundleRows ?: '<tr><td colspan="6" class="muted">No bundle metadata recorded.</td></tr>';
 
@@ -453,6 +678,21 @@ HTML;
 </div>
 HTML;
 
+        // === TIER 1: Volume and RAID detail tables ===
+        $volumeDetails = '';
+        $raidDetails = '';
+        if (!empty($hwSpecs)) {
+            $hwSpec = $hwSpecs[0]; // Use first bundle's hardware spec
+            $volumeDetails = $this->renderVolumeDetailsTable($hwSpec);
+            $raidDetails = $this->renderRaidDetailsTable($hwSpec);
+        }
+
+        // === TIER 2: Citation index ===
+        $citationIndex = $this->renderCitationIndex($incidents);
+
+        // === TIER 3: Event timeline ===
+        $eventTimeline = $this->renderEventTimeline($incidents);
+
         return <<<HTML
 <section class="appendix">
   <h2>Appendix</h2>
@@ -463,6 +703,10 @@ HTML;
       <tbody>{$bundleRows}</tbody>
     </table>
   </div>
+  {$volumeDetails}
+  {$raidDetails}
+  {$citationIndex}
+  {$eventTimeline}
   {$errorBlock}
 </section>
 HTML;
