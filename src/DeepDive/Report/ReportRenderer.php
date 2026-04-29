@@ -438,7 +438,9 @@ HTML;
         foreach ($volumes as $vol) {
             $name = htmlspecialchars((string)($vol['name'] ?? ''), ENT_QUOTES);
             $mount = htmlspecialchars((string)($vol['mount_point'] ?? ''), ENT_QUOTES);
-            $fs = htmlspecialchars((string)($vol['filesystem'] ?? 'unknown'), ENT_QUOTES);
+            // Check both 'filesystem' and 'fs_type' field names
+            $fsValue = $vol['filesystem'] ?? $vol['fs_type'] ?? 'unknown';
+            $fs = htmlspecialchars((string)$fsValue, ENT_QUOTES);
             $total = (float)($vol['total_gb'] ?? 0);
             $used = (float)($vol['used_gb'] ?? 0);
             $avail = (float)($vol['available_gb'] ?? 0);
