@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeepDive Report - Minimal Professional Design Preview</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            color: #1f2937;
+            background: #f3f4f6;
+            margin: 0;
+            padding: 24px 16px;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+        .report {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #fff;
+            border-radius: 8px;
+            padding: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .hdr {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 24px;
+            margin-bottom: 32px;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        .hdr-brand {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111827;
+        }
+        .hdr-sub {
+            color: #6b7280;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+        .hdr-right {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px 24px;
+            font-size: 12px;
+        }
+        .hdr-kv span {
+            display: block;
+            color: #9ca3af;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .hdr-kv code {
+            font-family: "SF Mono", Menlo, Consolas, monospace;
+            font-size: 13px;
+            color: #111827;
+            font-weight: 500;
+        }
+
+        h2 {
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #1f2937;
+            font-weight: 700;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin: 28px 0 16px;
+        }
+        h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            font-weight: 700;
+            margin: 16px 0 8px;
+        }
+
+        .summary {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 24px 0;
+        }
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .summary-headline strong {
+            font-size: 24px;
+            color: #111827;
+            margin-right: 8px;
+            font-weight: 700;
+        }
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: var(--chip);
+            border: 1px solid #e5e7eb;
+        }
+
+        .hw-section {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        .hw-device-card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .hw-spec-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            font-size: 13px;
+        }
+        .hw-spec-item {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            flex-direction: column;
+        }
+        .hw-spec-label {
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .hw-spec-value {
+            color: #111827;
+            margin-top: 4px;
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .volume-card {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .volume-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        .volume-name {
+            font-weight: 700;
+            color: #111827;
+        }
+        .volume-pool {
+            font-size: 11px;
+            color: #6b7280;
+            margin-top: 2px;
+        }
+        .volume-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: #4b5563;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #3b82f6;
+            border-radius: 3px;
+        }
+
+        .hardware-device {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 20px 0;
+        }
+
+        .device-enclosure {
+            border: 2px solid #cbd5e1;
+            border-radius: 4px;
+            padding: 12px 15px;
+            margin: 16px 0;
+        }
+
+        .device-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 4px;
+        }
+
+        .device-subtitle {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-bottom: 12px;
+        }
+
+        .bays-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .bay-slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            height: 90px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            background: #fff;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .bay-slot:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        .bay-number {
+            font-weight: 700;
+            color: #374151;
+            font-size: 10px;
+        }
+
+        .bay-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        .bay-serial {
+            font-size: 8px;
+            color: #6b7280;
+            font-family: Monaco, monospace;
+            font-weight: 500;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            color: white;
+            font-weight: 700;
+            font-size: 8px;
+        }
+
+        .status-healthy { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-critical { background: #dc2626; }
+        .status-empty { background: #e5e7eb; color: #9ca3af; }
+
+        .bay-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: flex-start;
+            padding: 12px 0;
+            font-size: 11px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+            margin-top: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <div class="report">
+        <!-- Header -->
+        <div class="hdr">
+            <div>
+                <div class="hdr-brand">DeepDive</div>
+                <div class="hdr-sub">Isolated diagnostic report</div>
+            </div>
+            <div class="hdr-right">
+                <div>
+                    <span>Job</span>
+                    <code>JOB-2024-001234</code>
+                </div>
+                <div>
+                    <span>Project</span>
+                    <code>PROD-NAS-01</code>
+                </div>
+                <div>
+                    <span>Generated</span>
+                    <code>2024-04-29 14:32:15 UTC</code>
+                </div>
+                <div>
+                    <span>Engine / Catalogue</span>
+                    <code>v2.0.1 · v1.4.2</code>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary">
+            <div class="summary-row">
+                <div style="font-size: 16px;">
+                    <span style="color: #6b7280;">Issues found:</span> <strong>4</strong>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <span class="chip" style="--chip: #dc2626;"><span style="font-weight: 700;">2</span> <span>Critical</span></span>
+                    <span class="chip" style="--chip: #f59e0b;"><span style="font-weight: 700;">1</span> <span>Warning</span></span>
+                    <span class="chip" style="--chip: #10b981;"><span style="font-weight: 700;">1</span> <span>Info</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Status -->
+        <div style="display: flex; align-items: center; gap: 10px; margin: 24px 0; padding: 16px; background: #f0fdf4; border: 1px solid #dcfce7; border-radius: 6px;">
+            <span style="color: #10b981; font-size: 20px;">✓</span>
+            <div>
+                <strong style="color: #15803d;">System is healthy</strong>
+                <p style="margin: 2px 0; color: #4b5563; font-size: 13px;">No critical issues detected at this moment</p>
+            </div>
+        </div>
+
+        <!-- Hardware Section -->
+        <div class="hw-section">
+            <h2>Hardware Configuration</h2>
+
+            <div class="hw-device-card">
+                <h4>NAS Device</h4>
+                <div class="hw-spec-grid">
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">Model</span>
+                        <span class="hw-spec-value">DS918+</span>
+                    </div>
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">Serial</span>
+                        <span class="hw-spec-value" style="font-size: 12px; font-family: monospace;">SN123XYZ456</span>
+                    </div>
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">CPU</span>
+                        <span class="hw-spec-value" style="font-size: 13px;">Intel i3-8100 (4c)</span>
+                    </div>
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">RAM</span>
+                        <span class="hw-spec-value">16 GB</span>
+                    </div>
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">Uptime</span>
+                        <span class="hw-spec-value">342 days</span>
+                    </div>
+                    <div class="hw-spec-item">
+                        <span class="hw-spec-label">Status</span>
+                        <span style="color: #10b981; font-weight: 700; font-size: 14px;">✓ Active</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume Usage -->
+            <h4>Volume Usage</h4>
+            <div>
+                <div class="volume-card">
+                    <div class="volume-header">
+                        <div>
+                            <div class="volume-name">Volume 1</div>
+                            <div class="volume-pool">Storage Pool 1</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="color: #3b82f6;">407.9 GB</strong> / 983 GB
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 41%;"></div>
+                    </div>
+                    <div class="volume-stats">
+                        <span>41% used</span>
+                        <span>575.1 GB free</span>
+                    </div>
+                </div>
+
+                <div class="volume-card">
+                    <div class="volume-header">
+                        <div>
+                            <div class="volume-name">Volume 2</div>
+                            <div class="volume-pool">Storage Pool 1</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <strong style="color: #3b82f6;">908.7 GB</strong> / 4.3 TB
+                        </div>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 21%;"></div>
+                    </div>
+                    <div class="volume-stats">
+                        <span>21% used</span>
+                        <span>3.4 TB free</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drive Bay Layout -->
+        <div class="hw-section">
+            <h2>Drive Information</h2>
+
+            <div class="hardware-device">
+                <div class="device-title">NAS_STORAGE</div>
+                <div class="device-subtitle">8 Bays · 7 Installed</div>
+
+                <div class="device-enclosure">
+                    <div class="bays-grid">
+                        <div class="bay-slot" title="Bay 1: WDC-SN123456 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-number">1</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-healthy">✓</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">WDC-SN123</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 2: SEA-ST456789 - Seagate (4TB) - Warning">
+                            <div class="bay-number">2</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-warning">⚠</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">SEA-ST456</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 3: WDC-SN234567 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-number">3</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-healthy">✓</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">WDC-SN234</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 4: HUA-HE012345 - Hitachi (3TB) - Critical">
+                            <div class="bay-number">4</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-critical">✕</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">HUA-HE012</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 5: WDC-SN345678 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-number">5</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-healthy">✓</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">WDC-SN345</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 6: STM-HD789ABC - Samsung (2TB) - Critical">
+                            <div class="bay-number">6</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-critical">✕</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">STM-HD789</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" title="Bay 7: SAM-SSD001 - Samsung (1TB) - Healthy">
+                            <div class="bay-number">7</div>
+                            <div style="position: absolute; top: 8px; right: 8px;">
+                                <span class="status-indicator status-healthy">✓</span>
+                            </div>
+                            <div class="bay-content">
+                                <div class="bay-serial">SAM-SSD</div>
+                            </div>
+                        </div>
+
+                        <div class="bay-slot" style="background: #f9fafb; color: #d1d5db;">
+                            <div class="bay-number" style="color: #9ca3af;">8</div>
+                            <div style="flex: 1; display: flex; align-items: center;">−</div>
+                        </div>
+                    </div>
+
+                    <div class="bay-legend">
+                        <div class="legend-item">
+                            <span class="legend-dot status-healthy"></span>
+                            <span>Healthy</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot status-warning"></span>
+                            <span>Warning</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot status-critical"></span>
+                            <span>Critical</span>
+                        </div>
+                        <div class="legend-item">
+                            <span class="legend-dot status-empty"></span>
+                            <span>Empty</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer note -->
+        <div style="margin-top: 40px; padding-top: 24px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 12px;">
+            <p style="margin: 0;">DeepDive Report v2.0.1 · Generated on 2024-04-29 · System healthy</p>
+        </div>
+    </div>
+</body>
+</html>

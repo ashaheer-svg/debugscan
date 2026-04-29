@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drive Bay Layout - Modern Compact UI Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #1e293b;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .design-note {
+            background: #f0f9ff;
+            border-left: 4px solid #0369a1;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #0369a1;
+            font-size: 13px;
+        }
+
+        /* Compact Modern Design Preview */
+        .bay-layout-modern {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .bay-layout-header {
+            margin-bottom: 16px;
+        }
+
+        .bay-layout-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1e293b;
+            letter-spacing: -0.3px;
+        }
+
+        .bay-layout-subtitle {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .bays-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .bay-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            height: 90px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 11px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bay-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .bay-item-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            font-weight: 700;
+            color: white;
+            font-size: 10px;
+        }
+
+        .bay-number {
+            background: rgba(255, 255, 255, 0.25);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .bay-icon {
+            font-size: 14px;
+        }
+
+        .bay-item-middle {
+            text-align: center;
+            color: white;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .bay-serial {
+            font-size: 9px;
+            font-family: 'Courier New', monospace;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            word-break: break-all;
+        }
+
+        .bay-model {
+            font-size: 8px;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
+        }
+
+        .bay-healthy {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border: 1px solid #059669;
+        }
+
+        .bay-caution {
+            background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);
+            border: 1px solid #d97706;
+        }
+
+        .bay-warning {
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
+            border: 1px solid #c2410c;
+        }
+
+        .bay-critical {
+            background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+            border: 2px solid #991b1b;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .bay-empty {
+            background: #e2e8f0;
+            border: 1px dashed #cbd5e1;
+            color: #94a3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .bay-empty-text {
+            font-size: 11px;
+            font-weight: 600;
+            color: #94a3b8;
+        }
+
+        .bay-bad-sector {
+            position: absolute;
+            bottom: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 8px;
+            font-weight: 700;
+        }
+
+        .bay-replacement {
+            position: absolute;
+            bottom: 4px;
+            left: 4px;
+            background: rgba(0, 0, 0, 0.2);
+            color: white;
+            padding: 1px 4px;
+            border-radius: 3px;
+            font-size: 7px;
+            font-weight: 700;
+        }
+
+        /* Legend */
+        .bay-legend {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            gap: 10px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            border: 1px solid #f1f5f9;
+            transition: all 0.2s ease;
+        }
+
+        .legend-item:hover {
+            background: #f1f5f9;
+            border-color: #e2e8f0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .legend-text {
+            flex: 1;
+        }
+
+        .legend-text strong {
+            display: block;
+            color: #1e293b;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+
+        .legend-text p {
+            margin: 0;
+            color: #64748b;
+            font-size: 10px;
+            line-height: 1.3;
+        }
+
+        /* Comparison */
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .comparison {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .comparison-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            background: #f9fafb;
+        }
+
+        .comparison-card h3 {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .feature-list {
+            list-style: none;
+            font-size: 12px;
+            color: #475569;
+        }
+
+        .feature-list li {
+            padding: 6px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #10b981;
+            font-weight: 700;
+            margin-right: 6px;
+        }
+
+        .toggle-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 8px 16px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        button.active {
+            background: #0369a1;
+            color: white;
+            border-color: #0369a1;
+        }
+
+        button:hover {
+            border-color: #0369a1;
+            color: #0369a1;
+        }
+
+        button.active:hover {
+            background: #0c5086;
+        }
+
+        .density-note {
+            font-size: 11px;
+            color: #64748b;
+            background: #f9fafb;
+            padding: 8px;
+            border-radius: 4px;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .layout-example {
+            margin-bottom: 30px;
+        }
+
+        .layout-example h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="section">
+            <h1>🎨 Drive Bay Layout - Modern Compact UI Preview</h1>
+            <p class="subtitle">Interactive preview of the modernized bay layout design</p>
+
+            <div class="design-note">
+                <strong>Note:</strong> This is an HTML preview showing the compact, modern design. Adjust column count and spacing below to see different layouts. The actual implementation will be in SVG with gradients and animations.
+            </div>
+
+            <div class="toggle-buttons">
+                <button class="active" onclick="showLayout(8)">8 Bays</button>
+                <button onclick="showLayout(12)">12 Bays</button>
+                <button onclick="showLayout(16)">16 Bays</button>
+                <button onclick="showLayout(4)">4 Bays</button>
+            </div>
+
+            <!-- 8 Bay Layout (Default) -->
+            <div class="layout-example" id="layout-8">
+                <h3>8-Bay NAS (Main Unit)</h3>
+                <div class="bay-layout-modern">
+                    <div class="bay-layout-header">
+                        <div class="bay-layout-title">Main Unit (DS918+)</div>
+                        <div class="bay-layout-subtitle">8 Bays · 7 occupied</div>
+                    </div>
+
+                    <div class="bays-grid" style="grid-template-columns: repeat(4, 1fr);">
+                        <!-- Bay 1: Healthy -->
+                        <div class="bay-item bay-healthy" title="Slot 1: WDC-SN123456 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-item-top">
+                                <span class="bay-number">1</span>
+                                <span class="bay-icon">✓</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">WDC-SN123</div>
+                                <div class="bay-model">WD Red Pro</div>
+                            </div>
+                        </div>
+
+                        <!-- Bay 2: Caution -->
+                        <div class="bay-item bay-caution" title="Slot 2: SEA-ST456789 - Seagate IronWolf (4TB) - Caution (23 sectors)">
+                            <div class="bay-item-top">
+                                <span class="bay-number">2</span>
+                                <span class="bay-icon">!</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">SEA-ST456</div>
+                                <div class="bay-model">Seagate IWF</div>
+                            </div>
+                            <div class="bay-bad-sector">23</div>
+                        </div>
+
+                        <!-- Bay 3: Healthy -->
+                        <div class="bay-item bay-healthy" title="Slot 3: WDC-SN234567 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-item-top">
+                                <span class="bay-number">3</span>
+                                <span class="bay-icon">✓</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">WDC-SN234</div>
+                                <div class="bay-model">WD Red Pro</div>
+                            </div>
+                        </div>
+
+                        <!-- Bay 4: Warning -->
+                        <div class="bay-item bay-warning" title="Slot 4: HUA-HE012345 - Hitachi (3TB) - Warning (67 sectors) - Replaced 2x">
+                            <div class="bay-item-top">
+                                <span class="bay-number">4</span>
+                                <span class="bay-icon">⚠</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">HUA-HE012</div>
+                                <div class="bay-model">Hitachi 7K</div>
+                            </div>
+                            <div class="bay-bad-sector">67</div>
+                            <div class="bay-replacement">↻2</div>
+                        </div>
+
+                        <!-- Bay 5: Healthy -->
+                        <div class="bay-item bay-healthy" title="Slot 5: WDC-SN345678 - WD Red Pro (4TB) - Healthy">
+                            <div class="bay-item-top">
+                                <span class="bay-number">5</span>
+                                <span class="bay-icon">✓</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">WDC-SN345</div>
+                                <div class="bay-model">WD Red Pro</div>
+                            </div>
+                        </div>
+
+                        <!-- Bay 6: Critical -->
+                        <div class="bay-item bay-critical" title="Slot 6: STM-HD789ABC - Samsung (2TB) - Critical (156 sectors) - Replaced 3x">
+                            <div class="bay-item-top">
+                                <span class="bay-number">6</span>
+                                <span class="bay-icon">✕</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">STM-HD789</div>
+                                <div class="bay-model">Samsung 870</div>
+                            </div>
+                            <div class="bay-bad-sector">99+</div>
+                            <div class="bay-replacement">↻3</div>
+                        </div>
+
+                        <!-- Bay 7: Healthy SSD -->
+                        <div class="bay-item bay-healthy" title="Slot 7: SAM-SSD001 - Samsung 980 Pro (1TB) - Healthy - SSD">
+                            <div class="bay-item-top">
+                                <span class="bay-number">7</span>
+                                <span class="bay-icon">✓</span>
+                            </div>
+                            <div class="bay-item-middle">
+                                <div class="bay-serial">SAM-SSD001</div>
+                                <div class="bay-model">980 Pro SSD</div>
+                            </div>
+                        </div>
+
+                        <!-- Bay 8: Empty -->
+                        <div class="bay-item bay-empty">
+                            <span class="bay-empty-text">Empty</span>
+                        </div>
+                    </div>
+
+                    <!-- Legend -->
+                    <div style="margin-top: 20px;">
+                        <div style="font-size: 12px; font-weight: 600; color: #1e293b; margin-bottom: 10px;">Health Status</div>
+                        <div class="bay-legend">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);"></div>
+                                <div class="legend-text">
+                                    <strong>Healthy</strong>
+                                    <p>Operational, 0 bad sectors</p>
+                                </div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%);"></div>
+                                <div class="legend-text">
+                                    <strong>Caution</strong>
+                                    <p>Minor issues, 10-50 sectors</p>
+                                </div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);"></div>
+                                <div class="legend-text">
+                                    <strong>Warning</strong>
+                                    <p>Moderate issues, 50+ sectors</p>
+                                </div>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);"></div>
+                                <div class="legend-text">
+                                    <strong>Critical</strong>
+                                    <p>Failed or 100+ sectors</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="density-note">
+                        <strong>Compact Design Benefits:</strong><br>
+                        • 80px × 90px bay cards (efficient space usage)<br>
+                        • 10px gaps between bays (modern spacing)<br>
+                        • Auto-responsive grid (adapts to screen width)<br>
+                        • Color gradients for visual depth<br>
+                        • Hover effects with lift animation<br>
+                        • Inline health/replacement indicators<br>
+                        • Monospace serial numbers for clarity
+                    </div>
+                </div>
+            </div>
+
+            <!-- 12 Bay Layout -->
+            <div class="layout-example" id="layout-12" style="display: none;">
+                <h3>12-Bay NAS with Expansion</h3>
+                <div class="bay-layout-modern">
+                    <div class="bay-layout-header">
+                        <div class="bay-layout-title">Main Unit (DS1821+)</div>
+                        <div class="bay-layout-subtitle">12 Bays · 11 occupied</div>
+                    </div>
+
+                    <div class="bays-grid" style="grid-template-columns: repeat(4, 1fr);">
+                        <!-- Showing first 6 bays -->
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">1</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN001</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">2</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN002</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-caution"><div class="bay-item-top"><span class="bay-number">3</span><span class="bay-icon">!</span></div><div class="bay-item-middle"><div class="bay-serial">SEA-ST001</div><div class="bay-model">Seagate IWF</div></div><div class="bay-bad-sector">15</div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">4</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN003</div><div class="bay-model">WD Red Pro</div></div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">5</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN004</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-warning"><div class="bay-item-top"><span class="bay-number">6</span><span class="bay-icon">⚠</span></div><div class="bay-item-middle"><div class="bay-serial">HUA-HE001</div><div class="bay-model">Hitachi 7K</div></div><div class="bay-bad-sector">78</div><div class="bay-replacement">↻2</div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">7</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN005</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">8</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN006</div><div class="bay-model">WD Red Pro</div></div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">9</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN007</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">10</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN008</div><div class="bay-model">WD Red Pro</div></div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">11</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN009</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-empty"><span class="bay-empty-text">Empty</span></div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="font-size: 11px; color: #64748b; background: #f9fafb; padding: 8px; border-radius: 4px;">
+                            ℹ️ <strong>Compact grid note:</strong> 12 bays fit in 4 columns (3 rows), maintaining readability while saving vertical space. Perfect for reports and dashboards.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 16 Bay Layout -->
+            <div class="layout-example" id="layout-16" style="display: none;">
+                <h3>16-Bay RAID Array</h3>
+                <div class="bay-layout-modern">
+                    <div class="bay-layout-header">
+                        <div class="bay-layout-title">RAID Array (RS3618xs)</div>
+                        <div class="bay-layout-subtitle">16 Bays · 16 occupied</div>
+                    </div>
+
+                    <div class="bays-grid" style="grid-template-columns: repeat(5, 1fr);">
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">1</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-001</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">2</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-002</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">3</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-003</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-caution"><div class="bay-item-top"><span class="bay-number">4</span><span class="bay-icon">!</span></div><div class="bay-item-middle"><div class="bay-serial">SEA-001</div><div class="bay-model">Seagate</div></div><div class="bay-bad-sector">8</div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">5</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-004</div><div class="bay-model">WD Red</div></div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">6</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-005</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">7</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-006</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">8</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-007</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-warning"><div class="bay-item-top"><span class="bay-number">9</span><span class="bay-icon">⚠</span></div><div class="bay-item-middle"><div class="bay-serial">HUA-001</div><div class="bay-model">Hitachi</div></div><div class="bay-bad-sector">52</div><div class="bay-replacement">↻1</div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">10</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-008</div><div class="bay-model">WD Red</div></div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">11</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-009</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">12</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-010</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">13</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-011</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">14</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-012</div><div class="bay-model">WD Red</div></div></div>
+                        <div class="bay-item bay-critical"><div class="bay-item-top"><span class="bay-number">15</span><span class="bay-icon">✕</span></div><div class="bay-item-middle"><div class="bay-serial">STM-001</div><div class="bay-model">Samsung</div></div><div class="bay-bad-sector">99+</div><div class="bay-replacement">↻4</div></div>
+
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">16</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-013</div><div class="bay-model">WD Red</div></div></div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="font-size: 11px; color: #64748b; background: #f9fafb; padding: 8px; border-radius: 4px;">
+                            ℹ️ <strong>Responsive grid:</strong> 16 bays automatically arrange in 5 columns (fits 1400px width). Grid adapts on smaller screens.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4 Bay Layout -->
+            <div class="layout-example" id="layout-4" style="display: none;">
+                <h3>4-Bay NAS (Compact)</h3>
+                <div class="bay-layout-modern">
+                    <div class="bay-layout-header">
+                        <div class="bay-layout-title">Main Unit (DS214+)</div>
+                        <div class="bay-layout-subtitle">4 Bays · 4 occupied</div>
+                    </div>
+
+                    <div class="bays-grid" style="grid-template-columns: repeat(2, 1fr);">
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">1</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN123</div><div class="bay-model">WD Red Pro</div></div></div>
+                        <div class="bay-item bay-caution"><div class="bay-item-top"><span class="bay-number">2</span><span class="bay-icon">!</span></div><div class="bay-item-middle"><div class="bay-serial">SEA-ST456</div><div class="bay-model">Seagate IWF</div></div><div class="bay-bad-sector">23</div></div>
+                        <div class="bay-item bay-warning"><div class="bay-item-top"><span class="bay-number">3</span><span class="bay-icon">⚠</span></div><div class="bay-item-middle"><div class="bay-serial">HUA-HE012</div><div class="bay-model">Hitachi 7K</div></div><div class="bay-bad-sector">67</div><div class="bay-replacement">↻2</div></div>
+                        <div class="bay-item bay-healthy"><div class="bay-item-top"><span class="bay-number">4</span><span class="bay-icon">✓</span></div><div class="bay-item-middle"><div class="bay-serial">WDC-SN345</div><div class="bay-model">WD Red Pro</div></div></div>
+                    </div>
+
+                    <div style="margin-top: 20px;">
+                        <div style="font-size: 11px; color: #64748b; background: #f9fafb; padding: 8px; border-radius: 4px;">
+                            ℹ️ <strong>Small layouts:</strong> Even compact systems get full visual hierarchy with gradients, icons, and replacement indicators. 2-column grid is optimal for 4-bay systems.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div style="margin-top: 40px;">
+                <h2 style="font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 20px;">Key Design Features</h2>
+                <div class="comparison">
+                    <div class="comparison-card">
+                        <h3>✓ Compact & Efficient</h3>
+                        <ul class="feature-list">
+                            <li>80px × 90px bay cards</li>
+                            <li>10px spacing (modern density)</li>
+                            <li>Auto-responsive grid layout</li>
+                            <li>Minimal text (truncated labels)</li>
+                            <li>Maximum information in minimal space</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card">
+                        <h3>✓ Modern Visual Design</h3>
+                        <ul class="feature-list">
+                            <li>Color gradients (depth & vibrancy)</li>
+                            <li>Smooth hover animations</li>
+                            <li>System font stack</li>
+                            <li>Proper contrast ratios (WCAG AA)</li>
+                            <li>Consistent 8px border radius</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card">
+                        <h3>✓ Interactive & Informative</h3>
+                        <ul class="feature-list">
+                            <li>Rich tooltips on hover</li>
+                            <li>Bad sector indicator badges</li>
+                            <li>Replacement history counter</li>
+                            <li>Health status icons (✓ ! ⚠ ✕)</li>
+                            <li>Clear visual hierarchy</li>
+                        </ul>
+                    </div>
+                    <div class="comparison-card">
+                        <h3>✓ Professional Legend</h3>
+                        <ul class="feature-list">
+                            <li>Grid-based responsive layout</li>
+                            <li>Large gradient color swatches</li>
+                            <li>Descriptive status text</li>
+                            <li>Hover effects for interactivity</li>
+                            <li>Proper color specification</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Implementation Notes -->
+            <div class="section" style="margin-top: 20px; background: #f0f9ff; border-left: 4px solid #0369a1;">
+                <h3 style="color: #0369a1; margin-bottom: 10px;">💡 Implementation Strategy</h3>
+                <p style="color: #0369a1; font-size: 13px; line-height: 1.6; margin: 0;">
+                    <strong>SVG Approach:</strong> The final SVG implementation will use gradients defined in &lt;defs&gt;, CSS styles embedded in &lt;style&gt;, and filters for shadows. This HTML preview demonstrates the visual layout and responsiveness. The actual SVG will have:<br>
+                    • Linear gradients for each health status<br>
+                    • Drop shadow filters with adjustable blur<br>
+                    • Smooth transitions with cubic-bezier timing<br>
+                    • Responsive viewBox for perfect scaling<br>
+                    • Inline title elements for rich tooltips
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showLayout(bays) {
+            document.getElementById('layout-4').style.display = 'none';
+            document.getElementById('layout-8').style.display = 'none';
+            document.getElementById('layout-12').style.display = 'none';
+            document.getElementById('layout-16').style.display = 'none';
+
+            document.getElementById('layout-' + bays).style.display = 'block';
+
+            // Update button states
+            document.querySelectorAll('.toggle-buttons button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
