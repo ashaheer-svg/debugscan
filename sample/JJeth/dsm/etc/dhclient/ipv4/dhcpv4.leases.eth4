@@ -1,0 +1,16 @@
+lease {
+  interface "eth4";
+  fixed-address 192.168.0.162;
+  option subnet-mask 255.255.255.0;
+  option routers 192.168.0.254;
+  option dhcp-lease-time 3600;
+  option dhcp-message-type 5;
+  option domain-name-servers 192.168.0.22,192.168.0.23,203.189.78.162;
+  option dhcp-server-identifier 192.168.0.23;
+  option dhcp-renewal-time 1800;
+  option dhcp-rebinding-time 3150;
+  option domain-name "jjslg.local";
+  renew 2 2017/12/12 11:22:17;
+  rebind 2 2017/12/12 11:48:32;
+  expire 2 2017/12/12 11:56:02;
+}

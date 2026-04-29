@@ -1,0 +1,25 @@
+Attached devices:
+Host: scsi8 Channel: 00 Id: 00 Lun: 00
+  Vendor: ATA      Model: ST4000NM000A-2HZ100      Rev: TN03
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 01 Lun: 00
+  Vendor: ATA      Model: ST4000NM002A-2HZ101      Rev: SN03
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 02 Lun: 00
+  Vendor: ATA      Model: ST4000NM0035-1V4107      Rev: TN05
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 03 Lun: 00
+  Vendor: ATA      Model: ST4000NM0035-1V4107      Rev: TN02
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 04 Lun: 00
+  Vendor: ATA      Model: ST4000NM0035-1V4107      Rev: TN02
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 05 Lun: 00
+  Vendor: ATA      Model: ST4000NM000A-2HZ100      Rev: TN03
+  Type:   Direct-Access                    ANSI  SCSI revision: 05
+Host: scsi8 Channel: 00 Id: 255 Lun: 00
+  Vendor: MARVELL  Model: Virtual Device           Rev: 1.00
+  Type:   RAID                             ANSI  SCSI revision: 04
+Host: scsi9 Channel: 00 Id: 00 Lun: 00
+  Vendor: Synology Model: DiskStation              Rev: PMAP
+  Type:   Direct-Access                    ANSI  SCSI revision: 06

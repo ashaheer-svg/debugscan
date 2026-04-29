@@ -1,0 +1,4 @@
+using configfile = /etc/samba/smb.conf
+
+No locked files
+

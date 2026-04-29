@@ -8,6 +8,9 @@ use App\DeepDive\Report\PdfExporter;
 use App\DeepDive\Report\ReportRenderer;
 use App\DeepDive\Support\Engine;
 use App\DeepDive\Support\Paths;
+use App\DeepDive\AI\AnomalyDetector;
+use App\DeepDive\AI\EventCorrelator;
+use App\DeepDive\AI\RootCauseAnalyzer;
 
 /**
  * Render Step: Generate HTML and PDF reports
@@ -67,23 +70,34 @@ final class RenderStep implements StepInterface
      * FLOW:
      * 1. Ensure report directory exists
      * 2. Extract incidents from context (in-memory, from CorrelateStep)
-     * 3. Initialize ReportRenderer
-     * 4. Load DB overlay (narratives from NarrateStep)
-     * 5. Load rule catalogue (best-effort, not fatal if missing)
-     * 6. Build context object with metadata
-     * 7. Render HTML report via ReportRenderer
-     * 8. Write HTML to disk
-     * 9. Attempt PDF export (optional, best-effort)
-     * 10. Record report paths and completion
+     * 3. RUN PHASE 1 & 2 (inline AI analysis - optional)
+     *    - AnomalyDetector: Find power, thermal, hardware issues
+     *    - EventCorrelator: Build causal chains
+     *    - RootCauseAnalyzer: Extract root causes + remediation
+     * 4. Initialize ReportRenderer
+     * 5. Load DB overlay (narratives from NarrateStep)
+     * 6. Load rule catalogue (best-effort, not fatal if missing)
+     * 7. Build context object with metadata + AI findings
+     * 8. Render HTML report via ReportRenderer
+     * 9. Write HTML to disk
+     * 10. Attempt PDF export (optional, best-effort)
+     * 11. Record report paths and completion
+     *
+     * AI ANALYSIS (Phase 1 & 2):
+     * Detects anomalies and builds root cause chains
+     * Automatically runs for each bundle unless disabled
+     * Results stored in context for report rendering
+     * Non-fatal: report renders even if AI fails
      *
      * METADATA:
      * Context includes job ID, versions, bundles, errors for report display
+     * AI findings include anomalies, chains, root causes, remediation
      * Enables audit trail and reproducibility
      *
      * HTML RENDERING:
      * ReportRenderer produces single-file HTML with embedded CSS/images
+     * Includes rule incidents, power supply data, and AI findings
      * Narratives applied as overlay on top of rule text
-     * If narratives missing: renders with fallback rule descriptions
      *
      * PDF EXPORT:
      * Best-effort using PdfExporter (mPDF-based)
@@ -109,6 +123,21 @@ final class RenderStep implements StepInterface
         $incidents = $ctx->bag['incidents'] ?? [];
         $incidents = is_array($incidents) ? $incidents : [];
 
+        // === RUN PHASE 1 & 2: AI ANOMALY DETECTION & ROOT CAUSE ANALYSIS ===
+        // Optional: Analyzes each bundle for anomalies and root causes
+        // Non-fatal: report renders even if AI analysis fails
+        $aiFindings = [];
+        try {
+            $aiFindings = $this->runAIAnalysis($ctx);
+            if (!empty($aiFindings)) {
+                $ctx->logger->info('[deepdive.render] AI analysis complete: ' . count($aiFindings) . ' bundle(s) analyzed');
+            }
+        } catch (\Throwable $e) {
+            // AI analysis failed: log warning but continue with report
+            // Report will render without AI findings
+            $ctx->logger->warning('[deepdive.render] AI analysis failed: ' . $e->getMessage());
+        }
+
         // === Initialize renderer ===
         $renderer = new ReportRenderer();
         // Load narratives as overlay (applied on top of rule text)
@@ -129,6 +158,8 @@ final class RenderStep implements StepInterface
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],   // Bundle metadata
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],  // Rule evaluation errors
+            'power_data'        => $ctx->bag['power_data'] ?? [],  // Power supply analysis data
+            'ai_findings'       => $aiFindings,                  // Phase 1 & 2 AI analysis results
         ];
 
         // === Render HTML report ===
@@ -173,6 +204,108 @@ final class RenderStep implements StepInterface
             $pdfOk ? 'HTML + PDF' : 'HTML only'
         ));
         $ctx->completeStep($this->id());
+    }
+
+    /**
+     * Internal helper: Run Phase 1 & 2 AI analysis
+     *
+     * PURPOSE:
+     * Runs anomaly detection and root cause analysis on bundles
+     * Non-fatal: if analysis fails, report continues without AI findings
+     *
+     * FLOW:
+     * 1. For each bundle:
+     *    a. Run Phase 1: AnomalyDetector (power, thermal, hardware)
+     *    b. Run Phase 2: EventCorrelator → RootCauseAnalyzer
+     *    c. Collect findings with confidence scores
+     * 2. Return consolidated findings for all bundles
+     *
+     * ERROR HANDLING:
+     * Bundle analysis errors are logged but don't block pipeline
+     * Returns partial results (other bundles still analyzed)
+     *
+     * @param PipelineContext $ctx Pipeline context
+     *
+     * @return array<array> AI findings for all bundles
+     */
+    private function runAIAnalysis(PipelineContext $ctx): array
+    {
+        // Initialize AI components
+        $detector = new AnomalyDetector($ctx->pdo, $ctx->logger, 10000);
+        $correlator = new EventCorrelator($ctx->logger);
+        $analyzer = new RootCauseAnalyzer($ctx->logger);
+
+        $allFindings = [];
+        $bundles = $ctx->bag['bundles'] ?? [];
+
+        foreach ($bundles as &$bundle) {
+            $bundlePath = $bundle['extracted_path'] ?? null;
+            if (!$bundlePath || !is_dir($bundlePath)) {
+                continue;
+            }
+
+            try {
+                // === Phase 1: Detect anomalies ===
+                $phase1 = $detector->analyzeBundleAnomalies($bundlePath, [
+                    'psu_model'        => $bundle['psu_model'] ?? null,
+                    'hardware_spec'    => $bundle['hardware_spec'] ?? null,
+                    'bundle_timestamp' => $bundle['extracted_at'] ?? date('Y-m-d H:i:s'),
+                ]);
+
+                // Collect all anomalies
+                $allAnomalies = array_merge(
+                    $phase1['findings']['power_supply']['anomalies'] ?? [],
+                    $phase1['findings']['thermal']['anomalies'] ?? [],
+                    $phase1['findings']['hardware']['anomalies'] ?? []
+                );
+
+                // === Phase 2: Correlate and analyze root causes ===
+                $chains = [];
+                $rootCauses = [];
+
+                if (!empty($allAnomalies)) {
+                    // Build causal chains
+                    $chains = $correlator->correlateAnomalies(
+                        $allAnomalies,
+                        $phase1['clusters'] ?? []
+                    );
+
+                    // Analyze root causes
+                    foreach ($chains as $chain) {
+                        try {
+                            $rootCauses[] = $analyzer->analyzeChain($chain);
+                        } catch (\Throwable $e) {
+                            $ctx->logger->warning('[deepdive.render] Root cause analysis failed: ' . $e->getMessage());
+                        }
+                    }
+                }
+
+                // === Store findings ===
+                $bundleFindings = [
+                    'bundle_id'        => $bundle['debug_file_id'] ?? basename($bundlePath),
+                    'bundle_name'      => basename($bundlePath),
+                    'phase1'           => $phase1,
+                    'chains'           => $chains,
+                    'root_causes'      => $rootCauses,
+                    'overall_risk'     => $phase1['overall_risk'] ?? 'LOW',
+                    'token_usage'      => $phase1['token_usage'] ?? 0,
+                ];
+
+                $allFindings[] = $bundleFindings;
+                $bundle['ai_analysis'] = $bundleFindings; // Store in bundle for reference
+
+            } catch (\Throwable $e) {
+                // Bundle analysis failed: log and continue
+                $ctx->logger->warning(sprintf(
+                    '[deepdive.render] AI analysis failed for bundle %s: %s',
+                    basename($bundlePath),
+                    $e->getMessage()
+                ));
+                continue;
+            }
+        }
+
+        return $allFindings;
     }
 
     /**

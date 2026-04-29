@@ -61,6 +61,14 @@ use App\DeepDive\Support\Engine;
  */
 final class ReportRenderer
 {
+    /**
+     * Power supply data collected during analysis
+     * Set via render() method context
+     *
+     * @var array
+     */
+    private array $powerData = [];
+
     private const ACTIONABILITY_ORDER = [
         'user_fixable'        => ['label' => 'What you can fix yourself',     'colour' => '#b45309'],
         'upgrade_recommended' => ['label' => 'Hardware upgrades recommended',  'colour' => '#9333ea'],
@@ -120,6 +128,9 @@ final class ReportRenderer
      */
     public function render(array $incidents, array $context, ?RuleCatalogue $catalogue = null): string
     {
+        // Store power data for access by rendering methods
+        $this->powerData = $context['power_data'] ?? [];
+
         $css  = $this->styles();
         $head = $this->headerBlock($context);
 
@@ -137,6 +148,9 @@ final class ReportRenderer
                 break; // Use first bundle's volumes
             }
         }
+
+        // Add power supply analysis section
+        $powerSection = $this->renderPowerSection();
 
         $grouped = $this->groupByActionability($incidents);
         $body    = '';
@@ -166,6 +180,7 @@ final class ReportRenderer
 {$hardware}
 {$summary}
 {$volumeCards}
+{$powerSection}
 {$body}
 {$appendix}
 </main>
@@ -500,6 +515,192 @@ CARD;
   <div class="volume-grid">{$cards}</div>
 </section>
 HTML;
+    }
+
+    /**
+     * Render power supply analysis section
+     * Displays PSU health, voltage readings, and power anomalies
+     */
+    private function renderPowerSection(): string
+    {
+        if (empty($this->powerData)) {
+            return '';
+        }
+
+        $sections = '';
+        foreach ($this->powerData as $powerInfo) {
+            $data = $powerInfo['data'] ?? [];
+            $assessment = $data['health_assessment'] ?? [];
+
+            if (empty($data) || empty($assessment)) {
+                continue;
+            }
+
+            $status = $assessment['overall_status'] ?? 'unknown';
+            $statusClass = match($status) {
+                'critical' => 'psu-status-critical',
+                'warning' => 'psu-status-warning',
+                'caution' => 'psu-status-caution',
+                default => 'psu-status-healthy'
+            };
+
+            $statusIcon = match($status) {
+                'critical' => '⚠️',
+                'warning' => '⚡',
+                'caution' => 'ℹ️',
+                default => '✓'
+            };
+
+            $bundleName = htmlspecialchars($powerInfo['bundle_name'] ?? 'Unknown Bundle', ENT_QUOTES);
+
+            $psuHtml = '';
+            if (!empty($data['power_supplies'])) {
+                $psuHtml = $this->renderPsuTable($data['power_supplies']);
+            }
+
+            $voltageHtml = '';
+            if (!empty($data['voltage_readings'])) {
+                $voltageHtml = $this->renderVoltageTable($data['voltage_readings']);
+            }
+
+            $riskHtml = '';
+            if (!empty($assessment['risk_factors'])) {
+                $riskItems = '';
+                foreach ($assessment['risk_factors'] as $factor) {
+                    $factorHtml = htmlspecialchars($factor, ENT_QUOTES);
+                    $riskItems .= "<li>{$factorHtml}</li>";
+                }
+                $riskHtml = <<<RISK
+<div class="psu-risk-factors">
+  <h5>Risk Factors</h5>
+  <ul>{$riskItems}</ul>
+</div>
+RISK;
+            }
+
+            $sections .= <<<PSU
+<div class="psu-block">
+  <div class="psu-header {$statusClass}">
+    <span class="psu-icon">{$statusIcon}</span>
+    <span class="psu-title">Power Supply Analysis</span>
+    <span class="psu-status">Status: {$status}</span>
+  </div>
+  <div class="psu-content">
+    {$psuHtml}
+    {$voltageHtml}
+    {$riskHtml}
+  </div>
+</div>
+PSU;
+        }
+
+        if ($sections === '') {
+            return '';
+        }
+
+        return <<<HTML
+<section class="psu-section">
+  <h3>Power Supply Health</h3>
+  {$sections}
+</section>
+HTML;
+    }
+
+    /**
+     * Render PSU status table
+     * @param array<mixed> $psus
+     */
+    private function renderPsuTable(array $psus): string
+    {
+        $rows = '';
+        foreach ($psus as $psu) {
+            $idx = htmlspecialchars((string)($psu['index'] ?? '?'), ENT_QUOTES);
+            $status = htmlspecialchars((string)($psu['status'] ?? 'unknown'), ENT_QUOTES);
+            $detection = htmlspecialchars((string)($psu['detection_status'] ?? 'unknown'), ENT_QUOTES);
+            $plugged = $psu['plugged'] ? 'Yes' : 'No';
+            $capacity = (int)($psu['max_capacity_watts'] ?? 0);
+            $capacityStr = $capacity > 0 ? "{$capacity}W" : 'N/A';
+
+            $statusColor = match($status) {
+                'failed' => '#dc2626',
+                'degraded' => '#f59e0b',
+                'healthy' => '#16a34a',
+                default => '#6b7280'
+            };
+
+            $rows .= <<<ROW
+<tr>
+  <td><strong>PSU {$idx}</strong></td>
+  <td style="color:{$statusColor};font-weight:600">{$status}</td>
+  <td>{$detection}</td>
+  <td>{$plugged}</td>
+  <td>{$capacityStr}</td>
+</tr>
+ROW;
+        }
+
+        return <<<TABLE
+<div class="psu-supplies">
+  <h5>Power Supplies</h5>
+  <table class="psu-table">
+    <thead>
+      <tr>
+        <th>Unit</th>
+        <th>Status</th>
+        <th>Detection</th>
+        <th>Plugged</th>
+        <th>Capacity</th>
+      </tr>
+    </thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+TABLE;
+    }
+
+    /**
+     * Render voltage readings table
+     * @param array<mixed> $readings
+     */
+    private function renderVoltageTable(array $readings): string
+    {
+        $rows = '';
+        foreach ($readings as $reading) {
+            $rail = htmlspecialchars((string)($reading['rail_name'] ?? 'Unknown'), ENT_QUOTES);
+            $voltage = number_format($reading['voltage_volts'] ?? 0, 2);
+            $status = htmlspecialchars((string)($reading['status'] ?? 'unknown'), ENT_QUOTES);
+
+            $statusColor = match($status) {
+                'critical' => '#dc2626',
+                'warning' => '#f59e0b',
+                'ok' => '#16a34a',
+                default => '#6b7280'
+            };
+
+            $rows .= <<<ROW
+<tr>
+  <td>{$rail}</td>
+  <td class="mono">{$voltage}V</td>
+  <td style="color:{$statusColor};font-weight:600">{$status}</td>
+</tr>
+ROW;
+        }
+
+        return <<<TABLE
+<div class="psu-voltage">
+  <h5>Voltage Readings</h5>
+  <table class="psu-table">
+    <thead>
+      <tr>
+        <th>Rail</th>
+        <th>Voltage</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>{$rows}</tbody>
+  </table>
+</div>
+TABLE;
     }
 
     /**
@@ -1392,6 +1593,25 @@ h4{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;f
 .volume-stats{text-align:right}
 .volume-stats-usage{color:#0369a1;font-weight:700;font-size:13px;margin:0}
 .volume-stats-text{color:#6b7280;font-size:12px;margin:2px 0 0}
+.psu-section{margin:20px 0}
+.psu-block{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;margin-bottom:16px;overflow:hidden}
+.psu-header{display:flex;align-items:center;gap:12px;padding:16px;background:#fff;border-bottom:1px solid #e5e7eb;font-weight:600;font-size:13px}
+.psu-icon{font-size:18px}
+.psu-title{flex:1}
+.psu-status{font-size:12px;color:#6b7280}
+.psu-status-critical{background:#fef2f2;border-bottom-color:#fee2e2}.psu-status-critical .psu-status{color:#991b1b}
+.psu-status-warning{background:#fffbeb;border-bottom-color:#fef3c7}.psu-status-warning .psu-status{color:#92400e}
+.psu-status-caution{background:#f0f9ff;border-bottom-color:#cffafe}.psu-status-caution .psu-status{color:#0c4a6e}
+.psu-status-healthy{background:#f0fdf4;border-bottom-color:#dcfce7}.psu-status-healthy .psu-status{color:#166534}
+.psu-content{padding:16px}
+.psu-supplies,.psu-voltage,.psu-risk-factors{margin-bottom:16px}
+.psu-supplies:last-child,.psu-voltage:last-child,.psu-risk-factors:last-child{margin-bottom:0}
+.psu-supplies h5,.psu-voltage h5,.psu-risk-factors h5{margin:0 0 12px;font-size:12px;font-weight:700;color:#1f2937;text-transform:uppercase;letter-spacing:0.05em}
+.psu-table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0 0}
+.psu-table th{background:#f9fafb;padding:10px 8px;text-align:left;border-bottom:2px solid #e5e7eb;font-weight:700;color:#6b7280;text-transform:uppercase;font-size:11px;letter-spacing:0.03em}
+.psu-table td{padding:8px;border-bottom:1px solid #f3f4f6;color:#4b5563}
+.psu-risk-factors ul{margin:0;padding-left:20px;font-size:12px;color:#4b5563;line-height:1.6}
+.psu-risk-factors li{margin-bottom:6px}
 CSS;
     }
 

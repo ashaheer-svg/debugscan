@@ -1,0 +1,71 @@
+id: hardware.power_anomaly_detected
+version: 1
+title: "Critical power anomaly detected in system event log"
+severity: high
+actionability: vendor_issue
+category: hardware
+description: >
+  The IPMI System Event Log (SEL) contains one or more critical power-related
+  events. These may include:
+
+  1. Power supply failures (stop/recovery cycles)
+  2. Power delivery anomalies
+  3. Shutdown events triggered by power issues
+  4. Redundancy degradation alerts
+  5. Voltage or current threshold violations
+
+  Power events in the SEL are logged by the Baseboard Management Controller (BMC)
+  and represent real conditions detected by hardware monitoring circuits. Unlike
+  application-level logs, these are hardware-level observations with high
+  confidence.
+
+  Multiple power events over time indicate a trending issue that will eventually
+  lead to system failure or data loss.
+remediation: >
+  1. IMMEDIATE: Analyze the event log for patterns
+     - List all power events: ipmitool sel list | grep -i power
+     - Note timestamps and event descriptions
+     - Identify if events are recurring or escalating
+     - Correlate with system load patterns
+
+  2. DIAGNOSIS:
+     - Is it a stop/recovery cycle? (indicates intermittent failure)
+     - Is it a gradual degradation? (indicates aging/wear)
+     - Is it a single event? (may have been transient)
+     - Are there correlating thermal events? (cooling failure)
+
+  3. CRITICAL ACTIONS if recurring events:
+     - Plan emergency PSU replacement immediately
+     - Backup all critical data to external storage
+     - Increase monitoring frequency (hourly checks)
+     - Notify users of potential downtime risk
+
+  4. INVESTIGATION:
+     - Check system logs for correlating entries
+     - Review power event timestamps
+     - Note any pattern (e.g., same time daily)
+     - Check for external power quality issues
+
+  5. RESOLUTION:
+     - Identify the specific PSU experiencing issues (if applicable)
+     - Order replacement part
+     - Schedule maintenance window
+     - Perform replacement following proper procedures
+
+  6. POST-RESOLUTION:
+     - Clear IPMI event log after replacement
+     - Monitor for 48hrs after repair
+     - Run stress test under load
+     - Verify voltage stability
+tags: [power-supply, events, anomaly, critical, monitoring]
+signature:
+  type: aggregate
+  source: power_supply_parser
+  metric: power_anomaly
+  operator: ">"
+  threshold: 0
+entities:
+  event_type: "$match.event_type"
+  severity: "$match.severity"
+  timestamp: "$match.timestamp"
+  description: "$match.description"

@@ -1,0 +1,30 @@
+[eth0-table]
+	source=192.168.0.23
+	enable=yes
+	id=3
+	source_v6=fe80::211:32ff:fe7b:7421
+	enable_v6=yes
+[eth1-table]
+	source=169.254.212.160
+	enable=yes
+	id=4
+	source_v6=fe80::211:32ff:fe7b:7422
+	enable_v6=yes
+[eth4-table]
+	source=192.168.0.22
+	enable=yes
+	id=5
+	source_v6=fe80::211:32ff:fe6d:c182
+	enable_v6=yes
+[static-table]
+	source=all
+	enable=yes
+	id=2
+	source_v6=all
+	enable_v6=yes
+[tun1000-table]
+	source=
+	enable=no
+	id=6
+	source_v6=
+	enable_v6=no

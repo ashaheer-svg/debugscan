@@ -1,0 +1,5 @@
+0:	from all lookup local 
+2:	from all lookup static-table 
+5:	from 192.168.0.22 lookup eth4-table 
+32766:	from all lookup main 
+32767:	from all lookup default 

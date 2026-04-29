@@ -1,0 +1,47 @@
+id: hardware.redundant_psu_failure
+version: 1
+title: "Redundant power supply failure detected"
+severity: high
+actionability: upgrade_recommended
+category: hardware
+description: >
+  This system is configured with redundant power supplies (for fault tolerance),
+  but one of the PSUs has failed or is no longer detected. The system is currently
+  running on a single PSU with no fault tolerance.
+
+  Impact:
+  - System has ZERO redundancy for power delivery
+  - Any malfunction of remaining PSU causes complete shutdown
+  - Data loss risk is IMMEDIATE
+  - No protection against power transients
+
+  This configuration should never be left unresolved. A second PSU failure
+  means immediate unplanned shutdown and potential data corruption.
+remediation: >
+  1. URGENT: Identify which PSU has failed
+     - Check IPMI sensor status: ipmitool sensor list | grep -i psu
+     - Review system event log: ipmitool sel list
+  2. URGENT: Order replacement PSU matching failed unit
+  3. HIGH: Schedule PSU replacement immediately (same day if possible)
+  4. DURING REPLACEMENT: Do not restart system between PSU changes
+  5. VERIFY: After replacement, confirm both PSUs detected and healthy
+     - Check DMI: dmidecode -t 39
+     - Check IPMI: ipmitool fru list
+  6. MONITOR: Watch system logs for 24hrs after replacement
+
+  Until PSU is replaced:
+  - Avoid scheduled maintenance/restarts
+  - Ensure continuous backup of critical data
+  - Monitor thermal conditions (failed PSU may affect cooling)
+  - Be prepared for emergency shutdown procedures
+tags: [power-supply, redundancy, failure, urgent]
+signature:
+  type: aggregate
+  source: power_supply_parser
+  metric: redundant_psu_degradation
+  operator: ">"
+  threshold: 0
+entities:
+  failed_psu_index: "$match.failed_psu_index"
+  working_psu_count: "$match.working_psu_count"
+  total_psu_count: "$match.total_psu_count"

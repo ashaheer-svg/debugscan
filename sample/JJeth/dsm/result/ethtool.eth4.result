@@ -1,0 +1,15 @@
+Settings for eth4:
+	Supported ports: [ FIBRE ]
+	Supported link modes:   10000baseT/Full 
+	Supported pause frame use: Symmetric
+	Supports auto-negotiation: No
+	Advertised link modes:  10000baseT/Full 
+	Advertised pause frame use: Symmetric
+	Advertised auto-negotiation: No
+	Speed: 10000Mb/s
+	Duplex: Full
+	Port: FIBRE
+	PHYAD: 0
+	Transceiver: external
+	Auto-negotiation: off
+	Link detected: yes

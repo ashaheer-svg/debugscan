@@ -1,0 +1,14 @@
+
+[1d9d1619:580832ae:c69de3af:22ddbed7]
+dev_path=/dev/md0
+disk_list=/dev/sdf,/dev/sde,/dev/sdd,/dev/sdc,/dev/sdb,/dev/sda
+[path-uuid-mapping]
+/dev/md1=9058e264:a83f05e4:82b84ad5:c35f65a2
+/dev/md0=1d9d1619:580832ae:c69de3af:22ddbed7
+/dev/md2=62d1abe5:12ea8987:8f004c4d:62604752
+[62d1abe5:12ea8987:8f004c4d:62604752]
+dev_path=/dev/md2
+disk_list=/dev/sdf,/dev/sde,/dev/sdd,/dev/sdc,/dev/sdb,/dev/sda
+[9058e264:a83f05e4:82b84ad5:c35f65a2]
+dev_path=/dev/md1
+disk_list=/dev/sdf,/dev/sde,/dev/sdd,/dev/sdc,/dev/sdb,/dev/sda

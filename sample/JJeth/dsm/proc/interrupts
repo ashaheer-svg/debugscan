@@ -1,0 +1,55 @@
+            CPU0       CPU1       CPU2       CPU3       CPU4       CPU5       CPU6       CPU7       
+   0:         88          0          0          0          0          0          0          0  IR-IO-APIC-edge      timer
+   3:         24          0          0          0          0          0          0          0  IR-IO-APIC-fasteoi   serial
+   4:         99          0          0          0          0          0          0          0  IR-IO-APIC-fasteoi   serial
+   8:          1          0          0          0          0          0          0          0  IR-IO-APIC-edge      rtc0
+   9:          0          0          0          0          0          0          0          0  IR-IO-APIC-fasteoi   acpi
+  18:         17          0  130537876          0          0          0          0          0  IR-IO-APIC-fasteoi   i801_smbus
+  64:          0          0          0          0          0          0          0          0  DMAR_MSI-edge      dmar0
+  65:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      ahci
+  66:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      ahci
+  67:    6614783   50080830          0  176901701   80477351          0  352320054          0  IR-PCI-MSI-edge      mv14xx-0
+  68:       3388          0          0          0          0          0          0  661653410  IR-PCI-MSI-edge      mv14xx-1
+  69:   59820599  135208639          0        126   43324205        452  126036539          0  IR-PCI-MSI-edge      mv14xx-2
+  70:  109056143  114509246      52756   43855699   95490589          0        881      45212  IR-PCI-MSI-edge      mv14xx-3
+  71:          1          0          0          0          0          0          0          0  IR-PCI-MSI-edge      mv14xx-4
+  72:          1          0          0          0          0          0          0          0  IR-PCI-MSI-edge      mv14xx-5
+  73:          1          0          0          0          0          0          0          0  IR-PCI-MSI-edge      mv14xx-6
+  74:          1          0          0          0          0          0          0          0  IR-PCI-MSI-edge      mv14xx-7
+  75:        507          0          0          0          0          0          0          0  IR-PCI-MSI-edge      xhci_hcd
+  76:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      eth3
+  77:          4         40       1765          0          0    4523052          0      17220  IR-PCI-MSI-edge      eth3-TxRx-0
+  78:          4          0      11230      42445        470    4487932          0          0  IR-PCI-MSI-edge      eth3-TxRx-1
+  79:    1615149    1105890      60695     413027     244550    1066900       7915      27955  IR-PCI-MSI-edge      eth3-TxRx-2
+  80:    1790671    1212400     128235      40245     326550     922900      11375     109705  IR-PCI-MSI-edge      eth3-TxRx-3
+  81:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      eth2
+  82:     683270     464335     159075     229870     211940    2608653      18524     166415  IR-PCI-MSI-edge      eth2-TxRx-0
+  83:     515890     507135     319430     236633     518975    2035554      34260     374205  IR-PCI-MSI-edge      eth2-TxRx-1
+  84:     268000     506900     282250      37010     621019    2295550      48315     483038  IR-PCI-MSI-edge      eth2-TxRx-2
+  85:     254155     573174     414195     153888     553895    1986590      62070     544115  IR-PCI-MSI-edge      eth2-TxRx-3
+  86:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      eth1
+  87:     211655     459050     474150     121680     514980    2144773      64860     550935  IR-PCI-MSI-edge      eth1-TxRx-0
+  88:     234941     341230     343865     119065     321805    2376164      67060     737953  IR-PCI-MSI-edge      eth1-TxRx-1
+  89:     152334     427000     695640     191990     247020    1900150      60479     867470  IR-PCI-MSI-edge      eth1-TxRx-2
+  90:     162776     378498     454215     205600     472930    2024749      67720     775595  IR-PCI-MSI-edge      eth1-TxRx-3
+  91:          0          0          0          0          0          0          0          0  IR-PCI-MSI-edge      eth0
+  92:     225641     522524     655915      37450     286375    1769493      93870     950815  IR-PCI-MSI-edge      eth0-TxRx-0
+  93:     245526     482710     400189      76980     202850    2388690     136430     608708  IR-PCI-MSI-edge      eth0-TxRx-1
+  94:     316166     592090     830760     109009     380730    1642990     164890     505448  IR-PCI-MSI-edge      eth0-TxRx-2
+  95:     650290    1384158     647350      68120     733180     909810      93395      55780  IR-PCI-MSI-edge      eth0-TxRx-3
+  96:        269          0          0      58638 2757960603          0  954350132          0  IR-PCI-MSI-edge      eth4
+ NMI:     158144     144308     168164     191304      91401      53898      70841      58983   Non-maskable interrupts
+ LOC:  242285303  254688312  226760282  246512972  108325960   66128081  120529706  142758889   Local timer interrupts
+ SPU:          0          0          0          0          0          0          0          0   Spurious interrupts
+ PMI:     158144     144308     168164     191304      91401      53898      70841      58983   Performance monitoring interrupts
+ IWI:   33720747   28827470   35181408   37203128   14435656    8913934    8827147   11003960   IRQ work interrupts
+ RTR:          0          0          0          0          0          0          0          0   APIC ICR read retries
+ RES:   86073960   51965933   32821939   33875723   16778154   26514566    7608535    5439258   Rescheduling interrupts
+ CAL:        233        208        250        240        227        239        244        220   Function call interrupts
+ TLB:    1730328    1190238    3522975    3594645    3763096    4582332    2247381    4098626   TLB shootdowns
+ TRM:          0          0          0          0          0          0          0          0   Thermal event interrupts
+ THR:          0          0          0          0          0          0          0          0   Threshold APIC interrupts
+ MCE:          0          0          0          0          0          0          0          0   Machine check exceptions
+ MCP:      30282      30282      30282      30282      30282      30282      30282      30282   Machine check polls
+ ERR:          0
+ MIS:          0

@@ -1,0 +1,96 @@
+
+
+SN: 1780NTN143500, Oops#1 at 2018-04-06T09:12:05+03:00 
+2018-04-06T09:08:45+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42372], T[(null)]
+2018-04-06T09:09:13+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42488]
+2018-04-06T09:09:15+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42488], T[(null)]
+2018-04-06T09:09:43+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42602]
+2018-04-06T09:09:45+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42602], T[(null)]
+2018-04-06T09:10:13+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42718]
+2018-04-06T09:10:16+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42718], T[(null)]
+2018-04-06T09:10:44+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42830]
+2018-04-06T09:10:46+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42830], T[(null)]
+2018-04-06T09:11:14+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42836]
+2018-04-06T09:11:16+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42836], T[(null)]
+2018-04-06T09:11:44+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:42950]
+2018-04-06T09:11:46+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:42950], T[(null)]
+2018-04-06T09:12:14+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43066]
+2018-04-06T09:12:16+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43066], T[(null)]
+2018-04-06T09:12:44+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43180]
+2018-04-06T09:12:46+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43180], T[(null)]
+2018-04-06T09:13:14+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43296]
+2018-04-06T09:13:16+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43296], T[(null)]
+2018-04-06T09:13:44+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43410]
+2018-04-06T09:13:46+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43410], T[(null)]
+2018-04-06T09:14:15+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43526]
+2018-04-06T09:14:17+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43526], T[(null)]
+2018-04-06T09:14:45+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43640]
+2018-04-06T09:14:47+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43640], T[(null)]
+2018-04-06T09:15:15+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43756]
+2018-04-06T09:15:17+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43756], T[(null)]
+2018-04-06T09:15:45+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43870]
+2018-04-06T09:15:47+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43870], T[(null)]
+2018-04-06T09:16:15+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:43986]
+2018-04-06T09:16:17+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:43986], T[(null)]
+2018-04-06T09:16:45+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44100]
+2018-04-06T09:16:47+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44100], T[(null)]
+2018-04-06T09:17:15+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44216]
+2018-04-06T09:17:17+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44216], T[(null)]
+2018-04-06T09:17:46+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44330]
+2018-04-06T09:17:48+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44330], T[(null)]
+2018-04-06T09:18:16+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44446]
+2018-04-06T09:18:18+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44446], T[(null)]
+2018-04-06T09:18:46+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44560]
+2018-04-06T09:18:48+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44560], T[(null)]
+2018-04-06T09:19:16+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44676]
+2018-04-06T09:19:18+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44676], T[(null)]
+2018-04-06T09:19:46+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44790]
+2018-04-06T09:19:48+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44790], T[(null)]
+2018-04-06T09:20:16+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:44906]
+2018-04-06T09:20:18+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:44906], T[(null)]
+2018-04-06T09:20:46+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:45020]
+2018-04-06T09:20:48+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.dahuatech.com][10.2.0.3:45020], T[(null)]
+2018-04-06T09:20:56+03:00  iSCSI:iscsi_target.c:4526:iscsit_close_connection Close - I[iqn.1991-05.com.microsoft:jjetveeam01.jjet.local][192.168.0.25:49664], T[iqn.2000-01.com.synology:JJETNAS01.VMWARE01]
+2018-04-06T09:21:13+03:00  init: synonetd main process (5693) killed by TERM signal
+2018-04-06T09:21:13+03:00  init: synostoraged main process (11147) terminated with status 15
+2018-04-06T09:21:13+03:00  init: hotplugd main process (11403) killed by TERM signal
+2018-04-06T09:21:13+03:00  init: smbd main process (11949) killed by TERM signal
+2018-04-06T09:21:13+03:00  init: pkg-FileStation-thumbd main process (12866) killed by TERM signal
+2018-04-06T09:21:17+03:00  iSCSI:iscsi_target_login.c:818:iscsi_post_login_handler Discovery session from I[iqn.dahuatech.com][10.2.0.3:45136]
+2018-04-06T09:21:17+03:00  init: Disconnected from D-Bus system bus
+2018-04-06T09:21:19+03:00  BUG: unable to handle kernel paging request at ffffffffa0bfb378
+2018-04-06T09:21:19+03:00  IP: [<ffffffffa0bfb378>] 0xffffffffa0bfb377
+2018-04-06T09:21:19+03:00  PGD 180e067 PUD 180f063 PMD 44dee3067 PTE 0
+2018-04-06T09:21:19+03:00  Oops: 0010 [#1] SMP 
+2018-04-06T09:21:19+03:00  Modules linked in: hid_generic usbhid hid usblp usb_storage target_core_ep(O) target_core_file(O) target_core_iblock(O) target_core_mod(O) syno_extent_pool(PO) rodsp_ep(O) broadwell_synobios(PO) adt7475 i2c_i801 exfat(O) btrfs synoacl_vfs(PO) zlib_deflate hfsplus md4 hmac bnx2x(O) libcrc32c mdio mlx5_core(O) mlx4_en(O) mlx4_core(O) mlx_compat(O) compat(O) tn40xx(O) i40e(O) ixgbe(O) be2net(O) igb(O) i2c_algo_bit e1000e(O) dca fuse vfat fat crc32c_intel aesni_intel glue_helper lrw gf128mul ablk_helper arc4 cryptd ecryptfs sha512_generic sha256_generic sha1_generic ecb aes_x86_64 authenc des_generic ansi_cprng cts md5 cbc cpufreq_conservative cpufreq_powersave cpufreq_performance cpufreq_ondemand acpi_cpufreq mperf processor thermal_sys cpufreq_stats freq_table dm_snapshot crc_itu_t crc_ccitt
+2018-04-06T09:21:19+03:00   quota_v2 quota_tree psnap p8022 llc sit tunnel4 ip_tunnel ipv6 zram(C) sg etxhci_hcd xhci_hcd uhci_hcd usbcore usb_common mv14xx(O) [last unloaded: iscsi_target_mod]
+2018-04-06T09:21:19+03:00  CPU: 0 PID: 31299 Comm: iscsi_trx Tainted: P         C O 3.10.102 #15217
+2018-04-06T09:21:19+03:00  Hardware name: Synology Inc. RS3617xs Series/Type2 - Board Product Name1, BIOS M.012 2016/06/04
+2018-04-06T09:21:19+03:00  task: ffff88046af5f040 ti: ffff88043eb2c000 task.ti: ffff88043eb2c000
+2018-04-06T09:21:19+03:00  RIP: 0010:[<ffffffffa0bfb378>]  [<ffffffffa0bfb378>] 0xffffffffa0bfb377
+2018-04-06T09:21:19+03:00  RSP: 0018:ffff88043eb2fde8  EFLAGS: 00010286
+2018-04-06T09:21:19+03:00  RAX: 0000000000000000 RBX: ffff88045da38800 RCX: 000000000000000f
+2018-04-06T09:21:19+03:00  RDX: ffff88045da38a40 RSI: 0000000000000286 RDI: ffff88045da38a38
+2018-04-06T09:21:19+03:00  RBP: ffff88043eb2fe48 R08: ffff88043eb2c000 R09: 0000000000000001
+2018-04-06T09:21:19+03:00  R10: 0005acf27fe65a4a R11: 0000000000000000 R12: ffff88045da38c02
+2018-04-06T09:21:19+03:00  R13: ffff88046af5f040 R14: 0000000000000000 R15: 0000000000000000
+2018-04-06T09:21:19+03:00  FS:  0000000000000000(0000) GS:ffff88047fc00000(0000) knlGS:0000000000000000
+2018-04-06T09:21:19+03:00  CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+2018-04-06T09:21:19+03:00  CR2: ffffffffa0bfb378 CR3: 00000004478fc000 CR4: 00000000003407f0
+2018-04-06T09:21:19+03:00  DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
+2018-04-06T09:21:19+03:00  DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
+2018-04-06T09:21:19+03:00  Stack:
+2018-04-06T09:21:19+03:00   ffff88047fd0c090 0000000000000000 0000000000000020 ffff88046b14f600
+2018-04-06T09:21:19+03:00   0000000127bf29ac ffff88047fd10300 0000000000000004 000000005da38cd0
+2018-04-06T09:21:19+03:00   7fffffff00000000 ffff88045da38cc8 ffff88043eb2fe48 0000000000000030
+2018-04-06T09:21:19+03:00  Call Trace:
+2018-04-06T09:21:19+03:00   [<ffffffff810501ff>] ? kthread+0xaf/0xc0
+2018-04-06T09:21:19+03:00   [<ffffffff810d0000>] ? __pte_alloc+0x20/0xa0
+2018-04-06T09:21:19+03:00   [<ffffffff81050150>] ? kthread_create_on_node+0x110/0x110
+2018-04-06T09:21:19+03:00   [<ffffffff814b0408>] ? ret_from_fork+0x58/0x90
+2018-04-06T09:21:19+03:00   [<ffffffff81050150>] ? kthread_create_on_node+0x110/0x110
+2018-04-06T09:21:19+03:00  Code:  Bad RIP value.
+2018-04-06T09:21:19+03:00  RIP  [<ffffffffa0bfb378>] 0xffffffffa0bfb377
+2018-04-06T09:21:19+03:00   RSP <ffff88043eb2fde8>
+2018-04-06T09:21:19+03:00  CR2: ffffffffa0bfb378
+2018-04-06T09:21:19+03:00  ---[ end trace bc22a04e48944f9a ]---

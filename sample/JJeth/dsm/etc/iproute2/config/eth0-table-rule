@@ -1,0 +1,5 @@
+[eth0_policy]
+	mask=255.255.255.0
+	ip=192.168.0.23
+	ifname=eth0
+	gateway=192.168.0.23

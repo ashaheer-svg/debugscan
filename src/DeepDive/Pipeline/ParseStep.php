@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DeepDive\Pipeline;
 
 use App\DeepDive\Hardware\HardwareSpecExtractor;
+use App\Parsers\PowerSupplyParser;
 use App\DeepDive\Parsers\BundleLocator;
 use App\DeepDive\Parsers\TimestampParser;
 use App\DeepDive\Rules\Sources\SourceRegistry;
@@ -70,7 +71,8 @@ final class ParseStep implements StepInterface
      *    a. Locate data sources (logs, databases, etc.)
      *    b. Register all sources into shared registry
      *    c. Extract hardware specifications
-     *    d. Generate metadata facts for report
+     *    d. Extract power supply information
+     *    e. Generate metadata facts for report
      * 4. Store complete registry for EvaluateStep
      * 5. Record statistics and complete step
      *
@@ -84,9 +86,16 @@ final class ParseStep implements StepInterface
      * - Extracts hardware configuration
      * - Generates missing/extracted fields lists
      *
+     * POWER SUPPLY EXTRACTION:
+     * PowerSupplyParser analyzes power system health:
+     * - Extracts DMI Type 39 (System Power Supply) information
+     * - Parses IPMI voltage/current sensors
+     * - Extracts IPMI System Event Log for power anomalies
+     * - Performs health assessment with risk factors
+     *
      * @param PipelineContext $ctx Shared pipeline context
      *
-     * @return void Populates $ctx->bag['source_registry'] and facts
+     * @return void Populates $ctx->bag['source_registry'], facts, and power_data
      */
     public function run(PipelineContext $ctx): void
     {
@@ -98,6 +107,8 @@ final class ParseStep implements StepInterface
         $registry = new SourceRegistry(); // Unified registry for all bundles
         $facts    = [];                    // Per-bundle metadata for report
         $hwExtractor = new HardwareSpecExtractor();
+        $powerParser = new PowerSupplyParser();   // Power supply analysis
+        $powerData = [];                          // Collected power data
 
         // === Process each bundle ===
         foreach ($ctx->bag['bundles'] as &$bundle) {
@@ -132,6 +143,30 @@ final class ParseStep implements StepInterface
                 'missing_fields'      => $hardwareSpec->missingFields(),
             ];
 
+            // === Extract power supply information ===
+            // Analyzes power system health (DMI, IPMI, events)
+            try {
+                $psuResult = $powerParser->parse($base, [
+                    'hardware' => $hardwareSpec,
+                    'majorversion' => 7  // DSM version for context
+                ]);
+
+                // Collect power data for later rendering
+                $powerData[] = [
+                    'bundle_id' => $bundle['debug_file_id'] ?? basename($base),
+                    'bundle_name' => basename($base),
+                    'data' => $psuResult['data'] ?? [],
+                    'citations' => $psuResult['citations'] ?? [],
+                ];
+
+                // Store in bundle for access during rendering
+                $bundle['power_data'] = $psuResult['data'] ?? [];
+            } catch (\Throwable $e) {
+                // Log error but continue - power data is supplementary
+                error_log("PowerSupplyParser error for {$base}: " . $e->getMessage());
+                $bundle['power_data'] = null;
+            }
+
             // === Generate per-bundle facts for report ===
             $facts[] = [
                 'debug_file_id'  => $bundle['debug_file_id'],           // For tracking
@@ -148,13 +183,15 @@ final class ParseStep implements StepInterface
         // Store results in context for downstream steps
         $ctx->bag['facts']           = $facts;
         $ctx->bag['source_registry'] = $registry;
+        $ctx->bag['power_data']      = $powerData;  // Power supply information for rendering
 
         // Report step completion with statistics
         $detail = sprintf(
-            '%d bundle(s), %d log source(s), %d sqlite source(s)',
+            '%d bundle(s), %d log source(s), %d sqlite source(s), %d power analysis(s)',
             count($facts),
             count($registry->allLogs()),
             count($registry->allSqlite()),
+            count($powerData),
         );
         $ctx->stepDetail($this->id(), $detail);
         $ctx->completeStep($this->id());

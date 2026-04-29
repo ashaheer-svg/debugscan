@@ -1,0 +1,72 @@
+sda:
+
+sda1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sda2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sda3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+sdb:
+
+sdb1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sdb2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sdb3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+sdc:
+
+sdc1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sdc2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sdc3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+sdd:
+
+sdd1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sdd2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sdd3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+sde:
+
+sde1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sde2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sde3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+sdf:
+
+sdf1:
+ARRAY /dev/md0 UUID=1d9d1619:580832ae:c69de3af:22ddbed7
+
+sdf2:
+ARRAY /dev/md1 UUID=9058e264:a83f05e4:82b84ad5:c35f65a2
+
+sdf3:
+ARRAY /dev/md/2  metadata=1.2 UUID=62d1abe5:12ea8987:8f004c4d:62604752 name=JJETNAS01:2
+
+md0:
+
+md1:
+
+md2:
+

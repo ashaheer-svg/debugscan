@@ -1,0 +1,41 @@
+id: hardware.psu_not_detected
+version: 1
+title: "Power supply unit not detected by system"
+severity: critical
+actionability: vendor_issue
+category: hardware
+description: >
+  The system's Baseboard Management Controller (BMC) reports that the power
+  supply unit is "Not Present" or "Not Plugged", despite the system being
+  operational. This indicates either a failed PSU, a PSU monitoring circuit
+  failure, or a loose connection. This is a critical issue because:
+
+  1. System may shut down unexpectedly when power demand spikes
+  2. No protection against voltage instability or transients
+  3. Without redundancy, any PSU failure causes data loss
+  4. Risk of data corruption from unclean shutdown
+
+  The device is currently running but at risk of imminent failure.
+remediation: >
+  1. IMMEDIATE: Review IPMI logs for power-related events
+  2. IMMEDIATE: Physically inspect PSU for damage, burns, or loose connectors
+  3. SHORT-TERM: Prepare replacement PSU for scheduled maintenance
+  4. BACKUP: Ensure all critical data is backed up to external storage
+  5. SCHEDULE: Perform PSU replacement during maintenance window
+  6. VERIFY: After replacement, confirm DMI reports correct PSU detection
+
+  If PSU appears intact but still not detected:
+  - Update BMC/IPMI firmware to latest version
+  - Perform BMC reset: ipmitool mc reset cold
+  - Check for connector seating on motherboard power header
+tags: [power-supply, psu, bmc, ipmi, critical-hardware]
+signature:
+  type: aggregate
+  source: power_supply_parser
+  metric: psu_detection_failure
+  operator: ">"
+  threshold: 0
+entities:
+  psu_index: "$match.psu_index"
+  detection_status: "$match.detection_status"
+  plugged_status: "$match.plugged"

@@ -1,0 +1,71 @@
+-+-[0000:ff]-+-0b.0  Device 8086:6f81
+ |           +-0b.1  Device 8086:6f36
+ |           +-0b.2  Device 8086:6f37
+ |           +-0b.3  Device 8086:6f76
+ |           +-0c.0  Device 8086:6fe0
+ |           +-0c.1  Device 8086:6fe1
+ |           +-0c.2  Device 8086:6fe2
+ |           +-0c.3  Device 8086:6fe3
+ |           +-0f.0  Device 8086:6ff8
+ |           +-0f.4  Device 8086:6ffc
+ |           +-0f.5  Device 8086:6ffd
+ |           +-0f.6  Device 8086:6ffe
+ |           +-10.0  Device 8086:6f1d
+ |           +-10.1  Device 8086:6f34
+ |           +-10.5  Device 8086:6f1e
+ |           +-10.6  Device 8086:6f7d
+ |           +-10.7  Device 8086:6f1f
+ |           +-12.0  Device 8086:6fa0
+ |           +-12.1  Device 8086:6f30
+ |           +-13.0  Device 8086:6fa8
+ |           +-13.1  Device 8086:6f71
+ |           +-13.2  Device 8086:6faa
+ |           +-13.3  Device 8086:6fab
+ |           +-13.4  Device 8086:6fac
+ |           +-13.5  Device 8086:6fad
+ |           +-13.6  Device 8086:6fae
+ |           +-13.7  Device 8086:6faf
+ |           +-14.0  Device 8086:6fb0
+ |           +-14.1  Device 8086:6fb1
+ |           +-14.2  Device 8086:6fb2
+ |           +-14.3  Device 8086:6fb3
+ |           +-14.4  Device 8086:6fbc
+ |           +-14.5  Device 8086:6fbd
+ |           +-14.6  Device 8086:6fbe
+ |           +-14.7  Device 8086:6fbf
+ |           +-15.0  Device 8086:6fb4
+ |           +-15.1  Device 8086:6fb5
+ |           +-15.2  Device 8086:6fb6
+ |           +-15.3  Device 8086:6fb7
+ |           +-1e.0  Device 8086:6f98
+ |           +-1e.1  Device 8086:6f99
+ |           +-1e.2  Device 8086:6f9a
+ |           +-1e.3  Device 8086:6fc0
+ |           +-1e.4  Device 8086:6f9c
+ |           +-1f.0  Device 8086:6f88
+ |           \-1f.2  Device 8086:6f8a
+ \-[0000:00]-+-00.0  Device 8086:6f00
+             +-01.0-[01]--
+             +-02.0-[02]--+-00.0  Device 8086:6f50
+             |            +-00.1  Device 8086:6f51
+             |            +-00.2  Device 8086:6f52
+             |            \-00.3  Device 8086:6f53
+             +-02.2-[03-05]--+-00.0  Device 8086:15a7
+             |               \-00.1  Device 8086:15a7
+             +-03.0-[06]----00.0  Device 1b4b:1475
+             +-03.2-[07]----00.0  Device 1fc9:4022
+             +-05.0  Device 8086:6f28
+             +-05.1  Device 8086:6f29
+             +-05.2  Device 8086:6f2a
+             +-05.4  Device 8086:6f2c
+             +-14.0  Device 8086:8c31
+             +-1a.0  Device 8086:8c2d
+             +-1c.0-[08]----00.0  Device 1b4b:9235
+             +-1c.2-[09]----00.0  Device 8086:1533
+             +-1c.3-[0a]----00.0  Device 8086:1533
+             +-1c.4-[0b]----00.0  Device 1b4b:9235
+             +-1c.6-[0c]----00.0  Device 8086:1533
+             +-1c.7-[0d]----00.0  Device 8086:1533
+             +-1d.0  Device 8086:8c26
+             +-1f.0  Device 8086:8c54
+             \-1f.3  Device 8086:8c22

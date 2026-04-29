@@ -1,0 +1,341 @@
+Service [syslog-acc] status=[enable]
+required upstart job: 
+	[syslog-acc] is start. 
+=======================================
+Service [pkgctl-FileStation] status=[enable]
+required upstart job: 
+	[pkgctl-FileStation] is start. 
+=======================================
+Service [nmbd] status=[enable]
+required upstart job: 
+	[nmbd] is start. 
+=======================================
+Service [ntpd-client] status=[enable]
+required upstart job: 
+	[ntpd] is start. 
+=======================================
+Service [pkgctl-OAuthService] status=[enable]
+required upstart job: 
+	[pkgctl-OAuthService] is start. 
+=======================================
+Service [ntpd-server] status=[disable]
+required upstart job: 
+	[ntpd] is start. 
+=======================================
+Service [ftpd] status=[disable]
+required upstart job: 
+	[ftpd] is stop. 
+	[ftpd-pure] is stop. 
+=======================================
+Service [crond] status=[enable]
+required upstart job: 
+	[crond] is start. 
+=======================================
+Service [synopyntlmd] status=[disable]
+required upstart job: 
+	[synopyntlmd] is stop. 
+=======================================
+Service [synovpnclient] status=[enable]
+required upstart job: 
+	[synovpnclient] is start. 
+=======================================
+Service [usbipd] status=[disable]
+required upstart job: 
+	[usbipd] is stop. 
+=======================================
+Service [btacd] status=[disable]
+required upstart job: 
+	[btacd] is stop. 
+=======================================
+Service [miniupnpd-handler] status=[disable]
+required upstart job: 
+	[miniupnpd-handler] is stop. 
+=======================================
+Service [atalk] status=[enable]
+required upstart job: 
+	[netatalk] is start. 
+=======================================
+Service [synomkthumbd] status=[disable]
+required upstart job: 
+	[synomkthumbd] is stop. 
+=======================================
+Service [bonjour] status=[disable]
+required upstart job: 
+	[bonjour] is stop. 
+=======================================
+Service [natpmpd] status=[disable]
+required upstart job: 
+	[natpmpd] is stop. 
+=======================================
+Service [syslog-notify] status=[enable]
+required upstart job: 
+	[syslog-ng] is start. 
+	[syslog-notify] is start. 
+=======================================
+Service [tftp] status=[disable]
+required upstart job: 
+	[opentftp] is stop. 
+=======================================
+Service [synotunnel] status=[disable]
+required upstart job: 
+	[synotunnel] is stop. 
+=======================================
+Service [cupsd] status=[disable]
+required upstart job: 
+	[cupsd] is stop. 
+=======================================
+Service [synoovs-db] status=[disable]
+required upstart job: 
+	[synoovs-db] is stop. 
+=======================================
+Service [ssh-shell] status=[disable]
+required upstart job: 
+	[ssh-shell] is stop. 
+	[sshd] is stop. 
+=======================================
+Service [synocgid] status=[enable]
+required upstart job: 
+	[synocgid] is start. 
+=======================================
+Service [synocontentextractd] status=[disable]
+required upstart job: 
+	[synocontentextractd] is stop. 
+=======================================
+Service [synowstransfer] status=[disable]
+required upstart job: 
+	[synowstransfer-adapter] is stop. 
+=======================================
+Service [heartbeat] status=[disable]
+required upstart job: 
+	[heartbeatd] is stop. 
+=======================================
+Service [dc-output] status=[enable]
+required upstart job: 
+	[dc-output] is start. 
+=======================================
+Service [dbus] status=[enable]
+required upstart job: 
+	[dbus-system] is start. 
+	[dbus-session] is start. 
+=======================================
+Service [manutild] status=[disable]
+required upstart job: 
+	[manutild] is stop. 
+=======================================
+Service [synotifyd] status=[disable]
+required upstart job: 
+	[synotifyd] is stop. 
+=======================================
+Service [synogpoclient] status=[enable]
+required upstart job: 
+	[synogpoclient] is start. 
+=======================================
+Service [iscsitrg] status=[enable]
+required upstart job: 
+	[iscsitrg-adapter] is start. 
+=======================================
+Service [cups-lpd] status=[disable]
+required upstart job: 
+	[cups-lpd] is stop. 
+	[inetd] is stop. 
+=======================================
+Service [synoagentregisterd] status=[disable]
+required upstart job: 
+	[synoagentregisterd] is stop. 
+=======================================
+Service [support-remote-access] status=[disable]
+required upstart job: 
+	[synorelayd] is stop. 
+=======================================
+Service [ups-net] status=[disable]
+required upstart job: 
+	[upsd-net-adapter] is stop. 
+=======================================
+Service [findhost] status=[enable]
+required upstart job: 
+	[findhostd] is start. 
+=======================================
+Service [sssd] status=[disable]
+required upstart job: 
+	[sssd] is stop. 
+=======================================
+Service [rsyncd] status=[disable]
+required upstart job: 
+	[rsyncd-adapter] is stop. 
+	[sshd] is stop. 
+=======================================
+Service [synoindexd] status=[disable]
+required upstart job: 
+	[synoindexd] is stop. 
+=======================================
+Service [winbindd] status=[disable]
+required upstart job: 
+	[winbindd] is stop. 
+=======================================
+Service [synomkflvd] status=[disable]
+required upstart job: 
+	[synomkflvd] is stop. 
+=======================================
+Service [synomount] status=[enable]
+required upstart job: 
+	[synomount] is start. 
+=======================================
+Service [ldap-server] status=[disable]
+required upstart job: 
+	[slapd-adapter] is stop. 
+=======================================
+Service [synoovs-vswitch] status=[disable]
+required upstart job: 
+	[synoovs-vswitch] is stop. 
+=======================================
+Service [pgsql] status=[enable]
+required upstart job: 
+	[pgsql-adapter] is start. 
+=======================================
+Service [upnpd] status=[disable]
+required upstart job: 
+	[upnpd] is stop. 
+=======================================
+Service [avahi] status=[enable]
+required upstart job: 
+	[avahi] is start. 
+=======================================
+Service [ddns] status=[disable]
+required upstart job: 
+	[ddnsd] is stop. 
+=======================================
+Service [synologanalyzer] status=[enable]
+required upstart job: 
+	[synologand] is start. 
+=======================================
+Service [synosnmpcd] status=[enable]
+required upstart job: 
+	[synosnmpcd] is start. 
+=======================================
+Service [hotplugd] status=[enable]
+required upstart job: 
+	[hotplugd] is start. 
+=======================================
+Service [telnetd] status=[disable]
+required upstart job: 
+	[telnetd] is stop. 
+	[inetd] is stop. 
+=======================================
+Service [synoperfeventd] status=[disable]
+required upstart job: 
+	[synoperfeventd] is stop. 
+=======================================
+Service [nfsd] status=[disable]
+required upstart job: 
+	[nfsd-adapter] is stop. 
+=======================================
+Service [s2s_daemon] status=[enable]
+required upstart job: 
+	[s2s_daemon] is start. 
+=======================================
+Service [ups-usb] status=[disable]
+required upstart job: 
+	[upsd-usb-adapter] is stop. 
+=======================================
+Service [synologrotate] status=[enable]
+required upstart job: 
+	[synologrotated] is start. 
+=======================================
+Service [samba] status=[enable]
+required upstart job: 
+	[smbd] is start. 
+=======================================
+Service [nginx] status=[enable]
+required upstart job: 
+	[nginx] is start. 
+=======================================
+Service [synobackupd] status=[enable]
+required upstart job: 
+	[synobackupd] is start. 
+=======================================
+Service [bluetoothd] status=[disable]
+required upstart job: 
+	[bluetoothd] is stop. 
+=======================================
+Service [nslcd] status=[disable]
+required upstart job: 
+	[nslcd] is stop. 
+=======================================
+Service [scemd] status=[enable]
+required upstart job: 
+	[scemd] is start. 
+=======================================
+Service [snmp] status=[enable]
+required upstart job: 
+	[snmpd] is start. 
+=======================================
+service [pppoerelay] status=[error]
+required upstart job: 
+	[pppoerelay] is stop. 
+=======================================
+Service [apparmor] status=[enable]
+required upstart job: 
+	[apparmor] is start. 
+=======================================
+Service [synostoraged] status=[enable]
+required upstart job: 
+	[synostoraged] is start. 
+=======================================
+Service [pkgctl-SynoFinder] status=[enable]
+required upstart job: 
+	[pkgctl-SynoFinder] is start. 
+=======================================
+Service [synowifid] status=[disable]
+required upstart job: 
+	[synowifid] is stop. 
+=======================================
+Service [synocacheclient] status=[enable]
+required upstart job: 
+	[synocacheclient] is start. 
+=======================================
+Service [synocrond] status=[enable]
+required upstart job: 
+	[synocrond] is start. 
+=======================================
+Service [DSM] status=[enable]
+required upstart job: 
+	[synoscgi] is start. 
+=======================================
+Service [sftp] status=[disable]
+required upstart job: 
+	[sshd] is stop. 
+	[ssh-sftp] is stop. 
+=======================================
+Service [synorelayd] status=[disable]
+required upstart job: 
+	[synorelayd] is stop. 
+=======================================
+Service [gcpd] status=[disable]
+required upstart job: 
+	[gcpd] is stop. 
+=======================================
+Service [synoconfd] status=[enable]
+required upstart job: 
+	[synoconfd] is start. 
+=======================================
+Service [synonetd] status=[enable]
+required upstart job: 
+	[synonetd] is start. 
+=======================================
+Service [ssdp] status=[enable]
+required upstart job: 
+	[minissdpd] is start. 
+=======================================
+Service [syslog-ng] status=[enable]
+required upstart job: 
+	[syslog-ng] is start. 
+=======================================
+Service [synocachepinfiletool] status=[enable]
+required upstart job: 
+	[synocachepinfiletool] is stop. 
+=======================================
+Service [ftpd-ssl] status=[disable]
+required upstart job: 
+	[ftpd] is stop. 
+	[ftpd-ssl] is stop. 
+=======================================

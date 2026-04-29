@@ -1,0 +1,3 @@
+[/dev/md2]
+	 desc="RAID 6, btrfs"
+	 reuse_space_id="reuse_1"

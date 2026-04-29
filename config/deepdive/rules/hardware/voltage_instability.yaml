@@ -1,0 +1,69 @@
+id: hardware.voltage_instability
+version: 1
+title: "Power supply voltage instability detected"
+severity: high
+actionability: vendor_issue
+category: hardware
+description: >
+  The system's power supply is reporting unstable or out-of-specification
+  voltage readings on one or more rails. This indicates:
+
+  1. Degraded power supply output regulation
+  2. Potential for data corruption under load
+  3. Risk of system shutdown if voltage sag continues
+  4. Possible failing PSU capacitors or output circuits
+
+  Voltage instability is often an early indicator of PSU failure. The power
+  supply may be failing gradually, with voltage excursions becoming worse
+  under load (high I/O, computation). Current readings may appear normal,
+  but the system is at risk.
+
+  This is NOT the same as a failed PSU - the system is still running. However,
+  it indicates imminent failure and requires attention before complete failure.
+remediation: >
+  1. IMMEDIATE: Monitor voltage readings over time
+     - Collect IPMI sensor data periodically
+     - Correlate voltage sag with system load
+     - Check if instability worsens during peak usage
+
+  2. SHORT-TERM: Prepare PSU replacement
+     - Order replacement PSU matching specifications
+     - Identify which PSU is showing instability
+     - Schedule maintenance window
+
+  3. DURING OPERATION:
+     - Reduce peak load if possible (defer backups)
+     - Increase monitoring frequency
+     - Keep continuous data backup updated
+     - Monitor system logs for power-related events
+
+  4. INVESTIGATION:
+     - Check for loose internal connections
+     - Test with equipment-level power monitoring
+     - Review PSU manufacturing date (age factor)
+     - Verify thermal conditions around PSU
+
+  5. REPLACEMENT:
+     - Replace PSU during maintenance window
+     - Verify voltage readings return to normal after replacement
+     - Run stress test under load
+     - Monitor for 24hrs after replacement
+
+  Until resolved:
+     - Avoid scheduled system restarts
+     - Minimize heavy I/O operations
+     - Be prepared for emergency shutdown procedures
+     - Maintain current backup strategy
+tags: [power-supply, voltage, stability, degradation, warning]
+signature:
+  type: aggregate
+  source: power_supply_parser
+  metric: voltage_instability
+  operator: ">"
+  threshold: 0
+entities:
+  rail_name: "$match.rail_name"
+  voltage_volts: "$match.voltage_volts"
+  status: "$match.status"
+  min_volts: "$match.min_volts"
+  max_volts: "$match.max_volts"

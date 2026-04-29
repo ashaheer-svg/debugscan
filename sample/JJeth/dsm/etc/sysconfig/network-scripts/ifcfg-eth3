@@ -1,0 +1,3 @@
+DEVICE=eth3
+BOOTPROTO=dhcp
+ONBOOT=yes
