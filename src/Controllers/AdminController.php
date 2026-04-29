@@ -1060,6 +1060,10 @@ class AdminController
      * - Configure confidence thresholds
      * - Set error handling policy
      *
+     * NOTE:
+     * This is a platform-wide setting, not per-tenant
+     * Uses a special "system" tenant_id for storage
+     *
      * @param Request $request HTTP request
      * @param Response $response HTTP response
      *
@@ -1067,8 +1071,9 @@ class AdminController
      */
     public function deepdiveReportAiSettings(Request $request, Response $response): Response
     {
-        // Get tenant ID from session (for multi-tenant context)
-        $tenantId = $_SESSION['tenant_id'] ?? null;
+        // Use a special "system" tenant ID for platform-wide DeepDive settings
+        // This keeps settings isolated from actual tenant data
+        $tenantId = 'system-deepdive';
         $logger = null;
 
         // Initialize the settings controller
@@ -1094,7 +1099,7 @@ class AdminController
      */
     public function updateDeepDiveReportAiSettings(Request $request, Response $response): Response
     {
-        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $tenantId = 'system-deepdive';
         $logger = null;
 
         $controller = new ReportAISettingsController($this->pdo, $tenantId, $logger);
@@ -1117,7 +1122,7 @@ class AdminController
      */
     public function getDeepDiveModels(Request $request, Response $response): Response
     {
-        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $tenantId = 'system-deepdive';
         $controller = new ReportAISettingsController($this->pdo, $tenantId, null);
         $result = $controller->getAvailableModels();
 
@@ -1130,7 +1135,7 @@ class AdminController
      */
     public function testDeepDiveZaiConnection(Request $request, Response $response): Response
     {
-        $tenantId = $_SESSION['tenant_id'] ?? null;
+        $tenantId = 'system-deepdive';
         $controller = new ReportAISettingsController($this->pdo, $tenantId, null);
         $result = $controller->testZaiConnection();
 

@@ -290,28 +290,35 @@ final class ReportAISettingsController
                         <div style="margin-bottom: 15px;">
                             <label><strong>Z.ai API Key</strong></label>
                             <input type="password" name="zai_api_key"
-                                   value="<?php echo htmlspecialchars($settings['zai_api_key']); ?>"
                                    placeholder="sk-..."
                                    style="width: 300px; padding: 8px; margin-top: 5px;">
-                            <button type="button" class="test-zai-btn" style="margin-left: 10px; padding: 8px 15px; cursor: pointer;">
+                            <p style="color: #666; font-size: 12px; margin: 5px 0 0 0;">
+                                <?php echo !empty($settings['zai_api_key']) ? '✓ API key is set' : 'Enter your Z.ai API key'; ?>
+                            </p>
+                            <button type="button" class="test-zai-btn" style="margin-left: 0; margin-top: 10px; padding: 8px 15px; cursor: pointer;">
                                 Test Connection
                             </button>
+                            <p style="color: #999; font-size: 12px; margin: 5px 0 0 15px;">
+                                Save settings first before testing
+                            </p>
                         </div>
 
                         <div style="margin-bottom: 15px;">
                             <label><strong>Model Selection</strong></label>
                             <select name="model" style="width: 300px; padding: 8px; margin-top: 5px;">
                                 <option value="">-- Select Model --</option>
-                                <option value="claude-opus" <?php echo $currentModel === 'claude-opus' ? 'selected' : ''; ?>>
-                                    Claude Opus (Recommended)
-                                </option>
-                                <option value="claude-sonnet" <?php echo $currentModel === 'claude-sonnet' ? 'selected' : ''; ?>>
-                                    Claude Sonnet
-                                </option>
+                                <?php if (!empty($currentModel)): ?>
+                                    <option value="<?php echo htmlspecialchars($currentModel); ?>" selected>
+                                        <?php echo htmlspecialchars($currentModel); ?> (Current)
+                                    </option>
+                                <?php endif; ?>
                             </select>
                             <button type="button" class="refresh-models-btn" style="margin-left: 10px; padding: 8px 15px; cursor: pointer;">
-                                Refresh Models
+                                Fetch Available Models
                             </button>
+                            <p style="color: #999; font-size: 12px; margin: 5px 0 0 0;">
+                                Click "Fetch Available Models" to sync with Z.ai
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -350,6 +357,13 @@ final class ReportAISettingsController
             </form>
 
             <script>
+            // Get CSRF token from page
+            function getCsrfToken() {
+                const nameKey = document.querySelector('input[name*="csrf"]')?.getAttribute('name');
+                const valueKey = nameKey ? document.querySelector(`input[name="${nameKey}"]`)?.value : null;
+                return valueKey;
+            }
+
             document.getElementById('ai-settings-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
@@ -364,9 +378,15 @@ final class ReportAISettingsController
                 status.textContent = 'Saving...';
 
                 try {
+                    const csrfToken = getCsrfToken();
+                    const headers = {'Content-Type': 'application/json'};
+                    if (csrfToken) {
+                        headers['X-CSRF-Token'] = csrfToken;
+                    }
+
                     const response = await fetch('/admin/api/deepdive-report-ai/settings', {
                         method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
+                        headers: headers,
                         body: JSON.stringify(data)
                     });
                     const result = await response.json();
@@ -382,12 +402,21 @@ final class ReportAISettingsController
                 document.getElementById('zai-config').style.display = e.target.checked ? 'block' : 'none';
             });
 
-            document.querySelector('.test-zai-btn').addEventListener('click', async () => {
-                const btn = event.target;
+            document.querySelector('.test-zai-btn').addEventListener('click', async (e) => {
+                const btn = e.target;
                 btn.disabled = true;
                 btn.textContent = 'Testing...';
                 try {
-                    const response = await fetch('/admin/api/deepdive-report-ai/test-zai', {method: 'POST'});
+                    const csrfToken = getCsrfToken();
+                    const headers = {};
+                    if (csrfToken) {
+                        headers['X-CSRF-Token'] = csrfToken;
+                    }
+
+                    const response = await fetch('/admin/api/deepdive-report-ai/test-zai', {
+                        method: 'POST',
+                        headers: headers
+                    });
                     const result = await response.json();
                     alert(result.message);
                 } catch (error) {
@@ -398,8 +427,8 @@ final class ReportAISettingsController
                 }
             });
 
-            document.querySelector('.refresh-models-btn').addEventListener('click', async () => {
-                const btn = event.target;
+            document.querySelector('.refresh-models-btn').addEventListener('click', async (e) => {
+                const btn = e.target;
                 btn.disabled = true;
                 btn.textContent = 'Fetching...';
                 try {
@@ -407,6 +436,10 @@ final class ReportAISettingsController
                     const result = await response.json();
                     if (result.success) {
                         const select = document.querySelector('[name="model"]');
+                        // Clear existing options (except first placeholder)
+                        while (select.options.length > 1) {
+                            select.remove(1);
+                        }
                         result.models.forEach(m => {
                             const option = document.createElement('option');
                             option.value = m.id;
