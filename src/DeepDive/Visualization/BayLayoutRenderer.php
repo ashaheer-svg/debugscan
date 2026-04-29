@@ -5,51 +5,27 @@ declare(strict_types=1);
 namespace App\DeepDive\Visualization;
 
 /**
- * BayLayoutRenderer: Hardware visualization for NAS bay layouts
+ * BayLayoutRenderer: Physical NAS enclosure visualization
  *
  * PURPOSE:
- * Renders physical NAS device layouts showing bay slots as they appear in hardware.
- * Uses a minimal, professional design with:
- * - Device frame visualization
- * - Simple bay slot rectangles
- * - Status indicators (checkmark, warning, critical icons)
- * - Clean, functional aesthetic
+ * Renders a realistic physical NAS device enclosure showing:
+ * - Device frame/bezel in realistic hardware style
+ * - Bay slots that look like actual hardware bays
+ * - Status indicators with colored overlays
+ * - Professional hardware illustration
  *
- * VISUALIZATION:
- * - Physical device outline (enclosure)
- * - Bay slots in correct physical arrangement
- * - Status icon overlaid on each bay
- * - Bay number label
- * - Minimal color palette (gray, green, yellow, red)
- *
- * STATUS INDICATORS:
- * - ✓ Green: Healthy
- * - ⚠ Yellow: Warning (caution/minor issues)
- * - ! Yellow: Caution (10-50 bad sectors)
- * - ✕ Red: Critical (failed or 100+ sectors)
- * - - Gray: Empty bay
+ * DESIGN:
+ * - Teal/dark green enclosure frame
+ * - Rectangular bay slots with borders
+ * - Color-coded status (green healthy, yellow warning, red critical, gray empty)
+ * - Clean, professional appearance matching real hardware
  *
  * @package App\DeepDive\Visualization
  */
 final class BayLayoutRenderer
 {
-    private const STATUS_COLORS = [
-        'healthy'  => '#10b981',
-        'caution'  => '#f59e0b',
-        'warning'  => '#f59e0b',
-        'critical' => '#dc2626',
-        'empty'    => '#e5e7eb',
-    ];
-
     /**
-     * Render hardware device with bay visualization
-     *
-     * @param string $containerName Device name (e.g., "DS918+", "Main Unit")
-     * @param array $drives List of installed drives
-     * @param int $totalBays Total bay count
-     * @param int $columnsPerRow Bays per row (default: auto-calculate)
-     *
-     * @return string SVG device visualization
+     * Render physical NAS enclosure with bay slots
      */
     public function renderBayLayout(
         string $containerName,
@@ -65,65 +41,80 @@ final class BayLayoutRenderer
 
         $rows = (int)ceil($totalBays / $columnsPerRow);
 
-        // Hardware device frame dimensions
-        $frameWidth = 450;
-        $frameHeight = 120 + ($rows * 55);
-        $baySlotWidth = 35;
-        $baySlotHeight = 45;
+        // Enclosure dimensions
+        $width = 500;
+        $height = 100 + ($rows * 70);
 
-        $svg = "<svg viewBox=\"0 0 $frameWidth $frameHeight\" xmlns=\"http://www.w3.org/2000/svg\" class=\"hardware-device\" style=\"max-width:100%;height:auto;\">\n";
+        $svg = "<svg viewBox=\"0 0 $width $height\" xmlns=\"http://www.w3.org/2000/svg\" class=\"hardware-enclosure\" style=\"max-width:100%;height:auto;\">\n";
+        $svg .= "<defs>\n";
+        $svg .= "<linearGradient id=\"enclosure-gradient\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n";
+        $svg .= "  <stop offset=\"0%\" style=\"stop-color:#1f2937;stop-opacity:1\" />\n";
+        $svg .= "  <stop offset=\"100%\" style=\"stop-color:#111827;stop-opacity:1\" />\n";
+        $svg .= "</linearGradient>\n";
+        $svg .= "<linearGradient id=\"bay-healthy\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n";
+        $svg .= "  <stop offset=\"0%\" style=\"stop-color:#10b981;stop-opacity:1\" />\n";
+        $svg .= "  <stop offset=\"100%\" style=\"stop-color:#059669;stop-opacity:1\" />\n";
+        $svg .= "</linearGradient>\n";
+        $svg .= "<linearGradient id=\"bay-warning\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n";
+        $svg .= "  <stop offset=\"0%\" style=\"stop-color:#f59e0b;stop-opacity:1\" />\n";
+        $svg .= "  <stop offset=\"100%\" style=\"stop-color:#d97706;stop-opacity:1\" />\n";
+        $svg .= "</linearGradient>\n";
+        $svg .= "<linearGradient id=\"bay-critical\" x1=\"0%\" y1=\"0%\" x2=\"0%\" y2=\"100%\">\n";
+        $svg .= "  <stop offset=\"0%\" style=\"stop-color:#dc2626;stop-opacity:1\" />\n";
+        $svg .= "  <stop offset=\"100%\" style=\"stop-color:#b91c1c;stop-opacity:1\" />\n";
+        $svg .= "</linearGradient>\n";
+        $svg .= "</defs>\n";
         $svg .= "<style>\n";
         $svg .= $this->getStyles();
         $svg .= "</style>\n";
 
-        // Device background
-        $svg .= "<rect width=\"$frameWidth\" height=\"$frameHeight\" fill=\"#f9fafb\" />\n";
+        // Title
+        $svg .= "<text x=\"20\" y=\"28\" class=\"enclosure-title\">{$containerName}</text>\n";
+        $svg .= "<text x=\"20\" y=\"45\" class=\"enclosure-subtitle\">{$totalBays} Bays · " . count($drives) . " installed</text>\n";
 
-        // Device header
-        $svg .= "<g class=\"device-header\">\n";
-        $svg .= "  <text x=\"20\" y=\"30\" class=\"device-title\">{$containerName}</text>\n";
-        $svg .= "  <text x=\"20\" y=\"48\" class=\"device-subtitle\">{$totalBays} Bay" . ($totalBays !== 1 ? 's' : '') . " · " . count($drives) . " Installed</text>\n";
+        // Enclosure frame (bezel)
+        $frameX = 15;
+        $frameY = 55;
+        $frameWidth = $width - 30;
+        $frameHeight = ($rows * 70) + 20;
+
+        $svg .= "<g class=\"enclosure-frame\">\n";
+        // Outer bezel
+        $svg .= "  <rect x=\"$frameX\" y=\"$frameY\" width=\"$frameWidth\" height=\"$frameHeight\" fill=\"url(#enclosure-gradient)\" rx=\"4\" />\n";
+        // Inner panel
+        $svg .= "  <rect x=\"" . ($frameX + 8) . "\" y=\"" . ($frameY + 8) . "\" width=\"" . ($frameWidth - 16) . "\" height=\"" . ($frameHeight - 16) . "\" fill=\"#0f172a\" rx=\"2\" />\n";
         $svg .= "</g>\n";
 
-        // Device enclosure frame
-        $enclosureX = 15;
-        $enclosureY = 60;
-        $enclosureWidth = $frameWidth - 30;
-        $enclosureHeight = ($rows * 55) + 20;
-
-        $svg .= "<g class=\"device-enclosure\">\n";
-        $svg .= "  <rect x=\"$enclosureX\" y=\"$enclosureY\" width=\"$enclosureWidth\" height=\"$enclosureHeight\" fill=\"none\" stroke=\"#cbd5e1\" stroke-width=\"2\" rx=\"4\" />\n";
-
-        // Create bay mapping
+        // Create drive mapping
         $driveMap = [];
         foreach ($drives as $drive) {
             $driveMap[$drive['bay']] = $drive;
         }
 
         // Render bay slots
-        $bayStartX = $enclosureX + 15;
-        $bayStartY = $enclosureY + 12;
+        $bayStartX = $frameX + 20;
+        $bayStartY = $frameY + 16;
+        $bayWidth = 42;
+        $bayHeight = 50;
         $bayGapX = 8;
-        $bayGapY = 10;
+        $bayGapY = 8;
 
         for ($bay = 1; $bay <= $totalBays; $bay++) {
             $row = (int)floor(($bay - 1) / $columnsPerRow);
             $col = ($bay - 1) % $columnsPerRow;
 
-            $x = $bayStartX + ($col * ($baySlotWidth + $bayGapX));
-            $y = $bayStartY + ($row * ($baySlotHeight + $bayGapY));
+            $x = $bayStartX + ($col * ($bayWidth + $bayGapX));
+            $y = $bayStartY + ($row * ($bayHeight + $bayGapY));
 
             if (isset($driveMap[$bay])) {
-                $svg .= $this->renderBaySlot($driveMap[$bay], $x, $y, $baySlotWidth, $baySlotHeight);
+                $svg .= $this->renderBaySlot($driveMap[$bay], $x, $y, $bayWidth, $bayHeight);
             } else {
-                $svg .= $this->renderEmptyBaySlot($bay, $x, $y, $baySlotWidth, $baySlotHeight);
+                $svg .= $this->renderEmptyBay($bay, $x, $y, $bayWidth, $bayHeight);
             }
         }
 
-        $svg .= "</g>\n";
-
         // Legend
-        $svg .= $this->renderLegend();
+        $svg .= $this->renderLegend($frameX + 20, $frameY + $frameHeight + 12);
 
         $svg .= "</svg>\n";
 
@@ -131,55 +122,56 @@ final class BayLayoutRenderer
     }
 
     /**
-     * Calculate optimal columns based on bay count
+     * Calculate optimal columns
      */
     private function getOptimalColumns(int $totalBays): int
     {
         if ($totalBays <= 4) return 4;
         if ($totalBays <= 8) return 4;
         if ($totalBays <= 12) return 4;
-        if ($totalBays <= 16) return 4;
         return 5;
     }
 
     /**
-     * Render a single bay slot with drive
+     * Render occupied bay slot
      */
     private function renderBaySlot(array $drive, float $x, float $y, float $w, float $h): string
     {
         $bay = (int)($drive['bay'] ?? 0);
+        $serial = htmlspecialchars((string)($drive['serial'] ?? ''), ENT_QUOTES, 'UTF-8');
         $healthStatus = (string)($drive['health_status'] ?? 'unknown');
         $badSectors = (int)($drive['bad_sectors'] ?? 0);
 
-        // Determine status
         $status = $this->getStatus($healthStatus, $badSectors);
-        $statusColor = self::STATUS_COLORS[$status] ?? '#9ca3af';
-        $statusIcon = $this->getStatusIcon($status);
+        $gradient = match($status) {
+            'healthy' => 'url(#bay-healthy)',
+            'warning' => 'url(#bay-warning)',
+            'critical' => 'url(#bay-critical)',
+            default => '#e5e7eb',
+        };
+        $icon = $this->getIcon($status);
 
-        // Bay slot background
         $svg = "<g class=\"bay-slot\" data-bay=\"$bay\">\n";
-        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" fill=\"#fff\" stroke=\"#d1d5db\" stroke-width=\"1\" rx=\"3\" />\n";
 
-        // Bay number (top-left)
-        $svg .= "  <text x=\"" . ($x + 4) . "\" y=\"" . ($y + 12) . "\" class=\"bay-slot-number\">$bay</text>\n";
+        // Bay slot rectangle with gradient
+        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" fill=\"$gradient\" stroke=\"#1f2937\" stroke-width=\"1\" rx=\"3\" />\n";
 
-        // Status icon (top-right with background)
-        $iconX = $x + $w - 10;
-        $iconY = $y + 8;
-        $svg .= "  <circle cx=\"" . ($iconX) . "\" cy=\"" . ($iconY) . "\" r=\"7\" fill=\"$statusColor\" />\n";
-        $svg .= "  <text x=\"" . ($iconX) . "\" y=\"" . ($iconY + 3) . "\" class=\"status-icon\" text-anchor=\"middle\" fill=\"white\">$statusIcon</text>\n";
+        // Bay number (large, centered)
+        $svg .= "  <text x=\"" . ($x + $w / 2) . "\" y=\"" . ($y + 20) . "\" class=\"bay-number\" text-anchor=\"middle\">$bay</text>\n";
 
-        // Drive info (middle)
-        $serial = htmlspecialchars((string)($drive['serial'] ?? 'Unknown'), ENT_QUOTES, 'UTF-8');
-        $shortSerial = strlen($serial) > 8 ? substr($serial, 0, 7) : $serial;
-        $svg .= "  <text x=\"" . ($x + 4) . "\" y=\"" . ($y + 28) . "\" class=\"bay-serial\">$shortSerial</text>\n";
+        // Status icon (top-right)
+        $svg .= "  <text x=\"" . ($x + $w - 6) . "\" y=\"" . ($y + 10) . "\" class=\"bay-status-icon\" text-anchor=\"end\">$icon</text>\n";
+
+        // Serial (bottom, truncated)
+        $shortSerial = strlen($serial) > 8 ? substr($serial, 0, 8) : $serial;
+        $svg .= "  <text x=\"" . ($x + 2) . "\" y=\"" . ($y + $h - 3) . "\" class=\"bay-serial\">$shortSerial</text>\n";
 
         // Tooltip
-        $tooltipText = "Bay $bay\n{$serial}\n" . htmlspecialchars((string)($drive['model'] ?? ''), ENT_QUOTES, 'UTF-8');
+        $tooltip = "Bay $bay\n{$serial}\n" . htmlspecialchars((string)($drive['model'] ?? ''), ENT_QUOTES, 'UTF-8');
         if ($badSectors > 0) {
-            $tooltipText .= "\nBad Sectors: {$badSectors}";
+            $tooltip .= "\nBad Sectors: $badSectors";
         }
-        $svg .= "  <title>$tooltipText</title>\n";
+        $svg .= "  <title>$tooltip</title>\n";
 
         $svg .= "</g>\n";
 
@@ -187,13 +179,13 @@ final class BayLayoutRenderer
     }
 
     /**
-     * Render an empty bay slot
+     * Render empty bay
      */
-    private function renderEmptyBaySlot(int $bay, float $x, float $y, float $w, float $h): string
+    private function renderEmptyBay(int $bay, float $x, float $y, float $w, float $h): string
     {
         $svg = "<g class=\"bay-slot empty\" data-bay=\"$bay\">\n";
-        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" fill=\"#f9fafb\" stroke=\"#d1d5db\" stroke-width=\"1\" stroke-dasharray=\"3,2\" rx=\"3\" />\n";
-        $svg .= "  <text x=\"" . ($x + $w / 2) . "\" y=\"" . ($y + $h / 2 + 2) . "\" class=\"empty-bay-text\" text-anchor=\"middle\">-</text>\n";
+        $svg .= "  <rect x=\"$x\" y=\"$y\" width=\"$w\" height=\"$h\" fill=\"#374151\" stroke=\"#4b5563\" stroke-width=\"1\" stroke-dasharray=\"3,2\" rx=\"3\" />\n";
+        $svg .= "  <text x=\"" . ($x + $w / 2) . "\" y=\"" . ($y + $h / 2 + 5) . "\" class=\"bay-number-empty\" text-anchor=\"middle\">$bay</text>\n";
         $svg .= "  <title>Bay $bay - Empty</title>\n";
         $svg .= "</g>\n";
 
@@ -203,41 +195,36 @@ final class BayLayoutRenderer
     /**
      * Render legend
      */
-    private function renderLegend(): string
+    private function renderLegend(float $x, float $y): string
     {
-        return <<<'SVG'
+        return <<<SVG
 <g class="legend">
-  <text x="20" y="0" class="legend-title">Status</text>
-  <g class="legend-item">
-    <circle cx="30" cy="12" r="5" fill="#10b981" />
-    <text x="42" y="16" class="legend-text">Healthy</text>
-  </g>
-  <g class="legend-item">
-    <circle cx="120" cy="12" r="5" fill="#f59e0b" />
-    <text x="132" y="16" class="legend-text">Warning</text>
-  </g>
-  <g class="legend-item">
-    <circle cx="220" cy="12" r="5" fill="#dc2626" />
-    <text x="232" y="16" class="legend-text">Critical</text>
-  </g>
-  <g class="legend-item">
-    <circle cx="310" cy="12" r="5" fill="#e5e7eb" />
-    <text x="322" y="16" class="legend-text">Empty</text>
-  </g>
+  <text x="$x" y="$y" class="legend-title">Status Legend</text>
+  <circle cx="{$x}" cy="{$y + 18}" r="5" fill="#10b981" />
+  <text x="{$x + 12}" y="{$y + 22}" class="legend-text">Healthy</text>
+
+  <circle cx="{$x + 90}" cy="{$y + 18}" r="5" fill="#f59e0b" />
+  <text x="{$x + 102}" y="{$y + 22}" class="legend-text">Warning</text>
+
+  <circle cx="{$x + 190}" cy="{$y + 18}" r="5" fill="#dc2626" />
+  <text x="{$x + 202}" y="{$y + 22}" class="legend-text">Critical</text>
+
+  <circle cx="{$x + 280}" cy="{$y + 18}" r="5" fill="#6b7280" />
+  <text x="{$x + 292}" y="{$y + 22}" class="legend-text">Empty</text>
 </g>
 SVG;
     }
 
     /**
-     * Determine status based on health and bad sectors
+     * Determine status
      */
-    private function getStatus(string $healthStatus, int $badSectors): string
+    private function getStatus(string $status, int $badSectors): string
     {
-        if ($healthStatus === 'critical' || $badSectors > 100) {
+        if ($status === 'critical' || $badSectors > 100) {
             return 'critical';
-        } elseif ($healthStatus === 'warning' || $badSectors > 50) {
+        } elseif ($status === 'warning' || $badSectors > 50) {
             return 'warning';
-        } elseif ($healthStatus === 'caution' || $badSectors > 10) {
+        } elseif ($status === 'caution' || $badSectors > 10) {
             return 'caution';
         }
         return 'healthy';
@@ -246,14 +233,14 @@ SVG;
     /**
      * Get status icon
      */
-    private function getStatusIcon(string $status): string
+    private function getIcon(string $status): string
     {
-        return match ($status) {
-            'healthy'  => '✓',
-            'caution'  => '!',
-            'warning'  => '⚠',
+        return match($status) {
+            'healthy' => '✓',
+            'caution' => '!',
+            'warning' => '⚠',
             'critical' => '✕',
-            default    => '?',
+            default => '○',
         };
     }
 
@@ -263,68 +250,63 @@ SVG;
     private function getStyles(): string
     {
         return <<<'CSS'
-.hardware-device {
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    background: white;
+.hardware-enclosure {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.device-header {
-    pointer-events: none;
-}
-
-.device-title {
+.enclosure-title {
     font-size: 16px;
     font-weight: 700;
     fill: #1f2937;
     letter-spacing: -0.3px;
 }
 
-.device-subtitle {
+.enclosure-subtitle {
     font-size: 12px;
     fill: #6b7280;
     font-weight: 500;
 }
 
-.device-enclosure {
-    pointer-events: auto;
+.enclosure-frame {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .bay-slot {
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: opacity 0.2s ease;
 }
 
 .bay-slot:hover rect {
-    fill: #f3f4f6;
-    stroke: #9ca3af;
+    opacity: 0.9;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.2));
 }
 
-.bay-slot-number {
-    font-size: 10px;
+.bay-number {
+    font-size: 18px;
     font-weight: 700;
-    fill: #374151;
+    fill: white;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.bay-number-empty {
+    font-size: 16px;
+    fill: #9ca3af;
+    font-weight: 600;
 }
 
 .bay-serial {
     font-size: 8px;
-    fill: #6b7280;
+    fill: white;
     font-family: 'Monaco', 'Courier New', monospace;
     font-weight: 500;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
-.empty-bay-text {
-    font-size: 14px;
-    fill: #d1d5db;
-    font-weight: 600;
-}
-
-.status-icon {
-    font-size: 10px;
+.bay-status-icon {
+    font-size: 12px;
+    fill: white;
     font-weight: 700;
-}
-
-.legend {
-    transform: translate(0, -25);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .legend-title {
@@ -333,10 +315,6 @@ SVG;
     fill: #1f2937;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-}
-
-.legend-item {
-    pointer-events: none;
 }
 
 .legend-text {

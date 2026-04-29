@@ -8,7 +8,6 @@ use App\DeepDive\Correlation\Incident;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\RuleCatalogue;
 use App\DeepDive\Support\Engine;
-use App\DeepDive\Visualization\BayLayoutRenderer;
 
 /**
  * ReportRenderer: Generate comprehensive HTML analysis reports
@@ -841,12 +840,6 @@ HTML;
             $driveTable .= "</div>";
         }
 
-        // Bay layout diagrams (visual drive positions)
-        $bayLayoutDiagrams = '';
-        $drives = $spec->drives ?? [];
-        if (!empty($drives)) {
-            $bayLayoutDiagrams = $this->renderBayLayoutDiagrams($drives, $spec);
-        }
 
         // Drive details table with location information
         $driveDetailsTable = '';
@@ -1241,7 +1234,6 @@ HTML;
   {$mainUnitTable}
   {$expansionTable}
   {$driveTable}
-  {$bayLayoutDiagrams}
   {$driveDetailsTable}
   {$driveHistorySection}
   {$raidTable}
@@ -1403,73 +1395,4 @@ h4{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;f
 CSS;
     }
 
-    /**
-     * Render bay layout diagrams for all storage units
-     */
-    private function renderBayLayoutDiagrams(array $drives, object $spec): string
-    {
-        if (empty($drives)) {
-            return '';
-        }
-
-        $renderer = new BayLayoutRenderer();
-
-        // Group drives by location/container
-        $drivesByLocation = [];
-
-        foreach ($drives as $drive) {
-            $location = $drive['location'] ?? 'Unknown';
-            if (!isset($drivesByLocation[$location])) {
-                $drivesByLocation[$location] = [];
-            }
-            $drivesByLocation[$location][] = $drive;
-        }
-
-        // Render diagrams
-        $html = '<h4>Drive Bay Layout</h4>';
-        $html .= '<div class="bay-layout-container" style="margin: 15px 0;">';
-
-        // Render Main unit first - use ACTUAL bay count from hardware spec, not assumptions
-        if (isset($drivesByLocation['Main'])) {
-            $mainModel = htmlspecialchars((string)($spec->model ?? 'NAS Device'), ENT_QUOTES);
-            // Use actual bay count from hardware detection (load_info, synoinfo, etc)
-            $mainTotalBays = (int)($spec->driveBays['main_unit_bays'] ?? 0);
-            if ($mainTotalBays <= 0) {
-                // Fallback: count actual drives if hardware bay count unavailable
-                $mainTotalBays = max(count($drivesByLocation['Main'] ?? []), 1);
-            }
-            $location = "Main Unit ({$mainModel})";
-            $locationDrivesToSort = $drivesByLocation['Main'];
-            $html .= $renderer->renderBayLayout($location, $locationDrivesToSort, $mainTotalBays);
-        }
-
-        // Render expansion units - use ACTUAL bay counts from hardware spec
-        foreach ($drivesByLocation as $location => $locationDrives) {
-            if ($location === 'Main') {
-                continue; // Already rendered
-            }
-
-            // For expansion units, find matching unit in spec->expansion by model name
-            // and use its actual bay_count from hardware detection
-            $totalBays = 0;
-            if (!empty($spec->expansion)) {
-                foreach ($spec->expansion as $expansionUnit) {
-                    if (isset($expansionUnit['model']) && $expansionUnit['model'] === $location) {
-                        $totalBays = (int)($expansionUnit['bay_count'] ?? 0);
-                        break;
-                    }
-                }
-            }
-            // Fall back to count of drives if metadata unavailable
-            if ($totalBays <= 0) {
-                $totalBays = max(count($locationDrives ?? []), 1);
-            }
-            $displayName = $location;
-            $html .= $renderer->renderBayLayout($displayName, $locationDrives, $totalBays);
-        }
-
-        $html .= '</div>';
-
-        return $html;
-    }
 }
