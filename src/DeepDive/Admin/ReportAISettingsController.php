@@ -415,8 +415,10 @@ final class ReportAISettingsController
                         return;
                     }
 
-                    // Add CSRF token to the request body (Slim's CSRF Guard checks this for JSON)
-                    data.__csrf = csrfToken;
+                    // Add CSRF token to the request body using the correct field name
+                    // The field name comes from window.CSRF_TOKEN.name (e.g., 'csrf_name')
+                    const csrfFieldName = window.CSRF_TOKEN?.name || 'csrf_name';
+                    data[csrfFieldName] = csrfToken;
 
                     const headers = {'Content-Type': 'application/json'};
 
@@ -454,14 +456,16 @@ final class ReportAISettingsController
                 btn.textContent = 'Testing...';
                 try {
                     const csrfToken = getCsrfToken();
-                    const headers = {};
+                    const csrfFieldName = window.CSRF_TOKEN?.name || 'csrf_name';
+                    const body = {};
                     if (csrfToken) {
-                        headers['X-CSRF-Token'] = csrfToken;
+                        body[csrfFieldName] = csrfToken;
                     }
 
                     const response = await fetch('/admin/api/deepdive-report-ai/test-zai', {
                         method: 'POST',
-                        headers: headers
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(body)
                     });
                     const result = await response.json();
                     alert(result.message);
@@ -478,6 +482,7 @@ final class ReportAISettingsController
                 btn.disabled = true;
                 btn.textContent = 'Fetching...';
                 try {
+                    // GET request - no CSRF token needed
                     const response = await fetch('/admin/api/deepdive-report-ai/models');
                     const result = await response.json();
                     if (result.success) {
