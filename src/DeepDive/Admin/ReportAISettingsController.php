@@ -235,9 +235,10 @@ final class ReportAISettingsController
     /**
      * Get admin panel HTML
      *
+     * @param ?string $csrfToken Optional CSRF token for form protection
      * @return string HTML for admin settings page
      */
-    public function getAdminHTML(): string
+    public function getAdminHTML(?string $csrfToken = null): string
     {
         $settings = $this->settings->getAll();
         $isZaiEnabled = $settings['use_zai'] ?? false;
@@ -253,6 +254,11 @@ final class ReportAISettingsController
             </p>
 
             <form id="ai-settings-form" style="margin-top: 20px;">
+                <!-- CSRF Token (if provided) -->
+                <?php if ($csrfToken): ?>
+                    <input type="hidden" name="__csrf" value="<?php echo htmlspecialchars($csrfToken); ?>">
+                <?php endif; ?>
+
                 <!-- Enable/Disable Toggle -->
                 <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
                     <label>
@@ -357,17 +363,40 @@ final class ReportAISettingsController
             </form>
 
             <script>
-            // Get CSRF token from page
+            // Get CSRF token from page (try multiple sources)
             function getCsrfToken() {
-                const nameKey = document.querySelector('input[name*="csrf"]')?.getAttribute('name');
-                const valueKey = nameKey ? document.querySelector(`input[name="${nameKey}"]`)?.value : null;
-                return valueKey;
+                // Try input field with csrf in name
+                const inputField = document.querySelector('input[name*="csrf"]');
+                if (inputField) {
+                    return inputField.value;
+                }
+
+                // Try meta tag
+                const metaToken = document.querySelector('meta[name*="csrf"]');
+                if (metaToken) {
+                    return metaToken.getAttribute('content');
+                }
+
+                // Try from cookie (Slim typically names it like _Token or similar)
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const [name, value] = cookie.trim().split('=');
+                    if (name.includes('csrf') || name.includes('token')) {
+                        return decodeURIComponent(value);
+                    }
+                }
+
+                return null;
             }
 
             document.getElementById('ai-settings-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const data = Object.fromEntries(formData);
+
+                // Remove CSRF token from data if present
+                delete data.__csrf;
+
                 data.ai_enabled = !!data.ai_enabled;
                 data.use_zai = !!data.use_zai;
                 data.require_ai_analysis = !!data.require_ai_analysis;
@@ -379,22 +408,36 @@ final class ReportAISettingsController
 
                 try {
                     const csrfToken = getCsrfToken();
-                    const headers = {'Content-Type': 'application/json'};
-                    if (csrfToken) {
-                        headers['X-CSRF-Token'] = csrfToken;
+                    if (!csrfToken) {
+                        status.textContent = '✗ Error: CSRF token not found';
+                        status.style.color = '#ef4444';
+                        console.error('CSRF token not found in page');
+                        return;
                     }
+
+                    const headers = {'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken};
 
                     const response = await fetch('/admin/api/deepdive-report-ai/settings', {
                         method: 'POST',
                         headers: headers,
                         body: JSON.stringify(data)
                     });
+
+                    if (!response.ok) {
+                        const text = await response.text();
+                        status.textContent = '✗ Error: HTTP ' + response.status;
+                        status.style.color = '#ef4444';
+                        console.error('HTTP Error:', response.status, text);
+                        return;
+                    }
+
                     const result = await response.json();
                     status.textContent = result.success ? '✓ Saved' : '✗ Error: ' + (result.error || result.errors?.[0]);
                     status.style.color = result.success ? '#10b981' : '#ef4444';
                 } catch (error) {
                     status.textContent = '✗ Error: ' + error.message;
                     status.style.color = '#ef4444';
+                    console.error('Fetch error:', error);
                 }
             });
 
