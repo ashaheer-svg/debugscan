@@ -197,20 +197,30 @@ final class BayLayoutRenderer
      */
     private function renderLegend(float $x, float $y): string
     {
+        $y18  = $y + 18;
+        $y22  = $y + 22;
+        $x12  = $x + 12;
+        $x90  = $x + 90;
+        $x102 = $x + 102;
+        $x190 = $x + 190;
+        $x202 = $x + 202;
+        $x280 = $x + 280;
+        $x292 = $x + 292;
+
         return <<<SVG
 <g class="legend">
   <text x="$x" y="$y" class="legend-title">Status Legend</text>
-  <circle cx="{$x}" cy="{$y + 18}" r="5" fill="#10b981" />
-  <text x="{$x + 12}" y="{$y + 22}" class="legend-text">Healthy</text>
+  <circle cx="$x" cy="$y18" r="5" fill="#10b981" />
+  <text x="$x12" y="$y22" class="legend-text">Healthy</text>
 
-  <circle cx="{$x + 90}" cy="{$y + 18}" r="5" fill="#f59e0b" />
-  <text x="{$x + 102}" y="{$y + 22}" class="legend-text">Warning</text>
+  <circle cx="$x90" cy="$y18" r="5" fill="#f59e0b" />
+  <text x="$x102" y="$y22" class="legend-text">Warning</text>
 
-  <circle cx="{$x + 190}" cy="{$y + 18}" r="5" fill="#dc2626" />
-  <text x="{$x + 202}" y="{$y + 22}" class="legend-text">Critical</text>
+  <circle cx="$x190" cy="$y18" r="5" fill="#dc2626" />
+  <text x="$x202" y="$y22" class="legend-text">Critical</text>
 
-  <circle cx="{$x + 280}" cy="{$y + 18}" r="5" fill="#6b7280" />
-  <text x="{$x + 292}" y="{$y + 22}" class="legend-text">Empty</text>
+  <circle cx="$x280" cy="$y18" r="5" fill="#6b7280" />
+  <text x="$x292" y="$y22" class="legend-text">Empty</text>
 </g>
 SVG;
     }

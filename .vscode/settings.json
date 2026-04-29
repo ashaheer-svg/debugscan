@@ -1,0 +1,15 @@
+{
+    "intelephense.files.exclude": [
+        "**/.git/**",
+        "**/node_modules/**",
+        "**/vendor/**/{Test,test,Tests,tests}/**",
+        "**/sample/**"
+    ],
+    "files.exclude": {
+        "**/sample": false
+    },
+    "search.exclude": {
+        "**/sample": true,
+        "**/vendor": true
+    }
+}
