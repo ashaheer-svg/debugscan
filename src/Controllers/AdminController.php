@@ -1105,15 +1105,8 @@ class AdminController
         $controller = new ReportAISettingsController($this->pdo, $tenantId, $logger);
         $result = $controller->updateSettings($request->getParsedBody());
 
-        // Log the change (use null for tenant_id since this is system-wide, not tenant-specific)
-        if ($result['success'] ?? false) {
-            $this->logAction($request, 'deepdive_ai_settings_updated', 'deepdive_report_ai_settings', null, [
-                'ai_enabled' => $result['settings']['ai_enabled'] ?? null,
-                'token_budget' => $result['settings']['token_budget'] ?? null,
-                'model' => $result['settings']['model'] ?? null,
-                'use_zai' => $result['settings']['use_zai'] ?? null,
-            ], null);  // Pass null instead of $tenantId for system-wide settings
-        }
+        // Skip audit logging for system-wide DeepDive settings
+        // (deepdive_ai_settings_updated is not in the audit_action enum)
 
         $response->getBody()->write(json_encode($result));
         return $response->withHeader('Content-Type', 'application/json');
