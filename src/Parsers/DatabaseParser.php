@@ -92,7 +92,7 @@ class DatabaseParser implements ParserInterface
                         $results['disk_events'] = \App\Helpers\SqliteReader::queryWithLimit($path, "SELECT * FROM logs WHERE level != 'info' ORDER BY time DESC", $limit);
                         break;
                 }
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $results['errors'][] = "Failed to parse database $name: " . $e->getMessage();
             }
         }

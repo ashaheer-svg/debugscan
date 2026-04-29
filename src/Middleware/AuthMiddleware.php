@@ -151,7 +151,7 @@ class AuthMiddleware implements MiddlewareInterface
 
         // === STEP 4: Configure PostgreSQL RLS context ===
         // This sets session variables that PostgreSQL policies reference for row-level filtering
-        \App\Database::setTenantContext($this->pdo, $tenantId, $role);
+        Database::setTenantContext($this->pdo, $tenantId, $role);
 
         // === STEP 5: Attach user context to request for handlers ===
         // Downstream handlers access these via $request->getAttribute('user_id'), etc.
