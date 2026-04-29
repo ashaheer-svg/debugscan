@@ -206,7 +206,7 @@ final class ReportAISettingsController
             if (!$this->zai) {
                 return [
                     'success' => false,
-                    'message' => 'Z.ai not configured',
+                    'message' => 'Z.ai not configured. Please save settings with Z.ai enabled, API key, and model selection before testing.',
                 ];
             }
 
