@@ -19,6 +19,16 @@
 </style>
 
 <div class="deepdive-settings-container">
+    {# Inject CSRF token as a data attribute for JavaScript access #}
+    <div id="csrf-container" data-csrf-name="{{ csrf.name|default('__csrf') }}" data-csrf-value="{{ csrf.value|default('') }}"></div>
     {{ settings_html | raw }}
 </div>
+
+<script>
+// Make CSRF token available to the form JavaScript
+window.CSRF_TOKEN = {
+    name: document.getElementById('csrf-container').dataset.csrfName,
+    value: document.getElementById('csrf-container').dataset.csrfValue
+};
+</script>
 {% endblock %}

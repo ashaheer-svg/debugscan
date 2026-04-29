@@ -1079,17 +1079,10 @@ class AdminController
         // Initialize the settings controller
         $controller = new ReportAISettingsController($this->pdo, $tenantId, $logger);
 
-        // Get CSRF token from request attributes (set by CSRF middleware)
-        // Try multiple possible attribute names
-        $csrfToken = $request->getAttribute('csrf_token')
-                  ?? $request->getAttribute('__csrf')
-                  ?? $request->getAttribute('_token')
-                  ?? null;
+        // Render the admin HTML directly (token will be embedded in template)
+        $html = $controller->getAdminHTML();
 
-        // Render the admin HTML directly
-        $html = $controller->getAdminHTML($csrfToken);
-
-        // Wrap in admin layout template
+        // Wrap in admin layout template - pass csrf tokens for embedding
         $body = $this->view->render('admin/deepdive_ai_settings.twig', [
             'settings_html' => $html,
             'active_page' => 'admin_deepdive_ai'

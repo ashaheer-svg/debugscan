@@ -235,10 +235,9 @@ final class ReportAISettingsController
     /**
      * Get admin panel HTML
      *
-     * @param ?string $csrfToken Optional CSRF token for form protection
      * @return string HTML for admin settings page
      */
-    public function getAdminHTML(?string $csrfToken = null): string
+    public function getAdminHTML(): string
     {
         $settings = $this->settings->getAll();
         $isZaiEnabled = $settings['use_zai'] ?? false;
@@ -254,10 +253,6 @@ final class ReportAISettingsController
             </p>
 
             <form id="ai-settings-form" style="margin-top: 20px;">
-                <!-- CSRF Token (if provided) -->
-                <?php if ($csrfToken): ?>
-                    <input type="hidden" name="__csrf" value="<?php echo htmlspecialchars($csrfToken); ?>">
-                <?php endif; ?>
 
                 <!-- Enable/Disable Toggle -->
                 <div style="margin-bottom: 20px; padding: 15px; background: #f5f5f5; border-radius: 4px;">
@@ -365,6 +360,11 @@ final class ReportAISettingsController
             <script>
             // Get CSRF token from page (try multiple sources)
             function getCsrfToken() {
+                // First try window.CSRF_TOKEN set by template
+                if (window.CSRF_TOKEN && window.CSRF_TOKEN.value) {
+                    return window.CSRF_TOKEN.value;
+                }
+
                 // Try input field with csrf in name
                 const inputField = document.querySelector('input[name*="csrf"]');
                 if (inputField) {
