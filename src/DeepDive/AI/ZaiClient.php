@@ -92,11 +92,26 @@ final class ZaiClient
 
             if (!$curlError && $httpCode === 200) {
                 $data = json_decode($response, true);
-                if (isset($data['data']) && is_array($data['data'])) {
-                    return $data['data'];
+                $models = [];
+
+                // Try different response formats
+                $modelList = $data['data'] ?? $data['models'] ?? $data ?? [];
+
+                if (is_array($modelList)) {
+                    foreach ($modelList as $model) {
+                        if (is_array($model)) {
+                            // Normalize different API response formats
+                            $models[] = [
+                                'id' => $model['id'] ?? $model['model'] ?? null,
+                                'name' => $model['name'] ?? $model['id'] ?? $model['model'] ?? 'Unknown',
+                                'tokens' => $model['tokens'] ?? $model['context_length'] ?? $model['max_tokens'] ?? 128000,
+                            ];
+                        }
+                    }
                 }
-                if (isset($data['models']) && is_array($data['models'])) {
-                    return $data['models'];
+
+                if (!empty($models)) {
+                    return $models;
                 }
             }
 
