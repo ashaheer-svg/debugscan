@@ -8,6 +8,8 @@ use App\DeepDive\Correlation\Incident;
 use App\DeepDive\Rules\FindingRecord;
 use App\DeepDive\Rules\RuleCatalogue;
 use App\DeepDive\Support\Engine;
+use App\DeepDive\Report\ReportRendererAIExtension;
+use App\DeepDive\Report\ReportRendererHistoricalExtension;
 
 /**
  * ReportRenderer: Generate comprehensive HTML analysis reports
@@ -152,6 +154,20 @@ final class ReportRenderer
         // Add power supply analysis section
         $powerSection = $this->renderPowerSection();
 
+        // Add AI anomaly & root cause analysis section
+        $aiSection = '';
+        $aiFindings = $context['ai_findings'] ?? [];
+        if (!empty($aiFindings)) {
+            $aiSection = ReportRendererAIExtension::renderAISection($aiFindings);
+        }
+
+        // Add historical analysis section (trends, forecasts, recurring issues)
+        $historicalSection = '';
+        $historicalData = $context['historical_data'] ?? [];
+        if (!empty($historicalData)) {
+            $historicalSection = ReportRendererHistoricalExtension::renderHistoricalSection($historicalData);
+        }
+
         $grouped = $this->groupByActionability($incidents);
         $body    = '';
         foreach (self::ACTIONABILITY_ORDER as $key => $meta) {
@@ -181,6 +197,8 @@ final class ReportRenderer
 {$summary}
 {$volumeCards}
 {$powerSection}
+{$aiSection}
+{$historicalSection}
 {$body}
 {$appendix}
 </main>
@@ -1612,6 +1630,44 @@ h4{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;f
 .psu-table td{padding:8px;border-bottom:1px solid #f3f4f6;color:#4b5563}
 .psu-risk-factors ul{margin:0;padding-left:20px;font-size:12px;color:#4b5563;line-height:1.6}
 .psu-risk-factors li{margin-bottom:6px}
+.historical-analysis{margin:28px 0}
+.hist-subsection{background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:20px;margin-bottom:24px}
+.hist-subsection h3{color:#1f2937;margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:0.05em}
+.subsection-desc{margin:0 0 16px;font-size:13px;color:#6b7280}
+.no-data{text-align:center;color:#6b7280;font-size:13px;padding:20px}
+.hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.hist-table th{background:white;border:1px solid #e5e7eb;padding:10px 8px;text-align:left;font-weight:700;color:#6b7280;text-transform:uppercase;font-size:10px;letter-spacing:0.05em}
+.hist-table td{border:1px solid #e5e7eb;padding:8px;color:#4b5563}
+.hist-table code{font-family:"SF Mono",Menlo,Consolas,monospace;font-size:11px;color:#374151}
+.severity-badge{display:inline-block;padding:4px 8px;border-radius:4px;font-size:11px;font-weight:700;color:#fff}
+.trend-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin-bottom:16px}
+.trend-card{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:16px}
+.trend-card h4{margin:0 0 12px;color:#1f2937}
+.trend-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+.trend-direction{font-weight:700;text-transform:uppercase}
+.trend-value{color:#111827;font-weight:600}
+.trend-change{margin:8px 0;font-size:13px;font-weight:700}
+.trend-summary{margin:8px 0 0;font-size:12px;color:#6b7280}
+.forecast-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
+.forecast-card{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:16px}
+.forecast-card h4{margin:0 0 12px;color:#1f2937}
+.forecast-stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:13px}
+.forecast-status{font-weight:700;text-transform:uppercase;font-size:13px}
+.forecast-value{color:#111827;font-weight:600;margin-left:auto}
+.forecast-projection{background:#f9fafb;border:1px solid #e5e7eb;border-radius:4px;padding:8px 12px;margin:8px 0;font-size:12px;color:#4b5563}
+.forecast-message{margin:8px 0 0;font-size:12px;color:#6b7280}
+.ba-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.ba-card{background:#fff;border:1px solid #e5e7eb;border-radius:6px;padding:16px}
+.ba-card h4{margin:0 0 8px;color:#1f2937}
+.ba-date{font-size:12px;color:#6b7280;margin-bottom:12px}
+.ba-comparison{display:flex;gap:12px;align-items:center;margin:12px 0;background:#f9fafb;border-radius:4px;padding:12px}
+.ba-column{flex:1;text-align:center}
+.ba-label{font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#6b7280;font-weight:700;margin-bottom:4px}
+.ba-value{font-size:16px;font-weight:700;color:#1f2937;margin-bottom:4px}
+.ba-range{font-size:11px;color:#6b7280}
+.ba-arrow{font-size:14px;color:#9ca3af;font-weight:700;display:flex;align-items:center}
+.ba-improvement{margin:12px 0;font-size:13px;font-weight:700}
+.ba-summary{margin:8px 0 0;font-size:12px;color:#6b7280}
 CSS;
     }
 

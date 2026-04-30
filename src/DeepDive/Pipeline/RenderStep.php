@@ -11,6 +11,10 @@ use App\DeepDive\Support\Paths;
 use App\DeepDive\AI\AnomalyDetector;
 use App\DeepDive\AI\EventCorrelator;
 use App\DeepDive\AI\RootCauseAnalyzer;
+use App\DeepDive\Metrics\MetricsExtractor;
+use App\DeepDive\Storage\MetricsPersistence;
+use App\DeepDive\Findings\FindingsIndexer;
+use App\DeepDive\Analysis\HistoricalAnalyzer;
 
 /**
  * Render Step: Generate HTML and PDF reports
@@ -138,6 +142,21 @@ final class RenderStep implements StepInterface
             $ctx->logger->warning('[deepdive.render] AI analysis failed: ' . $e->getMessage());
         }
 
+        // === RUN HISTORICAL ANALYSIS (METRICS, TRENDS, FORECASTS) ===
+        // Optional: Extracts metrics, detects recurring issues, forecasts thresholds
+        // Non-fatal: report renders even if historical analysis fails
+        $historicalData = [];
+        try {
+            $historicalData = $this->runHistoricalAnalysis($ctx);
+            if (!empty($historicalData)) {
+                $ctx->logger->info('[deepdive.render] Historical analysis complete');
+            }
+        } catch (\Throwable $e) {
+            // Historical analysis failed: log warning but continue with report
+            // Report will render without historical data
+            $ctx->logger->warning('[deepdive.render] Historical analysis failed: ' . $e->getMessage());
+        }
+
         // === Initialize renderer ===
         $renderer = new ReportRenderer();
         // Load narratives as overlay (applied on top of rule text)
@@ -160,6 +179,7 @@ final class RenderStep implements StepInterface
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],  // Rule evaluation errors
             'power_data'        => $ctx->bag['power_data'] ?? [],  // Power supply analysis data
             'ai_findings'       => $aiFindings,                  // Phase 1 & 2 AI analysis results
+            'historical_data'   => $historicalData,              // Metrics, trends, forecasts, recurring issues
         ];
 
         // === Render HTML report ===
@@ -306,6 +326,122 @@ final class RenderStep implements StepInterface
         }
 
         return $allFindings;
+    }
+
+    /**
+     * Internal helper: Run historical analysis (metrics, trends, forecasts)
+     *
+     * PURPOSE:
+     * Extracts metrics from bundles, stores in persistence layer,
+     * detects recurring issues, analyzes trends, and forecasts thresholds.
+     * Non-fatal: if analysis fails, report continues without historical data.
+     *
+     * FLOW:
+     * 1. Initialize persistence layer (MetricsPersistence, FindingsIndexer)
+     * 2. For each bundle:
+     *    a. Extract metrics via MetricsExtractor
+     *    b. Store metrics in timeseries database
+     *    c. Check for anomalies against baselines
+     *    d. Index findings if anomalies detected
+     *    e. Analyze trends from historical data
+     *    f. Forecast when thresholds will be exceeded
+     * 3. Compile results: recurring issues, trends, forecasts, before/after
+     *
+     * ERROR HANDLING:
+     * Bundle analysis errors are logged but don't block pipeline
+     * Returns partial results (other bundles still analyzed)
+     *
+     * @param PipelineContext $ctx Pipeline context
+     *
+     * @return array Historical analysis data with recurring_issues, trends, forecasts
+     */
+    private function runHistoricalAnalysis(PipelineContext $ctx): array
+    {
+        // Initialize persistence layer
+        $extractor = new MetricsExtractor($ctx->logger);
+        $persistence = new MetricsPersistence($ctx->pdo, $ctx->logger);
+        $findings = new FindingsIndexer($ctx->pdo, $ctx->logger);
+        $analyzer = new HistoricalAnalyzer($extractor, $persistence, $findings, $ctx->logger);
+
+        $historicalData = [
+            'recurring_issues' => [],
+            'trends'           => [],
+            'forecasts'        => [],
+            'before_after'     => [],
+        ];
+
+        $bundles = $ctx->bag['bundles'] ?? [];
+        $nasId = $ctx->bag['nas_id'] ?? $ctx->jobId; // Use NAS ID if available, fallback to job ID
+
+        foreach ($bundles as &$bundle) {
+            $bundlePath = $bundle['extracted_path'] ?? null;
+            if (!$bundlePath || !is_dir($bundlePath)) {
+                continue;
+            }
+
+            try {
+                $bundleDate = $bundle['extracted_at'] ?? date('Y-m-d H:i:s');
+
+                // === Analyze bundle: extract metrics, detect anomalies, index findings ===
+                $bundleAnalysis = $analyzer->analyzeBundle($bundle, $ctx->tenantId, $nasId, $bundleDate);
+
+                // Log summary
+                $ctx->logger->info(sprintf(
+                    '[deepdive.render] Bundle analysis: %d metrics, %d anomalies, %d findings',
+                    $bundleAnalysis['metrics_extracted'],
+                    $bundleAnalysis['anomalies_detected'],
+                    $bundleAnalysis['findings_created']
+                ));
+            } catch (\Throwable $e) {
+                // Analysis failed for this bundle: log and continue
+                $ctx->logger->warning(
+                    '[deepdive.render] Historical analysis failed for bundle: ' . $e->getMessage()
+                );
+                continue;
+            }
+        }
+
+        // === Compile historical analysis results ===
+        try {
+            // Get recurring issues (occurred multiple times)
+            $historicalData['recurring_issues'] = $analyzer->getRecurringIssues($ctx->tenantId, $nasId);
+
+            // Get key metrics for trend analysis
+            // Prioritize: memory usage, network errors, RAID status, thermal temps
+            $keyMetrics = [
+                'memory.used_percent',
+                'memory.swap_used_percent',
+                'network.total_errors',
+                'raid.rebuild_progress_percent',
+                'thermal.cpu_temp_celsius',
+                'storage.used_percent',
+            ];
+
+            foreach ($keyMetrics as $metricName) {
+                $trend = $analyzer->analyzeTrend($ctx->tenantId, $nasId, $metricName);
+                if ($trend['data_points'] >= 2) {
+                    $historicalData['trends'][] = $trend;
+                }
+
+                // Forecast for this metric (use baseline alarm threshold)
+                $baseline = $persistence->getBaselineProfile($ctx->tenantId, $nasId, $metricName);
+                if (!empty($baseline)) {
+                    $metric = reset($baseline);
+                    $threshold = $metric['alarm_threshold'] ?? null;
+                    if ($threshold) {
+                        $forecast = $analyzer->forecastThreshold($ctx->tenantId, $nasId, $metricName, (float)$threshold, 30);
+                        $historicalData['forecasts'][] = $forecast;
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            // Compilation failed: log but return partial results
+            $ctx->logger->warning(
+                '[deepdive.render] Failed to compile historical analysis: ' . $e->getMessage()
+            );
+        }
+
+        return $historicalData;
     }
 
     /**
