@@ -164,6 +164,45 @@ class PowerSupplyParser implements ParserInterface
     }
 
     /**
+     * Locate a file across multiple possible paths using glob patterns
+     *
+     * Handles various bundle extraction layouts (DSM 6/7, nested dirs, etc.)
+     * by searching through multiple possible locations with glob support.
+     *
+     * @param string $basePath Bundle root path
+     * @param array<string> $patterns Glob patterns to search (relative to basePath)
+     * @return string|null Absolute path to first matching file, or null
+     */
+    private function locateFile(string $basePath, array $patterns): ?string
+    {
+        $basePath = rtrim($basePath, '/\\');
+
+        foreach ($patterns as $pattern) {
+            // Direct file check (no glob)
+            if (strpos($pattern, '*') === false) {
+                $fullPath = $basePath . '/' . $pattern;
+                if (file_exists($fullPath)) {
+                    return $fullPath;
+                }
+            } else {
+                // Glob pattern
+                $globPath = $basePath . '/' . $pattern;
+                $matches = glob($globPath);
+                if ($matches && count($matches) > 0) {
+                    // Return first match (should be only one for dmidecode)
+                    foreach ($matches as $match) {
+                        if (is_file($match)) {
+                            return $match;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Extract device model from context (set by VersionParser or HardwareParser)
      */
     private function getModelFromContext(array $context): ?string
@@ -224,8 +263,17 @@ class PowerSupplyParser implements ParserInterface
         $data = [];
         $citations = [];
 
-        $dmiFile = $extractedPath . '/dsm/result/dmidecode.result';
-        if (!file_exists($dmiFile)) {
+        // Search for dmidecode.result across multiple possible locations
+        // to handle different bundle extraction layouts (DSM 6/7, nested dirs, etc.)
+        $dmiFile = $this->locateFile($extractedPath, [
+            'dsm/result/dmidecode.result',
+            'result/dmidecode.result',
+            'dmidecode.result',
+            '*/result/dmidecode.result',
+            '*/dmidecode.result',
+        ]);
+
+        if (!$dmiFile) {
             return ['data' => $data, 'citations' => $citations];
         }
 
@@ -346,8 +394,16 @@ class PowerSupplyParser implements ParserInterface
         $data = [];
         $citations = [];
 
-        $ipmiFile = $extractedPath . '/dsm/result/ipmi_sensors.result';
-        if (!file_exists($ipmiFile)) {
+        // Search for IPMI sensors file across multiple possible locations
+        $ipmiFile = $this->locateFile($extractedPath, [
+            'dsm/result/ipmi_sensors.result',
+            'result/ipmi_sensors.result',
+            'ipmi_sensors.result',
+            '*/result/ipmi_sensors.result',
+            '*/ipmi_sensors.result',
+        ]);
+
+        if (!$ipmiFile) {
             return ['data' => $data, 'citations' => $citations];
         }
 
@@ -388,8 +444,16 @@ class PowerSupplyParser implements ParserInterface
         $data = [];
         $citations = [];
 
-        $ipmiFile = $extractedPath . '/dsm/result/ipmi_sensors.result';
-        if (!file_exists($ipmiFile)) {
+        // Search for IPMI sensors file across multiple possible locations
+        $ipmiFile = $this->locateFile($extractedPath, [
+            'dsm/result/ipmi_sensors.result',
+            'result/ipmi_sensors.result',
+            'ipmi_sensors.result',
+            '*/result/ipmi_sensors.result',
+            '*/ipmi_sensors.result',
+        ]);
+
+        if (!$ipmiFile) {
             return ['data' => $data, 'citations' => $citations];
         }
 
@@ -427,8 +491,19 @@ class PowerSupplyParser implements ParserInterface
         $data = [];
         $citations = [];
 
-        $selFile = $extractedPath . '/dsm/result/ipmi_event_log.result';
-        if (!file_exists($selFile)) {
+        // Search for IPMI event log file across multiple possible locations
+        $selFile = $this->locateFile($extractedPath, [
+            'dsm/result/ipmi_event_log.result',
+            'result/ipmi_event_log.result',
+            'ipmi_event_log.result',
+            '*/result/ipmi_event_log.result',
+            '*/ipmi_event_log.result',
+            'dsm/result/ipmi_sel.result',
+            'result/ipmi_sel.result',
+            'ipmi_sel.result',
+        ]);
+
+        if (!$selFile) {
             return ['data' => $data, 'citations' => $citations];
         }
 
@@ -495,8 +570,16 @@ class PowerSupplyParser implements ParserInterface
         $data = [];
         $citations = [];
 
-        $chassisFile = $extractedPath . '/dsm/result/ipmi_chassis_status.result';
-        if (!file_exists($chassisFile)) {
+        // Search for IPMI chassis status file across multiple possible locations
+        $chassisFile = $this->locateFile($extractedPath, [
+            'dsm/result/ipmi_chassis_status.result',
+            'result/ipmi_chassis_status.result',
+            'ipmi_chassis_status.result',
+            '*/result/ipmi_chassis_status.result',
+            '*/ipmi_chassis_status.result',
+        ]);
+
+        if (!$chassisFile) {
             return ['data' => $data, 'citations' => $citations];
         }
 

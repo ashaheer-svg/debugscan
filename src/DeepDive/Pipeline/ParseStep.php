@@ -8,6 +8,7 @@ use App\DeepDive\Hardware\HardwareSpecExtractor;
 use App\Parsers\PowerSupplyParser;
 use App\DeepDive\Parsers\BundleLocator;
 use App\DeepDive\Parsers\TimestampParser;
+use App\DeepDive\Parsers\FileAvailabilityValidator;
 use App\DeepDive\Rules\Sources\SourceRegistry;
 
 /**
@@ -102,12 +103,13 @@ final class ParseStep implements StepInterface
         $ctx->startStep($this->id());
 
         // Initialize parsers and data structures
-        $year     = (int)date('Y'); // Current year for timestamp parsing
-        $locator  = new BundleLocator(new TimestampParser($year));
-        $registry = new SourceRegistry(); // Unified registry for all bundles
-        $facts    = [];                    // Per-bundle metadata for report
+        $year      = (int)date('Y'); // Current year for timestamp parsing
+        $locator   = new BundleLocator(new TimestampParser($year));
+        $registry  = new SourceRegistry(); // Unified registry for all bundles
+        $facts     = [];                    // Per-bundle metadata for report
         $hwExtractor = new HardwareSpecExtractor();
         $powerParser = new PowerSupplyParser();   // Power supply analysis
+        $fileValidator = new FileAvailabilityValidator(); // File availability check
         $powerData = [];                          // Collected power data
 
         // === Process each bundle ===
@@ -130,6 +132,10 @@ final class ParseStep implements StepInterface
                 $registry->registerSqlite($src);
             }
 
+            // === Validate file availability ===
+            // Pre-flight check: ensure required data files exist before parsing
+            $fileManifest = $fileValidator->validateBundle($base);
+
             // === Extract hardware specifications ===
             // Analyzes system information in bundle
             $hardwareSpec = $hwExtractor->extract($base);
@@ -145,6 +151,7 @@ final class ParseStep implements StepInterface
 
             // === Extract power supply information ===
             // Analyzes power system health (DMI, IPMI, events)
+            // Only parse power data if required files are available or alternatives found
             try {
                 $psuResult = $powerParser->parse($base, [
                     'hardware' => $hardwareSpec,
@@ -169,13 +176,22 @@ final class ParseStep implements StepInterface
 
             // === Generate per-bundle facts for report ===
             $facts[] = [
-                'debug_file_id'  => $bundle['debug_file_id'],           // For tracking
-                'root'           => basename($base),                     // Bundle directory name
-                'file_count'     => $this->countFiles($base),            // Total files in bundle
-                'size_bytes'     => $this->dirSize($base),               // Total size
-                'top_level'      => $this->topLevel($base),              // First 20 items in root
-                'sources_log'    => array_keys($bundleReg->allLogs()),   // Log files found
-                'sources_sqlite' => array_keys($bundleReg->allSqlite()), // Databases found
+                'debug_file_id'  => $bundle['debug_file_id'],                              // For tracking
+                'root'           => basename($base),                                        // Bundle directory name
+                'file_count'     => $this->countFiles($base),                               // Total files in bundle
+                'size_bytes'     => $this->dirSize($base),                                  // Total size
+                'top_level'      => $this->topLevel($base),                                 // First 20 items in root
+                'sources_log'    => array_keys($bundleReg->allLogs()),                      // Log files found
+                'sources_sqlite' => array_keys($bundleReg->allSqlite()),                    // Databases found
+                'file_availability' => [                                                   // Pre-flight validation results
+                    'completeness_pct' => $fileManifest['completeness_pct'],
+                    'assessment' => $fileManifest['assessment'],
+                    'critical_available' => $fileManifest['critical_available'],
+                    'critical_total' => $fileManifest['total_critical'],
+                    'power_available' => $fileManifest['power_available'],
+                    'power_total' => $fileManifest['total_power'],
+                    'issues' => $fileManifest['issues'],
+                ],
             ];
         }
         unset($bundle); // Unset reference to avoid side effects
