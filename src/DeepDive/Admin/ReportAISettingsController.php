@@ -408,6 +408,11 @@ final class ReportAISettingsController
                 // Remove CSRF token from data if present
                 delete data.__csrf;
 
+                // Only update API key if it was explicitly entered (not empty)
+                if (!data.zai_api_key) {
+                    delete data.zai_api_key;
+                }
+
                 data.ai_enabled = !!data.ai_enabled;
                 data.use_zai = !!data.use_zai;
                 data.require_ai_analysis = !!data.require_ai_analysis;
