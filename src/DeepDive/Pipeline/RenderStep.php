@@ -173,7 +173,7 @@ final class RenderStep implements StepInterface
             'project_id'        => $ctx->projectId,
             'generated_at'      => date('Y-m-d H:i:s T'),       // Timestamp
             'engine_version'    => Engine::VERSION,              // For reproducibility
-            'report_version'    => '3.0.0',                      // Format version
+            'report_version'    => '3.1.0',                      // Format version - enhanced power anomaly detection
             'catalogue_version' => $ctx->bag['rule_catalogue_version'] ?? Engine::catalogueVersion($catalogue),
             'bundles'           => $ctx->bag['bundles'] ?? [],   // Bundle metadata
             'evaluator_errors'  => $ctx->bag['evaluator_errors'] ?? [],  // Rule evaluation errors
