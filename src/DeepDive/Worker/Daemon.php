@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\DeepDive\Worker;
 
+use App\DeepDive\Logging\LogExporter;
+use App\DeepDive\Logging\PipelineLogger;
 use App\DeepDive\Pipeline\CleanupStep;
 use App\DeepDive\Pipeline\CorrelateStep;
 use App\DeepDive\Pipeline\DecompressStep;
@@ -208,6 +210,9 @@ final class Daemon
 
         $this->logger->info("[DeepDive] Processing job {$jobId} for tenant {$row['tenant_id']}");
 
+        // Initialize audit logger for this job
+        $auditLogger = new PipelineLogger($jobId);
+
         $steps = JobRepository::initialSteps();
         $ctx = new PipelineContext(
             jobId:       $jobId,
@@ -220,6 +225,9 @@ final class Daemon
             logger:      $this->logger,
             steps:       $steps,
         );
+
+        // Store audit logger in context for use by pipeline steps
+        $ctx->bag['audit_logger'] = $auditLogger;
 
         $pipeline = (new Pipeline($this->logger))
             ->add(new ValidateStep())
@@ -239,6 +247,17 @@ final class Daemon
             $htmlPath = $report['html_path'] ?? null;
             $pdfPath  = $report['pdf_path']  ?? null;
 
+            // Export audit logs after successful completion
+            try {
+                $logsPath = Paths::root() . '/storage/logs/deepdive';
+                $exporter = new LogExporter($auditLogger, $logsPath);
+                $logPaths = $exporter->save();
+                $ctx->bag['log_paths'] = $logPaths;
+                $this->logger->info("[DeepDive] Audit logs saved for {$jobId}");
+            } catch (\Throwable $e) {
+                $this->logger->warning("[DeepDive] Failed to export audit logs: " . $e->getMessage());
+            }
+
             $this->jobs->markCompleted($jobId, $htmlPath, $pdfPath, $ctx->asArray());
             $this->logger->info("[DeepDive] Completed {$jobId}");
         } catch (\Throwable $e) {
@@ -246,6 +265,18 @@ final class Daemon
                 'file' => basename($e->getFile()),
                 'line' => $e->getLine(),
             ]);
+
+            // Export audit logs even on failure for debugging
+            try {
+                $logsPath = Paths::root() . '/storage/logs/deepdive';
+                $exporter = new LogExporter($auditLogger, $logsPath);
+                $logPaths = $exporter->save();
+                $ctx->bag['log_paths'] = $logPaths;
+                $this->logger->info("[DeepDive] Audit logs saved for failed job {$jobId}");
+            } catch (\Throwable $e2) {
+                $this->logger->warning("[DeepDive] Failed to export audit logs: " . $e2->getMessage());
+            }
+
             $this->jobs->markFailed($jobId, $e->getMessage(), $ctx->asArray());
             // Best-effort cleanup on hard fail (unless debug mode).
             if (!$ctx->debugMode) {
