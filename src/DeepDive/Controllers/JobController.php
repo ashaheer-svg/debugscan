@@ -209,15 +209,10 @@ final class JobController
         }
 
         // Inject log download link into report
-        $logsLink = <<<HTML
-        <div style="background: #f0f4f8; border-bottom: 1px solid #e0e0e0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #666; font-size: 14px;">📊 Execution Logs Available</span>
-            <a href="/deepdive/logs" target="_blank" style="background: #667eea; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">View Audit Logs</a>
-        </div>
-        HTML;
+        $logsLink = '<div style="background: #f0f4f8; border-bottom: 1px solid #e0e0e0; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center;"><span style="color: #666; font-size: 14px;">📊 Execution Logs</span><a href="/deepdive/logs" target="_blank" style="background: #667eea; color: white; padding: 8px 16px; border-radius: 4px; text-decoration: none; font-size: 13px; font-weight: 500;">View Audit Logs</a></div>';
 
-        // Insert banner after opening body tag
-        $html = str_replace('<body>', '<body>' . "\n" . $logsLink . "\n", (string)$html);
+        // Insert banner after opening body tag (handles body with or without attributes)
+        $html = preg_replace('/<body[^>]*>/i', '$0' . "\n" . $logsLink . "\n", (string)$html);
 
         $res->getBody()->write($html);
         return $res->withHeader('Content-Type', 'text/html; charset=utf-8');
