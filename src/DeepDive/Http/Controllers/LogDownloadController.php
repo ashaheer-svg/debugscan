@@ -103,7 +103,7 @@ class LogDownloadController
             foreach (scandir($jobDir) ?: [] as $filename) {
                 if (in_array($filename, ['.', '..'])) continue;
 
-                $path = $jobDir . '/' $filename;
+                $path = $jobDir . '/' . $filename;
                 if (!is_file($path)) continue;
 
                 $size = filesize($path);

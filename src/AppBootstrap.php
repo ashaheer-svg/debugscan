@@ -440,6 +440,14 @@ class AppBootstrap
             $group->post('deepdive/cancel/{id}',               [\App\DeepDive\Controllers\JobController::class, 'cancel']);
             $group->post('deepdive/delete/{id}',               [\App\DeepDive\Controllers\JobController::class, 'delete']);
             $group->get ('deepdive/api/job/{id}/status',       [\App\DeepDive\Controllers\JobController::class, 'status']);
+
+            // Log Download routes for audit trail access
+            $group->get ('deepdive/logs',                      [\App\DeepDive\Controllers\LogDownloadController::class, 'dashboard']);
+            $group->get ('deepdive/logs/view/{jobId}',         [\App\DeepDive\Controllers\LogDownloadController::class, 'viewReport']);
+            $group->get ('deepdive/logs/download/{jobId}/{filename}', [\App\DeepDive\Controllers\LogDownloadController::class, 'downloadLog']);
+            $group->get ('api/deepdive/logs/list',             [\App\DeepDive\Controllers\LogDownloadController::class, 'listLogs']);
+            $group->get ('api/deepdive/logs/{jobId}',          [\App\DeepDive\Controllers\LogDownloadController::class, 'getLog']);
+            $group->post('api/deepdive/logs/delete/{jobId}',   [\App\DeepDive\Controllers\LogDownloadController::class, 'deleteLog']);
             // --- end DeepDive routes ---
         })->add($container->get(ViewDataMiddleware::class))
           ->add(new AuthMiddleware($container->get(PDO::class), $container->get('base_path')));
