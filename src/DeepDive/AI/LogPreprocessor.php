@@ -105,11 +105,36 @@ final class LogPreprocessor
             'analysis_intent'   => 'Detect anomalies in power supply, thermal, and hardware subsystems',
         ];
 
+        // === Pass through structured power data (from PowerSupplyParser) ===
+        // This provides validated, parsed power supply information for anomaly detection
+        if (!empty($metadata['power_data'])) {
+            $logs['power_data'] = $metadata['power_data'];
+        }
+
+        // === Pass additional AI context data ===
+        if (!empty($metadata['source_registry'])) {
+            $logs['source_registry'] = $metadata['source_registry'];
+        }
+        if (!empty($metadata['facts'])) {
+            $logs['facts'] = $metadata['facts'];
+        }
+        if (!empty($metadata['tenant_id'])) {
+            $logs['tenant_id'] = $metadata['tenant_id'];
+        }
+        if (!empty($metadata['nas_id'])) {
+            $logs['nas_id'] = $metadata['nas_id'];
+        }
+
         return [
             'ipmi_events'       => $logs['ipmi_events'],
             'syno_events'       => $logs['syno_events'],
             'kernel_logs'       => $logs['kernel_logs'] ?? null,
             'context'           => $logs['context'],
+            'power_data'        => $logs['power_data'] ?? null,          // Structured power supply data
+            'source_registry'   => $logs['source_registry'] ?? null,     // Data source registry
+            'facts'             => $logs['facts'] ?? null,                // Bundle metadata facts
+            'tenant_id'         => $logs['tenant_id'] ?? null,            // Multi-tenant context
+            'nas_id'            => $logs['nas_id'] ?? null,               // NAS identifier
             'estimated_tokens'  => $usedTokens,
             'time_window_hours' => self::TIME_WINDOW_HOURS,
         ];

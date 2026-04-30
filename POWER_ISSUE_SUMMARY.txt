@@ -1,0 +1,66 @@
+================================================================================
+                    POWER ANOMALY DETECTION ISSUE - SUMMARY
+================================================================================
+
+PROBLEM:
+  Report shows "0 Anomalies" despite real power issues in the system
+
+ROOT CAUSE:
+  **Data pipeline disconnect** between two subsystems that don't share data
+
+WHAT'S HAPPENING:
+
+  1. PowerSupplyParser (Works ✓)
+     - Extracts complete power data from DMI, IPMI, event logs
+     - Parses voltage, current, events, health assessment
+     - Data is displayed in report ✓
+     
+  2. AnomalyDetector (Broken ✗)
+     - Tries to detect power anomalies by parsing raw IPMI log files
+     - Only receives psu_model string, NOT the actual power_data
+     - If IPMI files missing (your data is 66% complete) → finds no events
+     - Result: "0 Anomalies" ✗
+
+THE GAP:
+  
+  PowerSupplyParser           AnomalyDetector
+  (extracts power data)       (detects anomalies)
+       ✓                            ✗
+       │                            │
+       └─→ ReportRenderer (display) │
+           ✓                        │
+                                    │
+                              Tries to re-extract
+                              from raw files
+                              (but files are missing!)
+
+FIX REQUIRED:
+
+  1. Pass power_data to AnomalyDetector
+     - File: src/DeepDive/Pipeline/RenderStep.php (line 270)
+     - Add: 'power_data' => $bundle['power_data'] ?? null,
+     
+  2. Update AnomalyDetector to check power_data
+     - File: src/DeepDive/AI/AnomalyDetector.php (line 147)
+     - Check power_data['health_assessment'] for anomalies
+     - Check voltage/current readings for out-of-spec conditions
+
+IMPACT:
+  - ✓ Safe: Uses already-validated data from PowerSupplyParser
+  - ✓ Low risk: Just connecting existing systems
+  - ✓ No database changes
+  - ✓ No API changes
+
+RESULT AFTER FIX:
+  - Anomalies count > 0 (if power issues exist)
+  - Risk level reflects power health
+  - Report accurately shows power problems
+
+FILES INVOLVED:
+  - src/DeepDive/Pipeline/RenderStep.php (lines 269-273) - Pass data
+  - src/DeepDive/AI/AnomalyDetector.php (lines 147-200) - Use data
+  - src/Parsers/PowerSupplyParser.php - Data source
+  - src/DeepDive/Pipeline/ParseStep.php - Where data stored
+
+NEXT STEP:
+  See POWER_ANOMALY_DETECTION_ISSUE.md for detailed implementation guide

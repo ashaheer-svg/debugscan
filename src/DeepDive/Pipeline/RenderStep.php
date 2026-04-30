@@ -266,10 +266,16 @@ final class RenderStep implements StepInterface
 
             try {
                 // === Phase 1: Detect anomalies ===
+                // Pass complete bundle context for comprehensive anomaly detection
                 $phase1 = $detector->analyzeBundleAnomalies($bundlePath, [
                     'psu_model'        => $bundle['psu_model'] ?? null,
                     'hardware_spec'    => $bundle['hardware_spec'] ?? null,
                     'bundle_timestamp' => $bundle['extracted_at'] ?? date('Y-m-d H:i:s'),
+                    'power_data'       => $bundle['power_data'] ?? null,           // Parsed power supply data
+                    'source_registry'  => $ctx->bag['source_registry'] ?? null,   // Data source registry
+                    'facts'            => $ctx->bag['facts'] ?? [],                // Bundle metadata facts
+                    'tenant_id'        => $ctx->tenantId,                          // Multi-tenant context
+                    'nas_id'           => $ctx->bag['nas_id'] ?? $ctx->jobId,     // NAS identifier
                 ]);
 
                 // Collect all anomalies

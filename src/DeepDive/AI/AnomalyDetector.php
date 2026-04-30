@@ -149,7 +149,157 @@ final class AnomalyDetector
         $anomalies = [];
         $issues = [];
 
-        // === Check IPMI PSU events ===
+        // === PRIMARY: Check structured power_data (from PowerSupplyParser) ===
+        // This is the most reliable source since data was already parsed and validated
+        if (!empty($logData['power_data'] ?? null)) {
+            $powerData = $logData['power_data'];
+            $this->log('debug', 'Analyzing structured power_data from PowerSupplyParser');
+
+            // Check health assessment first (highest priority)
+            if (isset($powerData['health_assessment'])) {
+                $health = $powerData['health_assessment'];
+
+                if ($health['overall_status'] === 'critical') {
+                    $anomalies[] = [
+                        'timestamp'    => date('Y-m-d H:i:s'),
+                        'type'         => 'PSU_HEALTH_CRITICAL',
+                        'severity'     => 'CRITICAL',
+                        'confidence'   => 0.95,
+                        'message'      => 'Power supply health assessment: CRITICAL - ' . implode(', ', $health['risk_factors'] ?? []),
+                    ];
+                    $issues[] = 'Critical power supply health issue';
+                } elseif ($health['overall_status'] === 'warning') {
+                    $anomalies[] = [
+                        'timestamp'    => date('Y-m-d H:i:s'),
+                        'type'         => 'PSU_HEALTH_WARNING',
+                        'severity'     => 'HIGH',
+                        'confidence'   => 0.85,
+                        'message'      => 'Power supply health assessment: WARNING - ' . implode(', ', $health['risk_factors'] ?? []),
+                    ];
+                    $issues[] = 'Power supply health warning';
+                } elseif ($health['overall_status'] === 'caution') {
+                    $anomalies[] = [
+                        'timestamp'    => date('Y-m-d H:i:s'),
+                        'type'         => 'PSU_HEALTH_CAUTION',
+                        'severity'     => 'MEDIUM',
+                        'confidence'   => 0.75,
+                        'message'      => 'Power supply health assessment: CAUTION - ' . implode(', ', $health['risk_factors'] ?? []),
+                    ];
+                    $issues[] = 'Power supply caution';
+                }
+
+                // Check redundancy status
+                $redundancy = $health['redundancy_status'] ?? 'none';
+                if ($redundancy === 'degraded') {
+                    $anomalies[] = [
+                        'timestamp'    => date('Y-m-d H:i:s'),
+                        'type'         => 'PSU_REDUNDANCY_DEGRADED',
+                        'severity'     => 'HIGH',
+                        'confidence'   => 0.90,
+                        'message'      => 'Redundant PSU configuration is degraded - one PSU may have failed',
+                    ];
+                    $issues[] = 'Redundant PSU degraded';
+                }
+            }
+
+            // Check individual PSU status
+            if (!empty($powerData['power_supplies'])) {
+                foreach ($powerData['power_supplies'] as $psu) {
+                    $status = $psu['status'] ?? 'unknown';
+                    $detection = $psu['detection_status'] ?? 'unknown';
+                    $plugged = $psu['plugged'] ?? null;
+
+                    if ($status === 'failed' || $detection === 'not_present' || $plugged === false) {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'PSU_FAILED',
+                            'severity'     => 'CRITICAL',
+                            'confidence'   => 0.99,
+                            'message'      => sprintf(
+                                'PSU #%d: status=%s, detection=%s, plugged=%s',
+                                $psu['index'] ?? 0,
+                                $status,
+                                $detection,
+                                $plugged === null ? 'unknown' : ($plugged ? 'yes' : 'no')
+                            ),
+                        ];
+                        $issues[] = 'PSU failure or not detected';
+                    } elseif ($status === 'degraded') {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'PSU_DEGRADED',
+                            'severity'     => 'HIGH',
+                            'confidence'   => 0.85,
+                            'message'      => sprintf('PSU #%d: degraded status detected', $psu['index'] ?? 0),
+                        ];
+                        $issues[] = 'PSU degradation';
+                    }
+                }
+            }
+
+            // Check voltage readings for out-of-spec conditions
+            if (!empty($powerData['voltage_readings'])) {
+                foreach ($powerData['voltage_readings'] as $voltage) {
+                    $status = $voltage['status'] ?? 'ok';
+
+                    if ($status === 'critical') {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'VOLTAGE_CRITICAL',
+                            'severity'     => 'CRITICAL',
+                            'confidence'   => 0.92,
+                            'message'      => sprintf(
+                                '%s: %.2fV (out of spec, expected %.2f-%.2fV)',
+                                $voltage['rail_name'],
+                                $voltage['voltage_volts'],
+                                $voltage['min_volts'] ?? 0,
+                                $voltage['max_volts'] ?? 0
+                            ),
+                        ];
+                        $issues[] = 'Critical voltage out of spec';
+                    } elseif ($status === 'warning') {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'VOLTAGE_WARNING',
+                            'severity'     => 'HIGH',
+                            'confidence'   => 0.80,
+                            'message'      => sprintf(
+                                '%s: %.2fV (approaching limit)',
+                                $voltage['rail_name'],
+                                $voltage['voltage_volts']
+                            ),
+                        ];
+                        $issues[] = 'Voltage approaching limit';
+                    }
+                }
+            }
+
+            // Check current readings for over-current
+            if (!empty($powerData['current_readings'])) {
+                foreach ($powerData['current_readings'] as $current) {
+                    $status = $current['status'] ?? 'ok';
+
+                    if ($status === 'critical') {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'CURRENT_CRITICAL',
+                            'severity'     => 'HIGH',
+                            'confidence'   => 0.85,
+                            'message'      => sprintf('%s: %.2fA (critical)', $current['rail_name'], $current['current_amps']),
+                        ];
+                        $issues[] = 'Over-current condition';
+                    }
+                }
+            }
+
+            // Log what was found
+            if (!empty($anomalies)) {
+                $this->log('info', 'Found ' . count($anomalies) . ' power anomalies from health assessment');
+            }
+        }
+
+        // === FALLBACK: Check IPMI PSU events (if no power_data available) ===
+        // This is secondary analysis for systems where PowerSupplyParser data isn't available
         $psuEvents = array_filter(
             $logData['ipmi_events'] ?? [],
             fn($e) => ($e['type'] ?? '') === 'IPMI_PSU'
