@@ -534,9 +534,10 @@ final class ReportAISettingsController
         try {
             if ($this->settings->useZai()) {
                 $apiKey = $this->settings->getZaiApiKey();
-                $model = $this->settings->getModel();
+                $model = $this->settings->getModel() ?? 'glm-4';  // Default model for fetching available models
 
-                if (!empty($apiKey) && !empty($model)) {
+                // Only need API key to initialize - model selection can be done later
+                if (!empty($apiKey)) {
                     $this->zai = new ZaiClient($apiKey, $model, null, $this->logger);
                 }
             }
