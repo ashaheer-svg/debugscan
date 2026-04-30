@@ -206,19 +206,20 @@ final class FindingsIndexer
     /**
      * Resolve a finding (issue fixed or no longer relevant)
      *
+     * @param string $tenant_id Tenant identifier for row-level security
      * @param int $finding_id Finding ID
      * @param string $resolution_notes Optional notes about resolution
      */
-    public function resolveFinding(int $finding_id, ?string $resolution_notes = null): void
+    public function resolveFinding(string $tenant_id, int $finding_id, ?string $resolution_notes = null): void
     {
         $stmt = $this->pdo->prepare("
             UPDATE nas_findings_index
             SET resolution_status = 'resolved',
                 resolved_at = NOW()
-            WHERE finding_id = :finding_id
+            WHERE tenant_id = :tenant_id AND finding_id = :finding_id
         ");
 
-        $stmt->execute(['finding_id' => $finding_id]);
+        $stmt->execute(['tenant_id' => $tenant_id, 'finding_id' => $finding_id]);
 
         $this->log('info', "Marked finding #{$finding_id} as resolved");
     }
