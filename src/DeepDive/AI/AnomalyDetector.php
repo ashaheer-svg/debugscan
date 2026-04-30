@@ -178,14 +178,21 @@ final class AnomalyDetector
                     ];
                     $issues[] = 'Power supply health warning';
                 } elseif ($health['overall_status'] === 'caution') {
-                    $anomalies[] = [
-                        'timestamp'    => date('Y-m-d H:i:s'),
-                        'type'         => 'PSU_HEALTH_CAUTION',
-                        'severity'     => 'MEDIUM',
-                        'confidence'   => 0.75,
-                        'message'      => 'Power supply health assessment: CAUTION - ' . implode(', ', $health['risk_factors'] ?? []),
-                    ];
-                    $issues[] = 'Power supply caution';
+                    // Only report caution if it's based on actual data issues
+                    // Skip if it's just indicating insufficient data
+                    $assessmentStatus = $health['assessment_status'] ?? 'based_on_data';
+                    if ($assessmentStatus !== 'insufficient_data') {
+                        $anomalies[] = [
+                            'timestamp'    => date('Y-m-d H:i:s'),
+                            'type'         => 'PSU_HEALTH_CAUTION',
+                            'severity'     => 'MEDIUM',
+                            'confidence'   => 0.75,
+                            'message'      => 'Power supply health assessment: CAUTION - ' . implode(', ', $health['risk_factors'] ?? []),
+                        ];
+                        $issues[] = 'Power supply caution';
+                    } else {
+                        $this->log('debug', 'Power supply data not available in bundle - cannot assess health');
+                    }
                 }
 
                 // Check redundancy status

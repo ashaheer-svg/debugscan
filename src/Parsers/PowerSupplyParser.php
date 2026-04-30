@@ -137,7 +137,23 @@ class PowerSupplyParser implements ParserInterface
         // 4.5. Extract model for PSU configuration detection
         $model = $this->getModelFromContext($context);
 
-        // 5. Perform health assessment and risk analysis
+        // 5. FALLBACK: If no primary power data available, scan logs for power-related errors
+        $hasAnyPowerData = !empty($data['power_supplies'] ?? [])
+            || !empty($data['voltage_readings'] ?? [])
+            || !empty($data['current_readings'] ?? [])
+            || !empty($data['power_events'] ?? [])
+            || !empty($data['system_power_status'] ?? []);
+
+        if (!$hasAnyPowerData) {
+            // Try to detect power issues from kernel/system logs
+            $logEvents = $this->detectPowerEventsFallback($extractedPath);
+            if ($logEvents['data']) {
+                $data['power_events'] = $logEvents['data'];
+                $citations = array_merge($citations, $logEvents['citations']);
+            }
+        }
+
+        // 6. Perform health assessment and risk analysis
         $assessment = $this->assessPowerHealth($data, $model);
         $data['health_assessment'] = $assessment;
 
@@ -523,15 +539,32 @@ class PowerSupplyParser implements ParserInterface
      */
     private function assessPowerHealth(array $data, ?string $model = null): array
     {
+        // Check if we have any power supply data to assess
+        $hasPowerSupplyData = !empty($data['power_supplies'] ?? [])
+            || !empty($data['voltage_readings'] ?? [])
+            || !empty($data['current_readings'] ?? [])
+            || !empty($data['power_events'] ?? [])
+            || !empty($data['system_power_status'] ?? []);
+
+        // Default status: 'healthy' if we have data to assess, 'caution' if insufficient data
+        $defaultStatus = $hasPowerSupplyData ? 'healthy' : 'caution';
+
         $assessment = [
-            'overall_status' => 'healthy',
+            'overall_status' => $defaultStatus,
             'redundancy_status' => 'none',
             'risk_factors' => [],
-            'requires_attention' => false,
+            'requires_attention' => !$hasPowerSupplyData,  // Flag as requiring attention if we have no data
             'model' => $model,
             'expected_psu_count' => null,
-            'actual_psu_count' => 0
+            'actual_psu_count' => 0,
+            'has_power_data' => $hasPowerSupplyData,  // Track whether assessment is based on actual data
+            'assessment_status' => $hasPowerSupplyData ? 'based_on_data' : 'insufficient_data'
         ];
+
+        // If we have no power supply data and no other power information, add a caution message
+        if (!$hasPowerSupplyData) {
+            $assessment['risk_factors'][] = 'Power supply monitoring data not available - cannot fully assess power health';
+        }
 
         // Get expected PSU configuration for this model
         $psuSpec = $model ? $this->getPsuSpecForModel($model) : null;
@@ -634,5 +667,92 @@ class PowerSupplyParser implements ParserInterface
         }
 
         return $assessment;
+    }
+
+    /**
+     * FALLBACK: Detect power events from kernel/system logs when IPMI data unavailable
+     *
+     * Scans kern.log, messages, and other logs for power-related errors:
+     * - Power supply failures
+     * - Voltage issues
+     * - Power cycling events
+     * - Thermal/power correlation
+     *
+     * @param string $extractedPath Bundle directory
+     *
+     * @return array{data: array, citations: array}
+     */
+    private function detectPowerEventsFallback(string $extractedPath): array
+    {
+        $events = [];
+        $citations = [];
+
+        $logFiles = [
+            'dsm/log/kern.log',
+            'dsm/log/messages',
+            'dsm/log/scemd',
+            'var/log/kern.log',
+            'var/log/messages',
+        ];
+
+        $powerKeywords = [
+            'power\s+(?:supply|failure|fail|issue)',
+            'psu\s+(?:fail|error|critical)',
+            'voltage\s+(?:out|low|high|critical)',
+            'power\s+(?:loss|lost|outage|cycle)',
+            'supply\s+(?:error|fault|fail)',
+        ];
+
+        foreach ($logFiles as $relPath) {
+            $filePath = $extractedPath . '/' . $relPath;
+            if (!file_exists($filePath)) continue;
+
+            $handle = fopen($filePath, 'r');
+            if (!$handle) continue;
+
+            $lineNum = 0;
+            while (($line = fgets($handle)) !== false && $lineNum < 10000) {
+                $lineNum++;
+
+                // Check for power-related keywords
+                $hasPowerKeyword = false;
+                foreach ($powerKeywords as $keyword) {
+                    if (preg_match('/' . $keyword . '/i', $line)) {
+                        $hasPowerKeyword = true;
+                        break;
+                    }
+                }
+
+                if (!$hasPowerKeyword) continue;
+
+                // Extract timestamp if present
+                $timestamp = date('Y-m-d H:i:s'); // Fallback
+                if (preg_match('/(\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}:\d{2})/', $line, $m)) {
+                    $timestamp = $m[1];
+                }
+
+                $events[] = [
+                    'timestamp'   => $timestamp,
+                    'event_type'  => 'power_event_log',
+                    'severity'    => preg_match('/(critical|error|fail)/i', $line) ? 'critical' : 'warning',
+                    'description' => trim(substr($line, 0, 200)),
+                ];
+            }
+            fclose($handle);
+
+            if (!empty($events)) {
+                $citations[] = [
+                    'file'      => $relPath,
+                    'lines'     => '1-' . $lineNum,
+                    'timestamp' => date('Y-m-d H:i:s', filemtime($filePath) ?: time()),
+                    'source'    => 'fallback_log_scan'
+                ];
+            }
+        }
+
+        return [
+            'data'      => $events,
+            'citations' => $citations
+        ];
     }
 }
