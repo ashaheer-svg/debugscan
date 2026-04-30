@@ -8,12 +8,10 @@
         "IPS_INPUT": "filter-INPUT", 
         "VPN_CLIENT_INPUT": "filter-INPUT", 
         "QUICKCONNECT_RELAY": "filter-INPUT", 
-        "FIREWALL_RELOADING": "filter-INPUT", 
         "PPPOE_FORWARD": "filter-FORWARD", 
         "VPN_PASSTHROUGH": "filter-FORWARD", 
         "DOS_PROTECT": "filter-INPUT", 
         "IPS_FORWARD": "filter-FORWARD", 
-        "VPN_SERVER_INPUT": "filter-INPUT", 
         "IPS_OUTPUT": "filter-OUTPUT", 
         "INPUT_FIREWALL": "filter-INPUT", 
         "MAILSERVER_PLUS": "filter-INPUT"
@@ -39,10 +37,8 @@
             "VPN_CLIENT_INPUT", 
             "MAILSERVER_PLUS", 
             "DOS_PROTECT", 
-            "FIREWALL_RELOADING", 
-            "QUICKCONNECT_RELAY", 
             "INPUT_FIREWALL", 
-            "VPN_SERVER_INPUT"
+            "QUICKCONNECT_RELAY"
         ]
     }
 }

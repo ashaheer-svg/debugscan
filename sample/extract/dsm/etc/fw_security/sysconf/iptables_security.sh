@@ -224,33 +224,36 @@ get_interface() {
 	#get pppoe
 	out_if="$out_if $PPPOE"
 
+	#get usbmodem
+	usbmodem_list=`synowireless --get-usbmodem-interface-list`
+	for usbmodem in $usbmodem_list;
+	do
+		out_if="$out_if $usbmodem"
+	done
+
 	echo $out_if
-}
-
-has_tmp_file() {
-	local interface=$1
-	local tmp_file=$SZD_FW_SECURITY_ROOT/$interface.conf.tmp
-
-	if [ -f $tmp_file ]; then
-		return 0
-	fi
-
-	return 1
 }
 
 fw_security_dump() {
 	local ret=""
 	local interface=""
 	local all_if=""
+	local modconf=""
 	local ifName=""
 
 	dump_rules_clear $SZF_RULES_SECURITY_DUMP $SZF_RULES_6_SECURITY_DUMP
+
+	for modfile in $SZD_FW_SECURITY_ROOT/*.conf.tmp ;
+	do
+		modconf=`basename $modfile | sed 's/.conf.tmp$//g'`
+	done
+
 	all_if=`get_interface`
 
 	for inf in $all_if ;
 	do
-		if has_tmp_file $inf; then
-			file=$SZD_FW_SECURITY_ROOT/$inf.conf.tmp
+		if [ "$modconf" = "$inf" ]; then
+			file=$modfile
 		else
 			file=$SZD_FW_SECURITY_ROOT/$inf.conf
 		fi

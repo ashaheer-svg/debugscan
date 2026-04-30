@@ -1,8 +1,0 @@
-
-[volpath_fsuuid.mapping]
-/dev/mapper/cachedev_1=a7e4dd2a-3688-40e4-9631-c134ec62468d
-/volume2=32b26da3-67d3-4ad4-9320-f8026566bcfb
-/dev/vg1/volume_2=32b26da3-67d3-4ad4-9320-f8026566bcfb
-/volume1=a7e4dd2a-3688-40e4-9631-c134ec62468d
-/dev/md2=a7e4dd2a-3688-40e4-9631-c134ec62468d
-/dev/mapper/cachedev_0=32b26da3-67d3-4ad4-9320-f8026566bcfb

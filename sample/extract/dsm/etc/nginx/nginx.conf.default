@@ -17,7 +17,7 @@ http {
         '"$http_user_agent" "$http_x_forwarded_for"';
 
     access_log  off;
-    error_log   /var/log/nginx/error_default.log error;
+    error_log   /var/log/nginx/error.log error;
 
     sendfile        on;
     server_tokens   off;
@@ -88,10 +88,9 @@ http {
             alias /usr/syno/synoman/webfm/webUI/directlogin.js;
         }
 
-        error_page 403 404 500 502 503 504 /dsm_error_page;
+        error_page 403 404 500 502 503 504 @error_page;
 
-        location /dsm_error_page {
-            internal;
+        location @error_page {
             root /usr/syno/share/nginx;
             rewrite (.*) /error.html break;
         }
@@ -115,10 +114,6 @@ http {
         listen  80;
         listen  [::]:80;
 
-        location / {
-            root /usr/syno/share/nginx;
-            add_header Cache-Control 'no-cache';
-            rewrite (.*) /default_redirect.html break;
-        }
+        return 302 http://$host:5000;
     }
 }

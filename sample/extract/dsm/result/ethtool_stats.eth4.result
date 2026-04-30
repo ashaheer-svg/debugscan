@@ -1,24 +1,24 @@
 NIC statistics:
-     InUCast: 106389022433
-     InMCast: 73958675
-     InBCast: 30014757
-     InPkts: 106492995865
-     InErrors: 6
-     InDropped: 50930371
+     InUCast: 39315410633
+     InMCast: 11365611
+     InBCast: 110617945
+     InPkts: 39437394189
+     InErrors: 0
+     InDropped: 35889294
      FrameTooLong: 0
      FrameSequenceErrors: 0
-     InVLAN: 0
-     InDroppedDFE: 1
-     InDroppedIntFull: 56412
+     InVLAN: 102538879
+     InDroppedDFE: 34
+     InDroppedIntFull: 0
      InFrameAlignErrors: 0
-     OutUCast: 363167159367
-     OutMCast: 8298
-     OutBCast: 474497
-     OutPkts: 363167642162
+     OutUCast: 44491273726
+     OutMCast: 147998
+     OutBCast: 22
+     OutPkts: 44491421746
      OutVLAN: 0
-     InUCastOctects: 123773522057298
-     OutUCastOctects: 537547022893680
-     InBCastOctects: 1906421568
-     OutBCastOctects: 57244179
-     InOctects: 123781428549306
-     OutOctects: 537547081007408
+     InUCastOctects: 55545247123351
+     OutUCastOctects: 58194332342252
+     InBCastOctects: 8896377495
+     OutBCastOctects: 5964
+     InOctects: 55555098074889
+     OutOctects: 58194341359371

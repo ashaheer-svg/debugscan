@@ -1,32 +1,4 @@
-total 124
-drwxr-xr-x 5 root root 4096 Dec 16 08:42 ActiveBackup
-drwxr-xr-x 5 root root 4096 Jul 24  2025 ActiveInsight
-drwxr-xr-x 4 root root 4096 Aug  4  2025 AntiVirus
-drwxr-xr-x 5 root root 4096 Jun 20  2025 DhcpServer
-drwxr-xr-x 4 root root 4096 Jun 20  2025 FileStation
-drwxr-xr-x 4 root root 4096 Dec 16 08:39 HybridShare
-drwxr-xr-x 5 root root 4096 Jun 20  2025 HyperBackup
-drwxr-xr-x 4 root root 4096 Jun 20  2025 LogCenter
-drwxr-xr-x 4 root root 4096 Jun 20  2025 Node.js_v12
-drwxr-xr-x 4 root root 4096 Jun 20  2025 Node.js_v18
-drwxr-xr-x 4 root root 4096 Oct 22 12:12 Node.js_v20
-drwxr-xr-x 4 root root 4096 Aug  4  2025 OAuthService
-drwxr-xr-x 4 root root 4096 Jun 20  2025 PDFViewer
-drwxr-xr-x 4 root root 4096 Jun 20  2025 PHP7.4
-drwxr-xr-x 4 root root 4096 Jun 20  2025 Perl
-drwxr-xr-x 4 root root 4096 Jun 20  2025 Python2
-drwxr-xr-x 4 root root 4096 Oct 10 08:51 QuickConnect
-drwxr-xr-x 4 root root 4096 Oct 22 12:06 ReplicationService
-drwxr-xr-x 4 root root 4096 Jun 20  2025 SMBService
-drwxr-xr-x 5 root root 4096 Oct 10 08:48 ScsiTarget
-drwxr-xr-x 4 root root 4096 Jun 20  2025 SecureSignIn
-drwxr-xr-x 5 root root 4096 Oct 22 12:06 SnapshotReplication
-drwxr-xr-x 4 root root 4096 Jun 20  2025 StorageAnalyzer
-drwxr-xr-x 4 root root 4096 Jun 20  2025 StorageManager
-drwxr-xr-x 4 root root 4096 Oct  3 20:39 SupportService
-drwxr-xr-x 4 root root 4096 Jun 20  2025 SynoFinder
-drwxr-xr-x 4 root root 4096 Mar  4 21:16 SynoOnlinePack_v2
-drwxr-xr-x 5 root root 4096 Oct 22 12:12 SynologyApplicationService
-drwxr-xr-x 5 root root 4096 Dec 16 08:39 SynologyDrive
-drwxr-xr-x 5 root root 4096 Jun 20  2025 USBCopy
-drwxr-xr-x 4 root root 4096 Oct 22 12:07 UniversalViewer
+total 12
+drwxr-xr-x 4 root root 4096 Jul  5  2019 FileStation
+drwxr-xr-x 4 root root 4096 Jul  5  2019 OAuthService
+drwxr-xr-x 4 root root 4096 Jul  5  2019 SynoFinder

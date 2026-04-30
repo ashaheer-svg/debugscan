@@ -3,11 +3,9 @@ Settings for eth4:
 	Supported link modes:   10000baseT/Full 
 	Supported pause frame use: Symmetric
 	Supports auto-negotiation: No
-	Supported FEC modes: Not reported
 	Advertised link modes:  10000baseT/Full 
 	Advertised pause frame use: Symmetric
 	Advertised auto-negotiation: No
-	Advertised FEC modes: Not reported
 	Speed: 10000Mb/s
 	Duplex: Full
 	Port: FIBRE

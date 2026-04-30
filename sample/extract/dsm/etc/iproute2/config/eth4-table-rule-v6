@@ -1,5 +1,5 @@
 [eth4_policy_v6_link_1]
-	ip=fe80::211:32ff:fe5b:e4ec
+	ip=fe80::211:32ff:fe6d:c182
 	ifname=eth4
 	gateway=
 	prefix_length=64

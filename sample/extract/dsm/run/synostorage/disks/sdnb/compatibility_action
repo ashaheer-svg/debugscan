@@ -1,1 +1,0 @@
-{"alert":false,"hide_alloc_status":false,"hide_is4Kn":false,"hide_remain_life":false,"hide_sb_days_left":false,"hide_serial":false,"hide_temperature":false,"hide_unc":false,"notification":false,"notify_health_status":true,"notify_lifetime":true,"notify_unc":true,"selectable":true,"send_health_report":true,"show_lifetime_chart":true,"ui_compatibility":"support"}

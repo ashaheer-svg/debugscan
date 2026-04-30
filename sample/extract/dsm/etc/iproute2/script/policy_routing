@@ -17,19 +17,11 @@ log_msg()
         ${LOGGER} -s -p warn -t "Policy routing table" "$1"
 }
 
-IFNAME=${IFNAME%:*} # remove IP alias label posfix
-ALIAS_LABEL_POSTFIX=${IFNAME#*:}
-if [ "${ALIAS_LABEL_POSTFIX}" = "${IFNAME}" ]; then
-	ALIAS_LABEL_POSTFIX=""
-fi
-
 routing_table_remove(){
         for ifn in `synonetdtool --get-interface-by-class -4 ethernet | sed -e 's/,/\n/g'`
         do
                 if [ "${ifn}" = "${IFNAME}" ]; then
-                        if test -z "${ALIAS_LABEL_POSTFIX}"; then
-                                synonetdtool --del-policy-route-rule -4 ${IFNAME}_policy ${IFNAME}  #delete v4 rule
-                        fi
+                        synonetdtool --del-policy-route-rule -4 ${IFNAME}_policy ${IFNAME}  #delete v4 rule
                         synonetdtool --disable-route-table  -4 ${IFNAME}
                 fi
         done
@@ -71,25 +63,7 @@ routing_table_build(){
                                 exit 1
                                 break
                         fi
-
-                        if test -z "${ALIAS_LABEL_POSTFIX}"; then
-                                synonetdtool --add-policy-route-rule -4 ${IFNAME}_policy ${IFNAME} ${IPADDR} ${NETMASK} ${IPADDR}
-                        fi
-                        IPADDR_LIST="${IPADDR}"
-
-                        for ALIAS in $(synonet --ip_alias_list "${IFNAME}")
-                        do
-                                ALIAS_IPADDR=${ALIAS%/*}
-                                IPADDR_LIST="${IPADDR_LIST},${ALIAS_IPADDR}"
-                        done
-
-                        if synohacore --is_ha_running; then
-                                HA_IP=$(/var/packages/HighAvailability/target/etc/UtilNetwork.sh get-ha-ip "${IFNAME}")
-                                if [ -n "$HA_IP" ]; then
-                                        IPADDR_LIST="${IPADDR_LIST},${HA_IP}"
-                                fi
-                        fi
-
+                        synonetdtool --add-policy-route-rule -4 ${IFNAME}_policy ${IFNAME} ${IPADDR} ${NETMASK} ${IPADDR}
                         GATEWAY=`get_section_key_value ${GATEWAY_DATABASE} ${IFNAME} gateway`
                         if [ "${GATEWAY}" != "NULL" ]; then
                                 local enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
@@ -98,7 +72,7 @@ routing_table_build(){
                                         synonetdtool --enable-multi-gateway
                                 fi
                         fi
-                        synonetdtool --refresh-route-table -4 "${IFNAME}" "${IPADDR_LIST}"
+                        synonetdtool --refresh-route-table -4 ${IFNAME} ${IPADDR}
                 fi
         done
 

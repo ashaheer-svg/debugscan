@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<log>
-  <hotplug time="2011/03/11 19:30:00" path="/dev/sde" container="" slot="5" model="ST4000NM0035-1V4107" SN="ZC12PNH9" show="1">plugout</hotplug>
-  <hotplug time="2011/03/11 19:30:12" path="/dev/sdi" container="" slot="9" model="ST4000NM0035-1V4107" SN="ZC13E3RC" show="1">plugout</hotplug>
-  <hotplug time="2011/03/11 19:30:23" path="/dev/sdc" container="" slot="3" model="ST4000NM0035-1V4107" SN="ZC12PNH9" show="1">plugin</hotplug>
-  <hotplug time="2011/03/11 19:31:01" path="/dev/sdd" container="" slot="4" model="ST4000NM0035-1V4107" SN="ZC13E3RC" show="1">plugin</hotplug>
-  <hotplug time="2018/05/17 13:27:19" path="/dev/sdb" container="" slot="2" model="ST4000NM0035-1V4107" SN="ZC12S4HV" show="1">plugout</hotplug>
-</log>

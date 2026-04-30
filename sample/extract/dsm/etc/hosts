@@ -1,5 +1,5 @@
 # Any manual change will be lost if the host name is changed or system upgrades.
 127.0.0.1	localhost
 ::1		localhost
-127.0.0.1	NAS
-::1		NAS
+127.0.0.1	JJETNAS01
+::1		JJETNAS01

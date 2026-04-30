@@ -1,2 +1,0 @@
-0	0	*	*	0	/usr/syno/bin/synoschedtask --run id=3
-0	0	*	*	0	/usr/syno/bin/synoschedtask --run id=9

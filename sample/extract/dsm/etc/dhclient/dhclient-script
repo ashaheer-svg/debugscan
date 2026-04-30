@@ -32,16 +32,12 @@ IPCALC=/bin/ipcalc
 SYNO_IPV6_CONF_PREFIX=/etc/sysconfig/networking/ipv6-
 SYNO_IPV6_ROUTER_LOCK=/tmp/lock/lock_ipv6_router
 SYNO_DHCP_INFO_PREFIX=/etc/dhclient/ipv4/dhcpcd-
+MAC_ADDR=`ifconfig $interface | grep HWaddr | awk '{print $5}'`
 LOGGER_DHCP="/usr/bin/logger -p user.err -t dhcp-client"
 
 SYNO_DHCP_CLIENT_RESOLV_OPTION_FILE=/etc/resolv.conf.option
 
-set_default_gateway() {
-	if [ "$(type -t set_default_gateway_interface)" != "function" ]; then
-		source /etc/iproute2/script/gateway-mgt-function
-	fi
-	set_default_gateway_interface
-}
+. /etc/iproute2/script/gateway-mgt-function
 
 make_resolv_conf() {
 	if [ "x$new_domain_name" != "x" -a "x$new_domain_name" != "x$old_domain_name" ]; then
@@ -107,7 +103,6 @@ syno_write_info() {
 	if [ x$old_ip_address = x ] || [ x$old_ip_address != x$new_ip_address ] || \
 		 [ x$reason = xBOUND ] || [ x$reason = xREBOOT ]; then
 		# for /etc/dhclient/ipv4/XXX.info file
-MAC_ADDR=`ifconfig $interface | grep HWaddr | awk '{print $5}'`
 		printf \
 "IPADDR=$new_ip_address\n"\
 "NETMASK=$new_subnet_mask\n"\
@@ -176,6 +171,10 @@ if [ x$reason = xPREINIT ]; then
 		# Bring down alias interface. Its routes will disappear too.
 		ifconfig $interface:0- inet 0
 	fi
+	ifconfig $interface up
+
+	# We need to give the kernel some time to get the interface up.
+	sleep 1
 
 	exit_with_hooks 0
 fi
@@ -242,7 +241,7 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
 				${SYNONETDTOOL} --add-gateway-info -4 -2 $interface $router ethernet
 			fi
 		done
-		set_default_gateway
+		set_default_gateway_interface
 		${SYNONETDTOOL} --refresh-gateway -4
 
 		if [ "x$old_ip_address" != "x" ]; then
@@ -277,7 +276,7 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
 					${SYNONETDTOOL} --add-gateway-info -4 -2 $interface $router ethernet
 				fi
 			done
-			set_default_gateway
+			set_default_gateway_interface
 			${SYNONETDTOOL} --refresh-gateway -4
 		fi
 	fi
@@ -295,17 +294,13 @@ if [ x$reason = xBOUND ] || [ x$reason = xRENEW ] || \
 			# add gateway even their is no given dns
 			${SYNONETDTOOL} --add-gateway-info -4 -2 $interface:0 ${alias_ip_address}
 		fi
-		set_default_gateway
+		set_default_gateway_interface
 		${SYNONETDTOOL} --refresh-gateway -4
 	fi
 
-
-	if [ x$old_ip_address = x ] || [ x$old_ip_address != x$new_ip_address ] || \
-		[ x$new_routers != x ] && [ x$new_routers != x$old_routers ] ; then
-		enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
-		if [ "xyes" = "x${enable_multi_gateway}" ]; then
-			${SYNONETDTOOL} --enable-multi-gateway
-		fi
+	enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
+	if [ "xyes" = "x${enable_multi_gateway}" ]; then
+		${SYNONETDTOOL} --enable-multi-gateway
 	fi
 
 	make_resolv_conf
@@ -336,7 +331,7 @@ if [ x$reason = xEXPIRE ] || [ x$reason = xFAIL ] || [ x$reason = xRELEASE ] \
 			# add gateway even their is no given dns
 			${SYNONETDTOOL} --add-gateway-info -4 -2 $interface $router ethernet
 		fi
-		set_default_gateway
+		set_default_gateway_interface
 		${SYNONETDTOOL} --refresh-gateway -4
 	fi
 	exit_with_hooks 0
@@ -366,7 +361,7 @@ if [ x$reason = xTIMEOUT ]; then
 #			for nameserver in $new_domain_name_servers; do
 #					${SYNONETDTOOL} --add-gateway-info -4 -2 ${interface} $router ${nameserver} ethernet
 #			done
-#			set_default_gateway
+#			set_default_gateway_interface
 #			${SYNONETDTOOL} --refresh-gateway -4
 #		done
 #		#make_resolv_conf
@@ -389,13 +384,6 @@ if [ x$reason = xPREINIT6 ] ; then
 	#${ip} -f inet6 addr flush dev ${interface} scope global permanent
 
 	exit_with_hooks 0
-fi
-
-if [ x${new_dhcp6_aftr_name} != x ] ; then
-	echo "Option aftr-name old=${old_dhcp6_aftr_name} new=${new_dhcp6_aftr_name}"
-
-	local aftr=`echo $new_dhcp6_aftr_name | sed 's/^....//g' | sed 's/\\\0[a-zA-Z0-9][a-zA-Z0-9]/./g'`
-	${SYNONETDTOOL} --create-dslite-tunnel-with-aftr ${interface} $aftr
 fi
 
 if [ x${old_ip6_prefix} != x ] || [ x${new_ip6_prefix} != x ] ; then
@@ -424,8 +412,6 @@ if [ x$reason = xBOUND6 ] ; then
 	fi
 
 	${SYNONET} --set_ip -6 $interface add ${new_ip6_address}/${new_ip6_prefixlen}
-	${ip} -6 addr change ${new_ip6_address}/${new_ip6_prefixlen} \
-		dev ${interface} valid_lft ${new_max_life} preferred_lft ${new_preferred_life}
 
 	# Check for nameserver options.
 	#make_resolv_conf
@@ -440,7 +426,7 @@ if [ x$reason = xBOUND6 ] ; then
 		# add gateway even their is no given dns
 		${SYNONETDTOOL} --add-gateway-info -6 -2 ${interface} NULL
 	fi
-	set_default_gateway
+	set_default_gateway_interface
 	${SYNONETDTOOL} --refresh-gateway -6
 
 	enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
@@ -465,21 +451,19 @@ if [ x$reason = xRENEW6 ] || [ x$reason = xREBIND6 ] ; then
 			# add gateway even their is no given dns
 			${SYNONETDTOOL} --add-gateway-info -6 -2 ${interface} NULL
 		fi
+	enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
+	if [ "xyes" = "x${enable_multi_gateway}" ]; then
+		${SYNONETDTOOL} --enable-multi-gateway-v6
 	fi
+	fi
+	set_default_gateway_interface
+	${SYNONETDTOOL} --refresh-gateway -6
 
 	if [ x${new_ip6_address} = x ] || [ x${new_ip6_prefixlen} = x ] ; then
 		exit_with_hooks 2;
 	fi
 
 	${SYNONET} --set_ip -6 $interface add ${new_ip6_address}/${new_ip6_prefixlen}
-	${ip} -6 addr change ${new_ip6_address}/${new_ip6_prefixlen} \
-		dev ${interface} valid_lft ${new_max_life} preferred_lft ${new_preferred_life}
-	${SYNONETDTOOL} --refresh-gateway -6
-
-	enable_multi_gateway=`/bin/get_key_value /etc/synoinfo.conf multi_gateway`
-	if [ "xyes" = "x${enable_multi_gateway}" ]; then
-		${SYNONETDTOOL} --enable-multi-gateway-v6
-	fi
 
 	# Make sure nothing has moved around on us.
 
@@ -487,12 +471,11 @@ if [ x$reason = xRENEW6 ] || [ x$reason = xREBIND6 ] ; then
 fi
 
 if [ x$reason = xDEPREF6 ] ; then
-	if [ x${cur_ip6_prefixlen} = x ] ; then
+	if [ x${new_ip6_prefixlen} = x ] ; then
 		exit_with_hooks 2;
 	fi
 
-	${ip} -6 addr change ${cur_ip6_address}/${cur_ip6_prefixlen} \
-		dev ${interface} scope global preferred_lft 0
+	${SYNONET} --set_ip -6 $interface add ${new_ip6_address}/${new_ip6_prefixlen}
 
 	exit_with_hooks 0
 fi
@@ -503,7 +486,6 @@ if [ x$reason = xEXPIRE6 -o x$reason = xRELEASE6 -o x$reason = xSTOP6 ] ; then
 	fi
 
 	${SYNONET} --set_ip -6 $interface flush
-	${SYNONETDTOOL} --refresh-gateway -6
 
 	exit_with_hooks 0
 fi

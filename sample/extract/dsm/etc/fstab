@@ -1,4 +1,3 @@
 none /proc proc defaults 0 0
 /dev/root / ext4 defaults 1 1
-/dev/mapper/cachedev_0 /volume2 btrfs auto_reclaim_space,ssd,synoacl,relatime,nodev 0 0
-/dev/mapper/cachedev_1 /volume1 btrfs auto_reclaim_space,ssd,synoacl,relatime,nodev 0 0
+/dev/md2 /volume1 btrfs auto_reclaim_space,synoacl,relatime 0 0

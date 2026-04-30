@@ -7,7 +7,7 @@
 
 		<sensor_config name="peci0" min="53" range="75" therm="80" crit_hyst="5"></sensor_config>
 
-		<pwm_config name="pwm2" sensor_type="allinput" high_freq="yes" pwm_duty_low="50" pwm_duty_high="220"></pwm_config>
+		<pwm_config name="pwm2" sensor_type="allinput" high_freq="yes" pwm_duty_low="50" pwm_duty_high="200"></pwm_config>
 
 		<fan_mapping_config name="internal" order="0" pwm="pwm2"></fan_mapping_config>
 		<fan_mapping_config name="internal" order="1" pwm="pwm2"></fan_mapping_config>
@@ -22,7 +22,7 @@
 
 		<sensor_config name="peci0" min="50" range="75" therm="80" crit_hyst="5"></sensor_config>
 
-		<pwm_config name="pwm2" sensor_type="allinput" high_freq="yes" pwm_duty_low="100" pwm_duty_high="220"></pwm_config>
+		<pwm_config name="pwm2" sensor_type="allinput" high_freq="yes" pwm_duty_low="100" pwm_duty_high="200"></pwm_config>
 
 		<fan_mapping_config name="internal" order="0" pwm="pwm2"></fan_mapping_config>
 		<fan_mapping_config name="internal" order="1" pwm="pwm2"></fan_mapping_config>
@@ -396,149 +396,6 @@
 	<disk_temperature fan_speed="MIDDLE" action="NONE">48</disk_temperature>
 	<disk_temperature fan_speed="FULL"   action="NONE">55</disk_temperature>
 	<disk_temperature fan_speed="FULL"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX6022sas" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX6022sas" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-FX2421" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-FX2421" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-DX1222" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="LOW">
-    <disk_temperature fan_speed="LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">48</disk_temperature>
-    <disk_temperature fan_speed="FULL"   action="NONE">55</disk_temperature>
-    <disk_temperature fan_speed="FULL"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-DX1222" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="LOW">
-    <disk_temperature fan_speed="LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">48</disk_temperature>
-    <disk_temperature fan_speed="FULL"   action="NONE">55</disk_temperature>
-    <disk_temperature fan_speed="FULL"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-DX1215II" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="LOW" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="MIDDLE" action="NONE">48</disk_temperature>
-	<disk_temperature fan_speed="FULL"   action="NONE">55</disk_temperature>
-	<disk_temperature fan_speed="FULL"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-DX1215II" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="LOW" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="MIDDLE" action="NONE">48</disk_temperature>
-	<disk_temperature fan_speed="FULL"   action="NONE">55</disk_temperature>
-	<disk_temperature fan_speed="FULL"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX1222sas" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX1222sas" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-<fan_config hw_version="Synology-RX1223rp" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX1223rp" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-
-<fan_config hw_version="Synology-DX524" period="20" threshold="6" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="50%0hz" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="58%0hz" action="NONE">41</disk_temperature>
-	<disk_temperature fan_speed="70%0hz" action="NONE">46</disk_temperature>
-	<disk_temperature fan_speed="80%0hz" action="NONE">50</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="NONE">53</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-<fan_config hw_version="Synology-DX524" period="20" threshold="6" type="DUAL_MODE_LOW_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="50%0hz" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="58%0hz" action="NONE">46</disk_temperature>
-	<disk_temperature fan_speed="70%0hz" action="NONE">52</disk_temperature>
-	<disk_temperature fan_speed="80%0hz" action="NONE">55</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="NONE">58</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX1224rp" period="300" threshold="2" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX1224rp" period="300" threshold="2" type="DUAL_MODE_LOW_EBOX" hibernation_speed="VERY_LOW">
-    <disk_temperature fan_speed="VERY_LOW" action="NONE">0</disk_temperature>
-    <disk_temperature fan_speed="MIDDLE" action="NONE">40</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="NONE">53</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="ALERT_LED">55</disk_temperature>
-    <disk_temperature fan_speed="FULL" action="SHUTDOWN">58</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX424" period="20" threshold="6" type="DUAL_MODE_HIGH_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="50%0hz" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="60%0hz" action="NONE">41</disk_temperature>
-	<disk_temperature fan_speed="70%0hz" action="NONE">46</disk_temperature>
-	<disk_temperature fan_speed="80%0hz" action="NONE">50</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="NONE">53</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="SHUTDOWN">61</disk_temperature>
-</fan_config>
-
-<fan_config hw_version="Synology-RX424" period="20" threshold="6" type="DUAL_MODE_LOW_EBOX" hibernation_speed="LOW">
-	<disk_temperature fan_speed="50%0hz" action="NONE">0</disk_temperature>
-	<disk_temperature fan_speed="60%0hz" action="NONE">46</disk_temperature>
-	<disk_temperature fan_speed="70%0hz" action="NONE">52</disk_temperature>
-	<disk_temperature fan_speed="80%0hz" action="NONE">55</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="NONE">58</disk_temperature>
-	<disk_temperature fan_speed="100%0hz"   action="SHUTDOWN">61</disk_temperature>
 </fan_config>
 
 </scemd>

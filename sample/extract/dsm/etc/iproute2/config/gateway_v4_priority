@@ -1,42 +1,6 @@
 [0]
 	slave=no
-	dns=172.16.10.10
-	class=ethernet
-	ifname=eth0
-	gateway=172.16.10.254
-[1]
-	slave=no
-	dns=
-	class=ethernet
-	ifname=eth1
-	gateway=
-[2]
-	slave=no
-	dns=
-	class=ethernet
-	ifname=eth2
-	gateway=
-[3]
-	slave=no
-	dns=
-	class=ethernet
-	ifname=eth3
-	gateway=
-[4]
-	slave=no
-	dns=172.16.10.10
+	dns=192.168.0.10
 	class=ethernet
 	ifname=eth4
-	gateway=172.16.10.254
-[5]
-	slave=no
-	dns=
-	class=ethernet
-	ifname=eth5
-	gateway=
-[6]
-	slave=no
-	dns=
-	class=ethernet
-	ifname=eth6
-	gateway=
+	gateway=192.168.0.253

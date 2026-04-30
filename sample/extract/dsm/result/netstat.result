@@ -1,751 +1,216 @@
 Active Internet connections (servers and established)
 Proto Recv-Q Send-Q Local Address           Foreign Address         State       User       Inode      PID/Program name    
-tcp        0      0 127.0.0.1:34317         0.0.0.0:*               LISTEN      0          278001681  4950/otel-collector 
-tcp        0      0 0.0.0.0:5357            0.0.0.0:*               LISTEN      0          182668     12627/nginx: worker 
-tcp        0      0 127.0.0.1:34318         0.0.0.0:*               LISTEN      0          277995335  4950/otel-collector 
-tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      0          60497      12627/nginx: worker 
-tcp        0      0 127.0.0.1:33300         0.0.0.0:*               LISTEN      0          278000653  4908/synomibresourc 
-tcp        0      0 127.0.0.1:33301         0.0.0.0:*               LISTEN      0          277995332  4913/python3        
-tcp        0      0 127.0.0.1:33302         0.0.0.0:*               LISTEN      0          277996358  4908/synomibresourc 
-tcp        0      0 127.0.0.1:33303         0.0.0.0:*               LISTEN      0          278000753  4351/synomibcollect 
-tcp        0      0 127.0.0.1:33304         0.0.0.0:*               LISTEN      0          824972014  30070/synomibaction 
-tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      55         89539      29283/postgres      
-tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      0          60499      12627/nginx: worker 
-tcp        0      0 172.16.10.102:3260      0.0.0.0:*               LISTEN      0          878208294  -                   
-tcp        0      0 172.16.10.100:3260      0.0.0.0:*               LISTEN      0          878208293  -                   
-tcp        0      0 127.0.0.1:4700          0.0.0.0:*               LISTEN      0          63614      24340/cnid_metad    
-tcp        0      0 0.0.0.0:445             0.0.0.0:*               LISTEN      0          180488     14384/smbd          
-tcp        0      0 127.0.0.1:161           0.0.0.0:*               LISTEN      0          878203437  29809/snmpd         
-tcp        0      0 0.0.0.0:6690            0.0.0.0:*               LISTEN      0          1348760227 14048/syncd         
-tcp        0      0 0.0.0.0:5510            0.0.0.0:*               LISTEN      192868     1348802053 21518/abk-agent-ser 
-tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN      0          60493      12627/nginx: worker 
-tcp        0      0 0.0.0.0:5001            0.0.0.0:*               LISTEN      0          60495      12627/nginx: worker 
-tcp        0      0 0.0.0.0:139             0.0.0.0:*               LISTEN      0          180489     14384/smbd          
-tcp        0      0 172.16.10.100:445       10.10.148.78:61668      ESTABLISHED 0          2032267185 23024/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.70:52789       ESTABLISHED 0          2032352669 28335/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.47:60172       ESTABLISHED 0          2032297489 24627/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.36:62933       ESTABLISHED 0          2032401084 31748/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.95:56978       ESTABLISHED 0          2032390047 31358/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.53:50873       ESTABLISHED 0          2032438207 2191/smbd           
-tcp        0      0 172.16.10.100:445       10.10.10.85:65204       ESTABLISHED 0          2032366535 29352/smbd          
-tcp        0      0 172.16.10.100:445       10.10.40.21:57006       ESTABLISHED 0          2032308883 25731/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.60:60696       ESTABLISHED 0          2032383461 30553/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.90:56061       ESTABLISHED 0          2032360958 29135/smbd          
-tcp        0      0 172.16.10.100:47848     172.16.10.10:445        ESTABLISHED 0          2031304959 14494/winbindd: dom 
-tcp        0      0 172.16.10.100:445       10.10.70.47:49664       ESTABLISHED 0          2032352672 28347/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.87:49720       ESTABLISHED 0          2032431373 1451/smbd           
-tcp        0      0 172.16.10.100:445       10.10.10.71:51937       ESTABLISHED 0          2032401743 31709/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.17:65069       ESTABLISHED 0          2032409134 32335/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.23:65267       ESTABLISHED 0          2032343199 27692/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.52:61647       ESTABLISHED 0          2032414635 507/smbd            
-tcp        0      0 172.16.10.100:445       10.10.10.49:53010       ESTABLISHED 0          2032403187 31921/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.58:52479       ESTABLISHED 0          2032341949 27835/smbd          
-tcp        0      0 172.16.10.100:36358     172.16.10.10:389        ESTABLISHED 0          2032421028 14454/winbindd      
-tcp        0      0 172.16.10.100:445       10.10.10.102:59505      ESTABLISHED 0          2032433092 1782/smbd           
-tcp        0      0 172.16.10.100:445       10.10.10.61:65473       ESTABLISHED 0          2032309281 25368/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.72:61931       ESTABLISHED 0          2032266957 22940/smbd          
-tcp        0      0 127.0.0.1:54582         127.0.0.1:33300         ESTABLISHED 0          1239366508 4950/otel-collector 
-tcp        0      0 172.16.10.100:445       10.10.70.39:49229       ESTABLISHED 0          2032421286 770/smbd            
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65515       ESTABLISHED 1023       2032440821 12627/nginx: worker 
-tcp        0      0 172.16.10.100:445       10.10.40.26:49694       ESTABLISHED 0          2032431575 1510/smbd           
-tcp        0      0 172.16.10.100:45132     172.16.10.10:49158      ESTABLISHED 0          2031320621 14494/winbindd: dom 
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57244         TIME_WAIT   0          0          -                   
-tcp        0      0 127.0.0.1:57160         127.0.0.1:161           ESTABLISHED 0          878201428  29998/synosnmpcd    
-tcp        0      0 172.16.10.100:41000     84.200.39.220:443       ESTABLISHED 0          1999824673 4950/otel-collector 
-tcp        0      0 172.16.10.100:445       10.10.70.24:49189       ESTABLISHED 0          2032452514 5037/smbd           
-tcp        0      0 172.16.10.100:445       10.10.20.22:49771       ESTABLISHED 0          2032336986 27219/smbd          
-tcp        0      0 172.16.10.100:57636     172.16.10.10:389        ESTABLISHED 0          2031574613 14495/winbindd      
-tcp        0      0 172.16.10.100:53212     172.16.10.10:49158      ESTABLISHED 0          2032319022 14494/winbindd: dom 
-tcp        0      0 172.16.10.100:445       10.10.70.45:49176       ESTABLISHED 0          2032413975 322/smbd            
-tcp        0      0 172.16.10.100:445       10.10.10.103:49795      ESTABLISHED 0          2032310038 25752/smbd          
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65485       TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.70.84:64050       ESTABLISHED 0          2032266834 22595/smbd          
-tcp        0      0 127.0.0.1:36660         127.0.0.1:33300         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.60.45:50064       ESTABLISHED 0          2032393247 31124/smbd          
-tcp        0      0 172.16.10.100:445       10.10.40.35:59467       ESTABLISHED 0          2032266406 22406/smbd          
-tcp        0      0 127.0.0.1:36656         127.0.0.1:33300         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.11.14:7376        ESTABLISHED 0          2032292852 24361/smbd          
-tcp        0      0 127.0.0.1:33300         127.0.0.1:54582         ESTABLISHED 0          1239364566 4908/synomibresourc 
-tcp        0      0 172.16.10.100:445       10.10.50.22:56906       ESTABLISHED 0          2032378832 30531/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.31:49813       ESTABLISHED 0          2032337010 27233/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.82:58289       ESTABLISHED 0          2032309317 25404/smbd          
-tcp        0      0 127.0.0.1:33300         127.0.0.1:36344         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:3260      172.16.10.41:50785      ESTABLISHED 0          878200301  -                   
-tcp        0      0 172.16.10.100:445       10.10.30.40:49754       ESTABLISHED 0          2032420893 539/smbd            
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57246         TIME_WAIT   0          0          -                   
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57248         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:3260      172.16.10.40:58171      ESTABLISHED 0          878200253  -                   
-tcp        0      0 172.16.10.100:445       10.10.70.22:49238       ESTABLISHED 0          2032342587 27874/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.39:55830       ESTABLISHED 0          2032240479 20594/smbd          
-tcp        0      0 172.16.10.100:50996     159.100.4.212:443       ESTABLISHED 0          2032432877 30065/synomibgrpccl 
-tcp        0      0 172.16.10.100:445       10.10.70.48:59573       ESTABLISHED 0          2032309776 25562/smbd          
-tcp        0      0 127.0.0.1:33300         127.0.0.1:58196         ESTABLISHED 0          2031655218 4908/synomibresourc 
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57249         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.70.63:55417       ESTABLISHED 0          2032431888 1660/smbd           
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65518       ESTABLISHED 1023       2032440869 12628/nginx: worker 
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57254         TIME_WAIT   0          0          -                   
-tcp        0      0 127.0.0.1:161           127.0.0.1:57160         ESTABLISHED 0          878204980  29809/snmpd         
-tcp        0      0 172.16.10.100:445       10.10.30.34:64529       ESTABLISHED 0          2032245550 21048/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.64:49768       ESTABLISHED 0          2032452064 4228/smbd           
-tcp        0      0 172.16.10.100:445       10.10.70.37:62142       ESTABLISHED 0          2032451905 4119/smbd           
-tcp        0      0 172.16.10.100:445       10.10.148.39:51482      ESTABLISHED 0          2032277692 23218/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.75:51932       ESTABLISHED 0          2032284107 23707/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.37:63832       ESTABLISHED 0          2032378603 30497/smbd          
-tcp        0      0 172.16.10.100:445       10.10.60.26:56142       ESTABLISHED 0          2032429203 1203/smbd           
-tcp        0      0 172.16.10.100:445       10.10.60.24:64232       ESTABLISHED 0          2032378696 30519/smbd          
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57258         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65519       ESTABLISHED 1023       2032434598 12632/nginx: worker 
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57256         TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.70.85:50818       ESTABLISHED 0          2032337554 27481/smbd          
-tcp        0      0 172.16.10.100:445       10.10.11.22:1877        ESTABLISHED 0          2032195367 17310/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.69:55714       ESTABLISHED 0          2032429243 1212/smbd           
-tcp        0      0 127.0.0.1:58196         127.0.0.1:33300         ESTABLISHED 0          2031656053 4950/otel-collector 
-tcp        0      0 172.16.10.100:445       10.10.70.24:49293       ESTABLISHED 0          2032212092 18205/smbd          
-tcp        0      0 172.16.10.100:445       10.10.11.2:50167        ESTABLISHED 0          2032368383 29373/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.89:49174       ESTABLISHED 0          2032408817 32165/smbd          
-tcp        0      0 172.16.10.100:445       10.10.148.49:57348      ESTABLISHED 0          2032300332 24799/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.40:64661       ESTABLISHED 0          2032366209 29192/smbd          
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65516       TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65514       TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.71.160:63615      ESTABLISHED 0          1909201677 14651/smbd          
-tcp        0      0 127.0.0.1:33300         127.0.0.1:36432         ESTABLISHED 0          2032425894 4908/synomibresourc 
-tcp        0      0 172.16.10.100:445       10.10.148.44:64065      ESTABLISHED 0          2032329301 26926/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.55:62082       ESTABLISHED 0          2032278307 23377/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.67:54111       ESTABLISHED 0          2032310186 25934/smbd          
-tcp        0      0 172.16.10.100:445       10.10.10.53:56750       ESTABLISHED 0          2032421197 749/smbd            
-tcp        0      0 127.0.0.1:36432         127.0.0.1:33300         ESTABLISHED 0          2032431330 4950/otel-collector 
-tcp        0      0 172.16.10.100:48980     84.200.39.220:443       ESTABLISHED 0          2032452196 4950/otel-collector 
-tcp        0      0 172.16.10.100:445       10.10.148.22:53237      ESTABLISHED 0          2032370542 29881/smbd          
-tcp        0      0 172.16.10.100:5000      10.10.70.17:65517       TIME_WAIT   0          0          -                   
-tcp        0      0 172.16.10.100:445       10.10.70.24:49521       ESTABLISHED 0          2032413778 32648/smbd          
-tcp        0      0 172.16.10.100:445       10.10.70.93:57665       ESTABLISHED 0          2032352696 28364/smbd          
-tcp        0      0 127.0.0.1:33301         127.0.0.1:57252         TIME_WAIT   0          0          -                   
-tcp6       0      0 :::5357                 :::*                    LISTEN      0          182669     12627/nginx: worker 
-tcp6       0      0 :::80                   :::*                    LISTEN      0          60498      12627/nginx: worker 
-tcp6       0      0 :::443                  :::*                    LISTEN      0          60500      12627/nginx: worker 
-tcp6       0      0 fe80::211:32ff:fe5:3260 :::*                    LISTEN      0          878208295  -                   
-tcp6       0      0 :::3261                 :::*                    LISTEN      0          878208105  -                   
-tcp6       0      0 :::445                  :::*                    LISTEN      0          180486     14384/smbd          
-tcp6       0      0 :::5566                 :::*                    LISTEN      0          948167430  17972/synobtrfsrepl 
-tcp6       0      0 :::3263                 :::*                    LISTEN      0          878208104  -                   
-tcp6       0      0 :::3264                 :::*                    LISTEN      0          878208106  -                   
-tcp6       0      0 :::3265                 :::*                    LISTEN      0          878203718  30098/scsi_plugin_s 
-tcp6       0      0 :::6690                 :::*                    LISTEN      0          1348760228 14048/syncd         
-tcp6       0      0 :::548                  :::*                    LISTEN      0          61125      24339/afpd          
-tcp6       0      0 :::5510                 :::*                    LISTEN      192868     1348802054 21518/abk-agent-ser 
-tcp6       0      0 :::5000                 :::*                    LISTEN      0          60494      12627/nginx: worker 
-tcp6       0      0 :::5001                 :::*                    LISTEN      0          60496      12627/nginx: worker 
-tcp6       0      0 :::139                  :::*                    LISTEN      0          180487     14384/smbd          
-udp        0      0 0.0.0.0:5353            0.0.0.0:*                           0          42647      20204/avahi-daemon: 
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          31568      18554/dhclient      
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          32630      18393/dhclient      
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          38287      18337/dhclient      
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          32498      18279/dhclient      
-udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          34488      18301/dhclient      
-udp        0      0 0.0.0.0:123             0.0.0.0:*                           0          44368      20198/chronyd       
-udp        0      0 172.16.10.255:137       0.0.0.0:*                           0          185660     14301/nmbd          
-udp        0      0 172.16.10.100:137       0.0.0.0:*                           0          185659     14301/nmbd          
-udp        0      0 0.0.0.0:137             0.0.0.0:*                           0          185636     14301/nmbd          
-udp        0      0 172.16.10.255:138       0.0.0.0:*                           0          185662     14301/nmbd          
-udp        0      0 172.16.10.100:138       0.0.0.0:*                           0          185661     14301/nmbd          
-udp        0      0 0.0.0.0:138             0.0.0.0:*                           0          185637     14301/nmbd          
-udp        0      0 127.0.0.1:161           0.0.0.0:*                           0          878203436  29809/snmpd         
-udp        0      0 127.0.0.1:323           0.0.0.0:*                           0          44366      20198/chronyd       
-udp        0      0 0.0.0.0:41514           0.0.0.0:*                           0          42649      20204/avahi-daemon: 
-udp        0      0 0.0.0.0:9997            0.0.0.0:*                           0          38397      18758/findhostd     
-udp        0      0 0.0.0.0:9998            0.0.0.0:*                           0          38396      18758/findhostd     
-udp        0      0 0.0.0.0:9999            0.0.0.0:*                           0          38395      18758/findhostd     
-udp        0      0 0.0.0.0:1900            0.0.0.0:*                           0          56720      23376/minissdpd     
-udp        0      0 0.0.0.0:3702            0.0.0.0:*                           99         179633     14343/synowsdiscove 
-udp6       0      0 :::5353                 :::*                                0          42648      20204/avahi-daemon: 
-udp6       0      0 :::47914                :::*                                0          42650      20204/avahi-daemon: 
-udp6       0      0 :::123                  :::*                                0          44369      20198/chronyd       
-udp6       0      0 ::1:323                 :::*                                0          44367      20198/chronyd       
-udp6       0      0 :::3702                 :::*                                99         179635     14343/synowsdiscove 
-raw6       0      0 :::58                   :::*                    7           0          18541      11097/synonetd      
+tcp        0      0 0.0.0.0:80              0.0.0.0:*               LISTEN      0          20210      11998/nginx: master 
+tcp        0      0 127.0.0.1:5432          0.0.0.0:*               LISTEN      55         23584      11921/postgres      
+tcp        0      0 0.0.0.0:443             0.0.0.0:*               LISTEN      0          20212      11998/nginx: master 
+tcp        0      0 192.168.0.23:3260       0.0.0.0:*               LISTEN      0          22406      -                   
+tcp        0      0 192.168.0.22:3260       0.0.0.0:*               LISTEN      0          22405      -                   
+tcp        0      0 127.0.0.1:4700          0.0.0.0:*               LISTEN      0          20107      11607/cnid_metad    
+tcp        0      0 0.0.0.0:445             0.0.0.0:*               LISTEN      0          20284      11959/smbd          
+tcp        0      0 0.0.0.0:3262            0.0.0.0:*               LISTEN      0          29171      13171/iscsi_snapsho 
+tcp        0      0 0.0.0.0:5000            0.0.0.0:*               LISTEN      0          20206      11998/nginx: master 
+tcp        0      0 0.0.0.0:5001            0.0.0.0:*               LISTEN      0          20208      11998/nginx: master 
+tcp        0      0 0.0.0.0:139             0.0.0.0:*               LISTEN      0          20285      11959/smbd          
+tcp        0      0 192.168.0.22:5000       10.3.1.200:57664        ESTABLISHED 1023       277719660  14400/nginx: worker 
+tcp        0      0 192.168.0.22:3260       192.168.0.25:49713      ESTABLISHED 0          154669778  -                   
+tcp        0      0 192.168.0.22:5000       10.3.1.200:57661        ESTABLISHED 1023       277719530  14401/nginx: worker 
+tcp        0      1 192.168.0.22:54101      108.139.60.57:443       SYN_SENT    0          277721964  9993/synoscgi_SYNO. 
+tcp        0      0 192.168.0.22:5000       10.3.1.200:57665        ESTABLISHED 1023       277729515  14397/nginx: worker 
+tcp        0      1 192.168.0.22:49595      108.139.60.69:80        SYN_SENT    1024       277729937  30146/synoscgi_SYNO 
+tcp        0      0 192.168.0.22:5000       10.3.1.200:57659        ESTABLISHED 1023       277733017  14400/nginx: worker 
+tcp        0      0 192.168.0.22:5000       10.3.1.200:57662        ESTABLISHED 1023       277729355  14401/nginx: worker 
+tcp        0      1 192.168.0.22:49596      108.139.60.69:80        SYN_SENT    1024       277721961  30147/synoscgi_SYNO 
+tcp        0      0 192.168.0.22:3260       192.168.0.19:49664      ESTABLISHED 0          248630132  -                   
+tcp6       0      0 :::80                   :::*                    LISTEN      0          20211      11998/nginx: master 
+tcp6       0      0 :::443                  :::*                    LISTEN      0          20213      11998/nginx: master 
+tcp6       0      0 :::3261                 :::*                    LISTEN      0          20976      -                   
+tcp6       0      0 :::445                  :::*                    LISTEN      0          20282      11959/smbd          
+tcp6       0      0 :::3263                 :::*                    LISTEN      0          20975      -                   
+tcp6       0      0 :::3264                 :::*                    LISTEN      0          20977      -                   
+tcp6       0      0 :::548                  :::*                    LISTEN      0          20219      11606/afpd          
+tcp6       0      0 :::5000                 :::*                    LISTEN      0          20207      11998/nginx: master 
+tcp6       0      0 :::5001                 :::*                    LISTEN      0          20209      11998/nginx: master 
+tcp6       0      0 :::139                  :::*                    LISTEN      0          20283      11959/smbd          
+udp        0      0 0.0.0.0:5353            0.0.0.0:*                           0          30822      14389/avahi-daemon: 
+udp        0      0 0.0.0.0:47212           0.0.0.0:*                           0          30824      14389/avahi-daemon: 
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          18710      10555/dhclient      
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          17100      10520/dhclient      
+udp        0      0 0.0.0.0:68              0.0.0.0:*                           0          15808      10271/dhclient      
+udp        0      0 192.168.0.22:123        0.0.0.0:*                           0          15492      9210/ntpd           
+udp        0      0 127.0.0.1:123           0.0.0.0:*                           0          15490      9210/ntpd           
+udp        0      0 0.0.0.0:123             0.0.0.0:*                           0          15471      9210/ntpd           
+udp        0      0 192.168.0.255:137       0.0.0.0:*                           0          27357      14317/nmbd          
+udp        0      0 192.168.0.22:137        0.0.0.0:*                           0          27356      14317/nmbd          
+udp        0      0 0.0.0.0:137             0.0.0.0:*                           0          29624      14317/nmbd          
+udp        0      0 192.168.0.255:138       0.0.0.0:*                           0          27359      14317/nmbd          
+udp        0      0 192.168.0.22:138        0.0.0.0:*                           0          27358      14317/nmbd          
+udp        0      0 0.0.0.0:138             0.0.0.0:*                           0          29625      14317/nmbd          
+udp        0      0 127.0.0.1:161           0.0.0.0:*                           0          20757      10846/snmpd         
+udp        0      0 0.0.0.0:8472            0.0.0.0:*                           0          6678       -                   
+udp        0      0 0.0.0.0:9997            0.0.0.0:*                           0          12154      9230/findhostd      
+udp        0      0 0.0.0.0:9998            0.0.0.0:*                           0          12153      9230/findhostd      
+udp        0      0 0.0.0.0:9999            0.0.0.0:*                           0          12152      9230/findhostd      
+udp        0      0 0.0.0.0:1900            0.0.0.0:*                           0          16533      9452/minissdpd      
+udp        0      0 0.0.0.0:59882           0.0.0.0:*                           0          20020      10930/synosnmpcd    
+udp6       0      0 :::35546                :::*                                0          30825      14389/avahi-daemon: 
+udp6       0      0 :::5353                 :::*                                0          30823      14389/avahi-daemon: 
+udp6       0      0 ::1:123                 :::*                                0          15494      9210/ntpd           
+udp6       0      0 :::123                  :::*                                0          15468      9210/ntpd           
+raw6       0      0 :::58                   :::*                    7           0          7796       5950/synonetd       
 Active UNIX domain sockets (servers and established)
 Proto RefCnt Flags       Type       State         I-Node   PID/Program name     Path
-unix  2      [ ACC ]     STREAM     LISTENING     1348802047 21513/abk-agent-res  /run/synoabk/synoabk-agent-restored.sock
-unix  2      [ ACC ]     STREAM     LISTENING     30489    17703/irqbalance     @
-unix  2      [ ]         DGRAM                    2032433153 1451/smbd            /run/samba/msg.sock/1451
-unix  2      [ ACC ]     STREAM     LISTENING     1348803075 22409/abk-agent-ser  /run/synoabk/abk-agent-control-socket
-unix  2      [ ACC ]     STREAM     LISTENING     1348760324 14138/synocontentex  /var/run/synocontentextractd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     105477   32323/synoindexscan  /tmp/synoindexscand_sock
-unix  2      [ ACC ]     STREAM     LISTENING     47110    2955/synoscgi        /run/synoscgi.sock
-unix  2      [ ]         DGRAM                    2032450056 4228/smbd            /run/samba/msg.sock/4228
-unix  2      [ ACC ]     STREAM     LISTENING     47112    2955/synoscgi        /run/synoscgi-fastapi.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348804105 21543/synoabk-job-q  /run/synoabk/synoabk-job-queue.sock
-unix  2      [ ACC ]     STREAM     LISTENING     47114    2955/synoscgi        /run/syno_background_task.sock
-unix  2      [ ]         DGRAM                    2032336139 27233/smbd           /run/samba/msg.sock/27233
-unix  2      [ ]         DGRAM                    184847   14526/smbd           /run/samba/msg.sock/14526
-unix  2      [ ]         DGRAM                    184850   14528/smbd           /run/samba/msg.sock/14528
-unix  2      [ ]         DGRAM                    2032420115 770/smbd             /run/samba/msg.sock/770
-unix  2      [ ]         DGRAM                    2032295955 24361/smbd           /run/samba/msg.sock/24361
-unix  2      [ ]         DGRAM                    182803   14524/smbd           /run/samba/msg.sock/14524
-unix  2      [ ]         DGRAM                    2032264468 22406/smbd           /run/samba/msg.sock/22406
-unix  2      [ ]         DGRAM                    2032354838 28364/smbd           /run/samba/msg.sock/28364
-unix  2      [ ]         DGRAM                    2032450842 4119/smbd            /run/samba/msg.sock/4119
-unix  2      [ ]         DGRAM                    2032404506 31748/smbd           /run/samba/msg.sock/31748
-unix  2      [ ]         DGRAM                    2032307485 25368/smbd           /run/samba/msg.sock/25368
-unix  2      [ ACC ]     STREAM     LISTENING     30494    17651/synobackupd    /var/run/synobackupd.socket
-unix  2      [ ]         DGRAM                    2032317472 25934/smbd           /run/samba/msg.sock/25934
-unix  2      [ ACC ]     STREAM     LISTENING     1348760352 14262/cloud-daemon.  /tmp/dscc.sock
-unix  2      [ ]         DGRAM                    2032428065 1203/smbd            /run/samba/msg.sock/1203
-unix  2      [ ACC ]     STREAM     LISTENING     1348802081 22409/abk-agent-ser  /run/synoabk/abk-agent-service-cmd-socket
-unix  2      [ ]         DGRAM                    185633   14301/nmbd           /run/samba/msg.sock/14301
-unix  2      [ ACC ]     STREAM     LISTENING     100129   32321/synoindexnoti  /tmp/synoindexnotifyd_sock
-unix  2      [ ]         DGRAM                    2032339491 27692/smbd           /run/samba/msg.sock/27692
-unix  2      [ ACC ]     STREAM     LISTENING     1348801059 21474/synoabk-fused  /run/synoabk/synoabk-fuse.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348760356 14265/cloud-monitor  /tmp/dscc-monitor.sock
-unix  2      [ ]         DGRAM                    2032414758 32648/smbd           /run/samba/msg.sock/32648
-unix  2      [ ]         DGRAM                    2032241702 20594/smbd           /run/samba/msg.sock/20594
-unix  2      [ ]         DGRAM                    2032415529 539/smbd             /run/samba/msg.sock/539
-unix  2      [ ]         DGRAM                    2032275757 23218/smbd           /run/samba/msg.sock/23218
-unix  2      [ ]         DGRAM                    2032428078 1212/smbd            /run/samba/msg.sock/1212
-unix  2      [ ]         DGRAM                    2032413486 322/smbd             /run/samba/msg.sock/322
-unix  2      [ ]         DGRAM                    2032382766 30497/smbd           /run/samba/msg.sock/30497
-unix  2      [ ACC ]     STREAM     LISTENING     878203438 29809/snmpd          /run/agentx.master
-unix  2      [ ]         DGRAM                    2032314416 25731/smbd           /run/samba/msg.sock/25731
-unix  2      [ ]         DGRAM                    180528   14571/winbindd: idm  /run/samba/msg.sock/14571
-unix  2      [ ACC ]     STREAM     LISTENING     44083    19505/synonode       /run/synoscgi_socket.sock
-unix  2      [ ]         DGRAM                    2032433972 1782/smbd            /run/samba/msg.sock/1782
-unix  2      [ ]         DGRAM                    2032359732 29373/smbd           /run/samba/msg.sock/29373
-unix  2      [ ]         DGRAM                    2032313908 25752/smbd           /run/samba/msg.sock/25752
-unix  2      [ ]         DGRAM                    2032248116 21048/smbd           /run/samba/msg.sock/21048
-unix  2      [ ]         DGRAM                    2032340278 27874/smbd           /run/samba/msg.sock/27874
-unix  2      [ ]         DGRAM                    2032271926 23377/smbd           /run/samba/msg.sock/23377
-unix  2      [ ]         DGRAM                    2032186166 17310/smbd           /run/samba/msg.sock/17310
-unix  2      [ ]         DGRAM                    2032415287 507/smbd             /run/samba/msg.sock/507
-unix  2      [ ]         DGRAM                    2032434234 1510/smbd            /run/samba/msg.sock/1510
-unix  2      [ ACC ]     STREAM     LISTENING     44092    19505/synonode       /run/synoscgi_domain_socket.sock
-unix  2      [ ]         DGRAM                    2032423997 749/smbd             /run/samba/msg.sock/749
-unix  2      [ ACC ]     STREAM     LISTENING     185663   14301/nmbd           /run/samba/nmbd/unexpected
-unix  3      [ ]         DGRAM                    17471    1/init               /run/systemd/notify
-unix  2      [ ACC ]     STREAM     LISTENING     17473    1/init               /run/systemd/private
-unix  2      [ ]         DGRAM                    2032456515 5037/smbd            /run/samba/msg.sock/5037
-unix  2      [ ACC ]     STREAM     LISTENING     1348801348 21464/python         /run/synoabk/synoabk-syslog-service.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64581    24354/synocgid       /var/run/synocgid/synocgid.htua.socket
-unix  2      [ ACC ]     STREAM     LISTENING     43589    20204/avahi-daemon:  /run/avahi-daemon/socket
-unix  2      [ ]         DGRAM                    2032338247 27219/smbd           /run/samba/msg.sock/27219
-unix  2      [ ACC ]     STREAM     LISTENING     1348759111 4252/synoscgi        /run/SynologyDrive/synoapid.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64583    24354/synocgid       /var/run/synocgid/synocgid.session.check.socket
-unix  2      [ ]         DGRAM                    2032275528 23024/smbd           /run/samba/msg.sock/23024
-unix  2      [ ]         DGRAM                    2032205385 18205/smbd           /run/samba/msg.sock/18205
-unix  2      [ ACC ]     STREAM     LISTENING     878203721 30098/scsi_plugin_s  ///tmp/iscsi/plugin_server.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64585    24354/synocgid       /var/run/synocgid/synocgid.session.crypto.box.socket
-unix  2      [ ]         DGRAM                    2032265034 22940/smbd           /run/samba/msg.sock/22940
-unix  2      [ ACC ]     STREAM     LISTENING     277995082 4351/synomibcollect  /run/ActiveInsight/online_updater.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348799307 21524/abk-agentless  /run/synoabk/abk-agentless.socket
-unix  2      [ ]         DGRAM                    73291    25438/scemd          /tmp/scemd_event_handler.sock_server
-unix  2      [ ACC ]     STREAM     LISTENING     64587    24354/synocgid       /var/run/synocgid/synocgid.session.exist.socket
-unix  2      [ ACC ]     STREAM     LISTENING     64589    24354/synocgid       /var/run/synocgid/synocgid.session.get.socket
-unix  2      [ ACC ]     SEQPACKET  LISTENING     17484    1/init               /run/udev/control
-unix  2      [ ACC ]     STREAM     LISTENING     878201422 29998/synosnmpcd     /tmp/synosnmpcd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64591    24354/synocgid       /var/run/synocgid/synocgid.session.getbyid.socket
-unix  2      [ ACC ]     STREAM     LISTENING     17487    1/init               /run/systemd/journal/stdout
-unix  2      [ ACC ]     STREAM     LISTENING     64593    24354/synocgid       /var/run/synocgid/synocgid.session.resume.socket
-unix  2      [ ]         DGRAM                    44370    20198/chronyd        /var/run/chrony/chronyd.sock
-unix  6      [ ]         DGRAM                    17490    1/init               /run/systemd/journal/socket
-unix  2      [ ACC ]     STREAM     LISTENING     178515   14336/synowstransfe  /tmp/synowstransfer.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64595    24354/synocgid       /var/run/synocgid/synocgid.session.add.socket
-unix  2      [ ]         DGRAM                    2032305748 25404/smbd           /run/samba/msg.sock/25404
-unix  2      [ ACC ]     STREAM     LISTENING     1348803924 21497/lo-server      /tmp/active-backup-lo-server-socket
-unix  2      [ ACC ]     STREAM     LISTENING     64597    24354/synocgid       /var/run/synocgid/synocgid.session.write.to.file.socket
-unix  2      [ ACC ]     STREAM     LISTENING     64599    24354/synocgid       /var/run/synocgid/synocgid.session.getid.socket
-unix  2      [ ACC ]     STREAM     LISTENING     1348804696 21508/abk-agent-aut  /tmp/abk-agent-authd-socket
-unix  2      [ ACC ]     STREAM     LISTENING     64601    24354/synocgid       /var/run/synocgid/synocgid.ssldecrypt.socket
-unix  2      [ ACC ]     STREAM     LISTENING     618384986 17672/synotifyd      /var/run/synotifyd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     64603    24354/synocgid       /var/run/synocgid/synocgid.remove.user.socket
-unix  2      [ ACC ]     STREAM     LISTENING     64605    24354/synocgid       /var/run/synocgid/synocgid.apikey.get.socket
-unix  2      [ ]         DGRAM                    2032364126 29352/smbd           /run/samba/msg.sock/29352
-unix  2      [ ]         DGRAM                    2032307806 25562/smbd           /run/samba/msg.sock/25562
-unix  2      [ ACC ]     STREAM     LISTENING     64607    24354/synocgid       /var/run/synocgid/synocgid.remove.by.attr.socket
-unix  2      [ ]         DGRAM                    2032389473 31124/smbd           /run/samba/msg.sock/31124
-unix  2      [ ACC ]     STREAM     LISTENING     64609    24354/synocgid       /var/run/synocgid/synocgid.session.update.socket
-unix  2      [ ]         DGRAM                    2032409701 32165/smbd           /run/samba/msg.sock/32165
-unix  2      [ ACC ]     STREAM     LISTENING     1348758375 13995/cloud-vmtouch  /tmp/cloud-vmtouchd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     104551   32344/fileindexd     /var/run/fileindexd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     185960   14454/winbindd       /run/samba/winbindd/pipe
-unix  2      [ ]         DGRAM                    1909202034 14651/smbd           /run/samba/msg.sock/14651
-unix  2      [ ACC ]     STREAM     LISTENING     1348761204 14017/syno-cloud-cl  /tmp/cloud-clientd-control
-unix  2      [ ACC ]     STREAM     LISTENING     185962   14454/winbindd       /var/lib/samba/winbindd_privileged/pipe
-unix  2      [ ]         DGRAM                    1988440698 20225/smbd           /run/samba/msg.sock/20225
-unix  2      [ ACC ]     STREAM     LISTENING     99450    31231/syslog-ng      /var/run/syslog
-unix  2      [ ]         DGRAM                    2032266107 22595/smbd           /run/samba/msg.sock/22595
-unix  2      [ ACC ]     STREAM     LISTENING     277990780 3466/synoaic_server  /run/ActiveInsight/server_status.sock
-unix  2      [ ]         DGRAM                    2032350078 28347/smbd           /run/samba/msg.sock/28347
-unix  2      [ ]         DGRAM                    2032381824 30553/smbd           /run/samba/msg.sock/30553
-unix  2      [ ACC ]     STREAM     LISTENING     1348804225 21534/python         /run/synoabk/hypervisor_server.sock
-unix  2      [ ACC ]     STREAM     LISTENING     178562   322/smbd             /run/samba/ncalrpc/np/initshutdown
-unix  2      [ ACC ]     STREAM     LISTENING     178564   322/smbd             /run/samba/ncalrpc/np/eventlog
-unix  78     [ ]         DGRAM                    17540    1/init               /run/systemd/journal/dev-log
-unix  2      [ ACC ]     STREAM     LISTENING     60037    24227/s2s_daemon     /tmp/S2S/daemon.sock
-unix  2      [ ACC ]     STREAM     LISTENING     178566   322/smbd             /run/samba/ncalrpc/np/plugplay
-unix  2      [ ]         DGRAM                    2032294024 24627/smbd           /run/samba/msg.sock/24627
-unix  2      [ ACC ]     STREAM     LISTENING     178568   322/smbd             /run/samba/ncalrpc/np/ntsvcs
-unix  2      [ ]         DGRAM                    2032434314 1660/smbd            /run/samba/msg.sock/1660
-unix  2      [ ACC ]     STREAM     LISTENING     178570   322/smbd             /run/samba/ncalrpc/np/svcctl
-unix  2      [ ACC ]     STREAM     LISTENING     19595    11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  2      [ ACC ]     STREAM     LISTENING     178572   322/smbd             /run/samba/ncalrpc/np/spoolss
-unix  2      [ ACC ]     STREAM     LISTENING     178574   322/smbd             /run/samba/ncalrpc/np/wkssvc
-unix  2      [ ]         DGRAM                    2032270991 23707/smbd           /run/samba/msg.sock/23707
-unix  2      [ ]         DGRAM                    1988439695 20224/smbd           /run/samba/msg.sock/20224
-unix  2      [ ACC ]     STREAM     LISTENING     1348805775 21487/synoabk-dsmca  /run/synoabk/synoabk-dsmcache.sock
-unix  2      [ ACC ]     STREAM     LISTENING     15503    10911/synoplugind    /run/synoplugind/server.sock
-unix  2      [ ACC ]     STREAM     LISTENING     178576   322/smbd             /run/samba/ncalrpc/np/netdfs
-unix  2      [ ACC ]     STREAM     LISTENING     101520   31231/syslog-ng      /var/run/synosyslog
-unix  2      [ ACC ]     STREAM     LISTENING     40081    18769/synocached.so  /run/synocached.sock
-unix  2      [ ]         DGRAM                    2032393106 31358/smbd           /run/samba/msg.sock/31358
-unix  2      [ ]         DGRAM                    2032365202 29135/smbd           /run/samba/msg.sock/29135
-unix  2      [ ACC ]     STREAM     LISTENING     178578   322/smbd             /run/samba/ncalrpc/np/samr
-unix  2      [ ACC ]     STREAM     LISTENING     101523   31231/syslog-ng      /run/LogCenter/syslog-ng.ctl
-unix  19     [ ]         DGRAM                    17811    11204/syslog-ng      /var/run/synologd
-unix  2      [ ]         DGRAM                    2032337556 27481/smbd           /run/samba/msg.sock/27481
-unix  2      [ ACC ]     STREAM     LISTENING     178580   322/smbd             /run/samba/ncalrpc/np/lsass
-unix  2      [ ACC ]     STREAM     LISTENING     17813    11204/syslog-ng      /run/syslog-ng/syslog-ng.ctl
-unix  2      [ ACC ]     STREAM     LISTENING     178582   322/smbd             /run/samba/ncalrpc/np/lsarpc
-unix  2      [ ]         DGRAM                    181911   14384/smbd           /run/samba/msg.sock/14384
-unix  2      [ ACC ]     STREAM     LISTENING     178584   322/smbd             /run/samba/ncalrpc/np/netlogon
-unix  2      [ ACC ]     STREAM     LISTENING     62616    24200/recyclebind    /run/recycle_bin/daemon.sock
-unix  2      [ ACC ]     STREAM     LISTENING     56728    23376/minissdpd      /var/run/minissdpd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     277994905 4099/synoaic_login_  /run/synoaic_login_uploader.sock
-unix  2      [ ACC ]     STREAM     LISTENING     178586   322/smbd             /run/samba/ncalrpc/np/srvsvc
-unix  2      [ ]         DGRAM                    2032381596 30519/smbd           /run/samba/msg.sock/30519
-unix  2      [ ACC ]     STREAM     LISTENING     178588   322/smbd             /run/samba/ncalrpc/DEFAULT
-unix  2      [ ACC ]     STREAM     LISTENING     178590   322/smbd             /run/samba/ncalrpc/np/winreg
-unix  2      [ ACC ]     STREAM     LISTENING     1348800159 21451/synoscgi       /run/synoabk/synoapid.sock
-unix  2      [ ]         DGRAM                    178595   14495/winbindd       /run/samba/msg.sock/14495
-unix  2      [ ACC ]     STREAM     LISTENING     1348800164 21459/synoabk-logd   /run/synoabk/synoabk-log.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348760229 14048/syncd          /tmp/cloud-syncservice
-unix  2      [ ACC ]     STREAM     LISTENING     948237477 422/node             /var/run/vapid_send_server.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348804781 21529/smbc-agent     /run/synoabk/smb-wrapper-daemon.sock
-unix  2      [ ]         DGRAM                    82352    25438/scemd          /tmp/scemd_connector.sock_server
-unix  2      [ ]         DGRAM                    2032407986 32335/smbd           /run/samba/msg.sock/32335
-unix  2      [ ]         DGRAM                    2032440757 2191/smbd            /run/samba/msg.sock/2191
-unix  2      [ ACC ]     STREAM     LISTENING     100025   32267/synoelasticd   /var/run/synoelasticd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     824982968 30065/synomibgrpccl  /run/SupportService/synomibgrpcclient.sock
-unix  2      [ ACC ]     STREAM     LISTENING     948235966 366/notification_se  /var/run/notification_send.sock
-unix  2      [ ]         DGRAM                    179646   14525/smbd           /run/samba/msg.sock/14525
-unix  2      [ ACC ]     STREAM     LISTENING     824966079 30070/synomibaction  /run/SupportService/online_updater.sock
-unix  2      [ ]         DGRAM                    179649   14527/smbd           /run/samba/msg.sock/14527
-unix  2      [ ]         DGRAM                    184002   14470/smbd           /run/samba/msg.sock/14470
-unix  2      [ ACC ]     STREAM     LISTENING     2016233667 27347/synoindexplug  /tmp/synoindexplugind_sock
-unix  2      [ ACC ]     STREAM     LISTENING     20931    12053/synotaskmgr    /tmp/synotaskmgr.sock
-unix  2      [ ACC ]     STREAM     LISTENING     184004   14470/smbd           /run/samba/ncalrpc/np/msftewds
-unix  2      [ ACC ]     STREAM     LISTENING     89542    29283/postgres       /run/postgresql/.s.PGSQL.5432
-unix  2      [ ACC ]     STREAM     LISTENING     103623   32324/synomediapars  /tmp/synomediaparserd_sock
-unix  2      [ ACC ]     STREAM     LISTENING     84679    29238/usb-copyd      /tmp/usb-copy-socket
-unix  2      [ ]         DGRAM                    2032367816 29192/smbd           /run/samba/msg.sock/29192
-unix  2      [ ]         DGRAM                    2032374985 29881/smbd           /run/samba/msg.sock/29881
-unix  2      [ ]         DGRAM                    184009   14454/winbindd       /run/samba/msg.sock/14454
-unix  2      [ ]         DGRAM                    2032296913 24799/smbd           /run/samba/msg.sock/24799
-unix  2      [ ACC ]     STREAM     LISTENING     1348754899 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ACC ]     STREAM     LISTENING     22228    12052/synotokenmgr   /tmp/synotokenmgr.sock
-unix  2      [ ACC ]     STREAM     LISTENING     103637   32331/synoindexd     /tmp/synoindexd_sock
-unix  2      [ ACC ]     STREAM     LISTENING     35800    19448/invoked        /run/invoked.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348805849 22409/abk-agent-ser  /run/synoabk/abk-agent-job-cmd-socket
-unix  2      [ ]         DGRAM                    2032381659 30531/smbd           /run/samba/msg.sock/30531
-unix  2      [ ACC ]     STREAM     LISTENING     14062    10975/dbus-daemon    @/tmp/dbus-l0KZ6gJetO
-unix  2      [ ACC ]     STREAM     LISTENING     99804    31819/thumbd         /run/filestation/thumbd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     948235229 32760/pgbouncer      /run/SynologyApplicationService/.s.PGSQL.6432
-unix  2      [ ACC ]     STREAM     LISTENING     11997    10868/mcelog         /var/run/mcelog-client
-unix  2      [ ]         DGRAM                    178654   14523/smbd           /run/samba/msg.sock/14523
-unix  2      [ ]         DGRAM                    2032340703 28335/smbd           /run/samba/msg.sock/28335
-unix  2      [ ]         DGRAM                    2032407008 31921/smbd           /run/samba/msg.sock/31921
-unix  2      [ ACC ]     STREAM     LISTENING     178656   14523/smbd           /run/samba/ncalrpc/DEFAULT
-unix  2      [ ACC ]     STREAM     LISTENING     1348801249 22409/abk-agent-ser  /tmp/synoabk/active-backup-service-server
-unix  2      [ ACC ]     STREAM     LISTENING     1348761825 14105/syncd          /tmp/cloud-service
-unix  2      [ ACC ]     STREAM     LISTENING     178658   14523/smbd           /run/samba/ncalrpc/np/mdssvc
-unix  2      [ ]         DGRAM                    2032342499 27835/smbd           /run/samba/msg.sock/27835
-unix  2      [ ]         DGRAM                    369793001 2584/systemd         /run/user/196791/systemd/notify
-unix  2      [ ACC ]     STREAM     LISTENING     49899    22523/synologand     /run/synologan.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348758508 14105/syncd          /tmp/sfsock
-unix  2      [ ACC ]     STREAM     LISTENING     369793004 2584/systemd         /run/user/196791/systemd/private
-unix  2      [ ACC ]     STREAM     LISTENING     1348762863 14016/cloud-authd    /tmp/cloud-authd-socket
-unix  2      [ ACC ]     STREAM     LISTENING     1348799216 21502/synodedup-eng  /run/synodedup-engine/daemon.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348802032 21479/synoabk-proxy  /run/synoabk/synoabk-proxyd.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348803832 21469/synoabk-privi  /run/synoabk/synoabk-privileged-fork.sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348762872 14105/syncd          /tmp/user_db_handler_sock
-unix  2      [ ]         DGRAM                    2032332281 26926/smbd           /run/samba/msg.sock/26926
-unix  2      [ ACC ]     STREAM     LISTENING     369793017 2745/synoavd         /tmp/AntiVirus/synoavd.sock
-unix  2      [ ]         DGRAM                    2032379898 31709/smbd           /run/samba/msg.sock/31709
-unix  2      [ ACC ]     STREAM     LISTENING     1348803834 21469/synoabk-privi  /run/synoabk/synoabk-privileged-async.sock
-unix  2      [ ]         DGRAM                    182778   14494/winbindd: dom  /run/samba/msg.sock/14494
-unix  2      [ ACC ]     STREAM     LISTENING     2016256507 28665/synoindexwork  /tmp/synoindexworkerd_sock
-unix  2      [ ACC ]     STREAM     LISTENING     1348800252 21492/synoabk-reten  /run/synoabk/synoabk-retention.sock
-unix  2      [ ]         STREAM     CONNECTED     1644575700 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348760259 14048/syncd          
-unix  2      [ ]         DGRAM                    89540    28320/postgres: pos  
-unix  2      [ ]         STREAM     CONNECTED     2032343497 27835/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348759108 14223/synocontentex  
-unix  3      [ ]         STREAM     CONNECTED     878207239 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    50772    22490/synocrond      
-unix  3      [ ]         STREAM     CONNECTED     1348802066 22480/abk-agent-ser  
-unix  2      [ ]         DGRAM                    2032436079 32648/smbd           
-unix  3      [ ]         STREAM     CONNECTED     178510   14336/synowstransfe  
-unix  2      [ ]         STREAM     CONNECTED     2032431687 25562/smbd           
-unix  2      [ ]         DGRAM                    948167429 17972/synobtrfsrepl  
-unix  3      [ ]         STREAM     CONNECTED     1348800426 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1646809059 14017/syno-cloud-cl  
-unix  2      [ ]         DGRAM                    2032342639 27692/smbd           
-unix  3      [ ]         STREAM     CONNECTED     824982961 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1370847314 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         DGRAM                    86156    29238/usb-copyd      
-unix  2      [ ]         DGRAM                    1348804103 21543/synoabk-job-q  
-unix  3      [ ]         STREAM     CONNECTED     369800057 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032292854 24361/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348762870 14105/syncd          
-unix  3      [ ]         STREAM     CONNECTED     1348802982 21553/tcmu-runner    
-unix  3      [ ]         STREAM     CONNECTED     31460    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348802028 21479/synoabk-proxy  
-unix  3      [ ]         STREAM     CONNECTED     181731   1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    100132   32321/synoindexnoti  
-unix  2      [ ]         STREAM     CONNECTED     1644579205 32344/fileindexd     
-unix  2      [ ]         DGRAM                    1348759027 14017/syno-cloud-cl  
-unix  2      [ ]         DGRAM                    82369341 22541/synostgd-volu  
-unix  3      [ ]         STREAM     CONNECTED     20861    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    1348754998 14138/synocontentex  
-unix  3      [ ]         STREAM     CONNECTED     1348754989 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         STREAM     CONNECTED     1203243439 32344/fileindexd     
-unix  2      [ ]         STREAM     CONNECTED     2032401086 31748/smbd           
-unix  3      [ ]         STREAM     CONNECTED     618380831 17672/synotifyd      
-unix  2      [ ]         STREAM     CONNECTED     2032309283 25368/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032195369 17310/smbd           
-unix  2      [ ]         DGRAM                    1348798375 21451/synoscgi       
-unix  3      [ ]         STREAM     CONNECTED     15560    11048/dbus-daemon    
-unix  3      [ ]         STREAM     CONNECTED     1348759066 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         DGRAM                    369798894 2588/(sd-pam)        
-unix  2      [ ]         STREAM     CONNECTED     2032421313 770/smbd             
-unix  3      [ ]         STREAM     CONNECTED     66763    24726/crond          
-unix  2      [ ]         STREAM     CONNECTED     2032408819 32165/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1349913189 14017/syno-cloud-cl  
-unix  2      [ ]         DGRAM                    44611    20417/systemd-login  
-unix  3      [ ]         STREAM     CONNECTED     41301    19505/synonode       
-unix  3      [ ]         STREAM     CONNECTED     22717    12029/systemd-udevd  
-unix  3      [ ]         STREAM     CONNECTED     1348802067 21518/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     1348802730 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    270867241 24340/cnid_metad     
-unix  3      [ ]         STREAM     CONNECTED     36904    11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  3      [ ]         STREAM     CONNECTED     1644575727 14017/syno-cloud-cl  
-unix  3      [ ]         STREAM     CONNECTED     1348803099 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     2027834270 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     2027834268 12627/nginx: worker  
-unix  2      [ ]         STREAM     CONNECTED     2032431267 322/smbd             
-unix  2      [ ]         STREAM     CONNECTED     2032340707 28335/smbd           
-unix  3      [ ]         STREAM     CONNECTED     72060    25438/scemd          
-unix  2      [ ]         STREAM     CONNECTED     2032428082 1212/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032337013 27233/smbd           
-unix  3      [ ]         STREAM     CONNECTED     185965   14454/winbindd       
-unix  2      [ ]         DGRAM                    105660   32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     39360    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    30490    17703/irqbalance     
-unix  3      [ ]         STREAM     CONNECTED     22796    12053/synotaskmgr    
-unix  2      [ ]         DGRAM                    277996583 4099/synoaic_login_  
-unix  2      [ ]         STREAM     CONNECTED     2032284113 23707/smbd           
-unix  2      [ ]         DGRAM                    2027842667 4093/synoaic_logd    
-unix  3      [ ]         STREAM     CONNECTED     878201382 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    31552    18554/dhclient       
-unix  2      [ ]         DGRAM                    19174    12029/systemd-udevd  
-unix  3      [ ]         STREAM     CONNECTED     3062     10975/dbus-daemon    
-unix  2      [ ]         STREAM     CONNECTED     1646809056 32344/fileindexd     
-unix  2      [ ]         DGRAM                    1348800163 21459/synoabk-logd   
-unix  3      [ ]         STREAM     CONNECTED     2027834263 12629/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     38248    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    2032378844 30519/smbd           
-unix  3      [ ]         STREAM     CONNECTED     84515    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     43591    20204/avahi-daemon:  
-unix  2      [ ]         STREAM     CONNECTED     1644581920 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348802057 22409/abk-agent-ser  
-unix  2      [ ]         DGRAM                    1348799304 21524/abk-agentless  
-unix  2      [ ]         DGRAM                    848527527 30065/synomibgrpccl  
-unix  3      [ ]         STREAM     CONNECTED     1348800332 21513/abk-agent-res  
-unix  2      [ ]         DGRAM                    2032448047 3942/synoscgi_SYNO.  
-unix  2      [ ]         STREAM     CONNECTED     2032428069 1203/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032355192 27481/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2016230362 28320/postgres: pos  /run/postgresql/.s.PGSQL.5432
-unix  3      [ ]         STREAM     CONNECTED     1348802740 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032407016 31921/smbd           
-unix  2      [ ]         DGRAM                    2032437305 25562/smbd           
-unix  2      [ ]         DGRAM                    32220    17740/synoconfd      
-unix  3      [ ]         STREAM     CONNECTED     1644579179 14105/syncd          /tmp/sfsock
-unix  2      [ ]         DGRAM                    1348760355 14265/cloud-monitor  
-unix  2      [ ]         DGRAM                    1348760296 14020/cloud-workerd  
-unix  3      [ ]         STREAM     CONNECTED     1348801065 11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  2      [ ]         STREAM     CONNECTED     2032266959 22940/smbd           
-unix  2      [ ]         DGRAM                    92418455 22538/synostgd-spac  
-unix  3      [ ]         STREAM     CONNECTED     31551    18554/dhclient       
-unix  3      [ ]         STREAM     CONNECTED     12034    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348802776 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     878206127 29998/synosnmpcd     
-unix  3      [ ]         STREAM     CONNECTED     64839    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     39065    18279/dhclient       
-unix  2      [ ]         STREAM     CONNECTED     2032452066 4228/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032361376 29192/smbd           
-unix  2      [ ]         DGRAM                    1348803923 21497/lo-server      
-unix  3      [ ]         STREAM     CONNECTED     1348798450 21459/synoabk-logd   
-unix  2      [ ]         STREAM     CONNECTED     2032451804 27874/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1646813401 14105/syncd          /tmp/sfsock
-unix  2      [ ]         DGRAM                    1929193046 8546/synoavscan      
-unix  2      [ ]         DGRAM                    304238   22530/syno_ip_confl  
-unix  2      [ ]         DGRAM                    2032343218 27692/smbd           
-unix  2      [ ]         DGRAM                    2032289775 22940/smbd           
-unix  2      [ ]         DGRAM                    60040    24227/s2s_daemon     
-unix  2      [ ]         STREAM     CONNECTED     2032352674 28347/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032241706 20594/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2027834265 12630/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     2027834262 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     39339    18758/findhostd      
-unix  3      [ ]         STREAM     CONNECTED     15559    11048/dbus-daemon    
-unix  3      [ ]         STREAM     CONNECTED     1646813382 14105/syncd          /tmp/sfsock
-unix  2      [ ]         DGRAM                    2032431682 25562/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032228421 18205/smbd           
-unix  3      [ ]         STREAM     CONNECTED     878200263 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348802061 21518/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     1348761203 14017/syno-cloud-cl  
-unix  3      [ ]         STREAM     CONNECTED     948167424 17972/synobtrfsrepl  
-unix  3      [ ]         STREAM     CONNECTED     48038    11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  2      [ ]         STREAM     CONNECTED     1203247902 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     277994194 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     180526   14454/winbindd       
-unix  2      [ ]         DGRAM                    1348799393 21464/python         
-unix  3      [ ]         STREAM     CONNECTED     1348802058 21518/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     2032457517 5185/synoscgi_SYNO.  /run/synoscgi.sock
-unix  2      [ ]         STREAM     CONNECTED     2032359736 29373/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032336988 27219/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1349916239 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  3      [ ]         STREAM     CONNECTED     824984192 30070/synomibaction  
-unix  3      [ ]         STREAM     CONNECTED     101522   31231/syslog-ng      
-unix  2      [ ]         DGRAM                    70980    25438/scemd          
-unix  3      [ ]         STREAM     CONNECTED     36730    17651/synobackupd    
-unix  3      [ ]         STREAM     CONNECTED     20203    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     278000751 4950/otel-collector  
-unix  2      [ ]         DGRAM                    179617   14343/synowsdiscove  
-unix  2      [ ]         DGRAM                    2032431319 322/smbd             
-unix  2      [ ]         STREAM     CONNECTED     2032245552 21048/smbd           
-unix  3      [ ]         STREAM     CONNECTED     39125    18301/dhclient       
-unix  3      [ ]         STREAM     CONNECTED     17189    11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  2      [ ]         DGRAM                    1987315333 14651/smbd           
-unix  3      [ ]         STREAM     CONNECTED     277994172 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     41672    11048/dbus-daemon    /var/run/dbus/system_bus_socket
-unix  3      [ ]         STREAM     CONNECTED     2027834269 12632/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348759038 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  3      [ ]         STREAM     CONNECTED     2032444596 19505/synonode       /run/synoscgi_socket.sock
-unix  2      [ ]         DGRAM                    33716    18337/dhclient       
-unix  2      [ ]         STREAM     CONNECTED     2032352698 28364/smbd           
-unix  2      [ ]         STREAM     CONNECTED     1646814418 32344/fileindexd     
-unix  2      [ ]         DGRAM                    60124    24268/netatalk       
-unix  3      [ ]         STREAM     CONNECTED     3061     10975/dbus-daemon    
-unix  3      [ ]         STREAM     CONNECTED     1348760233 14105/syncd          
-unix  3      [ ]         STREAM     CONNECTED     48773    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     948235767 32760/pgbouncer      
-unix  2      [ ]         STREAM     CONNECTED     2032451908 4119/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032310110 23377/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2027834267 12631/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348754995 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  3      [ ]         STREAM     CONNECTED     37337    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     35159    17654/synologaccd    
-unix  3      [ ]         STREAM     CONNECTED     86250    28320/postgres: pos  
-unix  3      [ ]         STREAM     CONNECTED     55541    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    2032438081 1510/smbd            
-unix  3      [ ]         STREAM     CONNECTED     2027834271 12633/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348759036 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         DGRAM                    618384989 17672/synotifyd      
-unix  3      [ ]         STREAM     CONNECTED     277995863 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     2032452516 5037/smbd            
-unix  2      [ ]         DGRAM                    1348799394 21464/python         
-unix  3      [ ]         STREAM     CONNECTED     1348802065 22480/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     1348805771 21487/synoabk-dsmca  
-unix  2      [ ]         STREAM     CONNECTED     1203249535 32344/fileindexd     
-unix  2      [ ]         STREAM     CONNECTED     2032393110 31358/smbd           
-unix  2      [ ]         DGRAM                    2032393413 28364/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032309319 25404/smbd           
-unix  2      [ ]         DGRAM                    2032249121 18205/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032379902 31709/smbd           
-unix  2      [ ]         STREAM     CONNECTED     1203243458 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348759106 14222/synocontentex  
-unix  2      [ ]         DGRAM                    22560    11113/synoneteventd  
-unix  2      [ ]         STREAM     CONNECTED     1218724108 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     878200269 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     39174    18337/dhclient       
-unix  2      [ ]         DGRAM                    1987313239 21474/synoabk-fused  
-unix  3      [ ]         STREAM     CONNECTED     2027834272 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348799328 21553/tcmu-runner    
-unix  2      [ ]         DGRAM                    1348760331 14226/synoscgi       
-unix  3      [ ]         STREAM     CONNECTED     277987012 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     44552    20417/systemd-login  
-unix  2      [ ]         STREAM     CONNECTED     2028917193 17740/synoconfd      
-unix  3      [ ]         STREAM     CONNECTED     1370846630 14105/syncd          
-unix  2      [ ]         STREAM     CONNECTED     2032266836 22595/smbd           
-unix  3      [ ]         STREAM     CONNECTED     824966039 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    2032409819 32165/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032312449 25934/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032294028 24627/smbd           
-unix  3      [ ]         STREAM     CONNECTED     178511   1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348803921 21497/lo-server      
-unix  2      [ ]         STREAM     CONNECTED     1203243419 32344/fileindexd     
-unix  2      [ ]         DGRAM                    65382    25179/synodisklaten  
-unix  2      [ ]         STREAM     CONNECTED     2032364130 29352/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032420896 539/smbd             
-unix  2      [ ]         STREAM     CONNECTED     2032267189 23024/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348800987 21474/synoabk-fused  
-unix  3      [ ]         STREAM     CONNECTED     1348759107 14138/synocontentex  
-unix  3      [ ]         STREAM     CONNECTED     50768    22523/synologand     
-unix  2      [ ]         DGRAM                    12004    10922/systemd-journ  
-unix  3      [ ]         STREAM     CONNECTED     3019     10868/mcelog         
-unix  3      [ ]         STREAM     CONNECTED     2027834260 12627/nginx: worker  
-unix  2      [ ]         DGRAM                    38394    18758/findhostd      
-unix  2      [ ]         STREAM     CONNECTED     2032431667 1510/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032431891 1660/smbd            
-unix  2      [ ]         DGRAM                    1351279537 14105/syncd          
-unix  3      [ ]         STREAM     CONNECTED     824985057 30065/synomibgrpccl  
-unix  3      [ ]         DGRAM                    20211    12029/systemd-udevd  
-unix  3      [ ]         STREAM     CONNECTED     1348760222 14017/syno-cloud-cl  
-unix  3      [ ]         STREAM     CONNECTED     2027834273 12634/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348802060 22409/abk-agent-ser  
-unix  2      [ ]         DGRAM                    69071    22539/synostgd-cach  
-unix  2      [ ]         DGRAM                    63219    24726/crond          
-unix  3      [ ]         STREAM     CONNECTED     1646807128 14017/syno-cloud-cl  
-unix  3      [ ]         STREAM     CONNECTED     53731    22384/synocachepinf  
-unix  3      [ ]         STREAM     CONNECTED     369798891 2584/systemd         
-unix  2      [ ]         DGRAM                    2032428424 22406/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032310040 25752/smbd           
-unix  2      [ ]         STREAM     CONNECTED     1351279540 14105/syncd          
-unix  3      [ ]         STREAM     CONNECTED     17613    1/init               
-unix  2      [ ]         DGRAM                    2032393468 29352/smbd           
-unix  2      [ ]         DGRAM                    878203723 30098/scsi_plugin_s  
-unix  3      [ ]         STREAM     CONNECTED     878203652 30098/scsi_plugin_s  
-unix  3      [ ]         STREAM     CONNECTED     44620    20417/systemd-login  
-unix  2      [ ]         DGRAM                    33653    18279/dhclient       
-unix  2      [ ]         DGRAM                    2032452542 539/smbd             
-unix  3      [ ]         STREAM     CONNECTED     2027834258 12628/nginx: worker  
-unix  2      [ ]         DGRAM                    1348754896 14029/redis.sock     
-unix  3      [ ]         STREAM     CONNECTED     38268    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     2032459985 12632/nginx: worker  
-unix  2      [ ]         STREAM     CONNECTED     2032393249 31124/smbd           
-unix  2      [ ]         DGRAM                    18500    10911/synoplugind    
-unix  2      [ ]         DGRAM                    2027840152 1/init               
-unix  2      [ ]         STREAM     CONNECTED     1218723160 32344/fileindexd     
-unix  2      [ ]         DGRAM                    283216123 3460/synoaic_monito  
-unix  3      [ ]         STREAM     CONNECTED     1348800247 21492/synoabk-reten  
-unix  3      [ ]         STREAM     CONNECTED     1348754991 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         STREAM     CONNECTED     1988345562 14384/smbd           
-unix  3      [ ]         STREAM     CONNECTED     72068    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     32605    18393/dhclient       
-unix  2      [ ]         STREAM     CONNECTED     2032431376 1451/smbd            
-unix  2      [ ]         STREAM     CONNECTED     2032328214 25731/smbd           
-unix  2      [ ]         DGRAM                    52320    17879/synologrotate  
-unix  3      [ ]         STREAM     CONNECTED     23618    12052/synotokenmgr   
-unix  2      [ ]         STREAM     CONNECTED     2032382770 30497/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2027834261 12628/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348802678 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348759068 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         DGRAM                    885775909 30095/synoscsitmoni  
-unix  3      [ ]         STREAM     CONNECTED     19609    10975/dbus-daemon    @/tmp/dbus-l0KZ6gJetO
-unix  3      [ ]         STREAM     CONNECTED     948229119 422/node             
-unix  2      [ ]         STREAM     CONNECTED     2032381600 30519/smbd           
-unix  3      [ ]         STREAM     CONNECTED     278000648 4913/python3         
-unix  2      [ ]         DGRAM                    2032337671 27481/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032277695 23218/smbd           
-unix  3      [ ]         STREAM     CONNECTED     878195710 29809/snmpd          
-unix  3      [ ]         STREAM     CONNECTED     278010008 4099/synoaic_login_  /run/synoaic_login_uploader.sock
-unix  3      [ ]         STREAM     CONNECTED     40397    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     30452    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348758518 14152/syncd          
-unix  2      [ ]         DGRAM                    44360    20198/chronyd        
-unix  3      [ ]         STREAM     CONNECTED     277996355 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348803742 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032264503 22406/smbd           
-unix  2      [ ]         DGRAM                    2032403916 28347/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032409138 32335/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2027834266 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     31414    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348806764 22751/vmtouch        
-unix  3      [ ]         STREAM     CONNECTED     1348802818 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348802694 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    23951943 14495/winbindd       
-unix  3      [ ]         STREAM     CONNECTED     43693    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032296917 24799/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348761853 14020/cloud-workerd  
-unix  2      [ ]         STREAM     CONNECTED     2032329304 26926/smbd           
-unix  2      [ ]         STREAM     CONNECTED     1646809030 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348760234 14048/syncd          
-unix  3      [ ]         STREAM     CONNECTED     277991854 4908/synomibresourc  
-unix  2      [ ]         STREAM     CONNECTED     2032433976 1782/smbd            
-unix  3      [ ]         STREAM     CONNECTED     2016261175 28665/synoindexwork  
-unix  2      [ ]         DGRAM                    277995843 4328/synoaic_backup  
-unix  3      [ ]         STREAM     CONNECTED     40432    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     46084    2955/synoscgi        
-unix  3      [ ]         STREAM     CONNECTED     37312    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032415291 507/smbd             
-unix  3      [ ]         STREAM     CONNECTED     2016244524 27347/synoindexplug  
-unix  2      [ ]         DGRAM                    1348804780 21529/smbc-agent     
-unix  2      [ ]         DGRAM                    2032399152 32335/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2032421199 749/smbd             
-unix  2      [ ]         DGRAM                    48852    22384/synocachepinf  
-unix  3      [ ]         STREAM     CONNECTED     1348802064 21518/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     1348758519 14152/syncd          
-unix  3      [ ]         STREAM     CONNECTED     277997914 4351/synomibcollect  
-unix  2      [ ]         DGRAM                    34305    17692/synoscheduled  
-unix  2      [ ]         STREAM     CONNECTED     2032369460 29881/smbd           
-unix  3      [ ]         STREAM     CONNECTED     278011027 31231/syslog-ng      
-unix  2      [ ]         STREAM     CONNECTED     1646816918 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348761854 14020/cloud-workerd  
-unix  3      [ ]         STREAM     CONNECTED     1348802714 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    1348804224 21534/python         
-unix  2      [ ]         STREAM     CONNECTED     2032438209 2191/smbd            
-unix  2      [ ]         STREAM     CONNECTED     1646809045 32344/fileindexd     
-unix  3      [ ]         STREAM     CONNECTED     1348760258 14152/syncd          
-unix  2      [ ]         DGRAM                    337602563 17654/synologaccd    
-unix  2      [ ]         DGRAM                    100028   32267/synoelasticd   
-unix  2      [ ]         STREAM     CONNECTED     2032383464 30553/smbd           
-unix  3      [ ]         STREAM     CONNECTED     2016256509 28667/postgres: pos  /run/postgresql/.s.PGSQL.5432
-unix  3      [ ]         STREAM     CONNECTED     30447    1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    369800634 2745/synoavd         
-unix  2      [ ]         DGRAM                    25413848 14293/smbd-unlinkd   
-unix  2      [ ]         DGRAM                    59134    24320/hotplugd       
-unix  3      [ ]         STREAM     CONNECTED     2032444595 12628/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     2027834264 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     1348762871 14105/syncd          
-unix  3      [ ]         STREAM     CONNECTED     185964   14494/winbindd: dom  
-unix  3      [ ]         STREAM     CONNECTED     35237    17740/synoconfd      
-unix  2      [ ]         STREAM     CONNECTED     2032360960 29135/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348802059 22409/abk-agent-ser  
-unix  3      [ ]         STREAM     CONNECTED     948166025 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     2032457993 14454/winbindd       /var/lib/samba/winbindd_privileged/pipe
-unix  3      [ ]         STREAM     CONNECTED     1348754993 14029/redis.sock     /run/SynologyDrive/redis.sock
-unix  2      [ ]         DGRAM                    2032353878 26926/smbd           
-unix  2      [ ]         STREAM     CONNECTED     1218720596 32344/fileindexd     
-unix  2      [ ]         DGRAM                    369792988 2584/systemd         
-unix  3      [ ]         STREAM     CONNECTED     100490   22523/synologand     /run/synologan.sock
-unix  3      [ ]         DGRAM                    20210    12029/systemd-udevd  
-unix  2      [ ]         DGRAM                    283211146 4950/otel-collector  
-unix  3      [ ]         STREAM     CONNECTED     179614   14343/synowsdiscove  
-unix  2      [ ]         DGRAM                    84747    24354/synocgid       
-unix  2      [ ]         DGRAM                    32606    18393/dhclient       
-unix  3      [ ]         STREAM     CONNECTED     878208407 30095/synoscsitmoni  
-unix  2      [ ]         DGRAM                    47109    2955/synoscgi        
-unix  3      [ ]         STREAM     CONNECTED     22187    1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     2027834259 12627/nginx: worker  
-unix  3      [ ]         STREAM     CONNECTED     35688    18769/synocached.so  
-unix  2      [ ]         DGRAM                    39126    18301/dhclient       
-unix  3      [ ]         STREAM     CONNECTED     17626    11097/synonetd       
-unix  3      [ ]         STREAM     CONNECTED     948236148 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2032343201 27692/smbd           
-unix  3      [ ]         STREAM     CONNECTED     618389740 1/init               /run/systemd/journal/stdout
-unix  3      [ ]         STREAM     CONNECTED     1348802056 21518/abk-agent-ser  
-unix  2      [ ]         DGRAM                    2032457530 5185/synoscgi_SYNO.  
-unix  3      [ ]         STREAM     CONNECTED     948233606 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         STREAM     CONNECTED     2030133326 14020/cloud-workerd  
-unix  2      [ ]         STREAM     CONNECTED     2032381663 30531/smbd           
-unix  3      [ ]         STREAM     CONNECTED     180525   14571/winbindd: idm  
-unix  2      [ ]         STREAM     CONNECTED     2032413805 32648/smbd           
-unix  2      [ ]         STREAM     CONNECTED     2030491686 14651/smbd           
-unix  3      [ ]         STREAM     CONNECTED     1348799303 21524/abk-agentless  
-unix  3      [ ]         STREAM     CONNECTED     1348804695 21508/abk-agent-aut  
-unix  3      [ ]         STREAM     CONNECTED     1348759109 14138/synocontentex  
-unix  2      [ ]         DGRAM                    611938639 32323/synoindexscan  
-unix  2      [ ]         DGRAM                    37665    19448/invoked        
-unix  2      [ ]         DGRAM                    17705    11097/synonetd       
-unix  3      [ ]         STREAM     CONNECTED     1348802792 1/init               /run/systemd/journal/stdout
-unix  2      [ ]         DGRAM                    278027408 3466/synoaic_server  
-unix  3      [ ]         STREAM     CONNECTED     277985246 3457/vmtouch         
+unix  2      [ ]         DGRAM                    20260    11959/smbd           /run/samba/msg.sock/11959
+unix  2      [ ACC ]     STREAM     LISTENING     23588    11921/postgres       /run/postgresql/.s.PGSQL.5432
+unix  2      [ ACC ]     STREAM     LISTENING     21807    10939/synologand     /run/synologan.sock
+unix  2      [ ACC ]     SEQPACKET  LISTENING     6705     6362/udevd           /run/udev/control
+unix  2      [ ACC ]     STREAM     LISTENING     3049     5821/dbus-daemon     @/tmp/dbus-hiowwAErTF
+unix  2      [ ACC ]     STREAM     LISTENING     19021    11251/synobackupd    /var/run/synobackupd.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22613    11368/synocgid       /var/run/synocgid/synocgid.htua.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22615    11368/synocgid       /var/run/synocgid/synocgid.session.check.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22617    11368/synocgid       /var/run/synocgid/synocgid.session.remove.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22619    11368/synocgid       /var/run/synocgid/synocgid.session.exist.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22621    11368/synocgid       /var/run/synocgid/synocgid.session.get.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22623    11368/synocgid       /var/run/synocgid/synocgid.session.update.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22625    11368/synocgid       /var/run/synocgid/synocgid.session.add.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22627    11368/synocgid       /var/run/synocgid/synocgid.session.getid.socket
+unix  2      [ ACC ]     STREAM     LISTENING     2809     1/init               @/com/ubuntu/upstart
+unix  2      [ ACC ]     STREAM     LISTENING     22629    11368/synocgid       /var/run/synocgid/synocgid.ssldecrypt.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22631    11368/synocgid       /var/run/synocgid/synocgid.getrsapublickey.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22633    11368/synocgid       /var/run/synocgid/synocgid.getrsamodulus.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22635    11368/synocgid       /var/run/synocgid/synocgid.remove.user.socket
+unix  2      [ ACC ]     STREAM     LISTENING     22637    11368/synocgid       /var/run/synocgid/synocgid.apikey.get.socket
+unix  2      [ ACC ]     STREAM     LISTENING     7789     5845/dbus-daemon     /var/run/dbus/system_bus_socket
+unix  2      [ ACC ]     STREAM     LISTENING     16246    11401/s2s_daemon     /tmp/S2S/daemon.sock
+unix  2      [ ACC ]     STREAM     LISTENING     4994     4836/cgmanager       /sys/fs/cgroup/cgmanager/sock
+unix  2      [ ACC ]     STREAM     LISTENING     16522    9052/synoscgi        /run/synoscgi.sock
+unix  2      [ ACC ]     STREAM     LISTENING     16529    9052/synoscgi        /run/synoscgi-fastapi.sock
+unix  2      [ ACC ]     STREAM     LISTENING     12193    9452/minissdpd       /var/run/minissdpd.sock
+unix  2      [ ]         DGRAM                    29620    14317/nmbd           /run/samba/msg.sock/14317
+unix  2      [ ACC ]     STREAM     LISTENING     30138    14389/avahi-daemon:  /var/run/avahi-daemon/socket
+unix  2      [ ACC ]     STREAM     LISTENING     28348    14048/synoelasticd   /var/run/synoelasticd.sock
+unix  2      [ ]         DGRAM                    22461    13615/scemd          /tmp/scemd_event_handler.sock_server
+unix  2      [ ]         DGRAM                    20929    12021/smbd           /run/samba/msg.sock/12021
+unix  2      [ ]         DGRAM                    20932    12022/smbd           /run/samba/msg.sock/12022
+unix  2      [ ACC ]     STREAM     LISTENING     27360    14317/nmbd           /run/samba/nmbd/unexpected
+unix  2      [ ]         DGRAM                    26085    13615/scemd          /tmp/scemd_connector.sock_server
+unix  2      [ ACC ]     STREAM     LISTENING     17904    10930/synosnmpcd     /tmp/synosnmpcd.sock
+unix  2      [ ACC ]     STREAM     LISTENING     8433     5868/syslog-ng       /run/syslog-ng/syslog-ng.ctl
+unix  2      [ ACC ]     STREAM     LISTENING     8436     5868/syslog-ng       /dev/log
+unix  21     [ ]         DGRAM                    8438     5868/syslog-ng       /dev/log
+unix  2      [ ACC ]     STREAM     LISTENING     8440     5868/syslog-ng       /var/run/syslog
+unix  2      [ ACC ]     STREAM     LISTENING     26105    14075/thumbd         /run/filestation/thumbd.sock
+unix  2      [ ACC ]     STREAM     LISTENING     8442     5868/syslog-ng       /var/run/synosyslog
+unix  2      [ ]         DGRAM                    8445     5868/syslog-ng       /var/run/synologd
+unix  3      [ ]         STREAM     CONNECTED     277730207 9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     26108    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     24301    14078/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     17308    10930/synosnmpcd     
+unix  3      [ ]         STREAM     CONNECTED     277730206 30656/synoscgi       
+unix  3      [ ]         STREAM     CONNECTED     8367     1/init               
+unix  2      [ ]         STREAM     CONNECTED     277527506 9993/synoscgi_SYNO.  /run/synoscgi.sock
+unix  3      [ ]         STREAM     CONNECTED     26125    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     13086    9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     21805    10939/synologand     
+unix  3      [ ]         STREAM     CONNECTED     27390    11998/nginx: master  
+unix  2      [ ]         DGRAM                    19838    10520/dhclient       
+unix  3      [ ]         STREAM     CONNECTED     15496    9210/ntpd            
+unix  3      [ ]         STREAM     CONNECTED     26118    14213/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     3705     5821/dbus-daemon     
+unix  2      [ ]         DGRAM                    24243    13615/scemd          
+unix  3      [ ]         STREAM     CONNECTED     27392    11998/nginx: master  
+unix  2      [ ]         DGRAM                    24298    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     19165    5868/syslog-ng       
+unix  3      [ ]         STREAM     CONNECTED     19020    11251/synobackupd    
+unix  3      [ ]         STREAM     CONNECTED     13088    9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     27387    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     27389    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     19071    11464/netatalk       
+unix  3      [ ]         STREAM     CONNECTED     26132    14220/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     19027    11368/synocgid       
+unix  3      [ ]         STREAM     CONNECTED     13083    9365/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     15497    9210/ntpd            
+unix  3      [ ]         STREAM     CONNECTED     13081    9363/synoscgi        
+unix  2      [ ]         DGRAM                    15431    9210/ntpd            
+unix  3      [ ]         STREAM     CONNECTED     26124    14216/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     3706     5821/dbus-daemon     
+unix  3      [ ]         STREAM     CONNECTED     8347     5704/synologaccd     
+unix  3      [ ]         STREAM     CONNECTED     30140    14389/avahi-daemon:  
+unix  3      [ ]         STREAM     CONNECTED     26128    14218/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     13079    9362/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     21806    10939/synologand     
+unix  3      [ ]         STREAM     CONNECTED     28644    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     26122    14215/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     10468    5845/dbus-daemon     /var/run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     24299    14077/thumbd         
+unix  3      [ ]         DGRAM                    1601     6362/udevd           
+unix  3      [ ]         STREAM     CONNECTED     3715     5845/dbus-daemon     
+unix  2      [ ]         STREAM     CONNECTED     277719525 30146/synoscgi_SYNO  /run/synoscgi.sock
+unix  3      [ ]         STREAM     CONNECTED     26126    14217/thumbd         
+unix  2      [ ]         DGRAM                    6698     6362/udevd           
+unix  3      [ ]         STREAM     CONNECTED     27385    11998/nginx: master  
+unix  2      [ ]         DGRAM                    20228    11921/postgres       
+unix  2      [ ]         STREAM     CONNECTED     13076    9362/synoscgi        
+unix  2      [ ]         STREAM     CONNECTED     277386302 9993/synoscgi_SYNO.  
+unix  3      [ ]         STREAM     CONNECTED     26131    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     13090    9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     28642    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     277729348 30147/synoscgi_SYNO  /run/synoscgi.sock
+unix  3      [ ]         STREAM     CONNECTED     28639    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     19026    11368/synocgid       
+unix  2      [ ]         DGRAM                    14143    10965/synostoraged   
+unix  2      [ ]         DGRAM                    21831    10902/synocrond      
+unix  3      [ ]         DGRAM                    1602     6362/udevd           
+unix  2      [ ]         DGRAM                    7798     5950/synonetd        
+unix  3      [ ]         STREAM     CONNECTED     28641    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     26107    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     24302    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     28643    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     10265    5845/dbus-daemon     /var/run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     26120    14214/thumbd         
+unix  2      [ ]         STREAM     CONNECTED     277730204 30656/synoscgi       
+unix  2      [ ]         DGRAM                    31767    13619/crond          
+unix  3      [ ]         STREAM     CONNECTED     26119    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     22040    10939/synologand     /run/synologan.sock
+unix  3      [ ]         STREAM     CONNECTED     13085    9366/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     27386    11998/nginx: master  
+unix  2      [ ]         DGRAM                    29166    13171/iscsi_snapsho  
+unix  3      [ ]         STREAM     CONNECTED     27391    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     19019    11251/synobackupd    
+unix  2      [ ]         DGRAM                    37021    11368/synocgid       
+unix  2      [ ]         DGRAM                    28350    14048/synoelasticd   
+unix  3      [ ]         STREAM     CONNECTED     277730238 9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     27393    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     13087    9367/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     27388    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     13084    9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     26123    14075/thumbd         
+unix  2      [ ]         DGRAM                    18558    10271/dhclient       
+unix  3      [ ]         STREAM     CONNECTED     8346     5704/synologaccd     
+unix  3      [ ]         STREAM     CONNECTED     26133    14075/thumbd         
+unix  2      [ ]         STREAM     CONNECTED     277719488 30146/synoscgi_SYNO  
+unix  3      [ ]         STREAM     CONNECTED     13082    9052/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     28640    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     26129    14075/thumbd         
+unix  2      [ ]         DGRAM                    277730449 30146/synoscgi_SYNO  
+unix  2      [ ]         DGRAM                    19860    10555/dhclient       
+unix  2      [ ]         STREAM     CONNECTED     13078    9362/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     30820    5845/dbus-daemon     /var/run/dbus/system_bus_socket
+unix  3      [ ]         STREAM     CONNECTED     13080    9052/synoscgi        
+unix  2      [ ]         DGRAM                    277719539 30147/synoscgi_SYNO  
+unix  3      [ ]         STREAM     CONNECTED     17307    10930/synosnmpcd     
+unix  3      [ ]         STREAM     CONNECTED     24300    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     3714     5845/dbus-daemon     
+unix  3      [ ]         STREAM     CONNECTED     26121    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     3721     5936/synoconfd       
+unix  3      [ ]         STREAM     CONNECTED     27384    11998/nginx: master  
+unix  3      [ ]         STREAM     CONNECTED     8448     5821/dbus-daemon     @/tmp/dbus-hiowwAErTF
+unix  2      [ ]         STREAM     CONNECTED     277729805 30629/synoscgi_SYNO  
+unix  3      [ ]         STREAM     CONNECTED     26127    14075/thumbd         
+unix  3      [ ]         STREAM     CONNECTED     19070    11464/netatalk       
+unix  2      [ ]         DGRAM                    22856    11456/hotplugd       
+unix  3      [ ]         STREAM     CONNECTED     277719532 14401/nginx: worker  
+unix  2      [ ]         DGRAM                    26977    13174/iscsi_snapsho  
+unix  3      [ ]         STREAM     CONNECTED     13089    9369/synoscgi        
+unix  3      [ ]         STREAM     CONNECTED     277730237 30716/synoscgi       
+unix  3      [ ]         STREAM     CONNECTED     9559     5950/synonetd        
+unix  3      [ ]         STREAM     CONNECTED     26130    14219/thumbd         

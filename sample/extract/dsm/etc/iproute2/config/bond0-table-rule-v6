@@ -1,5 +1,0 @@
-[bond0_policy_v6_link_1]
-	ip=fe80::211:32ff:fe7e:6f71
-	ifname=bond0
-	gateway=
-	prefix_length=64

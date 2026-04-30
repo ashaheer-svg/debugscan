@@ -1,4 +1,5 @@
--rwxr-xr-x 1 root root  8790 Jun 20  2025 /etc.defaults/synoinfo.conf
--rw------- 1 root root   106 Mar 12  2011 /etc/ddns.conf
--rw-r--r-- 1 root root 11757 Mar 19 16:18 /etc/synoinfo.conf
--rwxr-xr-x 1 root root  1178 Aug  4  2018 /usr/syno/etc/synosms.conf
+-rwxr-xr-x 1 root root 7958 Jul  5  2019 /etc.defaults/synoinfo.conf
+-rw------- 1 root root  106 Sep 11  2017 /etc/ddns.conf
+-rw-r--r-- 1 root root 8955 Jan 14 08:04 /etc/synoinfo.conf
+-rwxr-xr-x 1 root root 1198 Jul 17  2023 /usr/syno/etc/synosms.conf
+-rw-r--r-- 1 root root 1248 Jan 14 08:04 /usr/syno/etc/iscsi_target.conf
