@@ -84,6 +84,12 @@ final class ValidateStep implements StepInterface
         // Record step start for progress tracking
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('validate', 'Validating job preconditions and locating debug bundles');
+        }
+
         // === CHECK 1: Tenant feature enabled ===
         // Defensive: controller already checks this, but worker is separate process
         // so re-verify tenant hasn't disabled feature between job submit and execution
@@ -91,12 +97,22 @@ final class ValidateStep implements StepInterface
         $stmt->execute(['id' => $ctx->tenantId]);
         $enabled = (bool)$stmt->fetchColumn();
         if (!$enabled) {
+            if ($auditLogger) {
+                $auditLogger->logError('DeepDive feature not enabled for tenant', 'feature_disabled', ['tenant_id' => $ctx->tenantId]);
+            }
             throw new \RuntimeException('DeepDive is not enabled for this tenant');
         }
 
         // === CHECK 2: Debug files selected ===
         if (empty($ctx->debugFileIds)) {
+            if ($auditLogger) {
+                $auditLogger->logError('No debug files selected', 'no_files_selected', []);
+            }
             throw new \RuntimeException('No debug files selected for DeepDive');
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('DebugFileSelection', 'job', true, count($ctx->debugFileIds) . ' files selected');
         }
 
         // === CHECK 3 & 4: Resolve uploaded file paths and verify ownership ===
@@ -114,7 +130,18 @@ final class ValidateStep implements StepInterface
 
         // Verify count matches: if not, some files don't exist or don't belong to tenant
         if (count($rows) !== count($ctx->debugFileIds)) {
+            if ($auditLogger) {
+                $auditLogger->logError(
+                    'Missing or inaccessible debug files',
+                    'file_not_found',
+                    ['requested' => count($ctx->debugFileIds), 'found' => count($rows)]
+                );
+            }
             throw new \RuntimeException('One or more debug files not found for this tenant');
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('FileOwnershipCheck', 'job', true, 'All ' . count($rows) . ' files owned by tenant');
         }
 
         // === CHECK 5: Verify files exist on disk ===
@@ -122,6 +149,9 @@ final class ValidateStep implements StepInterface
         foreach ($rows as $r) {
             $path = $r['storage_path'] ?? '';
             if (!$path || !file_exists($path)) {
+                if ($auditLogger) {
+                    $auditLogger->logError("Debug bundle missing on disk: {$r['id']}", 'file_not_found_disk', ['file_id' => $r['id']]);
+                }
                 throw new \RuntimeException("Debug bundle missing on disk: {$r['id']}");
             }
 
@@ -131,6 +161,13 @@ final class ValidateStep implements StepInterface
                 'upload_path'    => $path,                 // Current file path on disk
                 'extracted_path' => null,                  // Will be set by DecompressStep
             ];
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('validate', 'Job preconditions validated', [
+                'bundles_validated' => count($rows),
+                'files_found' => count($rows),
+            ]);
         }
 
         // Record validation success with bundle count

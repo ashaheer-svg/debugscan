@@ -66,6 +66,13 @@ final class ExtractStep implements StepInterface
     public function run(PipelineContext $ctx): void
     {
         $ctx->startStep($this->id());
+
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('extract', 'Extracting and validating debug bundles');
+        }
+
         $root = $ctx->extractedPath();
         Paths::ensure($root);
         Paths::ensure($ctx->tmpPath());
@@ -81,6 +88,9 @@ final class ExtractStep implements StepInterface
             Paths::ensure($dest);
 
             $ctx->stepDetail($this->id(), "Extracting bundle {$index}/{$total}");
+            if ($auditLogger) {
+                $auditLogger->logFileExtracted($bundle['upload_path'], filesize($bundle['upload_path']), 'zip_bundle');
+            }
 
             $zip = new \ZipArchive();
             if ($zip->open($bundle['upload_path']) !== true) {
@@ -149,8 +159,23 @@ final class ExtractStep implements StepInterface
 
             $zip->close();
             $bundle['extracted_path'] = $dest;
+
+            if ($auditLogger) {
+                $auditLogger->logStepComplete('extract_bundle', "Extracted bundle {$index}/{$total}", [
+                    'entries' => $entries,
+                    'size_bytes' => $bytes,
+                ]);
+            }
         }
         unset($bundle);
+
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('extract', 'Bundle extraction complete', [
+                'bundles_extracted' => $total,
+                'total_entries' => $entries,
+                'total_size_bytes' => $bytes,
+            ]);
+        }
 
         $ctx->stepDetail($this->id(), "Extracted {$entries} entries ({$this->humanBytes($bytes)})");
         $ctx->completeStep($this->id());
