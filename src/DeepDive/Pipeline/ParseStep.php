@@ -102,6 +102,12 @@ final class ParseStep implements StepInterface
     {
         $ctx->startStep($this->id());
 
+        // Get audit logger if available for detailed event tracking
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('parse', 'Starting data extraction and parsing');
+        }
+
         // Initialize parsers and data structures
         $year      = (int)date('Y'); // Current year for timestamp parsing
         $locator   = new BundleLocator(new TimestampParser($year));
@@ -111,12 +117,15 @@ final class ParseStep implements StepInterface
         $powerParser = new PowerSupplyParser();   // Power supply analysis
         $fileValidator = new FileAvailabilityValidator(); // File availability check
         $powerData = [];                          // Collected power data
+        $powerAnalysisCount = 0;
 
         // === Process each bundle ===
         foreach ($ctx->bag['bundles'] as &$bundle) {
             // Get extracted bundle directory
             $base = $bundle['extracted_path'] ?? null;
             if (!$base || !is_dir($base)) continue;
+
+            $bundleId = $bundle['debug_file_id'] ?? basename($base);
 
             // === Locate and register data sources ===
             // BundleLocator identifies known file patterns (logs, sqlite, etc.)
@@ -135,11 +144,27 @@ final class ParseStep implements StepInterface
             // === Validate file availability ===
             // Pre-flight check: ensure required data files exist before parsing
             $fileManifest = $fileValidator->validateBundle($base);
+            if ($auditLogger) {
+                $auditLogger->logValidation(
+                    'FileAvailabilityValidator',
+                    $bundleId,
+                    (bool)($fileManifest['completeness_pct'] >= 50),
+                    'File completeness: ' . $fileManifest['completeness_pct'] . '% (' .
+                    $fileManifest['critical_available'] . '/' . $fileManifest['total_critical'] . ' critical files)'
+                );
+            }
 
             // === Extract hardware specifications ===
             // Analyzes system information in bundle
             $hardwareSpec = $hwExtractor->extract($base);
             $bundle['hardware_spec'] = $hardwareSpec;
+            if ($auditLogger) {
+                $auditLogger->logDataParsing(
+                    'HardwareSpecExtractor',
+                    $bundleId,
+                    count($hardwareSpec->extractedFields())
+                );
+            }
 
             // Store completeness metrics in bundle metadata
             $bundle['data_completeness'] = [
@@ -158,19 +183,43 @@ final class ParseStep implements StepInterface
                     'majorversion' => 7  // DSM version for context
                 ]);
 
+                // Log power data extraction results
+                $powerDataCount = count($psuResult['data'] ?? []);
+                if ($auditLogger) {
+                    $auditLogger->logDataParsing(
+                        'PowerSupplyParser',
+                        $bundleId,
+                        $powerDataCount
+                    );
+                }
+
                 // Collect power data for later rendering
-                $powerData[] = [
-                    'bundle_id' => $bundle['debug_file_id'] ?? basename($base),
-                    'bundle_name' => basename($base),
-                    'data' => $psuResult['data'] ?? [],
-                    'citations' => $psuResult['citations'] ?? [],
-                ];
+                if ($powerDataCount > 0) {
+                    $powerAnalysisCount++;
+                    $powerData[] = [
+                        'bundle_id' => $bundle['debug_file_id'] ?? basename($base),
+                        'bundle_name' => basename($base),
+                        'data' => $psuResult['data'] ?? [],
+                        'citations' => $psuResult['citations'] ?? [],
+                    ];
+                }
 
                 // Store in bundle for access during rendering
                 $bundle['power_data'] = $psuResult['data'] ?? [];
             } catch (\Throwable $e) {
-                // Log error but continue - power data is supplementary
-                error_log("PowerSupplyParser error for {$base}: " . $e->getMessage());
+                // Log error to audit trail for visibility
+                if ($auditLogger) {
+                    $auditLogger->logError(
+                        'PowerSupplyParser failed: ' . $e->getMessage(),
+                        'power_parser_exception',
+                        [
+                            'bundle' => $bundleId,
+                            'exception' => get_class($e),
+                            'file' => basename($e->getFile()),
+                            'line' => $e->getLine(),
+                        ]
+                    );
+                }
                 $bundle['power_data'] = null;
             }
 
@@ -200,6 +249,16 @@ final class ParseStep implements StepInterface
         $ctx->bag['facts']           = $facts;
         $ctx->bag['source_registry'] = $registry;
         $ctx->bag['power_data']      = $powerData;  // Power supply information for rendering
+
+        // Log step completion to audit trail
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('parse', 'Data extraction and parsing complete', [
+                'bundles_processed' => count($facts),
+                'log_sources_found' => count($registry->allLogs()),
+                'sqlite_sources_found' => count($registry->allSqlite()),
+                'power_analyses' => $powerAnalysisCount,
+            ]);
+        }
 
         // Report step completion with statistics
         $detail = sprintf(
