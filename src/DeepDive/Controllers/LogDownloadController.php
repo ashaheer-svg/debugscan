@@ -283,6 +283,7 @@ class LogDownloadController
     {
         $totalSize = array_sum(array_column($logs, 'size_bytes'));
         $totalSizeGb = round($totalSize / (1024 ** 3), 2);
+        $logsCount = count($logs);
 
         $logsHtml = '';
         if (!empty($logs)) {
@@ -346,12 +347,12 @@ class LogDownloadController
             <h1>📊 DeepDive Audit Logs</h1>
             <p>Download and view execution logs from pipeline analysis jobs</p>
             <div class="stats">
-                <div class="stat-box"><div class="stat-label">Total Logs</div><div class="stat-value">{$logs|count}</div></div>
-                <div class="stat-box"><div class="stat-label">Total Size</div><div class="stat-value">{$totalSizeGb} GB</div></div>
+                <div class="stat-box"><div class="stat-label">Total Logs</div><div class="stat-value">$logsCount</div></div>
+                <div class="stat-box"><div class="stat-label">Total Size</div><div class="stat-value">$totalSizeGb GB</div></div>
             </div>
         </div>
         <div class="logs-container">
-            {$logsHtml}
+            $logsHtml
         </div>
     </div>
 </body>
