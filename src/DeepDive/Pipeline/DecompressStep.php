@@ -75,6 +75,11 @@ final class DecompressStep implements StepInterface
     {
         $ctx->startStep($this->id());
 
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('decompress', 'Decompressing .xz files');
+        }
+
         // === Check for XZ decompression capability ===
         $hasXzCli = $this->hasXzCli();
         $hasXzExt = extension_loaded('xz');
@@ -133,6 +138,13 @@ final class DecompressStep implements StepInterface
         }
 
         // === Report results ===
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('decompress', 'XZ decompression complete', [
+                'files_expanded' => $expanded,
+                'failures' => $failed,
+            ]);
+        }
+
         $detail = "Decompressed {$expanded} file(s)";
         if ($failed > 0) $detail .= ", {$failed} failed";
         $ctx->stepDetail($this->id(), $detail);
