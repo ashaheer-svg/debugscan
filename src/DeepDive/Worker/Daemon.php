@@ -213,6 +213,9 @@ final class Daemon
         // Initialize audit logger for this job
         $auditLogger = new PipelineLogger($jobId);
 
+        // Log job start
+        $auditLogger->logStepStart('pipeline', "DeepDive analysis pipeline started for job {$jobId}");
+
         $steps = JobRepository::initialSteps();
         $ctx = new PipelineContext(
             jobId:       $jobId,
@@ -243,6 +246,11 @@ final class Daemon
         try {
             $pipeline->run($ctx);
 
+            // Log successful pipeline completion
+            $auditLogger->logStepComplete('pipeline', 'DeepDive analysis pipeline completed successfully', [
+                'steps_completed' => count($steps),
+            ]);
+
             $report   = $ctx->bag['report'] ?? [];
             $htmlPath = $report['html_path'] ?? null;
             $pdfPath  = $report['pdf_path']  ?? null;
@@ -261,6 +269,17 @@ final class Daemon
             $this->jobs->markCompleted($jobId, $htmlPath, $pdfPath, $ctx->asArray());
             $this->logger->info("[DeepDive] Completed {$jobId}");
         } catch (\Throwable $e) {
+            // Log pipeline error
+            $auditLogger->logError(
+                'Pipeline execution failed: ' . $e->getMessage(),
+                'exception',
+                [
+                    'exception' => get_class($e),
+                    'file' => basename($e->getFile()),
+                    'line' => $e->getLine(),
+                ]
+            );
+
             $this->logger->error("[DeepDive] Job {$jobId} failed: " . $e->getMessage(), [
                 'file' => basename($e->getFile()),
                 'line' => $e->getLine(),
