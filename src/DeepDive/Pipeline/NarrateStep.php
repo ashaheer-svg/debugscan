@@ -117,13 +117,26 @@ final class NarrateStep implements StepInterface
     {
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('narrate', 'Generating AI-powered incident narratives and recommendations');
+        }
+
         // === Extract incidents from context ===
         // In-memory array populated by CorrelateStep during incident correlation phase
         $incidents = $ctx->bag['incidents'] ?? [];
         // Soft skip if no incidents: nothing to narrate, no errors
         if (!is_array($incidents) || $incidents === []) {
+            if ($auditLogger) {
+                $auditLogger->logValidation('IncidentSelection', 'narrate', true, 'No incidents to narrate');
+            }
             $ctx->skipStep($this->id(), 'No incidents to narrate');
             return;
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('IncidentCount', 'narrate', true, count($incidents) . ' incident(s)');
         }
 
         // === Check for GROQ API key ===
@@ -134,6 +147,9 @@ final class NarrateStep implements StepInterface
         if ($apiKey === '') {
             // Soft skip: narration is optional, pipeline continues without narratives
             // RenderStep will fall back to rule remediation text
+            if ($auditLogger) {
+                $auditLogger->logValidation('GROQAPIKey', 'narrate', true, 'API key not set — skipping narration');
+            }
             $ctx->skipStep($this->id(), 'GROQ_API_KEY not set — skipping AI narration');
             return;
         }
@@ -145,8 +161,15 @@ final class NarrateStep implements StepInterface
         // Some configurations may fail validation (invalid key, missing dependencies, etc.)
         if (!$narrator->isConfigured()) {
             // Soft skip: API unavailable, fall back to rule text
+            if ($auditLogger) {
+                $auditLogger->logValidation('NarratorConfiguration', 'narrate', false, 'Narrator failed to configure');
+            }
             $ctx->skipStep($this->id(), 'Narrator refused to configure');
             return;
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('NarratorConfiguration', 'narrate', true, 'Narrator initialized and ready');
         }
 
         // === Initialize counters and prepare statement ===
@@ -235,6 +258,15 @@ final class NarrateStep implements StepInterface
         // === Record statistics and mark complete ===
         // Store token usage in context for downstream steps/report
         $ctx->bag['narrator_tokens_used'] = $tokens;
+
+        // Log step completion
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('narrate', 'AI narration complete', [
+                'incidents_narrated' => $ok,
+                'incidents_fallback' => $failed,
+                'tokens_used' => $tokens,
+            ]);
+        }
 
         // Status string shows: successful narrations, fallback count, tokens used
         // Example: "42 narrated, 8 fell back to rule text, 3204 tokens"

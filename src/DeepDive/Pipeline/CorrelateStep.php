@@ -97,6 +97,12 @@ final class CorrelateStep implements StepInterface
         // Record step start
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('correlate', 'Correlating findings into ranked incidents');
+        }
+
         // === Extract findings from evaluate step ===
         $findings = $ctx->bag['findings'] ?? [];
 
@@ -104,14 +110,29 @@ final class CorrelateStep implements StepInterface
         // Empty findings list is normal for systems with no issues
         if (!is_array($findings) || $findings === []) {
             $ctx->bag['incidents'] = [];
+            if ($auditLogger) {
+                $auditLogger->logValidation('FindingCorrelation', 'correlate', true, 'No findings to correlate');
+            }
             $ctx->skipStep($this->id(), 'No findings produced by evaluate step');
             return;
+        }
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('FindingExtraction', 'correlate', true, count($findings) . ' finding(s)');
         }
 
         // === Correlate findings into incidents ===
         // Analyzes causal relationships and groups related findings
         $correlator = new Correlator();
         $incidents  = $correlator->correlate($findings);
+
+        if ($auditLogger) {
+            $auditLogger->logDataParsing(
+                'Correlator',
+                'correlate',
+                count($incidents)
+            );
+        }
 
         // === Persist incidents to database ===
         // Save immediately so report renderer & downstream tools can read from DB
@@ -124,12 +145,31 @@ final class CorrelateStep implements StepInterface
             // Still store incidents in context for render step to use
             $ctx->bag['incidents'] = $incidents;
             // Soft failure: allow pipeline to continue with in-memory incidents
+            if ($auditLogger) {
+                $auditLogger->logError(
+                    'Database persist failed: ' . $e->getMessage(),
+                    'incident_persist_error',
+                    [
+                        'incidents' => count($incidents),
+                        'exception' => get_class($e),
+                    ]
+                );
+            }
             $ctx->softFailStep($this->id(), 'Correlator ran but DB persist failed: ' . $e->getMessage());
             return;
         }
 
         // === Success: store incidents and record completion ===
         $ctx->bag['incidents'] = $incidents;
+
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('correlate', 'Finding correlation complete', [
+                'incidents_created' => count($incidents),
+                'findings_correlated' => count($findings),
+                'rows_persisted' => $written,
+            ]);
+        }
+
         $ctx->stepDetail($this->id(), sprintf(
             '%d incident(s) from %d finding(s), %d rows written',
             count($incidents), count($findings), $written

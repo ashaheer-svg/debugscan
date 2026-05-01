@@ -115,6 +115,12 @@ final class CleanupStep implements StepInterface
     {
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('cleanup', 'Removing temporary extraction and working directories');
+        }
+
         // === Check debug mode flag ===
         // If debug_mode=true: preserve extraction directory for offline re-analysis
         // Rule authors can re-evaluate without re-extracting (development convenience)
@@ -122,6 +128,9 @@ final class CleanupStep implements StepInterface
         if ($ctx->debugMode) {
             // Mark cleanup as skipped (audit trail)
             $ctx->jobs->markCleanupStatus($ctx->jobId, 'skipped');
+            if ($auditLogger) {
+                $auditLogger->logValidation('DebugMode', 'cleanup', true, 'Extraction directory retained for offline analysis');
+            }
             $ctx->stepDetail($this->id(), 'Skipped — debug_mode retained extraction');
             $ctx->completeStep($this->id());
             return;
@@ -146,6 +155,15 @@ final class CleanupStep implements StepInterface
         // === Record cleanup completion ===
         // Update database cleanup_status for audit trail and orphan detection
         $ctx->jobs->markCleanupStatus($ctx->jobId, 'done');
+
+        // Log step completion
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('cleanup', 'Temporary files cleanup complete', [
+                'files_directories_removed' => $deleted,
+                'extraction_path' => Paths::extracted($ctx->jobId),
+                'tmp_path' => Paths::tmp($ctx->jobId),
+            ]);
+        }
 
         // Report statistics: file and directory count removed
         $ctx->stepDetail($this->id(), "Removed {$deleted} file(s)/dir(s)");

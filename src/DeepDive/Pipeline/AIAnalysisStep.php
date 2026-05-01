@@ -107,17 +107,29 @@ final class AIAnalysisStep implements StepInterface
         $ctx->startStep($this->id());
         $startTime = microtime(true);
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('ai_analysis', 'Running AI-driven anomaly detection and root cause analysis');
+        }
+
         // === Load AI settings (FIXED) ===
         $aiSettings = new ReportAISettings($ctx->pdo, $ctx->tenantId, $ctx->logger);
         $validationErrors = $aiSettings->validate();
 
         if (!empty($validationErrors)) {
             $ctx->logger->warning('[deepdive.ai_analysis] AI settings invalid: ' . implode(', ', $validationErrors));
+            if ($auditLogger) {
+                $auditLogger->logValidation('AISettings', 'ai_analysis', false, 'Settings validation failed: ' . implode(', ', $validationErrors));
+            }
         }
 
         // === Skip if disabled ===
         if (!$aiSettings->isEnabled()) {
             $ctx->logger->debug('[deepdive.ai_analysis] AI analysis disabled, skipping');
+            if ($auditLogger) {
+                $auditLogger->logValidation('AIEnabled', 'ai_analysis', true, 'AI analysis disabled in settings');
+            }
             $ctx->completeStep($this->id());
             return;
         }
@@ -126,6 +138,9 @@ final class AIAnalysisStep implements StepInterface
         $bundles = $ctx->bag['bundles'] ?? [];
         if (empty($bundles)) {
             $ctx->logger->debug('[deepdive.ai_analysis] No bundles to analyze');
+            if ($auditLogger) {
+                $auditLogger->logValidation('BundleCount', 'ai_analysis', true, 'No bundles to analyze');
+            }
             $ctx->completeStep($this->id());
             return;
         }
@@ -139,6 +154,14 @@ final class AIAnalysisStep implements StepInterface
             $tokenBudget / 1000,
             $aiSettings->getModel() ?? 'default'
         ));
+
+        if ($auditLogger) {
+            $auditLogger->logValidation('AIConfiguration', 'ai_analysis', true, sprintf(
+                'Budget: %dK tokens, Min confidence: %.0f%%',
+                $tokenBudget / 1000,
+                $minConfidence * 100
+            ));
+        }
 
         $detector = new AnomalyDetector($ctx->pdo, $ctx->logger, $tokenBudget);
         $correlator = new EventCorrelator($ctx->logger);
@@ -254,20 +277,39 @@ final class AIAnalysisStep implements StepInterface
 
         // === Compile statistics ===
         $duration = microtime(true) - $startTime;
+        $totalAnomalies = array_sum(array_map(fn($r) => $r['summary']['anomaly_count'] ?? 0, $allResults));
+        $totalChains = array_sum(array_map(fn($r) => $r['summary']['chain_count'] ?? 0, $allResults));
+        $totalRootCauses = array_sum(array_map(fn($r) => $r['summary']['root_cause_count'] ?? 0, $allResults));
+
         $ctx->bag['ai_statistics'] = [
             'bundles_analyzed'  => count($allResults),
-            'total_anomalies'   => array_sum(array_map(fn($r) => $r['summary']['anomaly_count'] ?? 0, $allResults)),
-            'total_chains'      => array_sum(array_map(fn($r) => $r['summary']['chain_count'] ?? 0, $allResults)),
-            'total_root_causes' => array_sum(array_map(fn($r) => $r['summary']['root_cause_count'] ?? 0, $allResults)),
+            'total_anomalies'   => $totalAnomalies,
+            'total_chains'      => $totalChains,
+            'total_root_causes' => $totalRootCauses,
             'total_tokens_used' => $totalTokens,
             'duration_seconds'  => $duration,
         ];
 
+        // Log step completion
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('ai_analysis', 'AI analysis complete', [
+                'bundles_analyzed' => count($allResults),
+                'total_anomalies' => $totalAnomalies,
+                'total_chains' => $totalChains,
+                'total_root_causes' => $totalRootCauses,
+                'total_tokens_used' => $totalTokens,
+                'duration_seconds' => (int)$duration,
+            ]);
+        }
+
         // === Report completion ===
         $ctx->stepDetail($this->id(), sprintf(
-            '%d bundle(s) analyzed - %.2fs total',
+            '%d bundle(s) analyzed - %.2fs total, %d anomalies, %d chains, %d root causes',
             count($allResults),
-            $duration
+            $duration,
+            $totalAnomalies,
+            $totalChains,
+            $totalRootCauses
         ));
 
         $ctx->completeStep($this->id());

@@ -118,6 +118,12 @@ final class RenderStep implements StepInterface
     {
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('render', 'Rendering HTML and PDF reports from analysis results');
+        }
+
         // === Prepare output directory ===
         Paths::ensure(Paths::reportsDir());
         $htmlPath = Paths::reportHtml($ctx->jobId);
@@ -216,6 +222,18 @@ final class RenderStep implements StepInterface
         // === Record report paths ===
         $ctx->bag['report']['html_path'] = $htmlPath;
         $ctx->bag['report']['pdf_path']  = $pdfOk ? $pdfPath : null;
+
+        // Log step completion
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('render', 'Report rendering complete', [
+                'incidents_rendered' => count($incidents),
+                'html_generated' => true,
+                'pdf_generated' => $pdfOk,
+                'html_size_bytes' => @filesize($htmlPath) ?: 0,
+                'ai_findings_count' => count($aiFindings),
+                'historical_data_available' => !empty($historicalData),
+            ]);
+        }
 
         // === Record completion ===
         $ctx->stepDetail($this->id(), sprintf(

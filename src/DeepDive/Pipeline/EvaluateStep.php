@@ -95,6 +95,12 @@ final class EvaluateStep implements StepInterface
         // Record step start
         $ctx->startStep($this->id());
 
+        // Get audit logger if available
+        $auditLogger = $ctx->bag['audit_logger'] ?? null;
+        if ($auditLogger) {
+            $auditLogger->logStepStart('evaluate', 'Applying detection rules to extracted data');
+        }
+
         // === Check SourceRegistry exists ===
         // Produced by ParseStep from extracted system data
         $registry = $ctx->bag['source_registry'] ?? null;
@@ -103,6 +109,9 @@ final class EvaluateStep implements StepInterface
             // Soft skip: normal condition during development
             $ctx->bag['findings']          = [];
             $ctx->bag['evaluator_errors']  = [];
+            if ($auditLogger) {
+                $auditLogger->logError('No SourceRegistry from parse step', 'registry_not_found', []);
+            }
             $ctx->skipStep($this->id(), 'No SourceRegistry produced by parse step (parsers not yet wired)');
             return;
         }
@@ -115,12 +124,18 @@ final class EvaluateStep implements StepInterface
             // Soft skip: may be normal during development
             $ctx->bag['findings']         = [];
             $ctx->bag['evaluator_errors'] = [];
+            if ($auditLogger) {
+                $auditLogger->logError('Rule catalogue is empty or failed to load', 'catalogue_not_found', []);
+            }
             $ctx->skipStep($this->id(), 'Rule catalogue is empty or failed to load');
             return;
         }
 
         // Record catalogue version for audit trail
         $ctx->bag['rule_catalogue_version'] = $cat->version();
+        if ($auditLogger) {
+            $auditLogger->logValidation('RuleCatalogue', 'evaluate', true, 'Loaded ' . $cat->count() . ' rule(s)');
+        }
 
         // === Evaluate rules against data ===
         // Evaluator runs all rules, catches individual errors
@@ -131,6 +146,15 @@ final class EvaluateStep implements StepInterface
         $ctx->bag['findings']         = $findings;
         $ctx->bag['evaluator_errors'] = $ev->errors();
 
+        // Log evaluation results
+        if ($auditLogger) {
+            $auditLogger->logDataParsing(
+                'RuleEvaluator',
+                'evaluate',
+                count($findings)
+            );
+        }
+
         // === Record completion with statistics ===
         $detail = sprintf(
             '%d finding(s) from %d rule(s)%s',
@@ -138,6 +162,15 @@ final class EvaluateStep implements StepInterface
             $cat->count(),
             $ev->errors() === [] ? '' : ', ' . count($ev->errors()) . ' rule error(s)'
         );
+
+        if ($auditLogger) {
+            $auditLogger->logStepComplete('evaluate', 'Rule evaluation complete', [
+                'findings_count' => count($findings),
+                'rules_evaluated' => $cat->count(),
+                'evaluator_errors' => count($ev->errors()),
+            ]);
+        }
+
         $ctx->stepDetail($this->id(), $detail);
         $ctx->completeStep($this->id());
     }
